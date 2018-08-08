@@ -13,7 +13,9 @@
         <div id="vertical-divider" class="ml-3 mr-3"></div>
 
         <div class="col-auto" v-if="robotData.length > 0">
-          <div class="btn btn-primary btn-sm" @click="setPause">{{robotData[0].pause === true ? '运行所有叉车' : '暂停所有叉车'}}
+          <div class="btn btn-primary btn-sm" @click="setPause"
+               :class="robotData[0].pause === true ? 'btn-primary' : 'btn-secondary'">
+            {{robotData[0].pause === true ? '运行所有叉车' : '暂停所有叉车'}}
           </div>
         </div>
       </div>
@@ -54,7 +56,7 @@
             </div>
           </div>
         </div>
-        <img class="card-img-top" src="/static/img/robot.jpg">
+        <img class="card-img-top" src="static/img/robot.jpg">
         <div class="card-body row pb-0 pt-1">
           <p class="card-text col">ID: {{item.id}}</p>
           <p class="card-text col">状态: {{item.statusString}}</p>
@@ -238,6 +240,9 @@
               //let path = this.$route.path;
               // this.$router.replace('_empty');
               // this.$router.push(path);
+            } else {
+              this.isPending = false;
+              errHandler(response.data.result);
             }
 
           }).catch(err => {
