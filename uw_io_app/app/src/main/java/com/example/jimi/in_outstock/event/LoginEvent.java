@@ -3,13 +3,13 @@ package com.example.jimi.in_outstock.event;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.jimi.in_outstock.activity.GetWindowTaskItemActivity;
 import com.example.jimi.in_outstock.application.MyApplication;
 import com.example.jimi.in_outstock.common.UrlData;
+import com.example.jimi.in_outstock.common.Log;
 
 import org.json.JSONObject;
 import org.xutils.common.Callback;
@@ -24,10 +24,17 @@ public class LoginEvent {
     private EditText edit_password;
     private String userName;
     private String password;
+
     // 返回成功
     private static final int SUCCESS_NUM = 200;
-    // 返回失败
-    private static final int FAILL_NUM = 0;
+    // 用户操作错误
+    private static final int USER_NUM = 412;
+    //网络异常(自定义)
+    private static final int NETWORK_NUM = 0;
+    //服务器内部错误
+    private static final int SERVER_NUM = 500;
+    //未知错误
+    private static final int UNKNOW_NUM = 666666;
 
     public void login(EditText editText_userName, EditText editText_password) {
         edit_userName = editText_userName;
@@ -57,10 +64,17 @@ public class LoginEvent {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
                     MyApplication.getContext().startActivity(intent);
                     break;
-                case FAILL_NUM:
+                case USER_NUM:
                     Toast.makeText(MyApplication.getContext(),"用户名或密码错误",Toast.LENGTH_SHORT).show();
                     break;
+                case NETWORK_NUM:
+                    Toast.makeText(MyApplication.getContext(),"无法连接服务器，请检查你的网络连接",Toast.LENGTH_SHORT).show();
+                    break;
+                case SERVER_NUM:
+                    Toast.makeText(MyApplication.getContext(),"服务器内部错误",Toast.LENGTH_SHORT).show();
+                    break;
                 default:
+                    Toast.makeText(MyApplication.getContext(),"未知错误，请联系管理员",Toast.LENGTH_SHORT).show();
                     break;
             }
         }
@@ -94,6 +108,9 @@ public class LoginEvent {
                 @Override
                 public void onError(Throwable ex, boolean isOnCallback) {
                     Log.d("Login--onError :",ex.getMessage());
+                    Message message  = new Message();
+                    message.what = NETWORK_NUM;
+                    handler.sendMessage(message);
                 }
 
                 @Override
@@ -116,7 +133,7 @@ public class LoginEvent {
      * @return
      */
     private int pareJSON(String jsonData){
-        int resultId = FAILL_NUM;
+        int resultId = UNKNOW_NUM;
         try{
             JSONObject jsonObject = new JSONObject(jsonData);
             resultId = jsonObject.getInt("result");

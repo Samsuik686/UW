@@ -80,6 +80,17 @@ public class RobotInfoSocket{
 				robotBOs.add(AGVRobot.toBO(agvRobot));
 			}
 			
+			//补充取空异常数据
+			List<RobotBO> robotBOs2 = RobotInfoRedisDAO.check();
+			for (RobotBO robotBO : robotBOs) {
+				for (RobotBO robotBO2 : robotBOs2) {
+					if(robotBO.getId().intValue() == robotBO2.getId().intValue()) {
+						robotBO.setLoadException(robotBO2.getLoadException());
+						break;
+					}
+				}
+			}
+			
 			//更新机器信息
   			RobotInfoRedisDAO.update(robotBOs);
 			
