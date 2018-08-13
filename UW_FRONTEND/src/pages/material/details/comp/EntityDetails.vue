@@ -73,8 +73,10 @@
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              this.data = response.data.data.list;
-              this.total = response.data.data.totalRow;
+              if (response.data.data !== null) {
+                this.data = response.data.data.list;
+                this.total = response.data.data.totalRow;
+              }
             } else if (response.data.result === 501) {
               alert(response.data.data)
             } else {

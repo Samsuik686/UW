@@ -100,25 +100,14 @@
                ]
            }
            --sample ends-- */
-        taskNowItems: {
-          id: '',
-          fileName: 'xxx',
-          type: 'xx',
-          materialNo: 'xxx',
-          planQuantity: '123',
-          actualQuantity: '123',
-          details: [
-            {
-              materialId: '123',
-              quantity: 'asd'
-            }
-          ]
-        },
+        taskNowItems: {},
 
         scanText: '',
         tipsMessage: '',
         tipsComponentMsg: '',
-        isTipsShow: false
+        isTipsShow: false,
+
+        patchAutoFinishStack: 0
       }
     },
     mounted() {
@@ -127,6 +116,7 @@
 
       window.g.PARKING_ITEMS_INTERVAL.push(setInterval(() => {
         this.fetchData(this.currentWindowId)
+        this.autoFinish(); //patch !
       }, 1000))
     },
     watch: {},
@@ -136,6 +126,20 @@
       ]),
     },
     methods: {
+      /*patch! wait for delete*/
+      autoFinish: function () {
+        if (JSON.stringify(this.taskNowItems) !== '{}') {
+          this.patchAutoFinishStack += 1;
+        }
+        if (this.patchAutoFinishStack > 10 && JSON.stringify(this.taskNowItems) !== '{}') {
+          console.log('send back');
+          this.patchAutoFinishStack = 0;
+          this.setBack();
+        }
+
+      },
+
+
       fetchData: function (id) {
         let options = {
           url: taskWindowParkingItems,
@@ -149,9 +153,11 @@
               this.taskNowItems = response.data.data;
               this.tipsMessage = ""
             } else {
+              this.taskNowItems = {};
               this.tipsMessage = "无数据"
             }
           } else if (response.data.result === 412) {
+            this.taskNowItems = {};
             this.tipsMessage = response.data.data
           }
         })

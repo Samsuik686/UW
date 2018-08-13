@@ -117,7 +117,7 @@
           if (res.data.result === 200 || res.data.result === 400) {
             this.setLoginToken('');
             localStorage.removeItem('token');
-            window.location.href = '/#/login'
+            window.location.href = window.g.SYSTEM_PATH + '/#/login'
           } else {
             errHandler(res.data.result)
           }

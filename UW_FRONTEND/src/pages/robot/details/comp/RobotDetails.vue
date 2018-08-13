@@ -43,16 +43,34 @@
                  v-model="checkedData">
         </div>
         <div class="message-tips card-body mt-5 row">
-          <div class="danger-tips row align-items-center pl-3 pr-3" v-if="item.error !== 255">
-            <icon name="danger" scale="2.6"></icon>
-            <div class="tips-msg ml-3">
-              <p class="m-0">{{item.errorString}}</p>
+          <div class="danger-tips row align-items-center pt-2 pb-2" v-if="item.error !== 255">
+            <div class="col-1">
+              <icon name="danger" scale="2.6"></icon>
+            </div>
+            <div class="tips-msg ml-2 mr-2 col">
+              <p class="m-0">
+                {{item.errorString}}
+              </p>
             </div>
           </div>
-          <div class="warning-tips row align-items-center pl-3 pr-3" v-if="item.warn !== 255">
-            <icon name="warning" scale="2.6"></icon>
-            <div class="tips-msg ml-3">
-              <p class="m-0">{{item.warnString}}</p>
+          <div class="danger-tips row align-items-center pt-2 pb-2" v-if="item.loadException === true">
+            <div class="col-1">
+              <icon name="danger" scale="2.6"></icon>
+            </div>
+            <div class="tips-msg ml-2 mr-2 col">
+              <p class="m-0">
+                {{item.loadExceptionString}}
+              </p>
+            </div>
+          </div>
+          <div class="warning-tips row align-items-center pt-2 pb-2" v-if="item.warn !== 255">
+            <div class="col-1">
+              <icon name="warning" scale="2.6"></icon>
+            </div>
+            <div class="tips-msg ml-2 mr-2 col">
+              <p class="m-0">
+                {{item.warnString}}
+              </p>
             </div>
           </div>
         </div>
@@ -310,7 +328,6 @@
 
   .warning-tips, .danger-tips {
     position: relative;
-    height: 50px;
     width: 100%;
     margin: 0.1em 0.25em;
     border: 1px solid #e9ecef;
@@ -332,7 +349,7 @@
   .tips-msg {
     line-height: 24px;
     color: #ffffff;
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .no-select {

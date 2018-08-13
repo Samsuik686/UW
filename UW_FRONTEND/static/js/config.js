@@ -3,6 +3,6 @@ window.g = {
   ROBOT_INTERVAL: [],
   PARKING_ITEMS_INTERVAL: [],
   API_URL: '/uw_server',
-  LOCAL_URL: 'http://192.168.2.110:8080/uw_server',
+  LOCAL_URL: 'http://10.10.11.185:8080/uw_server',
 
 };
