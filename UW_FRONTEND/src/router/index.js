@@ -20,6 +20,7 @@ import IoPreview from '../pages/io/details/IoPreview'
 Vue.use(Router);
 
 const router = new Router({
+  base: window.g.SYSTEM_PATH,
   routes: [
     {
       path: '/_empty'

@@ -47,7 +47,20 @@
       }
     },
     mounted() {
-      this.fetchData(store.state.taskDetails)
+      let val = store.state.taskDetails;
+      if (val.type === 0 || val.type === 1) {
+        this.columns = getTaskDetailsConfig('io')
+      }
+      let options = {
+        url: taskCheckUrl,
+        data: {
+          pageNo: 1,
+          pageSize: 20,
+          id: val.id,
+          type: val.type
+        }
+      };
+      this.fetchData(options)
     },
     watch: {
       query: {
@@ -64,34 +77,10 @@
         this.data = [];
         this.total = 0;
       },
-      fetchData: function (val) {
+      fetchData: function (options) {
         if (!this.isPending) {
           this.isPending = true;
 
-
-          //patch
-          // if (1) {
-          //   alert('暂不支持任务详情查看');
-          //   this.isPending = false;
-          //   this.setLoading(false);
-          //   this.closePanel();
-          //   return;
-          // }
-
-
-          if (val.type === 0 || val.type === 1) {
-            this.columns = getTaskDetailsConfig('io')
-          }
-
-          let options = {
-            url: taskCheckUrl,
-            data: {
-              pageNo: 1,
-              pageSize: 20,
-              id: val.id,
-              type: val.type
-            }
-          };
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {

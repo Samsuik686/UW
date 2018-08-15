@@ -13,7 +13,9 @@
         <div id="vertical-divider" class="ml-3 mr-3"></div>
 
         <div class="col-auto" v-if="robotData.length > 0">
-          <div class="btn btn-primary btn-sm" @click="setPause">{{robotData[0].pause === true ? '运行所有叉车' : '暂停所有叉车'}}
+          <div class="btn btn-primary btn-sm" @click="setPause"
+               :class="robotData[0].pause === true ? 'btn-primary' : 'btn-secondary'">
+            {{robotData[0].pause === true ? '运行所有叉车' : '暂停所有叉车'}}
           </div>
         </div>
       </div>
@@ -41,20 +43,38 @@
                  v-model="checkedData">
         </div>
         <div class="message-tips card-body mt-5 row">
-          <div class="danger-tips row align-items-center pl-3 pr-3" v-if="item.error !== 255">
-            <icon name="danger" scale="2.6"></icon>
-            <div class="tips-msg ml-3">
-              <p class="m-0">{{item.errorString}}</p>
+          <div class="danger-tips row align-items-center pt-2 pb-2" v-if="item.error !== 255">
+            <div class="col-1">
+              <icon name="danger" scale="2.6"></icon>
+            </div>
+            <div class="tips-msg ml-2 mr-2 col">
+              <p class="m-0">
+                {{item.errorString}}
+              </p>
             </div>
           </div>
-          <div class="warning-tips row align-items-center pl-3 pr-3" v-if="item.warn !== 255">
-            <icon name="warning" scale="2.6"></icon>
-            <div class="tips-msg ml-3">
-              <p class="m-0">{{item.warnString}}</p>
+          <div class="danger-tips row align-items-center pt-2 pb-2" v-if="item.loadException === true">
+            <div class="col-1">
+              <icon name="danger" scale="2.6"></icon>
+            </div>
+            <div class="tips-msg ml-2 mr-2 col">
+              <p class="m-0">
+                {{item.loadExceptionString}}
+              </p>
+            </div>
+          </div>
+          <div class="warning-tips row align-items-center pt-2 pb-2" v-if="item.warn !== 255">
+            <div class="col-1">
+              <icon name="warning" scale="2.6"></icon>
+            </div>
+            <div class="tips-msg ml-2 mr-2 col">
+              <p class="m-0">
+                {{item.warnString}}
+              </p>
             </div>
           </div>
         </div>
-        <img class="card-img-top" src="/static/img/robot.jpg">
+        <img class="card-img-top" src="static/img/robot.jpg">
         <div class="card-body row pb-0 pt-1">
           <p class="card-text col">ID: {{item.id}}</p>
           <p class="card-text col">状态: {{item.statusString}}</p>
@@ -238,6 +258,9 @@
               //let path = this.$route.path;
               // this.$router.replace('_empty');
               // this.$router.push(path);
+            } else {
+              this.isPending = false;
+              errHandler(response.data.result);
             }
 
           }).catch(err => {
@@ -305,7 +328,6 @@
 
   .warning-tips, .danger-tips {
     position: relative;
-    height: 50px;
     width: 100%;
     margin: 0.1em 0.25em;
     border: 1px solid #e9ecef;
@@ -327,7 +349,7 @@
   .tips-msg {
     line-height: 24px;
     color: #ffffff;
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .no-select {

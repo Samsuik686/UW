@@ -36,7 +36,7 @@
         </div>
         <div class="card bg-light col-12 col-lg-5 col-xl-3 m-2">
           <div class="border-light row ml-auto mr-auto mt-4">
-            <img src="/static/img/finishedQRCode.png" alt="finished" class="img-style">
+            <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
           </div>
           <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
           <button class="btn btn-primary mb-4 mt-auto" @click="setBack">操作完毕</button>
@@ -100,25 +100,14 @@
                ]
            }
            --sample ends-- */
-        taskNowItems: {
-          id: '',
-          fileName: 'xxx',
-          type: 'xx',
-          materialNo: 'xxx',
-          planQuantity: '123',
-          actualQuantity: '123',
-          details: [
-            {
-              materialId: '123',
-              quantity: 'asd'
-            }
-          ]
-        },
+        taskNowItems: {},
 
         scanText: '',
         tipsMessage: '',
         tipsComponentMsg: '',
-        isTipsShow: false
+        isTipsShow: false,
+
+        patchAutoFinishStack: 0
       }
     },
     mounted() {
@@ -127,6 +116,7 @@
 
       window.g.PARKING_ITEMS_INTERVAL.push(setInterval(() => {
         this.fetchData(this.currentWindowId)
+        this.autoFinish(); //patch !
       }, 1000))
     },
     watch: {},
@@ -136,6 +126,20 @@
       ]),
     },
     methods: {
+      /*patch! wait for delete*/
+      autoFinish: function () {
+        if (JSON.stringify(this.taskNowItems) !== '{}') {
+          this.patchAutoFinishStack += 1;
+        }
+        if (this.patchAutoFinishStack > 10 && JSON.stringify(this.taskNowItems) !== '{}') {
+          console.log('send back');
+          this.patchAutoFinishStack = 0;
+          this.setBack();
+        }
+
+      },
+
+
       fetchData: function (id) {
         let options = {
           url: taskWindowParkingItems,
@@ -149,9 +153,11 @@
               this.taskNowItems = response.data.data;
               this.tipsMessage = ""
             } else {
+              this.taskNowItems = {};
               this.tipsMessage = "无数据"
             }
           } else if (response.data.result === 412) {
+            this.taskNowItems = {};
             this.tipsMessage = response.data.data
           }
         })
@@ -174,6 +180,8 @@
           /*对比料号是否一致*/
           let tempArray = this.scanText.split("@");
           if (tempArray[0] !== this.taskNowItems.materialNo) {
+            console.log(tempArray[0]);
+            console.log(this.taskNowItems.materialNo);
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {

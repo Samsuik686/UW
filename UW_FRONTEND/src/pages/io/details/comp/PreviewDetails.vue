@@ -40,12 +40,18 @@
       $route: function (route) {
         this.init();
         this.setLoading(true);
-        this.fetchData(this.currentWindowId);
+        let options = {
+          url: taskWindowTaskItems,
+          data: {
+            id: this.currentWindowId
+          }
+        };
+        this.fetchData(options);
       },
       query: {
         handler(query) {
-          // this.setLoading(true);
-          // this.dataFilter(query);
+          this.setLoading(true);
+          this.dataFilter(query);
         },
         deep: true
       },
@@ -59,7 +65,13 @@
     mounted() {
       this.init();
       this.setLoading(true);
-      this.fetchData(this.currentWindowId);
+      let options = {
+        url: taskWindowTaskItems,
+        data: {
+          id: this.currentWindowId
+        }
+      };
+      this.fetchData(options);
     },
     computed: {
       ...mapGetters(['currentWindowId'])
@@ -81,18 +93,14 @@
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
       },
-      fetchData: function (id) {
-        let options = {
-          url: taskWindowTaskItems,
-          data: {
-            id: id
-          }
-        };
+      fetchData: function (options) {
         axiosPost(options).then(response => {
           this.isPending = false;
           if (response.data.result === 200) {
-            this.data = response.data.data.list;
-            this.total = response.data.data.totalRow;
+            if (response.data.data !== null) {
+              this.data = response.data.data.list;
+              this.total = response.data.data.totalRow;
+            }
           } else {
             errHandler(response.data.result)
           }
@@ -104,6 +112,17 @@
             alert('请求超时，请刷新重试');
             this.setLoading(false)
           })
+      },
+      dataFilter: function () {
+        let options = {
+          url: taskWindowTaskItems,
+          data: {
+            id: this.currentWindowId
+          }
+        };
+        options.data.pageNo = this.query.offset / this.query.limit + 1;
+        options.data.pageSize = this.query.limit;
+        this.fetchData(options);
       },
       routerReload: function () {
         let tempPath = this.$route.path;
