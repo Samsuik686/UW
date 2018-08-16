@@ -8,6 +8,7 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
+import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.vo.MaterialTypeVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
@@ -20,6 +21,11 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 public class MaterialService extends SelectService{
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+
+	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN"
+			+ "(SELECT id FROM task WHERE state = 2)";
+
+	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 	
 	private static final String GET_SPECIFIED_POSITION_MATERIAL_TYEP_SQL = "SELECT * FROM material_type WHERE row = ? AND col = ? AND height = ?";
 
@@ -85,10 +91,26 @@ public class MaterialService extends SelectService{
 		return materialType.save();
 	}
 
-	public boolean update(MaterialType materialType) {
-		return materialType.update();
+	public String update(MaterialType materialType) {
+		String resultString = "更新成功！";
+		if (!materialType.getEnabled()) {
+			MaterialType mt = MaterialType.dao.findFirst(COUNT_MATERIAL_SQL, materialType.getId());
+			if (mt.get("quantity") != null) {
+				Integer quantity = Integer.parseInt(mt.get("quantity").toString());
+				if (quantity > 0) {
+					resultString = "该物料库存数量大于0，禁止删除！";
+					return resultString;
+					}
+				}
+			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL, materialType.getId()) != null) {
+				resultString = "当前正在进行中的某个任务已经绑定了该物料，禁止删除该物料！";
+				return resultString;
+			}
+		}
+		materialType.update();
+		return resultString;
 	}
-	
+
 	/**
 	 * 列出同一个坐标盒子的所有物料类型
 	 */

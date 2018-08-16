@@ -48,7 +48,7 @@ public class TaskService {
 
 	private static final String GET_NEW_TASK_ID_SQL = "SELECT MAX(id) as newId FROM task";
 
-	private static final String GET_Material_NO_SQL = "SELECT * FROM material_type WHERE no = ?";
+	private static final String GET_Material_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
 
 	private static final String DELETE_PACKING_LIST_ITEM_SQL = "DELETE FROM packing_list_item WHERE task_id = ?";
 	
@@ -57,7 +57,7 @@ public class TaskService {
 	private static final String GET_TASK_ITEMS_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In"
-			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ?))";
+			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ? AND enabled = 1))";
 
 	private static final String GET_WINDOWS_SQL = "SELECT id FROM window";
 
