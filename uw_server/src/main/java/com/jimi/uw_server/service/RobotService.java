@@ -1,6 +1,7 @@
 package com.jimi.uw_server.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
@@ -13,6 +14,7 @@ import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
 import com.jimi.uw_server.service.base.SelectService;
+import com.jimi.uw_server.util.RobotComparator;
 
 /**
  * 叉车业务层
@@ -24,9 +26,7 @@ public class RobotService extends SelectService {
 
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
 
-	public static final String GET_ALL_ROBOT_IDS_SQL = "SELECT id FROM robot";
 
-	
 	public List<RobotVO> select() {
 		List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
 		List<RobotVO> robotVOs = new ArrayList<>();
@@ -34,6 +34,8 @@ public class RobotService extends SelectService {
 			RobotVO robotVO = new RobotVO(robotBO);
 			robotVOs.add(robotVO);
 		}
+		// 根据叉车ID对叉车进行升序排序
+		Collections.sort(robotVOs, new RobotComparator());
 		return robotVOs;
 	}
 
