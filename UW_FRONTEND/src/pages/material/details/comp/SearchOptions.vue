@@ -62,13 +62,13 @@
           },
           {
             id: 'row',
-            name: '列',
+            name: '行',
             model: '',
             type: 'text'
           },
           {
             id: 'col',
-            name: '行',
+            name: '列',
             model: '',
             type: 'text'
           },
