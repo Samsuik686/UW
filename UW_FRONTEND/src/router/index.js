@@ -16,7 +16,6 @@ import IoNow from '../pages/io/details/IoNow'
 import IoPreview from '../pages/io/details/IoPreview'
 
 
-
 Vue.use(Router);
 
 const router = new Router({
@@ -38,9 +37,7 @@ const router = new Router({
           path: '/material',
           name: 'Material',
           component: MaterialMain,
-          children: [
-
-          ]
+          children: []
         },
         {
           path: 'logs',
@@ -107,11 +104,15 @@ if (localStorage.getItem('token')) {
 
 
 router.beforeEach((to, from, next) => {
-  for (let index in window.g.ROBOT_INTERVAL){
-    clearInterval(window.g.ROBOT_INTERVAL[index])
-  }
-  for (let index in window.g.PARKING_ITEMS_INTERVAL){
-    clearInterval(window.g.PARKING_ITEMS_INTERVAL[index])
+  console.log(from)
+  console.log(to)
+  if (!(to.path === '/_empty' || from.path === '/_empty')) {
+    for (let index in window.g.ROBOT_INTERVAL) {
+      clearInterval(window.g.ROBOT_INTERVAL[index])
+    }
+    for (let index in window.g.PARKING_ITEMS_INTERVAL) {
+      clearInterval(window.g.PARKING_ITEMS_INTERVAL[index])
+    }
   }
   if (to.matched.some(r => r.meta.requireAuth)) {
     if (store.state.token) {

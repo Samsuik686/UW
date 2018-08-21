@@ -49,6 +49,12 @@
         // pageSize: 2000,
         queryOptions: [
           {
+            id: 'id',
+            name: '叉车ID',
+            model: '',
+            type: 'text'
+          },
+          {
             id: 'status',
             name: '状态',
             model: '',
@@ -80,10 +86,14 @@
             list: [
               {
                 value: '0',
-                string: '停用'
+                string: '系统停用'
               },
               {
                 value: '1',
+                string: '手动停用'
+              },
+              {
+                value: '2',
                 string: '启用'
               }
             ]

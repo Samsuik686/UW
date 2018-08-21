@@ -127,7 +127,8 @@
       return {
         robotData: "",
         isPending: false,
-        checkedData: []
+        checkedData: [],
+        robotFilter: []
       }
     },
     watch: {
@@ -135,14 +136,19 @@
       $route: function (route) {
         this.setLoading(true);
         if (route.query.filter) {
+          // let options = {
+          //   url: robotSelectUrl,
+          //   data: {
+          //     filter: route.query.filter
+          //   }
+          // };
+          this.robotFilter = route.query.filter.split('&');
           let options = {
             url: robotSelectUrl,
-            data: {
-              filter: route.query.filter
-            }
           };
           this.fetchData(options)
         } else {
+          this.robotFilter = [];
           let options = {
             url: robotSelectUrl,
           };
@@ -175,7 +181,18 @@
             this.setLoading(false);
             this.isPending = false;
             if (response.data.result === 200) {
-              this.robotData = response.data.data;
+              let thisData = response.data.data;
+              /*filter*/
+              for (let i = 0; i < this.robotFilter.length; i++) {
+                thisData = thisData.filter((item) => {
+                  let filterItem = this.robotFilter[i].split('=');
+                  if (item[filterItem[0]].toString() === filterItem[1].toString()) {
+                    return true;
+                  }
+                });
+              }
+
+              this.robotData = thisData;
             } else {
               errHandler(response.data.result)
             }
