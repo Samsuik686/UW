@@ -44,9 +44,11 @@ public class TaskService {
 	
 	private static final Object LOCK = new Object();
 
+	private static final String GET_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
+
 	private static final String GET_NEW_TASK_ID_SQL = "SELECT MAX(id) as newId FROM task";
 
-	private static final String GET_Material_NO_SQL = "SELECT * FROM material_type WHERE no = ?";
+	private static final String GET_Material_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
 
 	private static final String DELETE_PACKING_LIST_ITEM_SQL = "DELETE FROM packing_list_item WHERE task_id = ?";
 	
@@ -55,7 +57,7 @@ public class TaskService {
 	private static final String GET_TASK_ITEMS_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In"
-			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ?))";
+			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ? AND enabled = 1))";
 
 	private static final String GET_WINDOWS_SQL = "SELECT id FROM window";
 
@@ -68,21 +70,43 @@ public class TaskService {
 
 	public String createIOTask(Integer type, String fileName, String fullFileName) throws Exception {
 		String resultString = "添加成功！";
-		
+		File file = new File(fullFileName);
+
 		// 如果文件格式不对，则返回false，提示检查文件格式及内容格式
 		if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
+			//清空upload目录下的文件
+			if (file.exists()) {
+				file.delete();
+			}
+
 			resultString = "创建任务失败，请检查套料单的文件格式是否正确！";
 			return resultString;
 		}
-		File file = new File(fullFileName);
+
+		// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
+		if (Task.dao.find(GET_FILE_NAME_SQL, fileName).size() != 0) {
+			//清空upload目录下的文件
+			if (file.exists()) {
+				file.delete();
+			}
+
+			resultString = "已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
+			return resultString;
+		}
+
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
 		// 如果套料单表头不对，则返回false，提示检查文件格式及内容格式
 		if (items == null) {
+			//清空upload目录下的文件
+			if (file.exists()) {
+				file.delete();
+			}
+
 			resultString = "创建任务失败，请检查套料单的内容格式是否正确！";
 			return resultString;
 		} else {
-			// 插入套料单那里使用了「SELECT MAX(id) FROM task....」,因此这里要加同步锁，不然会有线程安全问题
+			// 插入套料单那里使用了「SELECT MAX(id) FROM task....」查询语句,因此这里要加同步锁，不然会有线程安全问题
 			synchronized(LOCK) {
 				// 如果套料单格式正确，则创建一条新的任务记录
 				Task task = new Task();
@@ -101,6 +125,11 @@ public class TaskService {
 					MaterialType noDao = MaterialType.dao.findFirst(GET_Material_NO_SQL, item.getNo());
 					// 判断物料类型表中是否存在对应的料号，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 					if (noDao == null) {
+						//清空upload目录下的文件
+						if (file.exists()) {
+							file.delete();
+						}
+
 						Db.update(DELETE_PACKING_LIST_ITEM_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中！";
@@ -108,6 +137,11 @@ public class TaskService {
 					}
 					// 判断物料是否已被禁用，若已被禁用，则将对应的任务记录删除掉，并提示操作员检查套料单
 					if (!noDao.getEnabled()) {
+						//清空upload目录下的文件
+						if (file.exists()) {
+							file.delete();
+						}
+
 						Db.update(DELETE_PACKING_LIST_ITEM_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料已被禁用！";
@@ -116,6 +150,11 @@ public class TaskService {
 					// 判断套料单中是否存在相同的料号
 					MaterialType materialTypeIdDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, noDao.getId(), newTaskId);
 					if (materialTypeIdDao != null) {
+						//清空upload目录下的文件
+						if (file.exists()) {
+							file.delete();
+						}
+
 						Db.update(DELETE_PACKING_LIST_ITEM_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料在套料单中重复出现！";
@@ -140,11 +179,7 @@ public class TaskService {
 				}
 
 				if (file.exists()) {
-		
-					if (!file.delete()) {
-						throw new OperationException("文件" + file.getName() + "删除失败！");
-					}
-		
+					file.delete();
 				}
 				
 				}
@@ -370,12 +405,12 @@ public class TaskService {
 			Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, agvioTaskItem.getTaskId());
 			if (task.getWindow() == id) {
 				Integer packingListItemId = agvioTaskItem.getId();
-					
+
 				// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
 				Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, 
 						new String[] {"packing_list_item.id = " + packingListItemId, "material_type.id = packing_list_item.material_type_id", },
 						pageNo, pageSize, null, null, null);
-				
+
 				// 记录获取查询记录总行数
 				totallyRow += windowTaskItems.getTotalRow();
 

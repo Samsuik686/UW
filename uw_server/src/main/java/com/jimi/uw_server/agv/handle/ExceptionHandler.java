@@ -1,13 +1,10 @@
 package com.jimi.uw_server.agv.handle;
 
-import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.cmd.AGVLoadExceptionCmd;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.service.MaterialService;
 
 /**
  * 异常处理器
@@ -17,7 +14,7 @@ import com.jimi.uw_server.service.MaterialService;
  */
 public class ExceptionHandler {
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+//	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 	
 	
 	public static void handleLoadException(String message) {
@@ -26,13 +23,13 @@ public class ExceptionHandler {
 		String groupid = loadExceptionCmd.getMissiongroupid();
 		for(AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if(item.getGroupId().equals(groupid)) {
-				//把物料设置为在架
-				MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
-				materialType.setIsOnShelf(true);
-				materialService.update(materialType);
-				
-				//把负载异常的条目回滚到状态0
-				TaskItemRedisDAO.updateTaskItemState(item, 0);
+//				//把物料设置为在架
+//				MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
+//				materialType.setIsOnShelf(true);
+//				materialService.update(materialType);
+//				
+//				//把负载异常的条目回滚到状态0
+//				TaskItemRedisDAO.updateTaskItemState(item, 0);
 				
 				//把指定叉车的取空异常置为真
 				 RobotInfoRedisDAO.setloadException(item.getRobotId());
