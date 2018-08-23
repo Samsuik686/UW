@@ -16,8 +16,7 @@ public class RobotComparator implements Comparator<RobotVO> {
 	@Override
 	public int compare(RobotVO r1, RobotVO r2) {
 
-		// 根据叉车ID，进行升序排序
-		if (r1.getId() > r2.getId()) {
+		if (r1.getId() > r2.getId()) {	// 根据叉车ID，进行升序排序
 			return 1;
 		} else {
 			return -1;
