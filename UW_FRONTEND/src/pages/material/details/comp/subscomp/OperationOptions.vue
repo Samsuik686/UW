@@ -97,7 +97,7 @@
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              alert('删除成功');
+              this.$alertSuccess('删除成功');
               this.isDeleting = false;
               let tempUrl = this.$route.path;
               this.$router.replace('_empty');
@@ -108,9 +108,11 @@
               this.isDeleting = false;
             }
           }).catch(err => {
-            this.isPending = false;
-            console.log(JSON.stringify(err));
-            alert('请求超时，清刷新重试')
+            if (JSON.stringify(err)) {
+              this.isPending = false;
+              console.log(JSON.stringify(err));
+              this.$alertDanger('请求超时，请刷新重试')
+            }
           })
         }
       }

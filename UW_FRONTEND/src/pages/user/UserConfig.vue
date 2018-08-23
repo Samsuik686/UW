@@ -173,13 +173,13 @@
             axiosPost(options).then(response => {
               this.isPending = false;
               if (response.data.result === 200) {
-                alert("添加成功");
+                this.$alertSuccess("添加成功");
                 this.isAdding = false;
                 let tempUrl = this.$route.path;
                 this.$router.replace('/_empty');
                 this.$router.replace(tempUrl);
               } else if (response.data.result === 412) {
-                alert("用户已存在");
+                this.$alertWarning("用户已存在");
               } else {
                 errHandler(response.data.result)
               }
@@ -187,10 +187,10 @@
               .catch(err => {
                 this.isPending = false;
                 console.log(JSON.stringify(err));
-                alert('请求超时，清刷新重试')
+                this.$alertDanger('请求超时，清刷新重试')
               })
           } else {
-            alert("内容不能为空");
+            this.$alertWarning("内容不能为空");
             this.isPending = false;
             return;
           }

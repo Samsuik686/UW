@@ -3,6 +3,7 @@ import Qs from 'qs';
 import {setLoginToken} from "../store/actions";
 import store from "../store";
 import router from '../router';
+import {alertWarning} from "../utils/modal";
 
 //axios.defaults.timeout = 5000;
 //axios.defaults.baseURL = window.g.API_URL;
@@ -34,11 +35,11 @@ axios.interceptors.response.use(
     if (res.data.result === 401){
       store.commit('setLoginToken', '');
       localStorage.removeItem('token');
-      alert('权限不足');
       router.replace({
         path: '/login',
         query: {redirect: router.currentRoute.fullPath}
-      })
+      });
+      alertWarning('权限不足');
     }
     return res
   },

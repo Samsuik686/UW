@@ -126,10 +126,12 @@
             }
           })
             .catch(err => {
-              this.isPending = false;
-              this.setLoading(false);
-              console.log(JSON.stringify(err));
-              alert('请求超时，请刷新重试')
+              if (JSON.stringify(err) !== '{}'){
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+                this.setLoading(false)
+              }
             })
         }
       },

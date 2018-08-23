@@ -52,8 +52,8 @@
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
-        <a class="btn btn-secondary col mr-1 text-white" @click="closeEditPanel">取消</a>
-        <a class="btn btn-primary col ml-1 text-white" @click="submitUpdate">提交</a>
+        <button class="btn btn-secondary col mr-1 text-white" @click="closeEditPanel">取消</button>
+        <button class="btn btn-primary col ml-1 text-white" @click="submitUpdate">提交</button>
       </div>
     </div>
   </div>
@@ -101,13 +101,13 @@
         if (!this.isPending) {
           for (let i in this.warningMsg) {
             if (this.warningMsg[i] !== "") {
-              alert("请输入正确格式！");
+              this.$alertWarning("请输入正确格式！");
               return
             }
           }
           for (let item in this.thisData) {
             if (this.thisData[item] === '') {
-              alert('内容不能为空');
+              this.$alertWarning('内容不能为空');
               return;
             }
           }
@@ -119,7 +119,7 @@
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              alert('更新成功');
+              this.$alertSuccess('更新成功');
               this.closeEditPanel();
               let tempUrl = this.$route.path;
               this.$router.replace('_empty');
@@ -130,9 +130,11 @@
               this.closeEditPanel()
             }
           }).catch(err => {
-            this.isPending = false;
-            console.log(JSON.stringify(err));
-            alert('请求超时，清刷新重试')
+            if (JSON.stringify(err)) {
+              this.isPending = false;
+              console.log(JSON.stringify(err));
+              this.$alertDanger('请求超时，请刷新重试')
+            }
           })
         }
       },
