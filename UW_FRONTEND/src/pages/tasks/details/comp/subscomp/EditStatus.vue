@@ -34,10 +34,11 @@
       </div>
       <div class="form-row" v-if="windowShow === '2' && originState === '1'">
         <label for="window-select" class="col-form-label">仓口选择:</label>
-        <select id="window-select" class="custom-select" v-model="windowVal" >
-          <option value="" disabled>请选择</option>
+        <select id="window-select" class="custom-select" v-model="windowVal" :disabled="window.length === 0">
+          <option value="" disabled>{{window.length > 0 ? '请选择' : '无可用仓口'}}</option>
           <option v-for="item in window" :value="item.id">{{item.id}}</option>
         </select>
+
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -81,7 +82,6 @@
     },
     watch: {
       thisState: function (val) {
-        console.log(val + typeof val);
         this.windowShow = val
       }
     },
@@ -113,7 +113,7 @@
             };
             if (this.thisState === '2') {
               if (this.windowVal === "") {
-                alert("请选择仓口");
+                this.$alertInfo("请选择仓口");
                 this.isPending = false;
                 return;
               }
@@ -122,7 +122,7 @@
             axiosPost(options).then(res => {
               this.isPending = false;
               if (res.data.result === 200) {
-                alert('设置成功');
+                this.$alertSuccess('设置成功');
                 this.windowShow = '';
                 this.thisData = {};
                 let tempUrl = this.$route.path;
@@ -132,7 +132,9 @@
                 errHandler(res.data.result)
               }
             }).catch(err => {
-              alert(err)
+              if (JSON.stringify(err) !== '{}'){
+                this.$alertDanger(JSON.stringify(err))
+              }
             })
           }
         }
