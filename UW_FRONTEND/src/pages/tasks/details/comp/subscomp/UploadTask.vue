@@ -73,7 +73,7 @@
               if (this.thisFile !== "") {
                 formData.append('file', this.thisFile);
               } else {
-                alert("内容不可为空");
+                this.$alertWarning("内容不可为空");
                 this.isPending = false;
                 return;
               }
@@ -88,14 +88,14 @@
             this.$axios.post(taskCreateUrl, formData, config).then(res => {
               if (res.data.result === 200) {
                 this.isPending = false;
-                alert('添加成功');
+                this.$alertSuccess('添加成功');
                 this.closeUploadPanel();
                 let tempUrl = this.$route.path;
                 this.$router.replace('_empty');
                 this.$router.replace(tempUrl);
               } else if (res.data.result === 412) {
                 this.isPending = false;
-                alert(res.data.data);
+                this.$alertWarning(res.data.data);
               }
               else {
                 this.isPending = false;
@@ -103,7 +103,7 @@
               }
             })
           } else {
-            alert("选项不能为空");
+            this.$alertWarning("选项不能为空");
           }
         }
       }

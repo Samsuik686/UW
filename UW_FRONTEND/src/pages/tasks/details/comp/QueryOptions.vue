@@ -257,7 +257,7 @@
                   this.queryString += ('&' + item.id + '>=' + tempFrom + '&' + item.id + '<=' + tempTo)
                 }
               } else {
-                alert('日期格式错误');
+                this.$alertWarning('日期格式错误');
                 this.setLoading(false);
                 return
               }

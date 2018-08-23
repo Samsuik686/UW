@@ -132,7 +132,6 @@
           this.patchAutoFinishStack += 1;
         }
         if (this.patchAutoFinishStack > 10 && JSON.stringify(this.taskNowItems) !== '{}') {
-          console.log('send back');
           this.patchAutoFinishStack = 0;
           this.setBack();
         }
@@ -180,8 +179,6 @@
           /*对比料号是否一致*/
           let tempArray = this.scanText.split("@");
           if (tempArray[0] !== this.taskNowItems.materialNo) {
-            console.log(tempArray[0]);
-            console.log(this.taskNowItems.materialNo);
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {

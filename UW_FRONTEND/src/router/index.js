@@ -104,8 +104,6 @@ if (localStorage.getItem('token')) {
 
 
 router.beforeEach((to, from, next) => {
-  console.log(from)
-  console.log(to)
   if (!(to.path === '/_empty' || from.path === '/_empty')) {
     for (let index in window.g.ROBOT_INTERVAL) {
       clearInterval(window.g.ROBOT_INTERVAL[index])
