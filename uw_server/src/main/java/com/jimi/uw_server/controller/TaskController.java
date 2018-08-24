@@ -93,13 +93,13 @@ public class TaskController extends Controller {
 	
 
 	// 查询所有仓口
-/*	public void getWindows(int type, int state) {
-		renderJson(ResultUtil.succeed(taskService.getWindows(type, state)));
-	}*/
-	
-	public void getWindows() {
-		renderJson(ResultUtil.succeed(taskService.getWindows()));
+	public void getWindows(int type) {
+		renderJson(ResultUtil.succeed(taskService.getWindows(type)));
 	}
+	
+/*	public void getWindows() {
+		renderJson(ResultUtil.succeed(taskService.getWindows()));
+	}*/
 
 
 	// 查询所有任务

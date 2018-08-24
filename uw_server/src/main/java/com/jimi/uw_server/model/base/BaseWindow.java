@@ -45,4 +45,13 @@ public abstract class BaseWindow<M extends BaseWindow<M>> extends Model<M> imple
 		return getInt("col");
 	}
 
+	public M setBindTaskId(java.lang.Integer bindTaskId) {
+		set("bind_task_id", bindTaskId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getBindTaskId() {
+		return getInt("bind_task_id");
+	}
+
 }

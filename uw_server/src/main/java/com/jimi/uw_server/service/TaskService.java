@@ -59,7 +59,13 @@ public class TaskService {
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In"
 			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ? AND enabled = 1))";
 
-	private static final String GET_WINDOWS_SQL = "SELECT id FROM window";
+	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
+
+	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN ("
+			+ "SELECT id FROM task WHERE type = 0)";
+
+	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN ("
+			+ "SELECT id FROM task WHERE type = 1)";
 
 	private static final String GET_TASK_IN_REDIS_SQL = "SELECT * FROM task WHERE id = ?";
 
@@ -195,25 +201,29 @@ public class TaskService {
 		return task.update();
 	}
 
+//	public boolean start(Integer id, Integer window) {
+//		Task task = Task.dao.findById(id);
+//		task.setWindow(window);
+//		// 根据套料单、物料类型表生成任务条目
+//		List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
+//		List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
+//		for (PackingListItem item : items) {
+//			AGVIOTaskItem a = new AGVIOTaskItem(item);
+//			taskItems.add(a);
+//		}
+//		// 把任务条目均匀插入到队列til中
+//		TaskItemRedisDAO.addTaskItem(taskItems);
+//		task.setState(2);
+//		return task.update();
+//	}
+	
 	public boolean start(Integer id, Integer window) {
 		Task task = Task.dao.findById(id);
+		// 设置仓口，并在仓口表绑定该任务id
 		task.setWindow(window);
-		// 根据套料单、物料类型表生成任务条目
-		List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
-		List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
-		for (PackingListItem item : items) {
-			AGVIOTaskItem a = new AGVIOTaskItem(item);
-			taskItems.add(a);
-		}
-		// 把任务条目均匀插入到队列til中
-		TaskItemRedisDAO.addTaskItem(taskItems);
-		task.setState(2);
-		return task.update();
-	}
-	
-/*	public boolean start(Integer id, Integer window) {
-		Task task = Task.dao.findById(id);
-		task.setWindow(window);
+		Window windowDao = Window.dao.findById(window);
+		windowDao.setBindTaskId(id);
+		windowDao.update();
 		// 如果任务类型为出库，则立即将任务条目加载到redis中
 		if (task.getType() == 1) {
 			// 根据套料单、物料类型表生成任务条目
@@ -228,7 +238,7 @@ public class TaskService {
 		}
 		task.setState(2);
 		return task.update();
-	}*/
+	}
 
 
 	public boolean cancel(Integer id) {
@@ -239,6 +249,10 @@ public class TaskService {
 			TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
 		}
 		task.setState(4);
+		// 将仓口解绑
+	    Window window = Window.dao.findById(task.getWindow());
+	    window.setBindTaskId(null);
+	    window.update();
 		return task.update();
 	}
 
@@ -291,18 +305,26 @@ public class TaskService {
 	}
 
 
-	public List<Window> getWindows() {
-		List<Window> windowIds;
-		windowIds = Window.dao.find(GET_WINDOWS_SQL);
-		return windowIds;
-	}
-	
-/*	public List<Window> getWindows(int type, int state) {
-		
+/*	public List<Window> getWindows() {
 		List<Window> windowIds;
 		windowIds = Window.dao.find(GET_WINDOWS_SQL);
 		return windowIds;
 	}*/
+	
+	public List<Window> getWindows(int type) {
+		List<Window> windowIds;
+		switch (type) {
+			case 1:
+				windowIds = Window.dao.find(GET_IN_TASK_WINDOWS_SQL);
+				return windowIds;
+			case 2:
+				windowIds = Window.dao.find(GET_OUT_TASK_WINDOWS_SQL);
+				return windowIds;
+			default:
+				windowIds = Window.dao.find(GET_FREE_WINDOWS_SQL);
+				return windowIds;
+		}
+	}
 
 
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -326,10 +348,13 @@ public class TaskService {
 
 
 	public void finish(Integer taskId) {
-		Task task = new Task();
-		task.setId(taskId);
+		Task task = Task.dao.findById(taskId);
 		task.setState(3);
 		task.update();
+		// 将仓口解绑
+	    Window window = Window.dao.findById(task.getWindow());
+	    window.setBindTaskId(null);
+	    window.update();
 	}
 
 

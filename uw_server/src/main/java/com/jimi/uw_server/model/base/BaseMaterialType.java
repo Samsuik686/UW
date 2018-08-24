@@ -27,6 +27,15 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getStr("no");
 	}
 
+	public M setSpecification(java.lang.String specification) {
+		set("specification", specification);
+		return (M)this;
+	}
+	
+	public java.lang.String getSpecification() {
+		return getStr("specification");
+	}
+
 	public M setArea(java.lang.Integer area) {
 		set("area", area);
 		return (M)this;

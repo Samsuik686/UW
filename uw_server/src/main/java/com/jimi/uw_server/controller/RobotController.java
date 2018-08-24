@@ -43,7 +43,23 @@ public class RobotController extends Controller {
 	// 令叉车回库
 	@Log("令叉车回库，该叉车目前绑定的任务条目为{id}")
 	public void back(Integer id) throws Exception {
-		robotService.back(id);
-		renderJson(ResultUtil.succeed());
+		String resultString = robotService.back(id);
+		if (resultString.equals("已成功发送SL指令！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.failed(resultString));
+		}
+	}
+
+
+	// 入库前扫料盘，发LS指令给叉车
+	@Log("料号为{no}的物料需要入库，发送LS指令让叉车取托盘到仓口{id}")
+	public void call(Integer id, String no) throws Exception {
+		String resultString = robotService.call(id, no);
+		if (resultString.equals("调用成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.failed(resultString));
+		}
 	}
 }
