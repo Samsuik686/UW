@@ -45,7 +45,7 @@
         <div class="message-tips card-body mt-5 row">
           <div class="danger-tips row align-items-center pt-2 pb-2" v-if="item.error !== 255">
             <div class="col-1">
-              <icon name="danger" scale="2.6"></icon>
+              <icon name="danger" scale="2.6" style="color: #ffffff;"></icon>
             </div>
             <div class="tips-msg ml-2 mr-2 col">
               <p class="m-0">
@@ -55,7 +55,7 @@
           </div>
           <div class="danger-tips row align-items-center pt-2 pb-2" v-if="item.loadException === true">
             <div class="col-1">
-              <icon name="danger" scale="2.6"></icon>
+              <icon name="danger" scale="2.6" style="color: #ffffff;"></icon>
             </div>
             <div class="tips-msg ml-2 mr-2 col">
               <p class="m-0">
@@ -65,7 +65,7 @@
           </div>
           <div class="warning-tips row align-items-center pt-2 pb-2" v-if="item.warn !== 255">
             <div class="col-1">
-              <icon name="warning" scale="2.6"></icon>
+              <icon name="warning" scale="2.6" style="color: #ffffff;"></icon>
             </div>
             <div class="tips-msg ml-2 mr-2 col">
               <p class="m-0">
@@ -197,10 +197,12 @@
               errHandler(response.data.result)
             }
           }).catch(err => {
-            this.isPending = false;
-            this.setLoading(false);
-            console.log(JSON.stringify(err));
-            alert('请求超时，请刷新重试')
+            if (JSON.stringify(err) !== '{}') {
+              this.isPending = false;
+              this.setLoading(false);
+              console.log(JSON.stringify(err));
+              this.$alertDanger('请求超时，请刷新重试')
+            }
           })
         }
       },
@@ -233,16 +235,18 @@
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
               this.isPending = false;
-              alert((thisEnabled === 1 ? "停用" : "启用") + "成功");
+              this.$alertSuccess((thisEnabled === 1 ? "停用" : "启用") + "成功");
               // let path = this.$route.path;
               // this.$router.replace('_empty');
               // this.$router.push(path);
             }
 
           }).catch(err => {
-            this.isPending = false;
-            console.log(JSON.stringify(err));
-            alert('请求超时，请刷新重试')
+            if (JSON.stringify(err)) {
+              this.isPending = false;
+              console.log(JSON.stringify(err));
+              this.$alertDanger('请求超时，请刷新重试')
+            }
           })
         }
       },
@@ -271,7 +275,7 @@
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
               this.isPending = false;
-              alert((thisPause === 0 ? "暂停" : "启用") + "成功");
+              this.$alertSuccess((thisPause === 0 ? "暂停" : "启用") + "成功");
               //let path = this.$route.path;
               // this.$router.replace('_empty');
               // this.$router.push(path);
@@ -281,9 +285,11 @@
             }
 
           }).catch(err => {
-            this.isPending = false;
-            console.log(JSON.stringify(err));
-            alert('请求超时，请刷新重试')
+            if (JSON.stringify(err)) {
+              this.isPending = false;
+              console.log(JSON.stringify(err));
+              this.$alertDanger('请求超时，请刷新重试')
+            }
           })
         }
       },

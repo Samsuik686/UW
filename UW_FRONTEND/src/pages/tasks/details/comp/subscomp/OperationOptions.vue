@@ -46,7 +46,7 @@
           this.setTaskData('');
           this.setTaskData(val)
         } else {
-          alert('暂不支持此类型任务的详情查看');
+          this.$alertInfo('暂不支持此类型任务的详情查看');
           return;
         }
       }
