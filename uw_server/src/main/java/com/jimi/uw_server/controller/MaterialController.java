@@ -31,10 +31,11 @@ public class MaterialController extends Controller {
 	// 添加物料类型#
 	@Log("添加了料号为{no}的物料类型,物料具体位置为: 区域号{area},行号{row},列号{col},高度{height}")
 	public void add(String no, Integer area, Integer row, Integer col, Integer height) {
-		if(materialService.add(no, area, row, col, height)) {
+		String resultString = materialService.add(no, area, row, col, height);
+		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {
-			throw new OperationException("该物料已存在，请不要添加重复的物料类型号！");
+			throw new OperationException(resultString);
 		}
 	}
 

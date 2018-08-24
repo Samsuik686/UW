@@ -365,7 +365,7 @@ public class TaskService {
 		packingListItem.update();
 	}
 
-	
+
 	public Object getWindowParkingItem(Integer id) {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
@@ -400,6 +400,7 @@ public class TaskService {
 
 		return null;
 	}
+
 
 	public boolean io(Integer packListItemId, String materialId, Integer quantity, User user) {
 		// 根据套料单id，获取对应的任务记录

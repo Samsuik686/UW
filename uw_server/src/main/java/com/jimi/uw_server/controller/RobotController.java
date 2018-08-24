@@ -5,6 +5,7 @@ import com.jfinal.aop.Enhancer;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.service.RobotService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -47,7 +48,7 @@ public class RobotController extends Controller {
 		if (resultString.equals("已成功发送SL指令！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
-			renderJson(ResultUtil.failed(resultString));
+			throw new OperationException(resultString);
 		}
 	}
 
@@ -59,7 +60,7 @@ public class RobotController extends Controller {
 		if (resultString.equals("调用成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
-			renderJson(ResultUtil.failed(resultString));
+			throw new OperationException(resultString);
 		}
 	}
 }

@@ -76,9 +76,11 @@ public class MaterialService extends SelectService{
 		return pagePaginate;
 	}
 
-	public boolean add(String no, Integer area, Integer row, Integer col, Integer height) {
+	public String add(String no, Integer area, Integer row, Integer col, Integer height) {
+		String resultString = "添加成功！";
 		if(MaterialType.dao.find(UNIQUE_MATERIAL_TYPE_CHECK_SQL, no).size() != 0) {
-			return false;
+			resultString = "该物料已存在，请不要添加重复的物料类型号！";
+			return resultString;
 		}
 		MaterialType materialType = new MaterialType();
 		materialType.setNo(no);
@@ -88,7 +90,7 @@ public class MaterialService extends SelectService{
 		materialType.setHeight(height);
 		materialType.setEnabled(true);
 		materialType.setIsOnShelf(true);
-		return materialType.save();
+		return resultString;
 	}
 
 	public String update(MaterialType materialType) {
