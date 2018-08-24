@@ -195,7 +195,6 @@ public class TaskService {
 		return task.update();
 	}
 
-
 	public boolean start(Integer id, Integer window) {
 		Task task = Task.dao.findById(id);
 		task.setWindow(window);
@@ -211,6 +210,25 @@ public class TaskService {
 		task.setState(2);
 		return task.update();
 	}
+	
+/*	public boolean start(Integer id, Integer window) {
+		Task task = Task.dao.findById(id);
+		task.setWindow(window);
+		// 如果任务类型为出库，则立即将任务条目加载到redis中
+		if (task.getType() == 1) {
+			// 根据套料单、物料类型表生成任务条目
+			List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
+			List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
+			for (PackingListItem item : items) {
+				AGVIOTaskItem a = new AGVIOTaskItem(item);
+				taskItems.add(a);
+			}
+			// 把任务条目均匀插入到队列til中
+			TaskItemRedisDAO.addTaskItem(taskItems);
+		}
+		task.setState(2);
+		return task.update();
+	}*/
 
 
 	public boolean cancel(Integer id) {
@@ -278,6 +296,13 @@ public class TaskService {
 		windowIds = Window.dao.find(GET_WINDOWS_SQL);
 		return windowIds;
 	}
+	
+/*	public List<Window> getWindows(int type, int state) {
+		
+		List<Window> windowIds;
+		windowIds = Window.dao.find(GET_WINDOWS_SQL);
+		return windowIds;
+	}*/
 
 
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
