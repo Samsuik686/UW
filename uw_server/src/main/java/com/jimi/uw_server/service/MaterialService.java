@@ -41,20 +41,21 @@ public class MaterialService extends SelectService{
 		Page<Record> result = selectService.select(new String[] {"material_type"}, null,
 				pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
-		int totallyRow =  0;
+		int totalRow = result.getTotalRow();
 		for (Record res : result.getList()) {
 			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("area"),
 					res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
 			if (res.get("enabled").equals(true)) {
 				materialTypeVOs.add(m);
-				totallyRow += 1;
+			} else {
+				totalRow -= 1;
 			}
 		}
 
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(totallyRow);
+		pagePaginate.setTotalRow(totalRow);
 		pagePaginate.setList(materialTypeVOs);
 
 		return pagePaginate;

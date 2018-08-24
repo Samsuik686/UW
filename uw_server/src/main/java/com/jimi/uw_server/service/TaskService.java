@@ -73,6 +73,8 @@ public class TaskService {
 
 	private static final String UNIQUE_MATERIAL_ID_CHECK_SQL = "SELECT * FROM material WHERE id = ?";
 
+	private static final String GET_PACKING_LIST_ITEM_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
+
 
 	public String createIOTask(Integer type, String fileName, String fullFileName) throws Exception {
 		String resultString = "添加成功！";
@@ -348,6 +350,13 @@ public class TaskService {
 
 
 	public void finish(Integer taskId) {
+		// 对于入库任务，每执行完一个任务条目会清一次redis，调用该接口，因此需要判断是否所有任务条目都已经执行完毕
+		List<PackingListItem> packListItem = PackingListItem.dao.find(GET_PACKING_LIST_ITEM_SQL, taskId);
+		for (PackingListItem item : packListItem) {
+			if (item.getFinishTime() == null) {
+				return ;
+			}
+		}
 		Task task = Task.dao.findById(taskId);
 		task.setState(3);
 		task.update();
