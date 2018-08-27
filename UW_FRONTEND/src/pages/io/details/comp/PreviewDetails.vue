@@ -74,6 +74,8 @@
       window.g.PREVIEW_ITEMS_INTERVAL.push(setInterval(() => {
         if (this.currentWindowId !== '') {
           this.fetchData(options)
+        } else {
+          this.init()
         }
       }, 3000))
     },
