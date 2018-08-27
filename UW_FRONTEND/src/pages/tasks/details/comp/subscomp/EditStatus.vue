@@ -76,7 +76,13 @@
       // if (this.originState === 1) {
       //   this.windowShow = 1;
       // }
-      axiosPost({url: taskWindowsUrl}).then(res => {
+      let options = {
+        url: taskWindowsUrl,
+        data: {
+          type: 0
+        }
+      };
+      axiosPost(options).then(res => {
         this.window = res.data.data
       })
     },

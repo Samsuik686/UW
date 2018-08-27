@@ -12,7 +12,8 @@ import RobotMain from '../pages/robot/RobotMain'
 import Login from '../pages/user/Login'
 import UserConfig from '../pages/user/UserConfig'
 import IoMain from '../pages/io/IoMain'
-import IoNow from '../pages/io/details/IoNow'
+import OutNow from '../pages/io/details/OutNow'
+import InNow from '../pages/io/details/InNow'
 import IoPreview from '../pages/io/details/IoPreview'
 
 
@@ -78,8 +79,12 @@ const router = new Router({
           component: IoMain,
           children: [
             {
-              path: 'now',
-              component: IoNow
+              path: 'innow',
+              component: InNow
+            },
+            {
+              path: 'outnow',
+              component: OutNow
             },
             {
               path: 'preview',
@@ -87,6 +92,8 @@ const router = new Router({
             }
           ]
         }
+
+
       ]
     },
 
@@ -108,8 +115,14 @@ router.beforeEach((to, from, next) => {
     for (let index in window.g.ROBOT_INTERVAL) {
       clearInterval(window.g.ROBOT_INTERVAL[index])
     }
-    for (let index in window.g.PARKING_ITEMS_INTERVAL) {
-      clearInterval(window.g.PARKING_ITEMS_INTERVAL[index])
+    for (let index in window.g.PARKING_ITEMS_INTERVAL_IN) {
+      clearInterval(window.g.PARKING_ITEMS_INTERVAL_IN[index])
+    }
+    for (let index in window.g.PARKING_ITEMS_INTERVAL_OUT) {
+      clearInterval(window.g.PARKING_ITEMS_INTERVAL_OUT[index])
+    }
+    for (let index in window.g.PREVIEW_ITEMS_INTERVAL) {
+      clearInterval(window.g.PREVIEW_ITEMS_INTERVAL[index])
     }
   }
   if (to.matched.some(r => r.meta.requireAuth)) {

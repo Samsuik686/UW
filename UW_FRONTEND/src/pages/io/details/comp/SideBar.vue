@@ -1,10 +1,9 @@
 <!--表单查看页面的统一侧边栏导航-->
 
 <template>
-  <div class="mt-3 mb-3">
-    <nav>
+  <div class="sidebar pt-3 pb-3 h-100">
+    <nav class="w-100">
       <div class="sidebar-items">
-        <!--透传数据-->
         <div class="sidebar-title">
           <a class="subtitle" draggable="false">出入库操作</a>
         </div>
@@ -13,14 +12,29 @@
             <div class="sidebar-link" @click="linkTo('preview')"
                :class="activeItem === 'preview' ? 'active' : ''">仓口任务预览</div>
           </div>
-          <div @click="toggleState('now')">
-            <div class="sidebar-link" @click="linkTo('now')"
-               :class="activeItem === 'now' ? 'active' : ''">即时仓口任务操作</div>
+          <div @click="toggleState('innow')">
+            <div class="sidebar-link" @click="linkTo('innow')"
+               :class="activeItem === 'innow' ? 'active' : ''">即时入库任务操作</div>
+          </div>
+          <div @click="toggleState('outnow')">
+            <div class="sidebar-link" @click="linkTo('outnow')"
+                 :class="activeItem === 'outnow' ? 'active' : ''">即时出库任务操作</div>
           </div>
         </div>
       </div>
     </nav>
-
+    <div class="m-2 mt-auto" v-if="$route.path === '/io/preview'">
+      <div class="row ml-auto mr-auto mt-4">
+        <img src="static/img/toIOQRcode.png" class="img-style">
+      </div>
+      <span class=" mt-auto">* 扫描此二维码或点击侧边栏以跳转到仓口入库页面</span>
+    </div>
+    <div class="m-2 mt-auto" v-else-if="$route.path === '/io/innow'">
+      <div class="row ml-auto mr-auto mt-4">
+        <img src="static/img/toCallQRCode.png" class="img-style">
+      </div>
+      <span class=" mt-auto">* 扫描此二维码或点击侧边栏以跳转到任务预览页面</span>
+    </div>
   </div>
 </template>
 
@@ -39,8 +53,11 @@
     },
     mounted: function () {
       switch (this.$route.path) {
-        case '/io/now':
-          this.toggleState('now');
+        case '/io/innow':
+          this.toggleState('innow');
+          break;
+        case '/io/outnow':
+          this.toggleState('outnow');
           break;
         case '/io/preview':
           this.toggleState('preview');
@@ -48,6 +65,19 @@
       }
     },
     watch: {
+      $route: function (route) {
+        switch (route.path) {
+          case '/io/innow':
+            this.toggleState('innow');
+            break;
+          case '/io/outnow':
+            this.toggleState('outnow');
+            break;
+          case '/io/preview':
+            this.toggleState('preview');
+            break;
+        }
+      }
     },
     computed: {
       ...mapGetters([
@@ -62,7 +92,9 @@
       },
       linkTo: function (obj) {
         //this.setLoading(true);
-        this.$router.replace('/_empty');
+        // if (this.$route.path === '/io/preview') {
+        //   this.$router.replace('/_empty')
+        // }
         this.$router.push({
           path: '/io/' + obj,
         })
@@ -80,6 +112,10 @@
   }
 
   .sidebar {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .sidebar-items {
@@ -138,5 +174,8 @@
     display: block;
     width: 100%;
     height: 100%;
+  }
+  .img-style {
+    height: 200px;
   }
 </style>

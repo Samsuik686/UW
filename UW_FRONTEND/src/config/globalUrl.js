@@ -44,3 +44,4 @@ export const robotSelectUrl = url + '/manage/robot/select';
 export const robotSwitchUrl = url + '/manage/robot/switch';
 export const robotPauseUrl = url + '/manage/robot/pause';
 export const robotBackUrl = url + '/manage/robot/back';
+export const robotCallUrl = url + '/manage/robot/call';

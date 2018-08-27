@@ -6,7 +6,7 @@
   <div>
     <global-tips :message="tipsComponentMsg" v-if="isTipsShow"/>
     <options/>
-    <input type="text" title="scanner" id="material-check" v-model="scanText"
+    <input type="text" title="scanner" id="in-check" v-model="scanText"
            @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
 
     <div class="io-now mt-1 mb-3" v-if="tipsMessage !==''">
@@ -73,10 +73,9 @@
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters} from 'vuex'
   import {robotBackUrl, taskWindowParkingItems, taskIOUrl} from "../../../config/globalUrl";
-  import {currentWindowId} from "../../../store/getters";
 
   export default {
-    name: "IoNow",
+    name: "InNow",
     components: {
       Options,
       GlobalTips
@@ -114,9 +113,11 @@
       this.setFocus();
       this.fetchData(this.currentWindowId);
 
-      window.g.PARKING_ITEMS_INTERVAL.push(setInterval(() => {
-        this.fetchData(this.currentWindowId)
-        this.autoFinish(); //patch !
+      window.g.PARKING_ITEMS_INTERVAL_IN.push(setInterval(() => {
+        if (this.currentWindowId !== '') {
+          this.fetchData(this.currentWindowId)
+          //this.autoFinish(); //patch !
+        }
       }, 1000))
     },
     watch: {},
@@ -164,8 +165,8 @@
       },
       /*设置输入框焦点*/
       setFocus: function () {
-        if (this.$route.path === '/io/now') {
-          document.getElementById('material-check').focus();
+        if (this.$route.path === '/io/innow') {
+          document.getElementById('in-check').focus();
         }
       },
 
@@ -174,6 +175,8 @@
         /*若扫描结果为叉车返回的页面二维码，则调用叉车回库*/
         if (this.scanText === "###finished###") {
           this.setBack()
+        } else if (this.scanText === "###JUMPTOCALL###") {
+          this.$router.push('/io/preview')
         } else {
           /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
           /*对比料号是否一致*/
@@ -257,7 +260,7 @@
     height: 100%;
   }
 
-  #material-check {
+  #in-check {
     opacity: 0;
     height: 0;
     line-height: 0;

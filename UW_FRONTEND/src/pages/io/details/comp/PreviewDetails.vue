@@ -1,6 +1,6 @@
 <template>
   <div class="preview-details mt-1 mb-3">
-    <datatable v-bind="$data"/>
+    <datatable v-bind="$data.tableData"/>
   </div>
 </template>
 
@@ -18,22 +18,24 @@
     },
     data() {
       return {
-        fixHeaderAndSetBodyMaxHeight: 650,
-        tblStyle: {
-          'word-break': 'break-all',
-          'table-layout': 'fixed'
+        tableData: {
+          fixHeaderAndSetBodyMaxHeight: 650,
+          tblStyle: {
+            'word-break': 'break-all',
+            'table-layout': 'fixed'
 
+          },
+          HeaderSettings: false,
+          pageSizeOptions: [20, 40, 80, 100],
+          data: [],
+          //srcData: [],
+          columns: [],
+          total: 0,
+          query: {"limit": 20, "offset": 0},
         },
-        HeaderSettings: false,
-        pageSizeOptions: [20, 40, 80, 100],
-        data: [],
-        //srcData: [],
-        columns: [],
-        total: 0,
-        query: {"limit": 20, "offset": 0},
         isPending: false,
         thisRouter: '',
-        filter: ""
+        filter: "",
       }
     },
     watch: {
@@ -54,9 +56,6 @@
           this.dataFilter(query);
         },
         deep: true
-      },
-      currentWindowId: function (val) {
-        this.routerReload()
       }
     },
     created() {
@@ -72,6 +71,11 @@
         }
       };
       this.fetchData(options);
+      window.g.PREVIEW_ITEMS_INTERVAL.push(setInterval(() => {
+        if (this.currentWindowId !== '') {
+          this.fetchData(options)
+        }
+      }, 1000))
     },
     computed: {
       ...mapGetters(['currentWindowId'])
@@ -79,8 +83,8 @@
     methods: {
       ...mapActions(['setLoading']),
       init: function () {
-        this.data = [];
-        this.columns = [
+        this.tableData.data = [];
+        this.tableData.columns = [
           {field: 'id', title: 'ID', colStyle: {'width': '60px'}},
           {field: 'fileName', title: '套料单名称', colStyle: {'width': '120px'}},
           {field: 'type', title: '操作类型', colStyle: {'width': '80px'}},
@@ -90,16 +94,16 @@
           {field: 'finishTime', title: '完成时间', colStyle: {'width': '120px'}},
           {field: 'operation', title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '90px'}},
         ];
-        this.total = 0;
-        this.query = {"limit": 20, "offset": 0}
+        this.tableData.total = 0;
+        this.tableData.query = {"limit": 20, "offset": 0}
       },
       fetchData: function (options) {
         axiosPost(options).then(response => {
           this.isPending = false;
           if (response.data.result === 200) {
             if (response.data.data !== null) {
-              this.data = response.data.data.list;
-              this.total = response.data.data.totalRow;
+              this.tableData.data = response.data.data.list;
+              this.tableData.total = response.data.data.totalRow;
             }
           } else {
             errHandler(response.data.result)
@@ -122,8 +126,8 @@
             id: this.currentWindowId
           }
         };
-        options.data.pageNo = this.query.offset / this.query.limit + 1;
-        options.data.pageSize = this.query.limit;
+        options.data.pageNo = this.tableData.query.offset / this.tableData.query.limit + 1;
+        options.data.pageSize = this.tableData.query.limit;
         this.fetchData(options);
       },
       routerReload: function () {
@@ -143,4 +147,5 @@
     padding: 10px;
     min-height: 500px;
   }
+
 </style>
