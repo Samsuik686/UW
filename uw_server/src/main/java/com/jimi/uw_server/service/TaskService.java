@@ -59,7 +59,7 @@ public class TaskService {
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In"
 			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ? AND enabled = 1))";
 
-	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
+	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";		//
 
 	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN ("
 			+ "SELECT id FROM task WHERE type = 0)";
@@ -350,7 +350,7 @@ public class TaskService {
 
 
 	public void finish(Integer taskId) {
-		// 对于入库任务，每执行完一个任务条目会清一次redis，调用该接口，因此需要判断是否所有任务条目都已经执行完毕
+		// 对于入库任务，每执行完一个任务条目会清一次redis，然后调用该接口将任务设置为已完成并解绑仓口，因此这里需要判断是否所有任务条目都已经执行完毕
 		List<PackingListItem> packListItem = PackingListItem.dao.find(GET_PACKING_LIST_ITEM_SQL, taskId);
 		for (PackingListItem item : packListItem) {
 			if (item.getFinishTime() == null) {
