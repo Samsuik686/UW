@@ -90,7 +90,6 @@
       ...mapActions(['setLoading', 'setCurrentWindow']),
 
       setPreset: function () {
-        console.log('reset')
         let options = {
           url: taskWindowsUrl,
           data: {

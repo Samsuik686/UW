@@ -53,7 +53,7 @@
               id: this.currentWindowId,
               no: tempArray[0]
             }
-            
+
           };
           axiosPost(options).then(res => {
             if (res.data.result === 200) {

@@ -75,7 +75,7 @@
         if (this.currentWindowId !== '') {
           this.fetchData(options)
         }
-      }, 1000))
+      }, 3000))
     },
     computed: {
       ...mapGetters(['currentWindowId'])

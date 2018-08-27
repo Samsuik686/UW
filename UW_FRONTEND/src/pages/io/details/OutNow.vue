@@ -102,7 +102,7 @@
         taskNowItems: {},
 
         scanText: '',
-        tipsMessage: '',
+        tipsMessage: '无数据',
         tipsComponentMsg: '',
         isTipsShow: false,
 
@@ -110,16 +110,20 @@
       }
     },
     mounted() {
+      this.initData();
       this.setFocus();
       this.fetchData(this.currentWindowId);
       window.g.PARKING_ITEMS_INTERVAL_OUT.push(setInterval(() => {
         if (this.currentWindowId !== '') {
           this.fetchData(this.currentWindowId)
           //this.autoFinish(); //patch !
+        } else {
+          this.initData();
         }
       }, 1000))
     },
-    watch: {},
+    watch: {
+    },
     computed: {
       ...mapGetters([
         'currentWindowId'
@@ -139,6 +143,14 @@
       },
 
 
+      initData: function () {
+        this.taskNowItems = {};
+        this.scanText = '';
+        this.tipsMessage = '无数据';
+        this.tipsComponentMsg = '';
+        this.isTipsShow = false;
+
+      },
       fetchData: function (id) {
         let options = {
           url: taskWindowParkingItems,

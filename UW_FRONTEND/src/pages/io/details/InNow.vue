@@ -102,7 +102,7 @@
         taskNowItems: {},
 
         scanText: '',
-        tipsMessage: '',
+        tipsMessage: '无数据',
         tipsComponentMsg: '',
         isTipsShow: false,
 
@@ -110,6 +110,7 @@
       }
     },
     mounted() {
+      this.initData();
       this.setFocus();
       this.fetchData(this.currentWindowId);
 
@@ -117,6 +118,8 @@
         if (this.currentWindowId !== '') {
           this.fetchData(this.currentWindowId)
           //this.autoFinish(); //patch !
+        } else {
+          this.initData();
         }
       }, 1000))
     },
@@ -138,7 +141,14 @@
         }
 
       },
+      initData: function () {
+        this.taskNowItems = {};
+        this.scanText = '';
+        this.tipsMessage = '无数据';
+        this.tipsComponentMsg = '';
+        this.isTipsShow = false;
 
+      },
 
       fetchData: function (id) {
         let options = {
