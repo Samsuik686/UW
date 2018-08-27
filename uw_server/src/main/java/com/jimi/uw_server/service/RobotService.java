@@ -117,7 +117,7 @@ public class RobotService extends SelectService {
 			for (int i = 0; i < cache.llen("til"); i++) {
 				byte[] redisItem = cache.lindex("til", i);
 				AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(redisItem), AGVIOTaskItem.class);
-				if (item.getId() == agvioTaskItem.getId()) {
+				if (item.getId().equals(agvioTaskItem.getId())) {
 					resultString = "该物料已经扫描过，请勿重复扫描！";
 					return resultString;
 				}

@@ -418,14 +418,16 @@ public class TaskService {
 		// 若在同一个出入库任务中重复扫同一个料盘时间戳，则抛出OperationException，错误代码为412
 		if (TaskLog.dao.find(UNIQUE_MATERIAL_ID_IN_SAME_TASK_CHECK_SQL, materialId, task.getId()).size() != 0) {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出入库任务中重复扫描同一个料盘！");
-		} else if(Material.dao.find(UNIQUE_MATERIAL_ID_CHECK_SQL, materialId).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
 		}
+
 		/*
 		 *  新增或减少物料表记录
 		 */
 		Integer type = task.getType();		// 获取任务条目对应的任务类型
 		if (type == 0) {	//如果是入库，则新增一条记录
+			if(Material.dao.find(UNIQUE_MATERIAL_ID_CHECK_SQL, materialId).size() != 0) {
+				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
+			}
 			Material material = new Material();
 			material.setId(materialId);
 			material.setType(packingListItem.getMaterialTypeId());
