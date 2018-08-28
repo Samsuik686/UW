@@ -59,7 +59,7 @@ public class TaskService {
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In"
 			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ? AND enabled = 1))";
 
-	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";		//
+	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
 
 	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN ("
 			+ "SELECT id FROM task WHERE type = 0)";
