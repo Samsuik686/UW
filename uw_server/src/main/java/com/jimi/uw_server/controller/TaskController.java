@@ -87,8 +87,8 @@ public class TaskController extends Controller {
 
 
 	// 查看任务详情
-	public void check(Integer id, Integer pageSize, Integer pageNo) {
-		renderJson(ResultUtil.succeed(taskService.check(id, pageSize, pageNo)));
+	public void check(Integer id, Integer type, Integer pageSize, Integer pageNo) {
+		renderJson(ResultUtil.succeed(taskService.check(id, type, pageSize, pageNo)));
 	}
 	
 
