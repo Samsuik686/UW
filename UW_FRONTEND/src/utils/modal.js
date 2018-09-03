@@ -12,16 +12,17 @@ function alertMsg (status, string, timeout, title) {
 
 
 export const alertDanger = function (string) {
-  alertMsg('is-danger', string, 5000, '警告')
+  alertMsg('is-danger', string, 3000, '警告')
 };
 
+
 export const alertSuccess = function (string) {
-  alertMsg('is-success', string, 4000, '成功')
+  alertMsg('is-success', string, 3000, '成功')
 };
 
 export const alertInfo = function (string) {
-  alertMsg('is-info', string, 4000, '提示')
+  alertMsg('is-info', string, 3000, '提示')
 };
 export const alertWarning = function (string) {
-  alertMsg('is-warning', string, 5000, '注意')
+  alertMsg('is-warning', string, 3000, '注意')
 };

@@ -44,3 +44,6 @@ export const setUserTypeList = ({commit}, userTypeList) => {
 export const setCurrentWindow = ({commit}, currentWindowId) => {
   commit('setCurrentWindow', currentWindowId)
 };
+export const setCurrentOprType = ({commit}, currentOprType) => {
+  commit('setCurrentOprType', currentOprType)
+};

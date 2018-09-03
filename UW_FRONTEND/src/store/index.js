@@ -38,7 +38,9 @@ const state = {
   userTypeList: {},
 
   /*缓存出入库页面运行仓口ID*/
-  currentWindowId: ''
+  currentWindowId: '',
+  /*缓存出入库类型*/
+  currentOprType:''
 };
 
 const store = new Vuex.Store({

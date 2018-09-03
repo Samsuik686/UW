@@ -1,6 +1,6 @@
 <template>
   <div class="notification-container">
-    <notification v-for="item,key in list" :key="item.id"
+    <notification v-for="(item,key) in list" :key="item.id"
                   :permanent="item.permanent"
                   :container="item.container"
                   :status="item.status"
@@ -45,7 +45,7 @@
       },
       timeout: {
         type: Number,
-        default: 4000
+        default: 3000
       },
       // central event bus
       eventBus: {
@@ -67,7 +67,7 @@
     methods: {
       showMe(obj) {
         const item = {
-          id: this.list.length,
+          id: Math.floor(Math.random() * 100000000),
           permanent: obj.permanent || this.permanent,
           close: obj.close || this.close,
           content: obj.data,

@@ -28,10 +28,10 @@
     data() {
       return {
         eventBus: eventBus,
-        // status: 'is-danger',
-        // permanent: true,
-        // text: 'Coded slow but effective',
-        // timeout: 4000,
+        status: '',
+        permanent: false,
+        text: '',
+        timeout: 3000,
       }
     },
     mounted: function () {

@@ -52,7 +52,13 @@
           this.windowType = 2;
           break;
         case '/io/preview':
-          this.windowType = 1;
+          if (this.currentOprType === '1') {
+            this.windowType = 1
+          } else if (this.currentOprType === '2') {
+            this.windowType = 2
+          } else {
+            this.windowType = 1;
+          }
           break;
       }
       this.setPreset();
@@ -65,7 +71,8 @@
     },
     computed: {
       ...mapGetters([
-        'currentWindowId'
+        'currentWindowId',
+        'currentOprType'
       ]),
     },
     watch: {
@@ -80,7 +87,13 @@
             this.setPreset();
             break;
           case '/io/preview':
-            this.windowType = 1;
+            if (this.currentOprType === '1') {
+              this.windowType = 1
+            } else if (this.currentOprType === '2') {
+              this.windowType = 2
+            } else {
+              this.windowType = 1;
+            }
             this.setPreset();
             break;
         }

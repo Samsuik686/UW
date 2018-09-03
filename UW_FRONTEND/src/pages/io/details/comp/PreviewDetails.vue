@@ -73,6 +73,12 @@
       this.fetchData(options);
       window.g.PREVIEW_ITEMS_INTERVAL.push(setInterval(() => {
         if (this.currentWindowId !== '') {
+          let options = {
+            url: taskWindowTaskItems,
+            data: {
+              id: this.currentWindowId
+            }
+          };
           this.fetchData(options)
         } else {
           this.init()

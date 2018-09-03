@@ -33,13 +33,19 @@
               <p class="card-text form-control">{{taskNowItems.actualQuantity}}</p>
             </div>
           </div>
+          <div class="card-body row">
+            <div class="col pr-0 pl-0">
+              <span class="col-form-label">欠入数量/超入数量:</span>
+              <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
+            </div>
+          </div>
         </div>
         <div class="card bg-light col-12 col-lg-5 col-xl-3 m-2">
           <div class="border-light row ml-auto mr-auto mt-4">
             <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
           </div>
           <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
-          <button class="btn btn-primary mb-4 mt-auto" @click="setBack">操作完毕</button>
+          <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
         </div>
       </div>
       <div class="row m-3">
@@ -64,6 +70,26 @@
         </div>
       </div>
     </div>
+    <div class="mention-box" v-if="isMentions">
+      <div class="mention-panel">
+        <div class="form-row flex-column justify-content-between">
+          <div class="form-group mb-0">
+            <h3>提示：</h3>
+          </div>
+        </div>
+        <div class="card-body">
+          <p>该任务计划入库数量: {{taskNowItems.planQuantity}}</p>
+          <p>实际入库数量: {{taskNowItems.actualQuantity}}</p>
+          <p>{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
+          <p>请确认是否入库</p>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="form-row justify-content-around">
+          <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
+          <button class="btn btn-primary col ml-1 text-white" @click="submit">确认</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -71,7 +97,7 @@
   import Options from './comp/QueryOptions'
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
-  import {mapGetters} from 'vuex'
+  import {mapGetters, mapActions} from 'vuex'
   import {robotBackUrl, taskWindowParkingItems, taskIOUrl} from "../../../config/globalUrl";
 
   export default {
@@ -105,15 +131,19 @@
         tipsMessage: '无数据',
         tipsComponentMsg: '',
         isTipsShow: false,
+        isPending: false,
+        isMentions: false,
 
-        patchAutoFinishStack: 0
+        patchAutoFinishStack: 0,
+
+
       }
     },
     mounted() {
       this.initData();
       this.setFocus();
       this.fetchData(this.currentWindowId);
-
+      this.setCurrentOprType('1');
       window.g.PARKING_ITEMS_INTERVAL_IN.push(setInterval(() => {
         if (this.currentWindowId !== '') {
           this.fetchData(this.currentWindowId)
@@ -128,6 +158,7 @@
       ...mapGetters([
         'currentWindowId'
       ]),
+
     },
     methods: {
       /*patch! wait for delete*/
@@ -141,6 +172,9 @@
         }
 
       },
+
+      ...mapActions(['setCurrentOprType']),
+
       initData: function () {
         this.taskNowItems = {};
         this.scanText = '';
@@ -180,11 +214,19 @@
         }
       },
 
+
+      checkOverQuantity: function () {
+        if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity !== 0) {
+          this.isMentions = true
+        } else {
+          this.setBack()
+        }
+      },
       /*扫码集中处理*/
       scannerHandler: function () {
         /*若扫描结果为叉车返回的页面二维码，则调用叉车回库*/
         if (this.scanText === "###finished###") {
-          this.setBack()
+          this.checkOverQuantity()
         } else if (this.scanText === "###JUMPTOCALL###") {
           this.$router.push('/io/preview')
         } else {
@@ -230,27 +272,45 @@
       },
 
       setBack: function () {
-        let options = {
-          url: robotBackUrl,
-          data: {
-            id: this.taskNowItems.id
-          }
-        };
-        axiosPost(options).then(response => {
-          if (response.data.result === 200) {
-            this.isTipsShow = true;
-            this.tipsComponentMsg = true;
-            setTimeout(() => {
-              this.isTipsShow = false;
-            }, 3000)
-          } else {
-            this.isTipsShow = true;
-            this.tipsComponentMsg = false;
-            setTimeout(() => {
-              this.isTipsShow = false;
-            }, 3000)
-          }
-        })
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: robotBackUrl,
+            data: {
+              id: this.taskNowItems.id
+            }
+          };
+          axiosPost(options).then(response => {
+            if (response.data.result === 200) {
+              this.isTipsShow = true;
+              this.tipsComponentMsg = true;
+              setTimeout(() => {
+                this.isTipsShow = false;
+              }, 3000)
+            } else {
+              this.isTipsShow = true;
+              this.tipsComponentMsg = false;
+              setTimeout(() => {
+                this.isTipsShow = false;
+              }, 3000)
+            }
+            this.isPending = false;
+          })
+        }
+      },
+      overQuantity: function (plan, actual) {
+        let overQty = plan - actual;
+        if (plan > actual) {
+          return ("欠入库数量: " + Math.abs(overQty)).toString();
+        } else if (plan < actual) {
+          return ("超入库数量: " + Math.abs(overQty)).toString();
+        } else {
+          return "--"
+        }
+      },
+      submit: function () {
+        this.isMentions = false;
+        this.setBack();
       }
     }
   }
@@ -276,5 +336,26 @@
     line-height: 0;
     border: none;
     padding: 0;
+  }
+  .mention-box {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+  }
+  .mention-panel {
+    background: #ffffff;
+    min-height: 220px;
+    max-width: 600px;
+    z-index: 1002;
+    border-radius: 10px;
+    box-shadow: 3px 3px 20px 1px #bbb;
+    padding: 30px 60px 10px 60px;
   }
 </style>

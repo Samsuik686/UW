@@ -42,3 +42,6 @@ export const userTypeList = (state) => {
 export const currentWindowId = (state) => {
   return state.currentWindowId
 };
+export const currentOprType = (state) => {
+  return state.currentOprType
+};

@@ -1,3 +1,4 @@
+import {currentOprType} from "./getters";
 
 export const setLoginToken = (state, token) => {
   state.token = token;
@@ -41,4 +42,7 @@ export const setUserTypeList = (state, userTypeList) => {
 
 export const setCurrentWindow = (state, currentWindowId) => {
   state.currentWindowId = currentWindowId
+};
+export const setCurrentOprType = (state, currentOprType) => {
+  state.currentOprType = currentOprType
 };

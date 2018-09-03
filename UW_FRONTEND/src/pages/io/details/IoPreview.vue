@@ -24,7 +24,8 @@
     },
     data() {
       return {
-        scanText: ''
+        scanText: '',
+        isPending: false
       }
     },
     mounted() {
@@ -42,31 +43,38 @@
         }
       },
       scannerHandler: function () {
-        if (this.scanText === '###JUMPTOIO###') {
-          this.scanText = "";
-          this.$router.push('/io/innow')
-        } else {
-          let tempArray = this.scanText.split("@");
-          let options = {
-            url: robotCallUrl,
-            data: {
-              id: this.currentWindowId,
-              no: tempArray[0]
-            }
 
-          };
-          axiosPost(options).then(res => {
-            if (res.data.result === 200) {
-              this.$alertSuccess("调用成功")
-            } else {
-              this.$alertWarning(res.data.data)
-            }
+        if (this.isPending === false) {
+          this.isPending = true;
+          if (this.scanText === '###JUMPTOIO###') {
             this.scanText = "";
-          }).catch(err => {
-            if (JSON.stringify(err) !== '{}'){
-              this.$alertDanger(JSON.stringify(err))
-            }
-          })
+            this.isPending = false;
+            this.$router.push('/io/innow')
+          } else {
+            let tempArray = this.scanText.split("@");
+            let options = {
+              url: robotCallUrl,
+              data: {
+                id: this.currentWindowId,
+                no: tempArray[0]
+              }
+
+            };
+            axiosPost(options).then(res => {
+              if (res.data.result === 200) {
+                this.$alertSuccess("调用成功")
+              } else {
+                this.$alertWarning(res.data.data)
+              }
+              this.isPending = false;
+              this.scanText = "";
+            }).catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                this.$alertDanger(JSON.stringify(err))
+              }
+            })
+          }
         }
       }
     }
