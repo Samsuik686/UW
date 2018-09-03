@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
+import com.jfinal.json.Json;
+import com.jfinal.plugin.redis.Cache;
+import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
@@ -30,6 +33,8 @@ public class RobotService extends SelectService {
 
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? "
 			+ "AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
+
+	private static Cache cache = Redis.use();
 
 
 	public List<RobotVO> select() {
@@ -108,10 +113,21 @@ public class RobotService extends SelectService {
 			resultString = "该物料暂时不需要入库！";
 			return resultString;
 		} else {
-				if (item.getFinishTime() != null) {
+
+			for (int i = 0; i < cache.llen("til"); i++) {
+				byte[] redisItem = cache.lindex("til", i);
+				AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(redisItem), AGVIOTaskItem.class);
+				if (item.getId().equals(agvioTaskItem.getId())) {
 					resultString = "该物料已经扫描过，请勿重复扫描！";
 					return resultString;
 				}
+			}
+
+			if (item.getFinishTime() != null) {
+				resultString = "该任务条目已完成，请勿重复扫描！";
+				return resultString;
+			}
+
 			AGVIOTaskItem a = new AGVIOTaskItem(item);
 			taskItems.add(a);
 			TaskItemRedisDAO.addTaskItem(taskItems);

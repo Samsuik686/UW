@@ -91,6 +91,7 @@ public class MaterialService extends SelectService{
 		materialType.setHeight(height);
 		materialType.setEnabled(true);
 		materialType.setIsOnShelf(true);
+		materialType.save();
 		return resultString;
 	}
 
