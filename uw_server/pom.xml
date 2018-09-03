@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>1.0</version>
+	<version>1.0.1</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -135,7 +135,7 @@
 
 	</dependencies>
 	<build>
-		<finalName>uw_server</finalName>
+		<finalName>uw_server-1.0.1</finalName>
 
 		<plugins>
 			<!-- 修改默认JRE -->
