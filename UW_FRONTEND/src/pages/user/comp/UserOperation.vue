@@ -13,12 +13,12 @@
             </div>
             <div class="form-row col-6 pl-2 pr-2">
               <label for="user-des" class="col-form-label">用户描述:</label>
-              <input type="text" id="user-des" class="form-control" v-model="userData.name">
+              <input type="text" id="user-des" class="form-control" v-model="userData.name" autocomplete="off">
             </div>
 
             <div class="form-row col-6 pl-2 pr-2">
               <label for="user-pwd" class="col-form-label">密码:</label>
-              <input type="password" id="user-pwd" class="form-control" v-model="userData.password">
+              <input type="password" id="user-pwd" class="form-control" v-model="userData.password" autocomplete="off">
             </div>
             <div class="form-row col-6 pl-2 pr-2">
               <label for="type-select" class="col-form-label">用户类型:</label>

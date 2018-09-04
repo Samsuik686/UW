@@ -9,7 +9,7 @@
           </div>
           <div class="form-row col-6 pl-2 pr-2">
             <label for="user-des" class="col-form-label">用户描述:</label>
-            <input type="text" id="user-des" class="form-control" v-model="userData.userDes">
+            <input type="text" id="user-des" class="form-control" v-model="userData.userDes"  autocomplete="off">
           </div>
           <div class="form-row col-6 pl-2 pr-2">
             <label for="type-select" class="col-form-label">用户类型:</label>

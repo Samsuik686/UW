@@ -102,6 +102,10 @@
               let tempUrl = this.$route.path;
               this.$router.replace('_empty');
               this.$router.replace(tempUrl);
+            } else if (response.data.result === 412) {
+              this.$alertWarning(response.data.data);
+              this.isDeleting = false;
+
             } else {
               this.isPending = false;
               errHandler(response.data.result);
@@ -124,6 +128,7 @@
   #edit-window {
     z-index: 100;
   }
+
   .delete-panel {
     position: fixed;
     display: flex;
@@ -146,6 +151,7 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
+
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
   }

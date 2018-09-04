@@ -45,6 +45,8 @@
         let options = {
           url: taskWindowTaskItems,
           data: {
+            pageNo: 1,
+            pageSize: 20,
             id: this.currentWindowId
           }
         };
@@ -67,19 +69,15 @@
       let options = {
         url: taskWindowTaskItems,
         data: {
+          pageNo: 1,
+          pageSize: 20,
           id: this.currentWindowId
         }
       };
       this.fetchData(options);
       window.g.PREVIEW_ITEMS_INTERVAL.push(setInterval(() => {
         if (this.currentWindowId !== '') {
-          let options = {
-            url: taskWindowTaskItems,
-            data: {
-              id: this.currentWindowId
-            }
-          };
-          this.fetchData(options)
+          this.dataFilter()
         } else {
           this.init()
         }

@@ -151,7 +151,7 @@
         } else {
           this.initData();
         }
-      }, 1000))
+      }, 10001111))
     },
     watch: {},
     computed: {
@@ -331,6 +331,7 @@
   }
 
   #in-check {
+    position: fixed;
     opacity: 0;
     height: 0;
     line-height: 0;

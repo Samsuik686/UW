@@ -20,7 +20,7 @@
         <div class="form-row pl-1 pr-1">
           <label for="upload-comp" class="col-form-label">选择文件:</label>
           <input id="upload-comp" type="text" class="form-control" v-model="fileName" onfocus="this.blur()"
-                 @click="setUpload">
+                 @click="setUpload"  autocomplete="off">
           <input type="file" id="upload-file-comp"
                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                  class="d-none" ref="taskUpload" @change="uploadFile">

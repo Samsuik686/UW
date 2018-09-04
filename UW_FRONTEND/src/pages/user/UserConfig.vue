@@ -24,15 +24,15 @@
             <div class="form-row">
               <div class="form-row col-6 pl-2 pr-2">
                 <label for="user-name" class="col-form-label">用户名:</label>
-                <input type="text" id="user-name" class="form-control" v-model="userData.uid" maxlength="16">
+                <input type="text" id="user-name" class="form-control" v-model="userData.uid" maxlength="16" autocomplete="off">
               </div>
               <div class="form-row col-6 pl-2 pr-2">
                 <label for="user-pwd" class="col-form-label">密码:</label>
-                <input type="password" id="user-pwd" class="form-control" v-model="userData.password" maxlength="32">
+                <input type="password" id="user-pwd" class="form-control" v-model="userData.password" maxlength="32" autocomplete="off">
               </div>
               <div class="form-row col-6 pl-2 pr-2">
                 <label for="user-des" class="col-form-label">用户描述:</label>
-                <input type="text" id="user-des" class="form-control" v-model="userData.name" maxlength="32">
+                <input type="text" id="user-des" class="form-control" v-model="userData.name" maxlength="32" autocomplete="off">
               </div>
               <div class="form-row col-6 pl-2 pr-2">
                 <label for="access-select" class="col-form-label">用户类型:</label>
@@ -114,7 +114,7 @@
         props: ['opt', 'callback'],
         template: '<div class="form-group col pr-3"">\n' +
         '           <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback">\n' +
+        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback" autocomplete="off">\n' +
         '          </div>'
       },
       'select-comp': {

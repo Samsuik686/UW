@@ -9,32 +9,30 @@
       <div class="form-row">
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-no" class="col-form-label">料号:</label>
-          <input type="text" id="material-no" class="form-control" v-model="thisData.no"
-                 @input="validate('no', '^((?!\\$).)*$', '料号中包含非法字符')">
-          <span class="form-span col">{{warningMsg.noMsg}}</span>
+          <input type="text" id="material-no" class="form-control" v-model="thisData.no"  autocomplete="off">
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-area" class="col-form-label">区域:</label>
           <input type="text" id="material-area" class="form-control" v-model="thisData.area"
-                 @input="validate('area', '^[0-9]*[1-9][0-9]*$', '请输入正整数区域号')">
+                 @input="validate('area', '^[0-9]*[1-9][0-9]*$', '请输入正整数区域号')"  autocomplete="off">
           <span class="form-span col">{{warningMsg.areaMsg}}</span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-row" class="col-form-label">行号:</label>
           <input type="text" id="material-row" class="form-control" v-model="thisData.row"
-                 @input="validate('row', '^[0-9]*[1-9][0-9]*$', '请输入正整数行号')">
+                 @input="validate('row', '^[0-9]*[1-9][0-9]*$', '请输入正整数行号')"  autocomplete="off">
           <span class="form-span col">{{warningMsg.rowMsg}}</span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-col" class="col-form-label">列号:</label>
           <input type="text" id="material-col" class="form-control" v-model="thisData.col"
-                 @input="validate('col', '^[0-9]*[1-9][0-9]*$', '请输入正整数列号')">
+                 @input="validate('col', '^[0-9]*[1-9][0-9]*$', '请输入正整数列号')"  autocomplete="off">
           <span class="form-span col">{{warningMsg.colMsg}}</span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-height" class="col-form-label">高度:</label>
           <input type="text" id="material-height" class="form-control" v-model="thisData.height"
-                 @input="validate('height', '^[0-9]*[1-9][0-9]*$', '请输入正整数高度')">
+                 @input="validate('height', '^[0-9]*[1-9][0-9]*$', '请输入正整数高度')"  autocomplete="off">
           <span class="form-span col">{{warningMsg.heightMsg}}</span>
         </div>
       </div>

@@ -38,7 +38,7 @@
         props: ['opt', 'callback'],
         template: '<div class="form-group col pr-3"">\n' +
         '           <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback">\n' +
+        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback" autocomplete="off">\n' +
         '          </div>'
       },
       'date-comp': {
