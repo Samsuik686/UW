@@ -96,8 +96,8 @@ public class TaskService {
 
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
-		// 如果套料单表头不对，则返回false，提示检查文件格式及内容格式
-		if (items == null) {
+		// 如果套料单表头不对或者上传的是空白excel表格，则提示检查文件格式及内容格式
+		if (items == null || items.size() == 0) {
 			//清空upload目录下的文件
 			if (file.exists()) {
 				file.delete();
@@ -121,6 +121,9 @@ public class TaskService {
 					// 获取新任务id
 					Task newTaskIdDao = Task.dao.findFirst(GET_NEW_TASK_ID_SQL);
 					Integer newTaskId = newTaskIdDao.get("newId");
+					if (item.getNo().equals("")) {
+						continue;
+					}
 					// 根据料号找到对应的物料类型id
 					MaterialType noDao = MaterialType.dao.findFirst(GET_Material_NO_SQL, item.getNo());
 					// 判断物料类型表中是否存在对应的料号，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型

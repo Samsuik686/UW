@@ -22,8 +22,10 @@ public class MaterialService extends SelectService{
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
+	private static final String COUNE_ENABLE_MATERIAL_TYPE_SQL = "SELECT * FROM material_type WHERE enabled = 1";
+
 	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN"
-			+ "(SELECT id FROM task WHERE state = 2)";
+			+ "(SELECT id FROM task WHERE state <= 2)";
 
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 	
@@ -41,20 +43,18 @@ public class MaterialService extends SelectService{
 		Page<Record> result = selectService.select(new String[] {"material_type"}, null,
 				pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
-		int totallyRow =  0;
 		for (Record res : result.getList()) {
 			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("area"),
 					res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
 			if (res.get("enabled").equals(true)) {
 				materialTypeVOs.add(m);
-				totallyRow += 1;
 			}
 		}
 
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(totallyRow);
+		pagePaginate.setTotalRow(MaterialType.dao.find(COUNE_ENABLE_MATERIAL_TYPE_SQL).size());
 		pagePaginate.setList(materialTypeVOs);
 
 		return pagePaginate;
@@ -103,7 +103,7 @@ public class MaterialService extends SelectService{
 					}
 				}
 			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL, materialType.getId()) != null) {
-				resultString = "当前正在进行中的某个任务已经绑定了该物料，禁止删除该物料！";
+				resultString = "当前有某个尚未完成的任务已经绑定了该物料，禁止删除该物料！";
 				return resultString;
 			}
 		}
