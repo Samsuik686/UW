@@ -335,6 +335,7 @@
     line-height: 0;
     border: none;
     padding: 0;
+    position: fixed;
   }
   .mention-box {
     position: fixed;

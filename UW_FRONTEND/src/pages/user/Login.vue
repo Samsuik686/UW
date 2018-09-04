@@ -8,12 +8,12 @@
         <form @submit.prevent="loginSubmit">
           <div class="form-group mb-4 mt-4">
             <label for="login-username">用户名</label>
-            <input type="text" id="login-username" class="form-control" placeholder="用户名" v-model="loginInfos.uid">
+            <input type="text" id="login-username" class="form-control" placeholder="用户名" v-model="loginInfos.uid" autocomplete="off">
           </div>
           <div class="form-group mb-2">
             <label for="login-password">密 码</label>
             <input type="password" id="login-password" class="form-control" placeholder="密码"
-                   v-model="loginInfos.password">
+                   v-model="loginInfos.password" autocomplete="off">
           </div>
           <!--<div class="form-check mb-2">-->
           <!--<input type="checkbox" class="form-check-input" id="login-check" v-model="loginInfos.checked">-->
@@ -84,9 +84,9 @@
               this.setLoginToken(localStorage.getItem('token'));
               this.$router.replace('/');
             } else if (res.data.result === 412) {
-              alert("请检查用户名或密码")
+              this.$alertWarning(res.data.data)
             } else if (res.data.result === 400) {
-              alert("请勿重复登录");
+              this.$alertWarning("请勿重复登录");
               this.$router.replace('/material')
             } else {
               errHandler(res.data.result)
