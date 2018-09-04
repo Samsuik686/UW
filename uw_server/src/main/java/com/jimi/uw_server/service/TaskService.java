@@ -476,7 +476,7 @@ public class TaskService {
 				AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 				if (agvioTaskItem.getTaskId() == window.getBindTaskId()) {
 					totalRow += 1;
-					Integer packingListItemId = agvioTaskItem.getId();
+					
 					for (Record windowTaskItem : windowTaskItems.getList()) {
 						// 查询task_log中的material_id,quantity
 						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, window.getBindTaskId(), windowTaskItem.get("MaterialType_No"));
@@ -485,7 +485,7 @@ public class TaskService {
 						for (TaskLog tl : taskLogs) {
 							actualQuantity += tl.getQuantity();
 						}
-						if (windowTaskItem.get("PackingListItem_Id").equals(packingListItemId)) {
+						if (windowTaskItem.get("PackingListItem_Id").equals(agvioTaskItem.getId())) {
 							Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, window.getBindTaskId());
 							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), 
 									task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), 
