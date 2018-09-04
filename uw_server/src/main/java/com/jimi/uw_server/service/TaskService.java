@@ -463,47 +463,51 @@ public class TaskService {
 
 
 	public Object getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
-		List<WindowTaskItemsVO> windowTaskItemsVOs = new ArrayList<WindowTaskItemsVO>();
-		PagePaginate pagePaginate = new PagePaginate();
-		int totallyRow = 0;
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, agvioTaskItem.getTaskId());
-			if (task.getWindow() == id) {
-				Integer packingListItemId = agvioTaskItem.getId();
-
-				// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
-				Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, 
-						new String[] {"packing_list_item.id = " + packingListItemId, "material_type.id = packing_list_item.material_type_id", },
-						pageNo, pageSize, null, null, null);
-
-				// 记录获取查询记录总行数
-				totallyRow += windowTaskItems.getTotalRow();
-
-				for (Record windowTaskItem : windowTaskItems.getList()) {
-					// 查询task_log中的material_id,quantity
-					List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, task.getId(), windowTaskItem.get("MaterialType_No"));
-					Integer actualQuantity = 0;
-					// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
-					for (TaskLog tl : taskLogs) {
-						actualQuantity += tl.getQuantity();
-					}
-					WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), 
-							task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), 
-							actualQuantity, windowTaskItem.get("PackingListItem_FinishTime"));
-					wt.setDetails(taskLogs);
-					windowTaskItemsVOs.add(wt);
-				}	
+		if (id != null) {
+			Window window = Window.dao.findById(id);
+			// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
+			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, 
+					new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id", },
+					pageNo, pageSize, null, null, null);
+			List<WindowTaskItemsVO> windowTaskItemsVOs = new ArrayList<WindowTaskItemsVO>();
+			int totalRow = 0;
+			for (int i = 0; i < cache.llen("til"); i++) {
+				byte[] item = cache.lindex("til", i);
+				AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+				if (agvioTaskItem.getTaskId() == window.getBindTaskId()) {
+					totalRow += 1;
+					Integer packingListItemId = agvioTaskItem.getId();
+					for (Record windowTaskItem : windowTaskItems.getList()) {
+						// 查询task_log中的material_id,quantity
+						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, window.getBindTaskId(), windowTaskItem.get("MaterialType_No"));
+						Integer actualQuantity = 0;
+						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
+						for (TaskLog tl : taskLogs) {
+							actualQuantity += tl.getQuantity();
+						}
+						if (windowTaskItem.get("PackingListItem_Id").equals(packingListItemId)) {
+							Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, window.getBindTaskId());
+							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), 
+									task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), 
+									actualQuantity, windowTaskItem.get("PackingListItem_FinishTime"));
+							wt.setDetails(taskLogs);
+							windowTaskItemsVOs.add(wt);
+						}
+					}	
+				}
 			}
-		}
-		// 分页，设置页码，每页显示条目等
-		pagePaginate.setPageSize(pageSize);
-		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(totallyRow);
-		pagePaginate.setList(windowTaskItemsVOs);
+			// 分页，设置页码，每页显示条目等
+			PagePaginate pagePaginate = new PagePaginate();
+			pagePaginate.setPageSize(pageSize);
+			pagePaginate.setPageNumber(pageNo);
+			pagePaginate.setTotalRow(totalRow);
+			pagePaginate.setList(windowTaskItemsVOs);
 
-		return pagePaginate;
+			return pagePaginate;
+		} else {
+			return null;
+		}
+		
 	}
 
 }

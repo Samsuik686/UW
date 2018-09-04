@@ -22,6 +22,8 @@ public class MaterialService extends SelectService{
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
+	private static final String COUNE_ENABLE_MATERIAL_TYPE_SQL = "SELECT * FROM material_type WHERE enabled = 1";
+
 	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN"
 			+ "(SELECT id FROM task WHERE state = 2)";
 
@@ -41,14 +43,13 @@ public class MaterialService extends SelectService{
 		Page<Record> result = selectService.select(new String[] {"material_type"}, null,
 				pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
-		int totalRow = result.getTotalRow();
+		List<MaterialType> mt = MaterialType.dao.find(COUNE_ENABLE_MATERIAL_TYPE_SQL);
+		int totalRow = mt.size();
 		for (Record res : result.getList()) {
 			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("area"),
 					res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
 			if (res.get("enabled").equals(true)) {
 				materialTypeVOs.add(m);
-			} else {
-				totalRow -= 1;
 			}
 		}
 
