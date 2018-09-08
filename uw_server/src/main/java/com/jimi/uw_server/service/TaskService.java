@@ -48,9 +48,9 @@ public class TaskService {
 
 	private static final String GET_NEW_TASK_ID_SQL = "SELECT MAX(id) as newId FROM task";
 
-	private static final String GET_Material_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
+	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
 
-	private static final String DELETE_PACKING_LIST_ITEM_SQL = "DELETE FROM packing_list_item WHERE task_id = ?";
+	private static final String DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL = "DELETE FROM packing_list_item WHERE task_id = ?";
 	
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT material_type_id FROM packing_list_item WHERE material_type_id = ? AND task_id = ?";
 
@@ -69,9 +69,9 @@ public class TaskService {
 
 	private static final String GET_TASK_IN_REDIS_SQL = "SELECT * FROM task WHERE id = ?";
 
-	private static final String UNIQUE_MATERIAL_ID_IN_SAME_TASK_CHECK_SQL = "SELECT * FROM task_log WHERE material_id = ? AND task_id = ?";
+	private static final String GET_MATERIAL_ID_IN_SAME_TASK_SQL = "SELECT * FROM task_log WHERE material_id = ? AND task_id = ?";
 
-	private static final String UNIQUE_MATERIAL_ID_CHECK_SQL = "SELECT * FROM material WHERE id = ?";
+	private static final String GET_MATERIAL_BY_ID_SQL = "SELECT * FROM material WHERE id = ?";
 
 	private static final String GET_PACKING_LIST_ITEM_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
@@ -133,7 +133,7 @@ public class TaskService {
 						continue;
 					}
 					// 根据料号找到对应的物料类型id
-					MaterialType noDao = MaterialType.dao.findFirst(GET_Material_NO_SQL, item.getNo());
+					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());
 					// 判断物料类型表中是否存在对应的料号，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 					if (noDao == null) {
 						//清空upload目录下的文件
@@ -141,7 +141,7 @@ public class TaskService {
 							file.delete();
 						}
 
-						Db.update(DELETE_PACKING_LIST_ITEM_SQL, newTaskId);
+						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中！";
 						return resultString;
@@ -153,7 +153,7 @@ public class TaskService {
 							file.delete();
 						}
 
-						Db.update(DELETE_PACKING_LIST_ITEM_SQL, newTaskId);
+						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料已被禁用！";
 						return resultString;
@@ -166,7 +166,7 @@ public class TaskService {
 							file.delete();
 						}
 
-						Db.update(DELETE_PACKING_LIST_ITEM_SQL, newTaskId);
+						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料在套料单中重复出现！";
 						return resultString;
@@ -206,29 +206,14 @@ public class TaskService {
 		return task.update();
 	}
 
-//	public boolean start(Integer id, Integer window) {
-//		Task task = Task.dao.findById(id);
-//		task.setWindow(window);
-//		// 根据套料单、物料类型表生成任务条目
-//		List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
-//		List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
-//		for (PackingListItem item : items) {
-//			AGVIOTaskItem a = new AGVIOTaskItem(item);
-//			taskItems.add(a);
-//		}
-//		// 把任务条目均匀插入到队列til中
-//		TaskItemRedisDAO.addTaskItem(taskItems);
-//		task.setState(2);
-//		return task.update();
-//	}
 	
 	public boolean start(Integer id, Integer window) {
 		Task task = Task.dao.findById(id);
 		// 设置仓口，并在仓口表绑定该任务id
 		task.setWindow(window);
-		Window windowDao = Window.dao.findById(window);
-		windowDao.setBindTaskId(id);
-		windowDao.update();
+		Window _window = Window.dao.findById(window);
+		_window.setBindTaskId(id);
+		_window.update();
 		// 如果任务类型为出库，则立即将任务条目加载到redis中
 		if (task.getType() == 1) {
 			// 根据套料单、物料类型表生成任务条目
@@ -248,20 +233,15 @@ public class TaskService {
 
 	public boolean cancel(Integer id) {
 		Task task = Task.dao.findById(id);
-		// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除，并更新任务状态为作废
+		// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除，将任务绑定的仓口解绑，并更新任务状态为作废
 		int state = task.getState();
 		if (state == 2) {
 			TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
+		    Window window = Window.dao.findById(task.getWindow());
+		    window.setBindTaskId(null);
+		    window.update();
 		}
 		task.setState(4);
-		// 若任务还未开始，则直接作废
-		if (state == 0 || state == 1) {
-			return task.update();
-		}
-		// 如果任务已经开始，任务绑定了仓口，则将仓口解绑
-	    Window window = Window.dao.findById(task.getWindow());
-	    window.setBindTaskId(null);
-	    window.update();
 		return task.update();
 	}
 
@@ -311,26 +291,23 @@ public class TaskService {
 		return null;
 	}
 
-
-/*	public List<Window> getWindows() {
-		List<Window> windowIds;
-		windowIds = Window.dao.find(GET_WINDOWS_SQL);
-		return windowIds;
-	}*/
 	
 	public List<Window> getWindows(int type) {
-		List<Window> windowIds;
+		List<Window> windowIds = null;
 		switch (type) {
+			case 0:
+				windowIds = Window.dao.find(GET_FREE_WINDOWS_SQL);
+				break;
 			case 1:
 				windowIds = Window.dao.find(GET_IN_TASK_WINDOWS_SQL);
-				return windowIds;
+				break;
 			case 2:
 				windowIds = Window.dao.find(GET_OUT_TASK_WINDOWS_SQL);
-				return windowIds;
+				break;
 			default:
-				windowIds = Window.dao.find(GET_FREE_WINDOWS_SQL);
-				return windowIds;
+				break;
 		}
+		return windowIds;
 	}
 
 
@@ -373,8 +350,7 @@ public class TaskService {
 
 
 	public void finishItem(Integer packingListItemid) {
-		PackingListItem packingListItem = new PackingListItem();
-		packingListItem.setId(packingListItemid);
+		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemid);
 		packingListItem.setFinishTime(new Date());
 		packingListItem.update();
 	}
@@ -421,7 +397,7 @@ public class TaskService {
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 		Task task = Task.dao.findById(packingListItem.getTaskId());
 		// 若在同一个出入库任务中重复扫同一个料盘时间戳，则抛出OperationException，错误代码为412
-		if (TaskLog.dao.find(UNIQUE_MATERIAL_ID_IN_SAME_TASK_CHECK_SQL, materialId, task.getId()).size() != 0) {
+		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, task.getId()).size() != 0) {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出入库任务中重复扫描同一个料盘！");
 		}
 
@@ -430,7 +406,7 @@ public class TaskService {
 		 */
 		Integer type = task.getType();		// 获取任务条目对应的任务类型
 		if (type == 0) {	//如果是入库，则新增一条记录
-			if(Material.dao.find(UNIQUE_MATERIAL_ID_CHECK_SQL, materialId).size() != 0) {
+			if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
 			}
 			Material material = new Material();
