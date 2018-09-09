@@ -5,9 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
-import com.jfinal.json.Json;
-import com.jfinal.plugin.redis.Cache;
-import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
@@ -33,8 +30,6 @@ public class RobotService extends SelectService {
 
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? "
 			+ "AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
-
-	private static Cache cache = Redis.use();
 
 	private static final Object LOCK = new Object();
 
@@ -116,14 +111,20 @@ public class RobotService extends SelectService {
 			return resultString;
 		}
 
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] redisItem = cache.lindex("til", i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(redisItem), AGVIOTaskItem.class);
-			if (item.getId().equals(agvioTaskItem.getId())) {
+		// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
+		if (item.getFinishTime() != null) {
+			resultString = "该任务条目已完成，请勿重复扫描！";
+			return resultString;
+		}
+
+		List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
+		for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+			if (item.getId().equals(redisTaskItem.getId())) {
 				resultString = "该物料已经扫描过，请勿重复扫描！";
 				return resultString;
 			}
 		}
+
 		// 根据套料单、物料类型表生成任务条目
 		List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
 		AGVIOTaskItem a = new AGVIOTaskItem(item);

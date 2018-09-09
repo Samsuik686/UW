@@ -6,12 +6,9 @@ import java.util.Date;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
-import com.jfinal.json.Json;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
-import com.jfinal.plugin.redis.Cache;
-import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.exception.OperationException;
@@ -37,8 +34,6 @@ import com.jimi.uw_server.util.ExcelHelper;
  * @createTime 2018年6月8日
  */
 public class TaskService {
-	
-	private static Cache cache = Redis.use();
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 	
@@ -80,7 +75,7 @@ public class TaskService {
 		String resultString = "添加成功！";
 		File file = new File(fullFileName);
 
-		// 如果文件格式不对，则返回false，提示检查文件格式及内容格式
+		// 如果文件格式不对，则提示检查文件格式
 		if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
 			//清空upload目录下的文件
 			if (file.exists()) {
@@ -91,22 +86,10 @@ public class TaskService {
 			return resultString;
 		}
 
-		// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
-		if (Task.dao.find(GET_FILE_NAME_SQL, fileName).size() != 0) {
-			//清空upload目录下的文件
-			if (file.exists()) {
-				file.delete();
-			}
-
-			resultString = "已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
-			return resultString;
-		}
-
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
-		// 如果套料单表头不对，则返回false，提示检查文件格式及内容格式
+		// 如果套料单表头不对，则提示检查内容格式
 		if (items == null || items.size() == 0) {
-			//清空upload目录下的文件
 			if (file.exists()) {
 				file.delete();
 			}
@@ -114,8 +97,16 @@ public class TaskService {
 			resultString = "创建任务失败，请检查套料单的内容格式是否正确！";
 			return resultString;
 		} else {
-			// 插入套料单那里使用了「SELECT MAX(id) FROM task....」查询语句,因此这里要加同步锁，不然会有线程安全问题
 			synchronized(LOCK) {
+				// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
+				if (Task.dao.find(GET_FILE_NAME_SQL, fileName).size() > 0) {
+					//清空upload目录下的文件
+					if (file.exists()) {
+						file.delete();
+					}
+					resultString = "已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
+					return resultString;
+				}
 				// 如果套料单格式正确，则创建一条新的任务记录
 				Task task = new Task();
 				task.setType(type);
@@ -123,56 +114,39 @@ public class TaskService {
 				task.setState(0);
 				task.setCreateTime(new Date());
 				task.save();
+				// 获取新任务id
+				Task newTaskIdDao = Task.dao.findFirst(GET_NEW_TASK_ID_SQL);
+				Integer newTaskId = newTaskIdDao.get("newId");
 
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
-					// 获取新任务id
-					Task newTaskIdDao = Task.dao.findFirst(GET_NEW_TASK_ID_SQL);
-					Integer newTaskId = newTaskIdDao.get("newId");
 					if (item.getNo().equals("")) {
 						continue;
 					}
 					// 根据料号找到对应的物料类型id
 					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());
-					// 判断物料类型表中是否存在对应的料号，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
+					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 					if (noDao == null) {
-						//清空upload目录下的文件
 						if (file.exists()) {
 							file.delete();
 						}
-
 						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
-						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中！";
-						return resultString;
-					}
-					// 判断物料是否已被禁用，若已被禁用，则将对应的任务记录删除掉，并提示操作员检查套料单
-					if (!noDao.getEnabled()) {
-						//清空upload目录下的文件
-						if (file.exists()) {
-							file.delete();
-						}
-
-						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
-						Task.dao.deleteById(newTaskId);
-						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料已被禁用！";
+						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用！";
 						return resultString;
 					}
 					// 判断套料单中是否存在相同的料号
-					MaterialType materialTypeIdDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, noDao.getId(), newTaskId);
-					if (materialTypeIdDao != null) {
+					if (MaterialType.dao.find(GET_MATERIAL_TYPE_ID_SQL, noDao.getId(), newTaskId).size() > 0) {
 						//清空upload目录下的文件
 						if (file.exists()) {
 							file.delete();
 						}
-
 						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
 						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料在套料单中重复出现！";
 						return resultString;
 					}
 
-					
 					PackingListItem packingListItem = new PackingListItem();
 
 					// 若物料类型表中存在对应的料号，且该物料未被禁用，则将任务条目插入套料单
@@ -211,9 +185,9 @@ public class TaskService {
 		Task task = Task.dao.findById(id);
 		// 设置仓口，并在仓口表绑定该任务id
 		task.setWindow(window);
-		Window _window = Window.dao.findById(window);
-		_window.setBindTaskId(id);
-		_window.update();
+		Window windowDao = Window.dao.findById(window);
+		windowDao.setBindTaskId(id);
+		windowDao.update();
 		// 如果任务类型为出库，则立即将任务条目加载到redis中
 		if (task.getType() == 1) {
 			// 根据套料单、物料类型表生成任务条目
@@ -357,13 +331,12 @@ public class TaskService {
 
 
 	public Object getWindowParkingItem(Integer id) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getState().intValue() == 2) {
-				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, agvioTaskItem.getTaskId());
+		List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
+		for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+			if(redisTaskItem.getState().intValue() == 2) {
+				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {
-					Integer packingListItemId = agvioTaskItem.getId();
+					Integer packingListItemId = redisTaskItem.getId();
 
 					// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
 					Page<Record> windowParkingListItems = selectService.select(new String[] {"packing_list_item", "material_type", }, 
@@ -446,13 +419,11 @@ public class TaskService {
 					new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id", },
 					pageNo, pageSize, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemsVOs = new ArrayList<WindowTaskItemsVO>();
+			List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
 			int totalRow = 0;
-			for (int i = 0; i < cache.llen("til"); i++) {
-				byte[] item = cache.lindex("til", i);
-				AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-				if (agvioTaskItem.getTaskId() == window.getBindTaskId()) {
+			for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+				if (redisTaskItem.getTaskId() == window.getBindTaskId()) {
 					totalRow += 1;
-					
 					for (Record windowTaskItem : windowTaskItems.getList()) {
 						// 查询task_log中的material_id,quantity
 						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, window.getBindTaskId(), windowTaskItem.get("MaterialType_No"));
@@ -461,7 +432,7 @@ public class TaskService {
 						for (TaskLog tl : taskLogs) {
 							actualQuantity += tl.getQuantity();
 						}
-						if (windowTaskItem.get("PackingListItem_Id").equals(agvioTaskItem.getId())) {
+						if (windowTaskItem.get("PackingListItem_Id").equals(redisTaskItem.getId())) {
 							Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, window.getBindTaskId());
 							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), 
 									task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), 
