@@ -106,7 +106,7 @@
               alert('更新成功');
               this.isEditing = false;
               let tempUrl = this.$route.path;
-              this.$router.replace('/_empty');
+              this.$router.push('/_empty');
               this.$router.replace(tempUrl)
             } else {
               errHandler(response.data.result)

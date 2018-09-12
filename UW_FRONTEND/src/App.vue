@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <router-view/>
+    <copyright/>
     <help-page/>
     <notify-me
       :event-bus="eventBus">
@@ -19,9 +20,11 @@
   import Notify from './components/Notify'
   import HelpPage from './components/HelpPage'
   import eventBus from './utils/eventBus'
+  import Copyright from "./components/Copyright";
   export default {
     name: 'App',
     components: {
+      Copyright,
       HelpPage,
       'notify-me': Notify
     },
@@ -45,7 +48,7 @@
   }
 
   body {
-    background: url("/uw_system/static/img/background.png") repeat;
+    background: url("assets/background.png") repeat;
 
   }
 

@@ -6,7 +6,7 @@
 
       <a class="navbar-brand" draggable="false">
         <span>
-          <img src="/uw_system/static/img/logo.png" class="nav-logo" draggable="false">
+          <img src="static/img/logo.png" class="nav-logo" draggable="false">
         </span>
         智能仓库管理系统</a>
     </div>

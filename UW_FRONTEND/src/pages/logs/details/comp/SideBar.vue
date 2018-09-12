@@ -4,7 +4,6 @@
   <div class="mt-3 mb-3">
     <nav>
       <div class="sidebar-items">
-        <!--透传数据-->
         <div class="sidebar-title">
           <a class="subtitle" draggable="false">日志详情</a>
         </div>
@@ -58,8 +57,8 @@
       },
       linkTo: function (obj) {
         //this.setLoading(true);
-        this.$router.replace('/_empty');
-        this.$router.push({
+        this.$router.push('/_empty');
+        this.$router.replace({
           path: '/logs/' + obj,
           query: {
             page: obj

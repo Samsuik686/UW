@@ -176,7 +176,7 @@
                 this.$alertSuccess("添加成功");
                 this.isAdding = false;
                 let tempUrl = this.$route.path;
-                this.$router.replace('/_empty');
+                this.$router.push('/_empty');
                 this.$router.replace(tempUrl);
               } else if (response.data.result === 412) {
                 this.$alertWarning("用户已存在");
@@ -229,8 +229,8 @@
           options.query.filter = this.queryString
         }
 
-        this.$router.replace('_empty');
-        this.$router.push(options
+        this.$router.push('_empty');
+        this.$router.replace(options
           , () => {
             this.setLoading(true);
           })

@@ -122,7 +122,7 @@
               this.$alertSuccess('更新成功');
               this.closeEditPanel();
               let tempUrl = this.$route.path;
-              this.$router.replace('_empty');
+              this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else {
               this.isPending = false;
