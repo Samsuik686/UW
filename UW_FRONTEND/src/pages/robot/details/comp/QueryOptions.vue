@@ -149,8 +149,8 @@
           options.query.filter = this.queryString
         }
 
-        this.$router.replace('_empty');
-        this.$router.push(options
+        this.$router.push('_empty');
+        this.$router.replace(options
         , () => {
           this.setLoading(true);
         })

@@ -111,6 +111,7 @@ if (localStorage.getItem('token')) {
 
 
 router.beforeEach((to, from, next) => {
+  store.commit('setLoading', false);
   if (!(to.path === '/_empty' || from.path === '/_empty')) {
     for (let index in window.g.ROBOT_INTERVAL) {
       clearInterval(window.g.ROBOT_INTERVAL[index])

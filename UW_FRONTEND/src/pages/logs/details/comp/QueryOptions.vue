@@ -135,8 +135,8 @@
         if (this.queryString !== "") {
           options.data.filter = this.queryString
         }
-        this.$router.replace('_empty');
-        this.$router.push({
+        this.$router.push('_empty');
+        this.$router.replace({
           path: '/logs/' + this.$store.state.logsRouterApi,
           query: options
         }, () => {

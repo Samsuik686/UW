@@ -100,7 +100,7 @@
               this.$alertSuccess('删除成功');
               this.isDeleting = false;
               let tempUrl = this.$route.path;
-              this.$router.replace('_empty');
+              this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);

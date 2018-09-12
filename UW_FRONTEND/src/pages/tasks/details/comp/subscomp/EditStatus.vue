@@ -132,7 +132,7 @@
                 this.windowShow = '';
                 this.thisData = {};
                 let tempUrl = this.$route.path;
-                this.$router.replace('/_empty');
+                this.$router.push('/_empty');
                 this.$router.replace(tempUrl)
               } else {
                 errHandler(res.data.result)

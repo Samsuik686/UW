@@ -151,7 +151,7 @@
         } else {
           this.initData();
         }
-      }, 10001111))
+      }, 1000))
     },
     watch: {},
     computed: {

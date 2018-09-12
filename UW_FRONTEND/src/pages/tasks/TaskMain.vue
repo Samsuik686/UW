@@ -4,7 +4,7 @@
     <!--<Header/>-->
     <loading v-if="$store.state.isLoading"/>
     <div class="" style="margin-left: 60px;">
-      <div class="row main-style" :style="sideBarStyle">
+      <div class="row main-style">
         <div class="col router-style mt-3 mb-3">
           <table-module/>
         </div>
@@ -27,10 +27,6 @@
     },
     data() {
       return {
-        sideBarIsShow: true,
-        sideBarStyle: {
-          height: '0px'
-        }
       }
     },
     mounted: function () {

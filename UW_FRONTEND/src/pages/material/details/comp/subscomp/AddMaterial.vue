@@ -97,7 +97,7 @@
               this.$alertSuccess('添加成功');
               this.closeAddPanel();
               let tempUrl = this.$route.path;
-              this.$router.replace('_empty');
+              this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result === 412) {
               this.$alertWarning('请勿添加重复料号')
