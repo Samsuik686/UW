@@ -135,7 +135,6 @@
 
 	</dependencies>
 	<build>
-		<finalName>uw_server-1.0.1</finalName>
 
 		<plugins>
 			<!-- 修改默认JRE -->

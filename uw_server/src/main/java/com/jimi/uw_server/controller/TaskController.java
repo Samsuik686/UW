@@ -92,14 +92,10 @@ public class TaskController extends Controller {
 	}
 	
 
-	// 查询所有仓口
+	// 查询指定类型的仓口
 	public void getWindows(int type) {
 		renderJson(ResultUtil.succeed(taskService.getWindows(type)));
 	}
-	
-/*	public void getWindows() {
-		renderJson(ResultUtil.succeed(taskService.getWindows()));
-	}*/
 
 
 	// 查询所有任务
