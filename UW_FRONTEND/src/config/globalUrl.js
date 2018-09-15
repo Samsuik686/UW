@@ -8,9 +8,11 @@ if (process.env.NODE_ENV === 'production') {
 //material manage
 export const materialCountUrl = url + '/manage/material/count';
 export const materialEntityUrl = url + '/manage/material/getEntities';
-export const materialAddUrl = url + '/manage/material/add';
-export const materialUpdateUrl = url + '/manage/material/update';
-
+export const materialAddUrl = url + '/manage/material/addType';
+export const materialUpdateUrl = url + '/manage/material/updateType';
+export const getBoxesUrl = url + '/manage/material/getBoxes';
+export const addBoxUrl = url + '/manage/material/addBox';
+export const updateBoxUrl = url + '/manage/material/updateBox';
 
 //logs
 export const logsUrl = url + '/log/select';
@@ -36,7 +38,8 @@ export const taskWindowsUrl = url + '/task/getWindows';
 export const taskWindowTaskItems = url + '/task/getWindowTaskItems';
 export const taskWindowParkingItems = url + '/task/getWindowParkingItem';
 
-export const taskIOUrl = url + '/task/io';
+export const taskInUrl = url + '/task/in';
+export const taskOutUrl = url + '/task/out';
 
 
 //robot

@@ -4,7 +4,7 @@
       <div class="add-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
-            <h3>物料详情：({{showNo}})</h3>
+            <h3>详情：</h3>
           </div>
           <datatable v-bind="$data"/>
         </div>
@@ -18,10 +18,10 @@
 
 <script>
   import {mapActions} from 'vuex';
-  import store from '../../../../store'
-  import {axiosPost} from "../../../../utils/fetchData";
-  import {materialEntityUrl} from "../../../../config/globalUrl";
-  import {errHandler} from "../../../../utils/errorHandler";
+  import store from '../../../store/index'
+  import {axiosPost} from "../../../utils/fetchData";
+  import {materialEntityUrl} from "../../../config/globalUrl";
+  import {errHandler} from "../../../utils/errorHandler";
 
   export default {
     name: "EntityDetails",
@@ -38,20 +38,29 @@
         columns: [
           {title: '料盘唯一码', field: 'id', colStyle: {width: '60px'}},
           {title: '类型', field: 'type', colStyle: {width: '60px'}, visible: false},
+          {title: '所在料盒', field: 'box', colStyle: {width: '60px'}},
           {title: '盒内行号', field: 'row', colStyle: {width: '60px'}},
           {title: '盒内列号', field: 'col', colStyle: {width: '60px'}},
           {title: '剩余数量', field: 'remainderQuantity', colStyle: {width: '60px'}},
+          {title: '生产日期', field: 'productionTimeString', colStyle: {width: '160px'}},
         ],
         total: 0,
         query: {"limit": 20, "offset": 0},
         isPending: false,
 
-        showNo: ''
       }
     },
     computed: {},
+    watch: {
+      query: {
+        handler(query) {
+          this.setLoading(true);
+          this.dataFilter(query);
+        },
+        deep: true
+      }
+    },
     mounted() {
-      this.showNo = store.state.materialDetails.no;
       this.fetchData(store.state.materialDetails);
     },
     methods: {
@@ -59,7 +68,6 @@
       init: function () {
         this.data = [];
         this.total = 0;
-        this.showNo = ""
       },
       fetchData: function (val) {
         if (!this.isPending) {
@@ -67,15 +75,20 @@
           let options = {
             url: materialEntityUrl,
             data: {
-              type: val.id
+              type: val.type,
+              box: val.box,
+              pageNo: 1,
+              pageSize: 20
             }
           };
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              if (response.data.data !== null) {
+              if (response.data.data.list !== null) {
                 this.data = response.data.data.list;
                 this.total = response.data.data.totalRow;
+              } else {
+                this.init()
               }
             } else if (response.data.result === 501) {
               this.$alertWarning(response.data.data)
@@ -99,8 +112,20 @@
       closePanel: function () {
         this.setDetailsActiveState(false);
         this.setDetailsData({})
+      },
+      dataFilter: function () {
+        let val = store.state.materialDetails;
+        let options = {
+          url: materialEntityUrl,
+          data: {
+            type: val.type,
+            box: val.box,
+          }
+        };
+        options.data.pageNo = this.query.offset / this.query.limit + 1;
+        options.data.pageSize = this.query.limit;
+        this.fetchData(options);
       }
-
     }
 
   }

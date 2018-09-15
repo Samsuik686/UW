@@ -5,6 +5,8 @@ import Router from 'vue-router'
 import store from '../store'
 import Main from '../pages/Main'
 import MaterialMain from '../pages/material/MaterialMain'
+import BoxesModule from '../pages/material/boxes/BoxesModule'
+import MaterialModule from '../pages/material/material/MaterialModule'
 import LogsMain from '../pages/logs/LogsMain'
 import LogsModule from '../pages/logs/details/TableModule'
 import TasksMain from '../pages/tasks/TaskMain'
@@ -38,7 +40,16 @@ const router = new Router({
           path: '/material',
           name: 'Material',
           component: MaterialMain,
-          children: []
+          children: [
+            {
+              path: 'material',
+              component: MaterialModule
+            },
+            {
+              path: 'boxes',
+              component: BoxesModule
+            }
+          ]
         },
         {
           path: 'logs',

@@ -26,7 +26,7 @@
           </div>
           <div class="form-row">
             <div class="form-row col pl-2 pr-2">
-              你正在删除料号为 "{{rowData.no}}" 的物料，请确认是否删除
+              你正在删除料盒号为 "{{rowData.id}}" 的物料，请确认是否删除
             </div>
           </div>
           <div class="dropdown-divider"></div>
@@ -41,10 +41,10 @@
 </template>
 
 <script>
-  import EditMaterial from './EditMaterial'
+  import EditBox from './EditBox'
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
-  import {materialUpdateUrl} from "../../../../../config/globalUrl";
+  import {updateBoxUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
@@ -52,7 +52,7 @@
     name: "OperationOptions",
     props: ['row'],
     components: {
-      EditMaterial
+      EditBox
     },
     data() {
       return {
@@ -77,8 +77,7 @@
         this.setDetailsActiveState(true);
         this.setDetailsData({});
         this.setDetailsData({
-          id: val.id,
-          no: val.no
+          box: val.id
         })
       },
       showWarning: function (val) {
@@ -89,10 +88,13 @@
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url: materialUpdateUrl,
-            data: JSON.parse(JSON.stringify(this.rowData))
+            url: updateBoxUrl,
+            data: {
+              id: this.rowData.id,
+              enabled: 0
+            }
+
           };
-          options.data.enabled = 0;
 
           axiosPost(options).then(response => {
             this.isPending = false;

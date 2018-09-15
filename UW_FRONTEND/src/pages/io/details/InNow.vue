@@ -98,7 +98,7 @@
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {robotBackUrl, taskWindowParkingItems, taskIOUrl} from "../../../config/globalUrl";
+  import {robotBackUrl, taskWindowParkingItems, taskInUrl} from "../../../config/globalUrl";
 
   export default {
     name: "InNow",
@@ -243,11 +243,12 @@
             return;
           } else {
             let options = {
-              url: taskIOUrl,
+              url: taskInUrl,
               data: {
                 packListItemId: this.taskNowItems.id,
                 materialId: tempArray[2],
-                quantity: tempArray[1]
+                quantity: tempArray[1],
+                productionTime: tempArray[7]
               }
             };
             axiosPost(options).then(response => {

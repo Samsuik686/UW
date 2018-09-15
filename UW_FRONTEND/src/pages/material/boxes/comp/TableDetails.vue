@@ -11,10 +11,10 @@
 <script>
   import {axiosPost} from "../../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {materialAddUrl, materialCountUrl, materialEntityUrl, materialUpdateUrl} from "../../../../config/globalUrl";
+  import {getBoxesUrl} from "../../../../config/globalUrl";
   import {errHandler} from "../../../../utils/errorHandler";
   import OperationOptions from "./subscomp/OperationOptions";
-  import EntityDetails from './EntityDetails'
+  import EntityDetails from '../../comp/EntityDetails'
   export default {
     name: "Details",
     components: {
@@ -44,7 +44,7 @@
     created() {
       this.init();
       let options = {
-        url: materialCountUrl,
+        url: getBoxesUrl,
         data: {
           pageNo: 1,
           pageSize: 20
@@ -63,7 +63,7 @@
         this.init();
         this.setLoading(true);
         let options = {
-          url: materialCountUrl,
+          url: getBoxesUrl,
           data: {
             pageNo: 1,
             pageSize: 20
@@ -95,14 +95,12 @@
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
           {field: 'id', title: '序号', visible: false},
-          {field: 'no', title: '料号', colStyle: {'width': '120px'}},
           {field: 'area', title: '所在区域', colStyle: {'width': '80px'}},
           {field: 'row', title: '行号', colStyle: {'width': '70px'}},
           {field: 'col', title: '列号', colStyle: {'width': '70px'}},
           {field: 'height', title: '高度', colStyle: {'width': '70px'}},
           {field: 'enabled', title: '可用性', visible: false},
           {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
-          {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},
           {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'} }
 
         ];
@@ -137,7 +135,7 @@
       },
       dataFilter: function () {
         let options = {
-          url: materialCountUrl,
+          url: getBoxesUrl,
           data: {
           }
         };

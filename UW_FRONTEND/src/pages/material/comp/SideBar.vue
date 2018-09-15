@@ -5,20 +5,18 @@
     <nav>
       <div class="sidebar-items">
         <div class="sidebar-title">
-          <a class="subtitle" draggable="false">日志详情</a>
+          <a class="subtitle" draggable="false">物料相关</a>
         </div>
         <div>
-          <div @click="toggleState('task_log')">
-            <div class="sidebar-link" @click="linkTo('task_log')"
-               :class="activeItem === 'task_log' ? 'active' : ''">任务日志</div>
+          <div @click="toggleState('boxes')">
+            <div class="sidebar-link" @click="linkTo('boxes')"
+                 :class="activeItem === 'boxes' ? 'active' : ''">料盒管理
+            </div>
           </div>
-          <div @click="toggleState('action_log')">
-            <div class="sidebar-link" @click="linkTo('action_log')"
-               :class="activeItem === 'action_log' ? 'active' : ''">接口调用日志</div>
-          </div>
-          <div @click="toggleState('position_log')">
-            <div class="sidebar-link"  @click="linkTo('position_log')"
-               :class="activeItem === 'position_log' ? 'active' : ''">物料位置转移日志</div>
+          <div @click="toggleState('material')">
+            <div class="sidebar-link" @click="linkTo('material')"
+                 :class="activeItem === 'material' ? 'active' : ''">物料管理
+            </div>
           </div>
         </div>
       </div>
@@ -41,32 +39,20 @@
       }
     },
     mounted: function () {
-      switch (this.$route.query.page) {
-        case 'task_log':
-          this.toggleState('task_log');
-          break;
-        case 'action_log':
-          this.toggleState('action_log');
-          break;
-        case 'position_log':
-          this.toggleState('position_log');
-          break;
+      if (this.$route.path === '/material/material') {
+        this.toggleState('material')
+      } else if (this.$route.path === '/material/boxes') {
+        this.toggleState('boxes')
       }
     },
     watch: {
       $route: function (route) {
-        switch (route.query.page) {
-          case 'task_log':
-            this.toggleState('task_log');
-            break;
-          case 'action_log':
-            this.toggleState('action_log');
-            break;
-          case 'position_log':
-            this.toggleState('position_log');
-            break;
+        if (route.path === '/material/material') {
+          this.toggleState('material')
+        } else if (route.path === '/material/boxes') {
+          this.toggleState('boxes')
         }
-      }
+      },
     },
     computed: {
       ...mapGetters([
@@ -84,10 +70,7 @@
         //this.setLoading(true);
         this.$router.push('/_empty');
         this.$router.replace({
-          path: '/logs/' + obj,
-          query: {
-            page: obj
-          }
+          path: '/material/' + obj,
         })
       }
     }

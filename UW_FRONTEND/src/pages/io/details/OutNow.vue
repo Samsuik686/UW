@@ -98,7 +98,7 @@
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {robotBackUrl, taskWindowParkingItems, taskIOUrl} from "../../../config/globalUrl";
+  import {robotBackUrl, taskWindowParkingItems, taskOutUrl} from "../../../config/globalUrl";
 
   export default {
     name: "OutNow",
@@ -242,7 +242,7 @@
             return;
           } else {
             let options = {
-              url: taskIOUrl,
+              url: taskOutUrl,
               data: {
                 packListItemId: this.taskNowItems.id,
                 materialId: tempArray[2],

@@ -55,26 +55,8 @@
             type: 'text'
           },
           {
-            id: 'area',
-            name: '区域',
-            model: '',
-            type: 'text'
-          },
-          {
-            id: 'row',
-            name: '行',
-            model: '',
-            type: 'text'
-          },
-          {
-            id: 'col',
-            name: '列',
-            model: '',
-            type: 'text'
-          },
-          {
-            id: 'height',
-            name: '高度',
+            id: 'specification',
+            name: '规格',
             model: '',
             type: 'text'
           }
@@ -129,7 +111,7 @@
       },
       fetchData: function () {
         let options = {
-          path: '/material',
+          path: '/material/material',
           query: {}
         };
         if (this.queryString !== "") {
