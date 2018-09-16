@@ -12,6 +12,7 @@ import com.jimi.uw_server.agv.handle.LSSLHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
@@ -31,7 +32,9 @@ public class RobotService extends SelectService {
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? "
 			+ "AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
 
-	private static final Object LOCK = new Object();
+	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In (SELECT id FROM material WHERE type = ?)";
+
+	private static final Object BACK_LOCK = new Object();
 
 
 	public List<RobotVO> select() {
@@ -76,24 +79,40 @@ public class RobotService extends SelectService {
 	 */
 	public String back(Integer id) throws Exception {
 		String resultString = "已成功发送SL指令！";
-		synchronized(LOCK) {
-			PackingListItem packingListItem = PackingListItem.dao.findById(id);
-			if (packingListItem.getFinishTime() == null) {
-				for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
-					if(id.equals(item.getId())) {
-						//查询对应物料类型
-						MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
+		synchronized(BACK_LOCK) {
+			for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+				if (item.getId().intValue() == id) {
+					//查询对应物料类型
+					MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
+					if (item.getState().intValue() < 3) {
 						LSSLHandler.sendSL(item, materialType);
-						taskService.finishItem(item.getId());
+						// 获取实际出入库数量，与计划出入库数量进行对比，若一直，则将该任务条目标记为已完成
+						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
+						PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
+						if (actualQuantity >= packingListItem.getQuantity()) {
+							taskService.finishItem(item.getId());
+						}
+					} else {
+						resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
+						return resultString;
 					}
 				}
-				return resultString;
-			} else {
-				resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
-				return resultString;
 			}
+			return resultString;
 		}
 
+	}
+
+
+	public Integer getActualIOQuantity(Integer taskId, Integer materialTypeId) {
+		// 查询task_log中的material_id,quantity
+		List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, taskId, materialTypeId);
+		Integer actualQuantity = 0;
+		// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
+		for (TaskLog tl : taskLogs) {
+			actualQuantity += tl.getQuantity();
+		}
+		return actualQuantity;
 	}
 
 

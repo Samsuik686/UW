@@ -11,10 +11,12 @@ import com.jimi.uw_server.agv.entity.bo.AGVMissionGroup;
 import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
+import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.MaterialService;
+import com.jimi.uw_server.service.RobotService;
 import com.jimi.uw_server.service.TaskService;
 
 /**
@@ -26,9 +28,12 @@ import com.jimi.uw_server.service.TaskService;
 public class LSSLHandler {
 
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
+
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
-	
+	private static RobotService robotService = Enhancer.enhance(RobotService.class);
+
+
 	public static void sendSL(AGVIOTaskItem item, MaterialType materialType) throws Exception {
 		//构建SL指令，令指定robot把料送回原仓位
 		AGVMoveCmd moveCmd = createSLCmd(materialType, item);
@@ -39,14 +44,14 @@ public class LSSLHandler {
 	}
 
 
-	public static void sendLS(AGVIOTaskItem item, MaterialType materialType) throws Exception {
+	public static void sendLS(AGVIOTaskItem item, MaterialBox materialBox) throws Exception {
 		//发送LS>>>
-		AGVMoveCmd cmd = createLSCmd(materialType, item);
+		AGVMoveCmd cmd = createLSCmd(materialBox, item);
 		AGVMainSocket.sendMessage(Json.getJson().toJson(cmd));
-		
-		//在数据库标记所有处于该坐标的物料为不在架***
-		setMaterialTypeIsOnShelf(materialType, false);
-		
+
+		//在数据库标记所有处于该坐标的料盒为不在架***
+		setMaterialBoxIsOnShelf(materialBox, false);
+
 		//更新任务条目状态为已分配***
 		TaskItemRedisDAO.updateTaskItemState(item, 1);
 	}
@@ -58,19 +63,19 @@ public class LSSLHandler {
 	public static void handleStatus(String message) throws Exception {
 		//转换成实体类
 		AGVStatusCmd statusCmd = Json.getJson().parse(message, AGVStatusCmd.class);
-		
+
 		//判断是否是开始执行任务
 		if(statusCmd.getStatus() == 0) {
 			handleStatus0(statusCmd);
 		}
-		
+
 		//判断是否是第二动作完成
 		if(statusCmd.getStatus() == 2) {
 			handleStatus2(statusCmd);
 		}
 	}
-	
-	
+
+
 	private static void handleStatus0(AGVStatusCmd statusCmd) {
 		//获取groupid
 		String groupid = statusCmd.getMissiongroupid();
@@ -98,22 +103,38 @@ public class LSSLHandler {
 				if(item.getState() == 1) {//LS执行完成时
 					//更改taskitems里对应item状态为2（已拣料到站）***
 					TaskItemRedisDAO.updateTaskItemState(item, 2);
-					
+
 				}else if(item.getState() == 3) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
 					TaskItemRedisDAO.updateTaskItemState(item, 4);
-					
-					//设置物料在架
-					MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
-					setMaterialTypeIsOnShelf(materialType, true);
-					
+
+					// 设置料盒在架
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					setMaterialBoxIsOnShelf(materialBox, true);
+
+					// 判断该任务条目是否还需要出入库
+					nextRound(item);
+
 					clearTil(groupid);
 				}
 			}
 		}
 	}
 
-	
+
+	private static void nextRound(AGVIOTaskItem item) {
+		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到0
+		if (Task.dao.findById(item.getTaskId()).getType() == 1) {
+			Integer actualQuantity = robotService.getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
+			if (actualQuantity < item.getQuantity().intValue()) {
+				TaskItemRedisDAO.updateTaskItemState(item, 0);
+				TaskItemRedisDAO.updateTaskItemRobot(item, 0);
+				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
+			}
+		}
+	}
+
+
 	/**
 	 * 判断该groupid所在的任务是否全部条目状态为4（已回库完成），如果是，
 	 * 则清除所有该任务id对应的条目，释放内存，并修改数据库任务状态***
@@ -142,9 +163,10 @@ public class LSSLHandler {
 		Window window = Window.dao.findById(windowId);
 		group.setStartx(window.getRow());//起点X为仓口X
 		group.setStarty(window.getCol());//起点Y为仓口Y
-		group.setEndx(materialType.getRow());//设置X
-		group.setEndy(materialType.getCol());//设置Y
-		group.setEndz(materialType.getHeight());//设置Z
+		MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+		group.setEndx(materialBox.getRow());//设置X
+		group.setEndy(materialBox.getCol());//设置Y
+		group.setEndz(materialBox.getHeight());//设置Z
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("SL");
@@ -154,13 +176,13 @@ public class LSSLHandler {
 	}
 
 
-	private static AGVMoveCmd createLSCmd(MaterialType materialType, AGVIOTaskItem item) {
+	private static AGVMoveCmd createLSCmd(MaterialBox materialBox, AGVIOTaskItem item) {
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getGroupId());
 		group.setRobotid(0);//让AGV系统自动分配
-		group.setStartx(materialType.getRow());//物料Row
-		group.setStarty(materialType.getCol());//物料Col
-		group.setStartz(materialType.getHeight());//物料Height
+		group.setStartx(materialBox.getRow());//物料Row
+		group.setStarty(materialBox.getCol());//物料Col
+		group.setStartz(materialBox.getHeight());//物料Height
 		int windowId = Task.dao.findById(item.getTaskId()).getWindow();
 		Window window = Window.dao.findById(windowId);
 		group.setEndx(window.getRow());//终点X为仓口X
@@ -175,11 +197,11 @@ public class LSSLHandler {
 	}
 
 
-	private static void setMaterialTypeIsOnShelf(MaterialType materialType, boolean isOnShelf) {
-		List<MaterialType> specifiedPositionMaterialTypes = materialService.listByXYZ(materialType.getRow(), materialType.getCol(), materialType.getHeight());
-		for (MaterialType mt: specifiedPositionMaterialTypes) {
-			mt.setIsOnShelf(isOnShelf);
-			materialService.update(mt);
+	private static void setMaterialBoxIsOnShelf(MaterialBox materialBox, boolean isOnShelf) {
+		List<MaterialBox> specifiedPositionMaterialBoxes = materialService.listByXYZ(materialBox.getRow(), materialBox.getCol(), materialBox.getHeight());
+		for (MaterialBox mb: specifiedPositionMaterialBoxes) {
+			mb.setIsOnShelf(isOnShelf);
+			materialService.updateBox(mb);
 		}
 	}
 

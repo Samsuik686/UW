@@ -21,7 +21,7 @@ public class LogService extends SelectService {
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
 
-	public Object selectTaskLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
+	public Object selectTaskLog(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select(new String[] {"task_log", "task", "material_type", "material", "user"},
 				new String[] {"task_log.task_id = task.id", "task_log.material_id = material.id", "material_type.id = material.type", 
 						"task_log.operator = user.uid"}, pageNo, pageSize, ascBy, descBy, filter);
@@ -43,7 +43,7 @@ public class LogService extends SelectService {
 	}
 
 
-	public Object selectPositionLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
+	public Object selectPositionLog(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select(new String[] {"position_log", "material_type", "material"},
 				new String[] {"position_log.material_id = material.id", "material.type = material_type.id"}, 
 				pageNo, pageSize, ascBy, descBy, filter);
