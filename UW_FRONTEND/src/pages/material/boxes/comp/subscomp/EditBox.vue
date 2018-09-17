@@ -7,15 +7,6 @@
         </div>
       </div>
       <div class="form-row">
-        <!--<div class="form-row col-4 pl-2 pr-2">-->
-          <!--<label for="material-id" class="col-form-label">Uid:</label>-->
-          <!--<input type="text" id="material-id" class="form-control"  v-model="thisData.id" disabled>-->
-        <!--</div>-->
-        <div class="form-row col-4 pl-2 pr-2">
-          <label for="material-no" class="col-form-label">料号:</label>
-          <input type="text" id="material-no" class="form-control" v-model="thisData.no" autocomplete="off" >
-          <span class="form-span col"></span>
-        </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-area" class="col-form-label">区域:</label>
           <input type="text" id="material-area" class="form-control" v-model="thisData.area"
@@ -40,15 +31,6 @@
                  @input="validate('height', '^[0-9]*[1-9][0-9]*$', '请输入正整数高度')" autocomplete="off">
           <span class="form-span col">{{warningMsg.heightMsg}}</span>
         </div>
-        <!--<div class="form-row col-4 pl-2 pr-2">-->
-          <!--<label for="material-enabled" class="col-form-label">是否启用:</label>-->
-          <!--<select id="material-enabled" class="custom-select" v-model="thisData.enabled">-->
-            <!--<option value="" disabled>请选择</option>-->
-            <!--<option value="0">禁用</option>-->
-            <!--<option value="1">启用</option>-->
-          <!--</select>-->
-          <!--<span class="form-span col">{{warningMsg.enabledMsg}}</span>-->
-        <!--</div>-->
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -74,7 +56,6 @@
           id: '',
           area: '',
           row: '',
-          no: '',
           col: '',
           height: '',
           enabled: 1
@@ -89,7 +70,6 @@
       this.thisData.id = this.editData.id;
       this.thisData.area = this.editData.area;
       this.thisData.row = this.editData.row;
-      this.thisData.no = this.editData.no;
       this.thisData.col = this.editData.col;
       this.thisData.height = this.editData.height;
     },
