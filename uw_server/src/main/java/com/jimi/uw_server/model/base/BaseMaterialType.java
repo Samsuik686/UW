@@ -36,42 +36,6 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getStr("specification");
 	}
 
-	public M setArea(java.lang.Integer area) {
-		set("area", area);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getArea() {
-		return getInt("area");
-	}
-
-	public M setRow(java.lang.Integer row) {
-		set("row", row);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getRow() {
-		return getInt("row");
-	}
-
-	public M setCol(java.lang.Integer col) {
-		set("col", col);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getCol() {
-		return getInt("col");
-	}
-
-	public M setHeight(java.lang.Integer height) {
-		set("height", height);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getHeight() {
-		return getInt("height");
-	}
-
 	public M setEnabled(java.lang.Boolean enabled) {
 		set("enabled", enabled);
 		return (M)this;
@@ -79,15 +43,6 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 	
 	public java.lang.Boolean getEnabled() {
 		return get("enabled");
-	}
-
-	public M setIsOnShelf(java.lang.Boolean isOnShelf) {
-		set("is_on_shelf", isOnShelf);
-		return (M)this;
-	}
-	
-	public java.lang.Boolean getIsOnShelf() {
-		return get("is_on_shelf");
 	}
 
 }

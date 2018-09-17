@@ -1,6 +1,8 @@
 package com.jimi.uw_server.controller;
 
 import java.io.File;
+import java.util.Date;
+
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
@@ -110,13 +112,27 @@ public class TaskController extends Controller {
 	}
 
 
-	// 物料出入库
-	@Log("正在将id号为{packListItemId}的任务条目进行扫码出入库，料盘时间戳为{materialId}，出入库数量为{quantity}")
-	public void io(Integer packListItemId, String materialId, Integer quantity) {
+	// 物料入库
+	@Log("正在将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，出入库数量为{quantity}")
+	public void in(Integer packListItemId, String materialId, Integer quantity, Date productionTime) {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.io(packListItemId, materialId, quantity, user)) {
+		if (taskService.in(packListItemId, materialId, quantity, productionTime, user)) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.failed());
+		}
+	}
+
+
+	// 物料出库
+	@Log("正在将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}")
+	public void out(Integer packListItemId, String materialId, Integer quantity) {
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		if (taskService.out(packListItemId, materialId, quantity, user)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
