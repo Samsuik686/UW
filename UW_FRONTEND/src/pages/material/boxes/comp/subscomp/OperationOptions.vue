@@ -12,7 +12,7 @@
 
 
     <div v-if="isEditing" id="edit-window">
-      <edit-material :editData="row"/>
+      <edit-box :editData="row"/>
     </div>
 
 

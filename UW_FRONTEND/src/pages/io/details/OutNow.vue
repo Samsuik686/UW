@@ -81,7 +81,10 @@
           <p>该任务计划出库数量: {{taskNowItems.planQuantity}}</p>
           <p>实际出库数量: {{taskNowItems.actualQuantity}}</p>
           <p>{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
-          <p>请确认是否出库</p>
+          <div class="dropdown-divider"></div>
+          <p v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">
+            当前实际出库数少于计划数，如果要让叉车出库（或当前料盒已无该料）请点击"确定"按钮</p>
+          <p v-else>请确定是否出库</p>
         </div>
         <div class="dropdown-divider"></div>
         <div class="form-row justify-content-around">

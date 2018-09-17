@@ -61,7 +61,17 @@
       }
     },
     mounted() {
-      this.fetchData(store.state.materialDetails);
+      let val = store.state.materialDetails;
+      let options = {
+        url: materialEntityUrl,
+        data: {
+          type: val.type,
+          box: val.box,
+          pageNo: 1,
+          pageSize: 20
+        }
+      };
+      this.fetchData(options);
     },
     methods: {
       ...mapActions(['setDetailsActiveState', 'setDetailsData', 'setLoading']),
@@ -69,18 +79,9 @@
         this.data = [];
         this.total = 0;
       },
-      fetchData: function (val) {
+      fetchData: function (options) {
         if (!this.isPending) {
           this.isPending = true;
-          let options = {
-            url: materialEntityUrl,
-            data: {
-              type: val.type,
-              box: val.box,
-              pageNo: 1,
-              pageSize: 20
-            }
-          };
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {

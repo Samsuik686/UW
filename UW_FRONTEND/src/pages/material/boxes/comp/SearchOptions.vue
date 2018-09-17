@@ -13,19 +13,19 @@
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="thisFetch">查询</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增物料</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增料盒</a>
       </div>
     </div>
     <transition name="fade">
       <div v-if="isAdding" id="add-window">
-        <add-material/>
+        <add-box/>
       </div>
     </transition>
   </div>
 </template>
 
 <script>
-  import AddMaterial from './subscomp/AddBox'
+  import AddBox from './subscomp/AddBox'
   import eventBus from '@/utils/eventBus'
   import {mapGetters, mapActions} from 'vuex';
   import {materialCountUrl} from "../../../../config/globalUrl";
@@ -42,7 +42,7 @@
         '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
         '          </div>'
       },
-      AddMaterial
+      AddBox
     },
     data() {
       return {
