@@ -111,7 +111,6 @@ public class LSSLHandler {
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 					setMaterialBoxIsOnShelf(materialBox, true);
 
-					// 判断该任务条目是否还需要出入库
 					nextRound(item);
 
 					clearTil(groupid);

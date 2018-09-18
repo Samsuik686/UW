@@ -42,6 +42,8 @@ public class AGVMainSocket {
 	private static String uri;
 	
 	private TaskPool taskPool;
+
+	private static final Object INIT_LOCK = new Object();
 	
 	/**
 	 * 发送的CMDID与是否被ACK的关系映射
@@ -55,8 +57,10 @@ public class AGVMainSocket {
 	
 	public static void init(String uri) throws Exception {
 		//初始化
-		sendCmdidAckMap = new HashMap<>();
-		receiveNotAckCmdidSet = new HashSet<>();
+		synchronized(INIT_LOCK) {
+			sendCmdidAckMap = new HashMap<>();
+			receiveNotAckCmdidSet = new HashSet<>();
+		}
 		TaskItemRedisDAO.setPauseAssign(0);
 		//连接AGV服务器
 		AGVMainSocket.uri = uri;
