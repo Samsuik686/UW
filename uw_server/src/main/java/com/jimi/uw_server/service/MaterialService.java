@@ -7,6 +7,7 @@ import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
@@ -24,7 +25,7 @@ public class MaterialService extends SelectService{
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
-	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN (SELECT id FROM task WHERE state <= 2)";
+	private static final String GET_MATERIAL_TYPE_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN (SELECT id FROM task WHERE state <= 2)";
 
 	private static final String COUNT_MATERIAL_BY_TYPE_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 	
@@ -102,15 +103,15 @@ public class MaterialService extends SelectService{
 	public String updateType(MaterialType materialType) {
 		String resultString = "更新成功！";
 		if (!materialType.getEnabled()) {
-			MaterialType mt = MaterialType.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, materialType.getId());
-			if (mt.get("quantity") != null) {
-				Integer quantity = Integer.parseInt(mt.get("quantity").toString());
+			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, materialType.getId());
+			if (m.get("quantity") != null) {
+				Integer quantity = Integer.parseInt(m.get("quantity").toString());
 				if (quantity > 0) {
 					resultString = "该物料库存数量大于0，禁止删除！";
 					return resultString;
 					}
 				}
-			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL, materialType.getId()) != null) {
+			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_IN_PROCESS_SQL, materialType.getId()) != null) {
 				resultString = "当前有某个尚未完成的任务已经绑定了该物料，禁止删除该物料！";
 				return resultString;
 			}
@@ -165,9 +166,9 @@ public class MaterialService extends SelectService{
 	public String updateBox(MaterialBox materialBox) {
 		String resultString = "更新成功！";
 		if (!materialBox.getEnabled()) {
-			MaterialType mt = MaterialType.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, materialBox.getId());
-			if (mt.get("quantity") != null) {
-				Integer quantity = Integer.parseInt(mt.get("quantity").toString());
+			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, materialBox.getId());
+			if (m.get("quantity") != null) {
+				Integer quantity = Integer.parseInt(m.get("quantity").toString());
 				if (quantity > 0) {
 					resultString = "该料盒中还有物料，禁止删除！";
 					return resultString;

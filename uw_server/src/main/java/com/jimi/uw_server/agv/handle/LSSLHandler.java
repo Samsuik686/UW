@@ -12,7 +12,6 @@ import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.MaterialService;
@@ -34,9 +33,9 @@ public class LSSLHandler {
 	private static RobotService robotService = Enhancer.enhance(RobotService.class);
 
 
-	public static void sendSL(AGVIOTaskItem item, MaterialType materialType) throws Exception {
+	public static void sendSL(AGVIOTaskItem item, MaterialBox materialBox) throws Exception {
 		//构建SL指令，令指定robot把料送回原仓位
-		AGVMoveCmd moveCmd = createSLCmd(materialType, item);
+		AGVMoveCmd moveCmd = createSLCmd(materialBox, item);
 		//发送SL>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 		//更新任务条目状态为已分配回库***
@@ -154,7 +153,7 @@ public class LSSLHandler {
 	}
 
 
-	private static AGVMoveCmd createSLCmd(MaterialType materialType, AGVIOTaskItem item) {
+	private static AGVMoveCmd createSLCmd(MaterialBox materialBox, AGVIOTaskItem item) {
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getGroupId());//missionGroupId要和LS指令相同
@@ -163,7 +162,6 @@ public class LSSLHandler {
 		Window window = Window.dao.findById(windowId);
 		group.setStartx(window.getRow());//起点X为仓口X
 		group.setStarty(window.getCol());//起点Y为仓口Y
-		MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 		group.setEndx(materialBox.getRow());//设置X
 		group.setEndy(materialBox.getCol());//设置Y
 		group.setEndz(materialBox.getHeight());//设置Z

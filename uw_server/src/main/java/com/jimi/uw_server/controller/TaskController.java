@@ -113,7 +113,7 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("正在将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，出入库数量为{quantity}")
+	@Log("正在将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}")
 	public void in(Integer packListItemId, String materialId, Integer quantity, Date productionTime) {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
@@ -127,7 +127,7 @@ public class TaskController extends Controller {
 
 
 	// 物料出库
-	@Log("正在将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}")
+	@Log("正在将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出库数量为{quantity}")
 	public void out(Integer packListItemId, String materialId, Integer quantity) {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);

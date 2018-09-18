@@ -102,9 +102,6 @@ public class TaskPool extends Thread{
 					// 5. 发送LS指令
 					LSSLHandler.sendLS(item, materialBox);
 					cn--;
-				} else {	// 不在架
-					System.out.println("料盒" + boxId + "暂时不在架！");
-//					continue;
 				}
 			}
 			
@@ -170,13 +167,13 @@ public class TaskPool extends Thread{
 	private static int getOldestMaterialBox(Integer materialTypeId) {
 		List<Material> materialList = Material.dao.find(GET_SURPLUS_MATERIAL_TYPE_MATERIAL_BOX_SQL, materialTypeId);
 		int boxId = 0;
-		Date produceTime = new Date();
+		Date productionTime = new Date();
 
 		// 如果库存数量大于0
 		if (materialList.size() > 0) {
 			for (Material m : materialList) {
-				if (m.getProductionTime().before(produceTime)) {
-					produceTime = m.getProductionTime();
+				if (m.getProductionTime().before(productionTime)) {
+					productionTime = m.getProductionTime();
 					boxId = m.getBox();
 				}
 			}
