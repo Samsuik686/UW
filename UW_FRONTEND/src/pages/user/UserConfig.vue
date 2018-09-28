@@ -179,7 +179,7 @@
                 this.$router.push('/_empty');
                 this.$router.replace(tempUrl);
               } else if (response.data.result === 412) {
-                this.$alertWarning("用户已存在");
+                this.$alertWarning(response.data.data);
               } else {
                 errHandler(response.data.result)
               }

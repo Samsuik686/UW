@@ -23,6 +23,7 @@
         <button class="btn btn-secondary col mr-1 text-white" @click="closeAddPanel">取消</button>
         <button class="btn btn-primary col ml-1 text-white" @click="submitAdding">提交</button>
       </div>
+
     </div>
   </div>
 </template>
