@@ -20,8 +20,6 @@ public class AGVIOTaskItem {
 
 	private Integer robotId;
 
-	private Integer boxId;
-
 	/**
 	 * 0：未分配 1：已分配拣料 2：已拣料到站 3：已分配回库 4：已回库完成
 	 */
@@ -38,7 +36,6 @@ public class AGVIOTaskItem {
 		this.quantity = packingListItem.getQuantity();
 		this.robotId = 0;
 		this.state = 0;
-		this.boxId = 0;
 	}
 
 	public Integer getRobotId() {
@@ -89,17 +86,7 @@ public class AGVIOTaskItem {
 		this.quantity = quantity;
 	}
 
-	public Integer getBoxId() {
-		return boxId;
-	}
-
-
-	public void setBoxId(Integer boxId) {
-		this.boxId = boxId;
-	}
-
 	public String getGroupId() {
 		return materialTypeId + ":" + taskId;
 	}
-
 }

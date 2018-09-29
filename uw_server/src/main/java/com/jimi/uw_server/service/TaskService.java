@@ -37,9 +37,7 @@ public class TaskService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 	
-	private static final Object CREATEIOTASK_LOCK = new Object();
-
-	private static final Object START_LOCK = new Object();
+	private static final Object LOCK = new Object();
 
 	private static final String GET_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
 
@@ -53,13 +51,16 @@ public class TaskService {
 
 	private static final String GET_TASK_ITEMS_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
-	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id IN (SELECT id FROM material WHERE type = ?)";
+	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In"
+			+ "(SELECT id FROM material WHERE type = (SELECT id FROM material_type WHERE no = ? AND enabled = 1))";
 
 	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
 
-	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 0)";
+	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN ("
+			+ "SELECT id FROM task WHERE type = 0)";
 
-	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1)";
+	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN ("
+			+ "SELECT id FROM task WHERE type = 1)";
 
 	private static final String GET_TASK_IN_REDIS_SQL = "SELECT * FROM task WHERE id = ?";
 
@@ -96,7 +97,7 @@ public class TaskService {
 			resultString = "创建任务失败，请检查套料单的内容格式是否正确！";
 			return resultString;
 		} else {
-			synchronized(CREATEIOTASK_LOCK) {
+			synchronized(LOCK) {
 				// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
 				if (Task.dao.find(GET_FILE_NAME_SQL, fileName).size() > 0) {
 					//清空upload目录下的文件
@@ -179,30 +180,28 @@ public class TaskService {
 		return task.update();
 	}
 
-
+	
 	public boolean start(Integer id, Integer window) {
-		synchronized(START_LOCK) {
-			Task task = Task.dao.findById(id);
-			// 设置仓口，并在仓口表绑定该任务id
-			task.setWindow(window);
-			Window windowDao = Window.dao.findById(window);
-			windowDao.setBindTaskId(id);
-			windowDao.update();
-			// 如果任务类型为出库，则立即将任务条目加载到redis中
-			if (task.getType() == 1) {
-				// 根据套料单、物料类型表生成任务条目
-				List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
-				List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
-				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item);
-					taskItems.add(a);
-				}
-				// 把任务条目均匀插入到队列til中
-				TaskItemRedisDAO.addTaskItem(taskItems);
+		Task task = Task.dao.findById(id);
+		// 设置仓口，并在仓口表绑定该任务id
+		task.setWindow(window);
+		Window windowDao = Window.dao.findById(window);
+		windowDao.setBindTaskId(id);
+		windowDao.update();
+		// 如果任务类型为出库，则立即将任务条目加载到redis中
+		if (task.getType() == 1) {
+			// 根据套料单、物料类型表生成任务条目
+			List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
+			List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
+			for (PackingListItem item : items) {
+				AGVIOTaskItem a = new AGVIOTaskItem(item);
+				taskItems.add(a);
 			}
-			task.setState(2);
-			return task.update();
+			// 把任务条目均匀插入到队列til中
+			TaskItemRedisDAO.addTaskItem(taskItems);
 		}
+		task.setState(2);
+		return task.update();
 	}
 
 
@@ -233,7 +232,7 @@ public class TaskService {
 			// 遍历同一个任务id的套料单数据
 			for (Record packingListItem : packingListItems.getList()) {
 				// 查询task_log中的material_id,quantity
-				List<TaskLog> taskLog = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, id, packingListItem.get("MaterialType_Id"));
+				List<TaskLog> taskLog = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, id, packingListItem.get("MaterialType_No"));
 				Integer actualQuantity = 0;
 				// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 				for (TaskLog tl : taskLog) {
@@ -307,7 +306,7 @@ public class TaskService {
 
 
 	public void finish(Integer taskId) {
-		// 对于入库任务，每执行完一批任务条目会清一次redis，然后调用该接口将任务设置为已完成并解绑仓口，但是可能还有其它任务条目未被扫描加载进redis，因此这里需要判断是否所有任务条目都已经执行完毕
+		// 对于入库任务，每执行完一个任务条目会清一次redis，然后调用该接口将任务设置为已完成并解绑仓口，因此这里需要判断是否所有任务条目都已经执行完毕
 		List<PackingListItem> packListItem = PackingListItem.dao.find(GET_PACKING_LIST_ITEM_SQL, taskId);
 		for (PackingListItem item : packListItem) {
 			if (item.getFinishTime() == null) {
@@ -332,7 +331,8 @@ public class TaskService {
 
 
 	public Object getWindowParkingItem(Integer id) {
-		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+		List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
+		for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
 			if(redisTaskItem.getState().intValue() == 2) {
 				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {
@@ -345,7 +345,7 @@ public class TaskService {
 
 					for (Record windowParkingListItem : windowParkingListItems.getList()) {
 						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getTaskId(), redisTaskItem.getMaterialTypeId());
+						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, task.getId(), windowParkingListItem.get("MaterialType_No"));
 						Integer actualQuantity = 0;
 						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 						for (TaskLog tl : taskLogs) {
@@ -365,73 +365,46 @@ public class TaskService {
 	}
 
 
-	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, User user) {
+	public boolean io(Integer packListItemId, String materialId, Integer quantity, User user) {
 		// 根据套料单id，获取对应的任务记录
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 		Task task = Task.dao.findById(packingListItem.getTaskId());
+		// 若在同一个出入库任务中重复扫同一个料盘时间戳，则抛出OperationException，错误代码为412
 		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, task.getId()).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
-		}
-		if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
+			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出入库任务中重复扫描同一个料盘！");
 		}
 
 		/*
-		 *  新增物料表记录
+		 *  新增或减少物料表记录
 		 */
-		int boxId = 0;
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
-			if (item.getId().intValue() == packListItemId) {
-				boxId = item.getBoxId();
+		Integer type = task.getType();		// 获取任务条目对应的任务类型
+		if (type == 0) {	//如果是入库，则新增一条记录
+			if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
+				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
 			}
+			Material material = new Material();
+			material.setId(materialId);
+			material.setType(packingListItem.getMaterialTypeId());
+			material.setRow(0);
+			material.setCol(0);
+			material.setRemainderQuantity(quantity);
+			material.save();
+		} else if (type == 1) {		// 如果是出库，则将对应的物料实体表记录置为无效
+			Material oldMaterial = Material.dao.findById(materialId);
+			oldMaterial.setRow(-1);
+			oldMaterial.setCol(-1);
+			oldMaterial.setRemainderQuantity(0);
+			oldMaterial.update();
 		}
-		Material material = new Material();
-		material.setId(materialId);
-		material.setType(packingListItem.getMaterialTypeId());
-		material.setBox(boxId);
-		material.setRow(0);
-		material.setCol(0);
-		material.setRemainderQuantity(quantity);
-		material.setProductionTime(productionTime);
-		material.save();
 
-		// 写入一条入库任务日志
 		TaskLog taskLog = new TaskLog();
+		// 写入一条出入库任务日志
 		taskLog.setTaskId(packingListItem.getTaskId());
 		taskLog.setMaterialId(materialId);
 		taskLog.setQuantity(quantity);
+		// 写入当前使用系统用户的Uid
 		taskLog.setOperator(user.getUid());
-		// 区分入库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-		taskLog.setAuto(true);
-		taskLog.setTime(new Date());
-		return taskLog.save();
-	}
-
-	public boolean out(Integer packListItemId, String materialId, Integer quantity, User user) {
-		// 根据套料单id，获取对应的任务记录
-		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
-		Task task = Task.dao.findById(packingListItem.getTaskId());
-		// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
-		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, task.getId()).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
-		}
-
-		/*
-		 *  将物料表记录置位无效
-		 */
-		Material oldMaterial = Material.dao.findById(materialId);
-		oldMaterial.setRow(-1);
-		oldMaterial.setCol(-1);
-		oldMaterial.setRemainderQuantity(0);
-		oldMaterial.update();
-
-		// 写入一条出库任务日志
-		TaskLog taskLog = new TaskLog();
-		taskLog.setTaskId(packingListItem.getTaskId());
-		taskLog.setMaterialId(materialId);
-		taskLog.setQuantity(quantity);
-		taskLog.setOperator(user.getUid());
-		// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
+		// 区分出入库操作人工还是机器操作,暂时先统一写成机器操作
 		taskLog.setAuto(true);
 		taskLog.setTime(new Date());
 		return taskLog.save();
@@ -446,13 +419,14 @@ public class TaskService {
 					new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id", },
 					pageNo, pageSize, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemsVOs = new ArrayList<WindowTaskItemsVO>();
+			List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
 			int totalRow = 0;
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
-				if (redisTaskItem.getTaskId().intValue() == window.getBindTaskId()) {
+			for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+				if (redisTaskItem.getTaskId() == window.getBindTaskId()) {
 					totalRow += 1;
 					for (Record windowTaskItem : windowTaskItems.getList()) {
 						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getTaskId(), redisTaskItem.getMaterialTypeId());
+						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, window.getBindTaskId(), windowTaskItem.get("MaterialType_No"));
 						Integer actualQuantity = 0;
 						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 						for (TaskLog tl : taskLogs) {
@@ -480,7 +454,7 @@ public class TaskService {
 		} else {
 			return null;
 		}
-
+		
 	}
 
 }

@@ -10,10 +10,8 @@ import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.LSSLHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
-import com.jimi.uw_server.model.MaterialBox;
+import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
@@ -33,11 +31,7 @@ public class RobotService extends SelectService {
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? "
 			+ "AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
 
-	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In (SELECT id FROM material WHERE type = ?)";
-
-	private static final Object BACK_LOCK = new Object();
-
-	private static final Object CALL_LOCK = new Object();
+	private static final Object LOCK = new Object();
 
 
 	public List<RobotVO> select() {
@@ -82,83 +76,62 @@ public class RobotService extends SelectService {
 	 */
 	public String back(Integer id) throws Exception {
 		String resultString = "已成功发送SL指令！";
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
-			if (item.getId().intValue() == id) {
-				synchronized(BACK_LOCK) {
-					// 查询对应料盒
-					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-					if (item.getState().intValue() < 3) {
-						LSSLHandler.sendSL(item, materialBox);
-						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
-						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
-						PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
-						if (actualQuantity >= packingListItem.getQuantity()) {
-							taskService.finishItem(item.getId());
-						}
-					} else {
-						resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
-						return resultString;
+		synchronized(LOCK) {
+			PackingListItem packingListItem = PackingListItem.dao.findById(id);
+			if (packingListItem.getFinishTime() == null) {
+				for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+					if(id.equals(item.getId())) {
+						//查询对应物料类型
+						MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
+						LSSLHandler.sendSL(item, materialType);
+						taskService.finishItem(item.getId());
 					}
 				}
+				return resultString;
+			} else {
+				resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
+				return resultString;
 			}
 		}
-		return resultString;
 
-	}
-
-
-	public Integer getActualIOQuantity(Integer taskId, Integer materialTypeId) {
-		// 查询task_log中的material_id,quantity
-		List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, taskId, materialTypeId);
-		Integer actualQuantity = 0;
-		// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
-		for (TaskLog tl : taskLogs) {
-			actualQuantity += tl.getQuantity();
-		}
-		return actualQuantity;
 	}
 
 
 	/**
 	 * 入库前扫料盘，发LS指令给叉车
 	 */
-	public String call(Integer id, String no) throws Exception {
-		synchronized(CALL_LOCK) {
-			Window window = Window.dao.findById(id);
-			Integer taskId = window.getBindTaskId();
-			PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no);
-			String resultString = "调用成功！";
+	public synchronized String call(Integer id, String no) throws Exception {
+		Window window = Window.dao.findById(id);
+		Integer taskId = window.getBindTaskId();
+		PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no);
+		String resultString = "调用成功！";
 
-			if (item == null) {
-				resultString = "该物料暂时不需要入库！";
-				return resultString;
-			}
-
-			// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
-			if (item.getFinishTime() != null) {
-				resultString = "该任务条目已完成，请勿重复扫描！";
-				return resultString;
-			}
-
-			if (Task.dao.findById(taskId).getType() == 1) {
-				resultString = "出库任务不需要调用该接口！";
-				return resultString;
-			}
-
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
-				if (item.getId().equals(redisTaskItem.getId())) {
-					resultString = "该物料已经扫描过，请勿重复扫描！";
-					return resultString;
-				}
-			}
-
-			// 根据套料单、物料类型表生成任务条目
-			List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
-			AGVIOTaskItem a = new AGVIOTaskItem(item);
-			taskItems.add(a);
-			TaskItemRedisDAO.addTaskItem(taskItems);
+		if (item == null) {
+			resultString = "该物料暂时不需要入库！";
 			return resultString;
 		}
+
+		// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
+		if (item.getFinishTime() != null) {
+			resultString = "该任务条目已完成，请勿重复扫描！";
+			return resultString;
+		}
+
+		List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
+		for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+			if (item.getId().equals(redisTaskItem.getId())) {
+				resultString = "该物料已经扫描过，请勿重复扫描！";
+				return resultString;
+			}
+		}
+
+		// 根据套料单、物料类型表生成任务条目
+		List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
+		AGVIOTaskItem a = new AGVIOTaskItem(item);
+		taskItems.add(a);
+		TaskItemRedisDAO.addTaskItem(taskItems);
+		return resultString;
+
 	}
 
 }

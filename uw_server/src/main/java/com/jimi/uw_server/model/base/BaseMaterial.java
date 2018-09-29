@@ -27,15 +27,6 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 		return getInt("type");
 	}
 
-	public M setBox(java.lang.Integer box) {
-		set("box", box);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getBox() {
-		return getInt("box");
-	}
-
 	public M setRow(java.lang.Integer row) {
 		set("row", row);
 		return (M)this;
@@ -61,15 +52,6 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 	
 	public java.lang.Integer getRemainderQuantity() {
 		return getInt("remainder_quantity");
-	}
-
-	public M setProductionTime(java.util.Date productionTime) {
-		set("production_time", productionTime);
-		return (M)this;
-	}
-	
-	public java.util.Date getProductionTime() {
-		return get("production_time");
 	}
 
 }

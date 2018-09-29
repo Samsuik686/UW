@@ -126,22 +126,6 @@ public class TaskItemRedisDAO {
 		}
 	}
 
-
-	/**
-	 * 更新任务条目盒号<br>
-	 */
-	public synchronized static void updateTaskItemBoxId(AGVIOTaskItem taskItem, int boxId) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
-				agvioTaskItem.setBoxId(boxId);
-				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
-				break;
-			}
-		}
-	}
-
 	
 	/**
 	 *  填写指定条目的执行机器

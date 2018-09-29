@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
-import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
-import com.jimi.uw_server.model.vo.MaterialBoxVO;
 import com.jimi.uw_server.model.vo.MaterialTypeVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
@@ -25,26 +22,20 @@ public class MaterialService extends SelectService{
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
-	private static final String GET_MATERIAL_TYPE_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN (SELECT id FROM task WHERE state <= 2)";
+	private static final String GET_ENABLED_MATERIAL_TYPE_SQL = "SELECT * FROM material_type WHERE enabled = 1";
 
-	private static final String COUNT_MATERIAL_BY_TYPE_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
+	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN"
+			+ "(SELECT id FROM task WHERE state <= 2)";
+
+	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 	
-	private static final String COUNT_MATERIAL_BY_BOX_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE box = ?";
+	private static final String GET_SPECIFIED_POSITION_MATERIAL_TYEP_SQL = "SELECT * FROM material_type WHERE row = ? AND col = ? AND height = ?";
 
-	private static final String GET_SPECIFIED_POSITION_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE row = ? AND col = ? AND height = ?";
+	private	static final String GET_ENTITIES_SQL = "SELECT material.id, material.type, material.row, material.col, "
+			+ "material.remainder_quantity as remainderQuantity FROM material, material_type WHERE type = ? "
+			+ "AND material_type.id = material.type AND material_type.enabled = 1";
 
-	private static final String GET_ENTITIES_SELECT_SQL = "SELECT id, type, box, row, col, remainder_quantity as remainderQuantity, production_time as productionTimeString ";
-
-	private	static final String GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL = "FROM material WHERE type = ?";
-
-	private	static final String GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL = "FROM material WHERE box = ?";
-
-	private	static final String GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL = "FROM material WHERE type = ? and box = ?";
-
-	private static final String GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND enabled = 1";
-
-	private static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE area = ? AND row = ? AND col = ? AND height = ? AND enabled = 1";
-
+	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND enabled = 1";
 
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -57,61 +48,62 @@ public class MaterialService extends SelectService{
 				pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
 		for (Record res : result.getList()) {
-			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("specification"), res.get("enabled"));
+			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("area"),
+					res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
 			materialTypeVOs.add(m);
 		}
 
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(result.getTotalRow());
+		pagePaginate.setTotalRow(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_SQL).size());
 		pagePaginate.setList(materialTypeVOs);
 
 		return pagePaginate;
 	}
 
+	public Object getEntities(Integer type, Integer pageNo, Integer pageSize) {
+		List<Material> materialEntities = Material.dao.find(GET_ENTITIES_SQL, type);
 
-	public Page<Record> getEntities(Integer type, Integer box, Integer pageNo, Integer pageSize) {
-		Page<Record> materialEntities = new Page<Record>();
-		if (type != null && box == null) {
-			materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, type);
-		} else if (type == null && box != null) {
-			materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, box);
-		} else if (type != null && box != null) {
-			materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL, type, box);
-		}
+		PagePaginate pagePaginate = new PagePaginate();
+		pagePaginate.setPageSize(pageSize);
+		pagePaginate.setPageNumber(pageNo);
+		pagePaginate.setTotalRow(materialEntities.size());
+		pagePaginate.setList(materialEntities);
 
-		return materialEntities;
+		return pagePaginate;
 	}
 
-
-	public String addType(String no, String specification) {
+	public String add(String no, Integer area, Integer row, Integer col, Integer height) {
 		String resultString = "添加成功！";
-		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no).size() != 0) {
+		if(MaterialType.dao.find(GET_MATERIAL_TYPE_BY_NO_SQL, no).size() != 0) {
 			resultString = "该物料已存在，请不要添加重复的物料类型号！";
 			return resultString;
 		}
 		MaterialType materialType = new MaterialType();
 		materialType.setNo(no);
-		materialType.setSpecification(specification);
+		materialType.setArea(area);
+		materialType.setRow(row);
+		materialType.setCol(col);
+		materialType.setHeight(height);
 		materialType.setEnabled(true);
+		materialType.setIsOnShelf(true);
 		materialType.save();
 		return resultString;
 	}
 
-
-	public String updateType(MaterialType materialType) {
+	public String update(MaterialType materialType) {
 		String resultString = "更新成功！";
 		if (!materialType.getEnabled()) {
-			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, materialType.getId());
-			if (m.get("quantity") != null) {
-				Integer quantity = Integer.parseInt(m.get("quantity").toString());
+			MaterialType mt = MaterialType.dao.findFirst(COUNT_MATERIAL_SQL, materialType.getId());
+			if (mt.get("quantity") != null) {
+				Integer quantity = Integer.parseInt(mt.get("quantity").toString());
 				if (quantity > 0) {
 					resultString = "该物料库存数量大于0，禁止删除！";
 					return resultString;
 					}
 				}
-			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_IN_PROCESS_SQL, materialType.getId()) != null) {
+			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL, materialType.getId()) != null) {
 				resultString = "当前有某个尚未完成的任务已经绑定了该物料，禁止删除该物料！";
 				return resultString;
 			}
@@ -120,71 +112,11 @@ public class MaterialService extends SelectService{
 		return resultString;
 	}
 
-
-	public Object getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		// 只查询enabled字段为true的记录
-		if (filter != null ) {
-			filter = filter.concat("&enabled=1");
-		} else {
-			filter = "enabled=1";
-		}
-		Page<Record> result = selectService.select(new String[] {"material_box"}, null, pageNo, pageSize, ascBy, descBy, filter);
-		List<MaterialBoxVO> MaterialBoxVOs = new ArrayList<MaterialBoxVO>();
-		for (Record res : result.getList()) {
-			MaterialBoxVO m = new MaterialBoxVO(res.get("id"), res.get("area"), res.get("row"), res.get("col"), res.get("height"), 
-					res.get("enabled"));
-			MaterialBoxVOs.add(m);
-		}
-		PagePaginate pagePaginate = new PagePaginate();
-		pagePaginate.setPageSize(pageSize);
-		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(result.getTotalRow());
-		pagePaginate.setList(MaterialBoxVOs);
-
-		return pagePaginate;
-	}
-
-
-	public String addBox(Integer area, Integer row, Integer col, Integer height) {
-		String resultString = "添加成功！";
-		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL, area, row, col, height).size() != 0) {
-			resultString = "该位置已有料盒存在，请不要在该位置添加料盒！";
-			return resultString;
-		}
-		MaterialBox materialBox = new MaterialBox();
-		materialBox.setArea(area);
-		materialBox.setRow(row);
-		materialBox.setCol(col);
-		materialBox.setHeight(height);
-		materialBox.setIsOnShelf(true);
-		materialBox.setEnabled(true);
-		materialBox.save();
-		return resultString;
-	}
-
-
-	public String updateBox(MaterialBox materialBox) {
-		String resultString = "更新成功！";
-		if (!materialBox.getEnabled()) {
-			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, materialBox.getId());
-			if (m.get("quantity") != null) {
-				Integer quantity = Integer.parseInt(m.get("quantity").toString());
-				if (quantity > 0) {
-					resultString = "该料盒中还有物料，禁止删除！";
-					return resultString;
-					}
-				}
-		}
-		materialBox.update();
-		return resultString;
-	}
-
-
 	/**
 	 * 列出同一个坐标盒子的所有物料类型
 	 */
-	public List<MaterialBox> listByXYZ(int x, int y, int z) {
-		return MaterialBox.dao.find(GET_SPECIFIED_POSITION_MATERIAL_BOX_SQL, x, y, z);
+	public List<MaterialType> listByXYZ(int x, int y, int z) {
+		return MaterialType.dao.find(GET_SPECIFIED_POSITION_MATERIAL_TYEP_SQL, x, y, z);
 	}
 
 }
