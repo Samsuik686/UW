@@ -10,6 +10,7 @@
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-no" class="col-form-label">料号:</label>
           <input type="text" id="material-no" class="form-control" v-model="thisData.no"  autocomplete="off">
+          <span class="form-span col"></span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-area" class="col-form-label">区域:</label>
