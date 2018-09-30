@@ -85,13 +85,13 @@ public class TaskService {
 
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
-		// 如果套料单表头不对，则提示检查内容格式
+		// 如果套料单表头不对，则提示检查套料单表头
 		if (items == null || items.size() == 0) {
 			if (file.exists()) {
 				file.delete();
 			}
 
-			resultString = "创建任务失败，请检查套料单的内容格式是否正确！";
+			resultString = "创建任务失败，请检查套料单的表头是否正确！";
 			return resultString;
 		} else {
 			synchronized(LOCK) {
@@ -117,8 +117,8 @@ public class TaskService {
 
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
-					// 检查excel表格内容，避免造成空指针异常或将空格误认为料号
-					if (item.getNo() == null || item.getNo().replaceAll(" ", "").equals("")) {
+					// 检查excel表格内容，避免造成空指针异常或将空格误认为料号或需求数
+					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
 						continue;
 					}
 					// 根据料号找到对应的物料类型
@@ -218,10 +218,10 @@ public class TaskService {
 			}
 		}
 		// 将任务绑定的仓口解绑，并更新任务状态为作废
-		if (untiedWindowflag) {
+		if (state == 2 && untiedWindowflag) {
 			Window window = Window.dao.findById(task.getWindow());
-		    window.setBindTaskId(null);
-		    window.update();
+			window.setBindTaskId(null);
+			window.update();
 		}
 		task.setState(4);
 		return task.update();
