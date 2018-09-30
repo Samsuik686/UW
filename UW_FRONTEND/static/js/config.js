@@ -5,6 +5,6 @@ window.g = {
   PARKING_ITEMS_INTERVAL_OUT: [],
   PREVIEW_ITEMS_INTERVAL: [],
   API_URL: '/uw_server',
-  LOCAL_URL: 'http://127.0.0.1:8080/uw_server',
+  LOCAL_URL: 'http://120.198.40.186:28889/uw_server',
 
 };
