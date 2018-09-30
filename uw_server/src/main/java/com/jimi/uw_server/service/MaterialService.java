@@ -24,16 +24,13 @@ public class MaterialService extends SelectService{
 
 	private static final String GET_ENABLED_MATERIAL_TYPE_SQL = "SELECT * FROM material_type WHERE enabled = 1";
 
-	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN"
-			+ "(SELECT id FROM task WHERE state <= 2)";
+	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN (SELECT id FROM task WHERE state <= 2)";
 
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 	
 	private static final String GET_SPECIFIED_POSITION_MATERIAL_TYEP_SQL = "SELECT * FROM material_type WHERE row = ? AND col = ? AND height = ?";
 
-	private	static final String GET_ENTITIES_SQL = "SELECT material.id, material.type, material.row, material.col, "
-			+ "material.remainder_quantity as remainderQuantity FROM material, material_type WHERE type = ? "
-			+ "AND material_type.id = material.type AND material_type.enabled = 1";
+	private	static final String GET_ENTITIES_SQL = "SELECT material.id, material.type, material.row, material.col, material.remainder_quantity as remainderQuantity FROM material, material_type WHERE type = ? AND material_type.id = material.type AND material_type.enabled = 1";
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND enabled = 1";
 
@@ -48,8 +45,7 @@ public class MaterialService extends SelectService{
 				pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
 		for (Record res : result.getList()) {
-			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("area"),
-					res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
+			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("area"), res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
 			materialTypeVOs.add(m);
 		}
 
