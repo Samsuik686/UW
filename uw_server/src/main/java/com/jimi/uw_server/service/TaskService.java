@@ -87,13 +87,13 @@ public class TaskService {
 
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
-		// 如果套料单表头不对，则提示检查内容格式
+		// 如果套料单表头不对，则提示检查套料单表头
 		if (items == null || items.size() == 0) {
 			if (file.exists()) {
 				file.delete();
 			}
 
-			resultString = "创建任务失败，请检查套料单的内容格式是否正确！";
+			resultString = "创建任务失败，请检查套料单的表头是否正确！";
 			return resultString;
 		} else {
 			synchronized(CREATEIOTASK_LOCK) {
@@ -119,7 +119,8 @@ public class TaskService {
 
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
-					if (item.getNo().equals("")) {
+					// 检查excel表格内容，避免造成空指针异常或将空格误认为料号或需求数
+					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
 						continue;
 					}
 					// 根据料号找到对应的物料类型id
@@ -208,14 +209,27 @@ public class TaskService {
 
 	public boolean cancel(Integer id) {
 		Task task = Task.dao.findById(id);
-		// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除，将任务绑定的仓口解绑，并更新任务状态为作废
 		int state = task.getState();
+		boolean untiedWindowflag = true;
+		// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
 		if (state == 2) {
 			TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
-		    Window window = Window.dao.findById(task.getWindow());
-		    window.setBindTaskId(null);
-		    window.update();
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+				if (redisTaskItem.getTaskId().intValue() == id) {
+					untiedWindowflag = false;
+					break;
+				}
+			}
 		}
+		// 如果任务状态为进行中且该组任务的全部任务条目都已从redis清空，则将任务绑定的仓口解绑
+		if (state == 2 && untiedWindowflag) {
+			Window window = Window.dao.findById(task.getWindow());
+			window.setBindTaskId(null);
+			window.update();
+			window.setBindTaskId(null);
+			window.update();
+		}
+		// 更新任务状态为作废
 		task.setState(4);
 		return task.update();
 	}
@@ -226,10 +240,8 @@ public class TaskService {
 		// 如果任务类型为出入库
 		if (type == 0 || type == 1) {
 			// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
-			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, 
-					new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, 
-					pageNo, pageSize, null, null, null);
-			
+			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, null);
+
 			// 遍历同一个任务id的套料单数据
 			for (Record packingListItem : packingListItems.getList()) {
 				// 查询task_log中的material_id,quantity
@@ -239,8 +251,7 @@ public class TaskService {
 				for (TaskLog tl : taskLog) {
 					actualQuantity += tl.getQuantity();
 				}
-				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), 
-						actualQuantity, packingListItem.get("PackingListItem_FinishTime"));
+				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), actualQuantity, packingListItem.get("PackingListItem_FinishTime"));
 				io.setDetails(taskLog);
 				ioTaskDetailVOs.add(io);
 			}
@@ -309,25 +320,35 @@ public class TaskService {
 	public void finish(Integer taskId) {
 		// 对于入库任务，每执行完一批任务条目会清一次redis，然后调用该接口将任务设置为已完成并解绑仓口，但是可能还有其它任务条目未被扫描加载进redis，因此这里需要判断是否所有任务条目都已经执行完毕
 		List<PackingListItem> packListItem = PackingListItem.dao.find(GET_PACKING_LIST_ITEM_SQL, taskId);
+		Task task = Task.dao.findById(taskId);
 		for (PackingListItem item : packListItem) {
-			if (item.getFinishTime() == null) {
+			if (item.getFinishTime() == null && task.getState() == 2) {
 				return ;
 			}
 		}
-		Task task = Task.dao.findById(taskId);
-		task.setState(3);
-		task.update();
-		// 将仓口解绑
+		if (task.getState() == 2) {
+			task.setState(3);
+			task.update();
+		}
+		// 将仓口解绑(作废任务时，如果还有任务条目没跑完就不会解绑仓口，因此不管任务状态是为进行中还是作废，这里都需要解绑仓口)
 	    Window window = Window.dao.findById(task.getWindow());
 	    window.setBindTaskId(null);
 	    window.update();
 	}
 
 
-	public void finishItem(Integer packingListItemid) {
-		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemid);
-		packingListItem.setFinishTime(new Date());
-		packingListItem.update();
+	public boolean finishItem(Integer packListItemId, Boolean isFinish) {
+		if (isFinish) {
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+				if (redisTaskItem.getId().intValue() == packListItemId) {
+					TaskItemRedisDAO.updateTaskIsFinish(redisTaskItem, isFinish);
+					PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+					packingListItem.setFinishTime(new Date());
+					packingListItem.update();
+				}
+			}
+		}
+		return true;
 	}
 
 
@@ -339,9 +360,7 @@ public class TaskService {
 					Integer packingListItemId = redisTaskItem.getId();
 
 					// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
-					Page<Record> windowParkingListItems = selectService.select(new String[] {"packing_list_item", "material_type", }, 
-							new String[] {"packing_list_item.id = " + packingListItemId, "material_type.id = packing_list_item.material_type_id", },
-							null, null, null, null, null);
+					Page<Record> windowParkingListItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.id = " + packingListItemId, "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 
 					for (Record windowParkingListItem : windowParkingListItems.getList()) {
 						// 查询task_log中的material_id,quantity
@@ -351,9 +370,7 @@ public class TaskService {
 						for (TaskLog tl : taskLogs) {
 							actualQuantity += tl.getQuantity();
 						}
-						WindowParkingListItemVO wp = new WindowParkingListItemVO(windowParkingListItem.get("PackingListItem_Id"), task.getFileName(), 
-								task.getType(), windowParkingListItem.get("MaterialType_No"), windowParkingListItem.get("PackingListItem_Quantity"), 
-								actualQuantity);
+						WindowParkingListItemVO wp = new WindowParkingListItemVO(windowParkingListItem.get("PackingListItem_Id"), task.getFileName(),  task.getType(), windowParkingListItem.get("MaterialType_No"), windowParkingListItem.get("PackingListItem_Quantity"), actualQuantity);
 						wp.setDetails(taskLogs);
 						return wp;
 					}
@@ -382,7 +399,7 @@ public class TaskService {
 		int boxId = 0;
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if (item.getId().intValue() == packListItemId) {
-				boxId = item.getBoxId();
+				boxId = item.getBoxId().intValue();
 			}
 		}
 		Material material = new Material();
@@ -406,6 +423,7 @@ public class TaskService {
 		taskLog.setTime(new Date());
 		return taskLog.save();
 	}
+
 
 	public boolean out(Integer packListItemId, String materialId, Integer quantity, User user) {
 		// 根据套料单id，获取对应的任务记录
@@ -442,9 +460,7 @@ public class TaskService {
 		if (id != null) {
 			Window window = Window.dao.findById(id);
 			// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
-			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, 
-					new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id", },
-					pageNo, pageSize, null, null, null);
+			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemsVOs = new ArrayList<WindowTaskItemsVO>();
 			int totalRow = 0;
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
@@ -460,9 +476,7 @@ public class TaskService {
 						}
 						if (windowTaskItem.get("PackingListItem_Id").equals(redisTaskItem.getId())) {
 							Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, window.getBindTaskId());
-							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), 
-									task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), 
-									actualQuantity, windowTaskItem.get("PackingListItem_FinishTime"));
+							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), actualQuantity,  windowTaskItem.get("PackingListItem_FinishTime"));
 							wt.setDetails(taskLogs);
 							windowTaskItemsVOs.add(wt);
 						}

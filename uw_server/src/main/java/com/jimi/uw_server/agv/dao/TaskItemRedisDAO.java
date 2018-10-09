@@ -112,7 +112,7 @@ public class TaskItemRedisDAO {
 
 
 	/**
-	 * 更新任务条目状态<br>
+	 * 更新任务条目执行状态<br>
 	 */
 	public synchronized static void updateTaskItemState(AGVIOTaskItem taskItem, int state) {
 		for (int i = 0; i < cache.llen("til"); i++) {
@@ -120,6 +120,22 @@ public class TaskItemRedisDAO {
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setState(state);
+				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
+	 * 更新任务条目为已完成，标识出入库数量已满足实际需求<br>
+	 */
+	public synchronized static void updateTaskIsFinish(AGVIOTaskItem taskItem, boolean isFinish) {
+		for (int i = 0; i < cache.llen("til"); i++) {
+			byte[] item = cache.lindex("til", i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
+				agvioTaskItem.setIsFinish(isFinish);
 				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}

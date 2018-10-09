@@ -15,7 +15,6 @@ import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.MaterialService;
-import com.jimi.uw_server.service.RobotService;
 import com.jimi.uw_server.service.TaskService;
 
 /**
@@ -29,8 +28,6 @@ public class LSSLHandler {
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-
-	private static RobotService robotService = Enhancer.enhance(RobotService.class);
 
 
 	public static void sendSL(AGVIOTaskItem item, MaterialBox materialBox) throws Exception {
@@ -123,8 +120,7 @@ public class LSSLHandler {
 	private static void nextRound(AGVIOTaskItem item) {
 		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到0
 		if (Task.dao.findById(item.getTaskId()).getType() == 1) {
-			Integer actualQuantity = robotService.getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
-			if (actualQuantity < item.getQuantity().intValue()) {
+			if (!item.getIsFinish()) {
 				TaskItemRedisDAO.updateTaskItemState(item, 0);
 				TaskItemRedisDAO.updateTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);

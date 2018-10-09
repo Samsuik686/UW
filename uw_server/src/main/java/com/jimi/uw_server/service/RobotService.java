@@ -30,8 +30,7 @@ public class RobotService extends SelectService {
 
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
 
-	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? "
-			+ "AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
+	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In (SELECT id FROM material WHERE type = ?)";
 
@@ -92,8 +91,8 @@ public class RobotService extends SelectService {
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
 						PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
-						if (actualQuantity >= packingListItem.getQuantity()) {
-							taskService.finishItem(item.getId());
+						if (actualQuantity.intValue() == packingListItem.getQuantity()) {
+							taskService.finishItem(item.getId(), true);
 						}
 					} else {
 						resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
@@ -146,9 +145,19 @@ public class RobotService extends SelectService {
 			}
 
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {
-					resultString = "该物料已经扫描过，请勿重复扫描！";
-					return resultString;
+					// 该入库任务条目已经执行过一遍但是还没标记为已完成状态，则将该任务条目再次回滚到0
+					if (redisTaskItem.getState() == 4 && !redisTaskItem.getIsFinish()) {
+						AGVIOTaskItem taskItem = new AGVIOTaskItem(item);
+						TaskItemRedisDAO.updateTaskItemState(taskItem, 0);
+						TaskItemRedisDAO.updateTaskItemRobot(taskItem, 0);
+						TaskItemRedisDAO.updateTaskItemBoxId(taskItem, 0);
+						return resultString;
+					} else {	// 否则，提示重复扫描
+						resultString = "该物料已经扫描过，请勿重复扫描！";
+						return resultString;
+					}
 				}
 			}
 

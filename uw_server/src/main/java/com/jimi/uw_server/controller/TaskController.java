@@ -140,6 +140,13 @@ public class TaskController extends Controller {
 	}
 
 
+	// 完成任务条目
+	@Log("id号为{packListItemId}的任务条目出入库数量与计划数量不相符，叉车回库后，该任务条目的完成状态为{isFinish}(true表示已完成，false表示未完成)")
+	public void finishItem(Integer packListItemId, Boolean isFinish) {
+		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish)));
+	}
+
+
 	// 获取指定仓口任务条目
 	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
 		renderJson(ResultUtil.succeed(taskService.getWindowTaskItems(id, pageNo, pageSize)));
