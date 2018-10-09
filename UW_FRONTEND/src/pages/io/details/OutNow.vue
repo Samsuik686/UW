@@ -83,13 +83,14 @@
           <p>{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
           <div class="dropdown-divider"></div>
           <p v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">
-            当前实际出库数少于计划数，如果要让叉车出库（或当前料盒已无该料）请点击"确定"按钮</p>
+            当前实际出库数少于计划数，如果要将该任务条目置为已完成，请点击“确认完成”按钮</p>
           <p v-else>请确定是否出库</p>
         </div>
         <div class="dropdown-divider"></div>
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
-          <button class="btn btn-primary col ml-1 text-white" @click="submit">确认</button>
+          <button class="btn btn-primary col ml-1 text-white" @click="delay">稍候再见</button>
+          <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
         </div>
       </div>
     </div>
@@ -101,7 +102,7 @@
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {robotBackUrl, taskWindowParkingItems, taskOutUrl} from "../../../config/globalUrl";
+  import {robotBackUrl, taskWindowParkingItems, taskOutUrl,taskFinishUrl} from "../../../config/globalUrl";
 
   export default {
     name: "OutNow",
@@ -148,7 +149,6 @@
       window.g.PARKING_ITEMS_INTERVAL_OUT.push(setInterval(() => {
         if (this.currentWindowId !== '') {
           this.fetchData(this.currentWindowId)
-          //this.autoFinish(); //patch !
         } else {
           this.initData();
         }
@@ -162,18 +162,6 @@
       ]),
     },
     methods: {
-      /*patch! wait for delete*/
-      autoFinish: function () {
-        if (JSON.stringify(this.taskNowItems) !== '{}') {
-          this.patchAutoFinishStack += 1;
-        }
-        if (this.patchAutoFinishStack > 10 && JSON.stringify(this.taskNowItems) !== '{}') {
-          this.patchAutoFinishStack = 0;
-          this.setBack();
-        }
-
-      },
-
       ...mapActions(['setCurrentOprType']),
 
       initData: function () {
@@ -312,7 +300,36 @@
       },
       submit: function () {
         this.isMentions = false;
-        this.setBack();
+        this.setFinishItem(true, this.setBack)
+      },
+
+      delay: function () {
+        this.isMentions = false;
+        this.setFinishItem(false, this.setBack)
+      },
+
+      //调用finishItem接口，用于需要出入库实际数与计划数不同的地方
+      setFinishItem: function (boolean, callback) {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: taskFinishUrl,
+            data: {
+              packListItemId: this.taskNowItems.id,
+              isFinish: boolean
+            }
+          };
+          axiosPost(options).then(response => {
+            if (response.data.result === 200) {
+              this.isPending = false;
+              callback();
+            } else {
+              errorHandler(response.data.result)
+            }
+            this.isPending = false;
+          })
+        }
+
       }
     }
   }
