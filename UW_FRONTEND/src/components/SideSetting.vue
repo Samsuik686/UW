@@ -4,19 +4,19 @@
     <div class="setting-container">
       <div class="icon-container" :class="activeItem === 'material' ? 'icon-active' : '' " @click="initData('material')">
         <div class="setting-icon">
-          <icon name="table" scale="1.6" style="color: #fff;"></icon>
+          <icon name="table" scale="1.8" style="color: #fff;"></icon>
         </div>
         <span>物料</span>
       </div>
       <div class="icon-container" :class="activeItem === 'tasks' ? 'icon-active' : ''" @click="initData('tasks')">
         <div class="setting-icon">
-          <icon name="tasks" scale="1.6" style="color: #fff;"></icon>
+          <icon name="tasks" scale="1.8" style="color: #fff;"></icon>
         </div>
         <span>任务</span>
       </div>
       <div class="icon-container" :class="activeItem === 'logs' ? 'icon-active' : ''" @click="initData('logs')">
         <div class="setting-icon">
-          <icon name="logs" scale="1.6" style="color: #fff;"></icon>
+          <icon name="logs" scale="1.8" style="color: #fff;"></icon>
         </div>
         <span>日志</span>
       </div>
@@ -28,7 +28,7 @@
       </div>
       <div class="icon-container" :class="activeItem === 'io' ? 'icon-active' : ''" @click="initData('io')">
         <div class="setting-icon">
-          <icon name="transfer" scale="1.6" style="color: #fff;"></icon>
+          <icon name="transfer" scale="1.8" style="color: #fff;"></icon>
         </div>
         <span>出入库</span>
       </div>
@@ -39,13 +39,13 @@
         <div class="icon-container " :class="activeItem === 'user' ? 'icon-active' : ''"
              @click="initData('user')">
           <div class="setting-icon">
-            <icon name="users" scale="1.6" style="color: #fff;"></icon>
+            <icon name="users" scale="1.8" style="color: #fff;"></icon>
           </div>
           <span>用户</span>
         </div>
         <div class="icon-container" @click="logout">
           <div class="setting-icon">
-            <icon name="power" scale="1.6" style="color: #fff;"></icon>
+            <icon name="power" scale="1.8" style="color: #fff;"></icon>
           </div>
           <span>登出</span>
         </div>
@@ -149,8 +149,8 @@
 
   .setting-icon {
     border-radius: 7px;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     background: #ffb85b;
     display: flex;
     align-items: center;
@@ -170,14 +170,14 @@
     display: flex;
     align-items: center;
     flex-direction: column;
-    margin: 20px 0;
+    margin: 14px 0;
     padding: 5px 0;
     cursor: pointer;
     width: 100%;
   }
 
   .setting-container .icon-active {
-    border-left: #a4efff 3px solid;
+    border-left: #ffb85b 3px solid;
     background: #4f97ff;
   }
 </style>

@@ -94,7 +94,7 @@
         this.data = [];
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
-          {field: 'id', title: '序号', visible: false},
+          {field: 'id', title: '料盒号', colStyle: {'width': '70px'}},
           {field: 'area', title: '所在区域', colStyle: {'width': '80px'}},
           {field: 'row', title: '行号', colStyle: {'width': '70px'}},
           {field: 'col', title: '列号', colStyle: {'width': '70px'}},

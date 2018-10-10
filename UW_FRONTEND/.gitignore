@@ -15,3 +15,7 @@ yarn-error.log*
 /node_modules/
 
 /package-lock.json
+/src/components/vue-datetime/LICENSE
+/src/components/vue-datetime/README.md
+/src/components/vue-datetime/CHANGELOG.md
+/src/components/vue-datetime/package-lock.json

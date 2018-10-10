@@ -89,7 +89,8 @@
         <div class="dropdown-divider"></div>
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
-          <button class="btn btn-primary col ml-1 text-white" @click="delay">稍候再见</button>
+          <button class="btn btn-primary col ml-1 text-white" @click="delay"
+                  v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见</button>
           <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
         </div>
       </div>
@@ -303,8 +304,13 @@
 
       submit: function () {
         this.isMentions = false;
-        this.setFinishItem(true, this.setBack)
+        if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity > 0) {
+          this.setFinishItem(true, this.setBack)
+        } else {
+          this.setBack();
+        }
       },
+
 
       delay: function () {
         this.isMentions = false;
@@ -381,4 +387,39 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
+
+  .btn-delay {
+    color: #fff;
+    background-color: #ffb85b;
+    border-color: #ffb85b;
+  }
+
+  .btn-delay:hover {
+    color: #fff;
+    background-color: #e6a654;
+    border-color: #f5ad5c;
+  }
+
+  .btn-delay:focus, .btn-delay.focus {
+    box-shadow: 0 0 0 0.2rem rgba(252, 180, 93, 0.5);
+  }
+
+  .btn-delay.disabled, .btn-delay:disabled {
+    color: #fff;
+    background-color: #ffb85b;
+    border-color: #ffb85b;
+  }
+
+  .btn-delay:not(:disabled):not(.disabled):active, .btn-delay:not(:disabled):not(.disabled).active,
+  .show > .btn-delay.dropdown-toggle {
+    color: #fff;
+    background-color: #f1aa5b;
+    border-color: #fdb35f;
+  }
+
+  .btn-delay:not(:disabled):not(.disabled):active:focus, .btn-delay:not(:disabled):not(.disabled).active:focus,
+  .show > .btn-delay.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.2rem rgba(252, 180, 93, 0.5);
+  }
+
 </style>

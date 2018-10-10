@@ -27,8 +27,8 @@
   import eventBus from '@/utils/eventBus'
   import {mapGetters, mapActions} from 'vuex';
   import {taskSelectUrl} from "../../../../config/globalUrl";
-  import {Datetime} from 'vue-datetime'
-  import 'vue-datetime/dist/vue-datetime.css'
+  //import {Datetime} from '@/utils/vue-datetime/vue-datetime'
+  import Datetime from '@/components/vue-datetime/Datetime'
   import _ from 'lodash'
 
   export default {
@@ -230,6 +230,9 @@
       createQueryString: function () {
         this.queryString = "";
         this.copyQueryOptions = this.queryOptions.filter((item) => {
+          if ((item.modelFrom === '') ^ (item.modelTo === '')) {
+            this.$alertInfo('日期选择不完整');
+          }
           if (!(item.model === "" || item.modelFrom === "" || item.modelTo === "")) {
             return true;
           }

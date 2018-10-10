@@ -94,7 +94,7 @@
         this.data = [];
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
-          {field: 'id', title: '序号', visible: false},
+          {field: 'id', title: '物料类型号', colStyle: {'width': '70px'}},
           {field: 'no', title: '料号', colStyle: {'width': '120px'}},
           {field: 'specification', title: '规格', colStyle: {'width': '150px'}},
           {field: 'enabled', title: '可用性', visible: false},
