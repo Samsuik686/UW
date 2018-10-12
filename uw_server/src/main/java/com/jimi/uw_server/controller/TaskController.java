@@ -54,7 +54,7 @@ public class TaskController extends Controller {
 
 
 	// 令指定任务通过审核
-	@Log("审核通过了任务编号为{id}的任务")
+	@Log("审核任务编号为{id}的任务")
 	public void pass(Integer id) {
 		if(taskService.pass(id)) {
 			renderJson(ResultUtil.succeed());
@@ -65,7 +65,7 @@ public class TaskController extends Controller {
 
 
 	// 令指定任务开始
-	@Log("开始了任务编号为{id}的任务")
+	@Log("开始任务编号为{id}的任务,绑定的仓口为{window}")
 	public void start(Integer id, Integer window) {
 		if(taskService.start(id, window)) {
 			renderJson(ResultUtil.succeed());
@@ -76,7 +76,7 @@ public class TaskController extends Controller {
 	
 
 	// 作废指定任务
-	@Log("作废了任务编号为{id}的任务")
+	@Log("作废任务编号为{id}的任务")
 	public void cancel(Integer id) {
 		if(taskService.cancel(id)) {
 			renderJson(ResultUtil.succeed());
@@ -111,7 +111,7 @@ public class TaskController extends Controller {
 
 
 	// 物料出入库
-	@Log("正在将id号为{packListItemId}的任务条目进行扫码出入库，料盘时间戳为{materialId}，出入库数量为{quantity}")
+	@Log("将id号为{packListItemId}的任务条目进行扫码出入库，料盘时间戳为{materialId}，出入库数量为{quantity}")
 	public void io(Integer packListItemId, String materialId, Integer quantity) {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);

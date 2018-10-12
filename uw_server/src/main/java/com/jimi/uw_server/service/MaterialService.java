@@ -22,8 +22,6 @@ public class MaterialService extends SelectService{
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
-	private static final String GET_ENABLED_MATERIAL_TYPE_SQL = "SELECT * FROM material_type WHERE enabled = 1";
-
 	private static final String GET_MATERIAL_TYPE_ID_IN_PROCESS_SQL = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id IN (SELECT id FROM task WHERE state <= 2)";
 
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
@@ -52,7 +50,7 @@ public class MaterialService extends SelectService{
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_SQL).size());
+		pagePaginate.setTotalRow(result.getTotalRow());
 		pagePaginate.setList(materialTypeVOs);
 
 		return pagePaginate;

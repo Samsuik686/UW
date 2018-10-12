@@ -117,9 +117,15 @@ public class TaskService {
 
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
-					// 检查excel表格内容，避免造成空指针异常或将空格误认为料号或需求数
+					// 检查套料单中是否存在非法字符
 					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
-						continue;
+						if (file.exists()) {
+							file.delete();
+						}
+						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
+						Task.dao.deleteById(newTaskId);
+						resultString = "创建任务失败，请检查套料单中是否存在非法字符！";
+						return resultString;
 					}
 					// 根据料号找到对应的物料类型
 					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());

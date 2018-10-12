@@ -29,7 +29,7 @@ public class MaterialController extends Controller {
 	}
 
 	// 添加物料类型#
-	@Log("添加了料号为{no}的物料类型,物料具体位置为: 区域号{area},行号{row},列号{col},高度{height}")
+	@Log("添加料号为{no}的物料类型,物料具体位置为: 区域号{area},行号{row},列号{col},高度{height}")
 	public void add(String no, Integer area, Integer row, Integer col, Integer height) {
 		String resultString = materialService.add(no, area, row, col, height);
 		if(resultString.equals("添加成功！")) {
@@ -40,7 +40,7 @@ public class MaterialController extends Controller {
 	}
 
     // 更新物料类型#
-	@Log("更新了料号为{no}的物料类型,更新后的物料具体位置为: 区域号{area},行号{row},列号{col},高度{height}")
+	@Log("更新料号为{no}的物料类型,更新后的物料具体位置为: 区域号{area},行号{row},列号{col},高度{height},传递的enabeld值为{enabled}(0表示禁用,1表示启用)")
 	public void update(@Para("") MaterialType materialType) {
 		String resultString = materialService.update(materialType);
 		if(resultString.equals("更新成功！")) {

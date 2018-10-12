@@ -6,12 +6,14 @@ import java.util.List;
 
 import com.jfinal.kit.PropKit;
 import com.jfinal.kit.StrKit;
+import com.jfinal.plugin.activerecord.ActiveRecordException;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.dialect.MysqlDialect;
 import com.jfinal.plugin.druid.DruidPlugin;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.MappingKit;
 
@@ -162,9 +164,18 @@ public class SelectService {
 		}
 		String resultSet = createResultSet(tables);
 		if(pageNo == null && pageSize == null) {
-			return Db.paginate(1, PropKit.use("properties.ini").getInt("defaultPageSize"), resultSet, sql.toString(), questionValues.toArray());
+			try {
+				return Db.paginate(1, PropKit.use("properties.ini").getInt("defaultPageSize"), resultSet, sql.toString(), questionValues.toArray());
+			} catch (ActiveRecordException a) {
+				throw new OperationException("请勿输入非法字符！");
+			}
+			
 		}else {
-			return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());
+			try {
+				return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());
+			} catch (ActiveRecordException a) {
+				throw new OperationException("请勿输入非法字符！");
+			}
 		}
 	}
 
