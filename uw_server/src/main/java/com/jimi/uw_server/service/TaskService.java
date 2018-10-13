@@ -121,7 +121,13 @@ public class TaskService {
 				for (PackingListItemBO item : items) {
 					// 检查excel表格内容，避免造成空指针异常或将空格误认为料号或需求数
 					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
-						continue;
+						if (file.exists()) {
+							file.delete();
+						}
+						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
+						Task.dao.deleteById(newTaskId);
+						resultString = "创建任务失败，请检查套料单中是否存在非法字符！";
+						return resultString;
 					}
 					// 根据料号找到对应的物料类型id
 					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());
@@ -215,6 +221,7 @@ public class TaskService {
 		if (state == 2) {
 			TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+				// 这里加这条if语句是为了判断任务队列中是否还存在该任务对应的任务条目，因为有可能任务队列中还存在不同任务id的任务条目，因此不能根据任务队列中还有任务条目就直接break
 				if (redisTaskItem.getTaskId().intValue() == id) {
 					untiedWindowflag = false;
 					break;
@@ -224,8 +231,6 @@ public class TaskService {
 		// 如果任务状态为进行中且该组任务的全部任务条目都已从redis清空，则将任务绑定的仓口解绑
 		if (state == 2 && untiedWindowflag) {
 			Window window = Window.dao.findById(task.getWindow());
-			window.setBindTaskId(null);
-			window.update();
 			window.setBindTaskId(null);
 			window.update();
 		}
@@ -337,11 +342,11 @@ public class TaskService {
 	}
 
 
-	public boolean finishItem(Integer packListItemId, Boolean isFinish) {
-		if (isFinish) {
+	public boolean finishItem(Integer packListItemId, Boolean isForceFinish) {
+		if (isForceFinish) {
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 				if (redisTaskItem.getId().intValue() == packListItemId) {
-					TaskItemRedisDAO.updateTaskIsFinish(redisTaskItem, isFinish);
+					TaskItemRedisDAO.updateTaskIsForceFinish(redisTaskItem, isForceFinish);
 					PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 					packingListItem.setFinishTime(new Date());
 					packingListItem.update();

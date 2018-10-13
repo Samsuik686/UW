@@ -130,12 +130,12 @@ public class TaskItemRedisDAO {
 	/**
 	 * 更新任务条目为已完成，标识出入库数量已满足实际需求<br>
 	 */
-	public synchronized static void updateTaskIsFinish(AGVIOTaskItem taskItem, boolean isFinish) {
+	public synchronized static void updateTaskIsForceFinish(AGVIOTaskItem taskItem, boolean isForceFinish) {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
-				agvioTaskItem.setIsFinish(isFinish);
+				agvioTaskItem.setIsForceFinish(isForceFinish);
 				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}

@@ -9,10 +9,8 @@ import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.LSSLHandler;
-import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.util.ErrorLogWritter;
@@ -95,7 +93,8 @@ public class TaskPool extends Thread{
 
 				MaterialBox materialBox = MaterialBox.dao.findById(boxId);
 				// 3. 判断盒子是否在架
-				if (materialBox.getIsOnShelf()) {
+				// 若 boxId 为 0，则查询出来的 materialBox 为  null，如果还调用 materialBox.getIsOnShelf()，会出现空指针异常，需要避免这个错误
+				if (materialBox != null && materialBox.getIsOnShelf()) {
 					// 在架
 					// 4. 将盒号填入item并update到Redis
 					TaskItemRedisDAO.updateTaskItemBoxId(item, boxId);
@@ -104,7 +103,7 @@ public class TaskPool extends Thread{
 					cn--;
 				}
 			}
-			
+
 			a++;
 		} while(cn != 0 && a != taskItems.size());
 	}
@@ -153,10 +152,16 @@ public class TaskPool extends Thread{
 					boxId = differentTypeMaterialBox.getId();
 				}
 			}
-			if (boxId == 0) {
-				TaskItemRedisDAO.setPauseAssign(1);
-				throw new OperationException("仓库的料盒全满了，请尽快处理！");
-			}
+//			if (boxId == 0) {
+				/*
+				 * 如果这里pause了，因为我们暂时没有手动出库的接口，那么除非人为修改数据库，否则这里仓库会一直处于料盒已满状态，系统将永远无法在发送指令给叉车
+				所以这里建议不pause，直接记录错误日志，对应的任务条目不执行，等仓库工作人员发现了，再创建出库任务进行出库，腾出料盒位置即可 */
+				// TaskItemRedisDAO.setPauseAssign(1);
+
+				/*
+				 * 由于任务池遍历周期很短暂，如果记录错误日志，短短几分钟就会记录几百条重复的错误日志 */
+//				throw new OperationException("仓库的料盒全满了，请尽快处理！");
+//			}
 
 		}
 
@@ -177,11 +182,18 @@ public class TaskPool extends Thread{
 					boxId = m.getBox();
 				}
 			}
-		} else {	// 如果库存数量为0，则提示进行补料并pause
-			MaterialType materialType = MaterialType.dao.findById(materialTypeId);
-			TaskItemRedisDAO.setPauseAssign(1);
-			throw new OperationException("仓库缺料了，请尽快对料号为" + materialType.getNo() + "的物料进行补料！");
 		}
+//		else {
+//			MaterialType materialType = MaterialType.dao.findById(materialTypeId);
+			/*
+			 * 与料盒已满的情况相类似，如果这里pause了，因为我们暂时没有手动入库的接口，那么除非人为修改数据库，否则对应的物料会一直处于缺料状态，系统将永远无法在发送指令给叉车
+			所以这里建议不pause，直接记录错误日志，对应的任务条目不执行，等仓库工作人员发现了，再创建入库任务进行补料即可 */
+			// TaskItemRedisDAO.setPauseAssign(1);
+
+			/*
+			 * 也不抛异常或记录错误日志，抛异常会导致任务池不断重复遍历缺料的任务条目；由于任务池遍历周期很短暂，如果记录错误日志，短短几分钟就会记录几百条重复的错误日志 */
+//			throw new OperationException("仓库缺料了，请尽快对料号为" + materialType.getNo() + "的物料进行补料！");
+//		}
 
 		return boxId;
 	}

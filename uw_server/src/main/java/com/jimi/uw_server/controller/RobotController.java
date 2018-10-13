@@ -42,7 +42,7 @@ public class RobotController extends Controller {
 
 
 	// 令叉车回库
-	@Log("令叉车回库，该叉车目前绑定的任务条目为{id}")
+	@Log("发送SL(回库)指令给叉车，该叉车目前绑定的任务条目为{id}")
 	public void back(Integer id) throws Exception {
 		String resultString = robotService.back(id);
 		if (resultString.equals("已成功发送SL指令！")) {

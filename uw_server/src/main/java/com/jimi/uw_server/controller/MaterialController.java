@@ -33,7 +33,7 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加了料号为{no}的物料类型,规格号为{specification}")
+	@Log("添加料号为{no}的物料类型,规格号为{specification}")
 	public void addType(String no, String specification) {
 		String resultString = materialService.addType(no, specification);
 		if(resultString.equals("添加成功！")) {
@@ -45,7 +45,7 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新了id为{id}的物料类型")
+	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
 	public void updateType(@Para("") MaterialType materialType) {
 		String resultString = materialService.updateType(materialType);
 		if(resultString.equals("更新成功！")) {
@@ -63,7 +63,7 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加了新的料盒,区域号为{area},行号为{row},列号为{col},高度为{height}")
+	@Log("添加新的料盒,区域号为{area},行号为{row},列号为{col},高度为{height}")
 	public void addBox(Integer area, Integer row, Integer col, Integer height) {
 		String resultString = materialService.addBox(area, row, col, height);
 		if(resultString.equals("添加成功！")) {
@@ -75,7 +75,7 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新了料盒号为{id}的料盒信息")
+	@Log("更新料盒号为{id}的料盒信息,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
 	public void updateBox(@Para("") MaterialBox MaterialBox) {
 		String resultString = materialService.updateBox(MaterialBox);
 		if(resultString.equals("更新成功！")) {

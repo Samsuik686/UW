@@ -30,7 +30,7 @@ public class AGVIOTaskItem {
 	/**
 	 * false：出入库数量尚未满足实际需求	true：出入库数量已满足实际需求
 	 */
-	private Boolean isFinish;
+	private Boolean isForceFinish;
 
 	
 	public AGVIOTaskItem() {}
@@ -44,7 +44,7 @@ public class AGVIOTaskItem {
 		this.robotId = 0;
 		this.state = 0;
 		this.boxId = 0;
-		this.isFinish = false;
+		this.isForceFinish = false;
 	}
 
 	public Integer getRobotId() {
@@ -99,20 +99,17 @@ public class AGVIOTaskItem {
 		return boxId;
 	}
 
-
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
 	}
 
-	public Boolean getIsFinish() {
-		return isFinish;
+	public Boolean getIsForceFinish() {
+		return isForceFinish;
 	}
 
-
-	public void setIsFinish(Boolean isFinish) {
-		this.isFinish = isFinish;
+	public void setIsForceFinish(Boolean isForceFinish) {
+		this.isForceFinish = isForceFinish;
 	}
-
 
 	public String getGroupId() {
 		return materialTypeId + ":" + taskId;

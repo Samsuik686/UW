@@ -6,6 +6,7 @@ import java.util.List;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.model.vo.ActionLogVO;
 import com.jimi.uw_server.model.vo.PositionLogVO;
 import com.jimi.uw_server.model.vo.TaskLogVO;
 import com.jimi.uw_server.service.base.SelectService;
@@ -19,6 +20,22 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 public class LogService extends SelectService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+
+
+	public Object selectActionLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
+		Page<Record> result = selectService.select(new String[] {table}, null, pageNo, pageSize, ascBy, descBy, filter);
+		List<ActionLogVO> actionLogVOs = new ArrayList<ActionLogVO>();
+		for (Record res : result.getList()) {
+			ActionLogVO a = new ActionLogVO(res.get("id"), res.get("ip"), res.get("uid"), res.get("action"), res.get("time"), res.get("result_code"));
+			actionLogVOs.add(a);
+		}
+		PagePaginate pagePaginate = new PagePaginate();
+		pagePaginate.setPageSize(pageSize);
+		pagePaginate.setPageNumber(pageNo);
+		pagePaginate.setTotalRow(result.getTotalRow());
+ 		pagePaginate.setList(actionLogVOs);
+ 		return pagePaginate;
+	}
 
 
 	public Object selectTaskLog(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {

@@ -91,7 +91,7 @@ public class RobotService extends SelectService {
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
 						PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
-						if (actualQuantity.intValue() == packingListItem.getQuantity()) {
+						if (actualQuantity.intValue() >= packingListItem.getQuantity()) {
 							taskService.finishItem(item.getId(), true);
 						}
 					} else {
@@ -148,7 +148,7 @@ public class RobotService extends SelectService {
 				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {
 					// 该入库任务条目已经执行过一遍但是还没标记为已完成状态，则将该任务条目再次回滚到0
-					if (redisTaskItem.getState() == 4 && !redisTaskItem.getIsFinish()) {
+					if (redisTaskItem.getState() == 4 && !redisTaskItem.getIsForceFinish()) {
 						AGVIOTaskItem taskItem = new AGVIOTaskItem(item);
 						TaskItemRedisDAO.updateTaskItemState(taskItem, 0);
 						TaskItemRedisDAO.updateTaskItemRobot(taskItem, 0);
