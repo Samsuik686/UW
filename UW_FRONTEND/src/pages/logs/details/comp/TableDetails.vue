@@ -8,6 +8,7 @@
 </template>
 
 <script>
+  import HighLight from './HighLight'
   import {axiosPost} from "../../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
   import {logsUrl} from "../../../../config/globalUrl";
@@ -16,7 +17,9 @@
 
   export default {
     name: "Details",
-    components: {},
+    components: {
+      HighLight
+    },
     data() {
       return {
         fixHeaderAndSetBodyMaxHeight: 650,

@@ -230,6 +230,9 @@
       createQueryString: function () {
         this.queryString = "";
         this.copyQueryOptions = this.queryOptions.filter((item) => {
+          if ((item.modelFrom === '') ^ (item.modelTo === '')) {
+            this.$alertInfo('日期选择不完整');
+          }
           if (!(item.model === "" || item.modelFrom === "" || item.modelTo === "")) {
             return true;
           }

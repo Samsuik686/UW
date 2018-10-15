@@ -12,6 +12,7 @@
   import {axiosPost} from "../../../utils/fetchData";
   import {errHandler} from "../../../utils/errorHandler";
   import UserOperation from "./UserOperation"
+
   export default {
     name: "UserDetails",
     components: {
@@ -34,7 +35,7 @@
           {field: 'type', title: '用户类型', colStyle: {'width': '100px'}, visible: false},
           {field: 'typeString', title: '用户类型', colStyle: {'width': '100px'}},
           {field: 'enabled', title: '是否启用', colStyle: {'width': '100px'}, visible: false},
-          {field: 'enabledString', title: '是否启用', colStyle:{'width': '100px'}},
+          {field: 'enabledString', title: '是否启用', colStyle: {'width': '100px'}},
           {title: '操作', tdComp: 'UserOperation', colStyle: {'width': '100px'}}
         ],
         total: 0,
@@ -46,7 +47,7 @@
     created() {
       this.init();
     },
-    mounted () {
+    mounted() {
       this.thisFetch(this.$route.query)
 
     },
@@ -102,6 +103,8 @@
                 item.showId = index + 1 + this.query.offset;
               });
               this.total = response.data.data.totalRow;
+            } else if (response.data.result === 412) {
+              this.$alertWarning(response.data.data);
             } else {
               this.isPending = false;
               errHandler(response.data.result)
