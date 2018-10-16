@@ -64,7 +64,7 @@ public class UserController extends Controller {
 
 
 	// 更新用户信息
-	@Log("更新用户{uid}的信息,更新后的用户姓名为{name},用户类型为{type}(1表示超级管理员,2表示普通管理员),传递的enabeld值为{enabled}(false表示禁用,true表示启用)")
+	@Log("更新用户{uid}的信息,更新后的用户姓名为{name},用户类型为{type}(1表示超级管理员,2表示普通管理员),是否标记为删除:{enabled} (false 表示 是,true 表示 否)")
 	public void update(String uid, String name, String password, Boolean enabled, Integer type) {
 		if(userService.update(uid, name, password, enabled, type)) {
 			renderJson(ResultUtil.succeed());
