@@ -47,6 +47,8 @@ public class RobotController extends Controller {
 		String resultString = robotService.back(id);
 		if (resultString.equals("已成功发送SL指令！")) {
 			renderJson(ResultUtil.succeed());
+		} else if (resultString.equals("料盒中还有其他需要出库的物料，叉车暂时不回库！")) {
+			renderJson(ResultUtil.succeed(resultString));
 		} else {
 			throw new OperationException(resultString);
 		}

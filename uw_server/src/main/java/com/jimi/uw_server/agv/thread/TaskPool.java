@@ -92,12 +92,12 @@ public class TaskPool extends Thread{
 				}
 
 				MaterialBox materialBox = MaterialBox.dao.findById(boxId);
-				// 3. 判断盒子是否在架
+				// 3. 将盒号填入item并update到Redis
+				TaskItemRedisDAO.updateTaskItemBoxId(item, boxId);
+				// 4. 判断盒子是否在架
 				// 若 boxId 为 0，则查询出来的 materialBox 为  null，如果还调用 materialBox.getIsOnShelf()，会出现空指针异常，需要避免这个错误
 				if (materialBox != null && materialBox.getIsOnShelf()) {
 					// 在架
-					// 4. 将盒号填入item并update到Redis
-					TaskItemRedisDAO.updateTaskItemBoxId(item, boxId);
 					// 5. 发送LS指令
 					LSSLHandler.sendLS(item, materialBox);
 					cn--;

@@ -158,7 +158,7 @@ public class TaskItemRedisDAO {
 		}
 	}
 
-	
+
 	/**
 	 *  填写指定条目的执行机器
 	 */
@@ -168,6 +168,22 @@ public class TaskItemRedisDAO {
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setRobotId(robotid);
+				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
+	 *  更新指定条目的groupId
+	 */
+	public synchronized static void updateTaskItemGroupId(AGVIOTaskItem taskItem, String groupId) {
+		for (int i = 0; i < cache.llen("til"); i++) {
+			byte[] item = cache.lindex("til", i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
+				agvioTaskItem.setGroupId(groupId);
 				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}

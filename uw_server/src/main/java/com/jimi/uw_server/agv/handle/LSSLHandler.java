@@ -36,7 +36,7 @@ public class LSSLHandler {
 		//发送SL>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 		//更新任务条目状态为已分配回库***
-		TaskItemRedisDAO.updateTaskItemState(item, 3);
+//		TaskItemRedisDAO.updateTaskItemState(item, 3);
 	}
 
 
@@ -78,7 +78,7 @@ public class LSSLHandler {
 		
 		//匹配groupid
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
-			if(groupid.equals(item.getGroupId())) {
+			if(groupid.equals(item.getGroupId()) && item.getState().intValue() != 4) {
 				//更新tsakitems里对应item的robotid
 				TaskItemRedisDAO.updateTaskItemRobot(item, statusCmd.getRobotid());
 				break;

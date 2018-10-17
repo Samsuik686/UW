@@ -32,6 +32,7 @@ public class AGVIOTaskItem {
 	 */
 	private Boolean isForceFinish;
 
+	private String groupId;
 	
 	public AGVIOTaskItem() {}
 	
@@ -45,6 +46,7 @@ public class AGVIOTaskItem {
 		this.state = 0;
 		this.boxId = 0;
 		this.isForceFinish = false;
+		this.groupId = packingListItem.getMaterialTypeId() + ":" + packingListItem.getTaskId();
 	}
 
 	public Integer getRobotId() {
@@ -112,7 +114,11 @@ public class AGVIOTaskItem {
 	}
 
 	public String getGroupId() {
-		return materialTypeId + ":" + taskId;
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
 	}
 
 }

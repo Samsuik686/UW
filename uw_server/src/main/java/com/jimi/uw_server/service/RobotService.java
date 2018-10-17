@@ -84,16 +84,32 @@ public class RobotService extends SelectService {
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(BACK_LOCK) {
-					// 查询对应料盒
-					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 					if (item.getState().intValue() < 3) {
-						LSSLHandler.sendSL(item, materialBox);
+						// 更新任务条目状态为已分配回库
+						TaskItemRedisDAO.updateTaskItemState(item, 3);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
-						PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
-						if (actualQuantity.intValue() >= packingListItem.getQuantity()) {
-							taskService.finishItem(item.getId(), true);
+						if (actualQuantity >= item.getQuantity()) {
+							taskService.finishItem(id, true);
 						}
+
+						// 查询对应料盒
+						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相桶，且未被分配任务的任务条目，则发送回库指令
+						if (getSameBoxItem(item).intValue() == id) {
+							LSSLHandler.sendSL(item, materialBox);
+						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
+							PackingListItem packingListItem = PackingListItem.dao.findById(getSameBoxItem(item));
+							AGVIOTaskItem itemInSameBox = new AGVIOTaskItem(packingListItem);
+							// 更新任务条目状态为已到达仓口
+							TaskItemRedisDAO.updateTaskItemState(itemInSameBox, 2);
+							// 更新任务条目的叉车id
+							TaskItemRedisDAO.updateTaskItemRobot(itemInSameBox, item.getRobotId());
+							// 更新任务条目的groupId，使其groupId与同料盒的任务条目一致
+							TaskItemRedisDAO.updateTaskItemGroupId(itemInSameBox, item.getGroupId());
+							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
+						}
+
 					} else {
 						resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
 						return resultString;
@@ -106,6 +122,9 @@ public class RobotService extends SelectService {
 	}
 
 
+	/**
+	 * 获取任务条目实际出入库数量
+	 */
 	public Integer getActualIOQuantity(Integer taskId, Integer materialTypeId) {
 		// 查询task_log中的material_id,quantity
 		List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, taskId, materialTypeId);
@@ -115,6 +134,20 @@ public class RobotService extends SelectService {
 			actualQuantity += tl.getQuantity();
 		}
 		return actualQuantity;
+	}
+
+
+	/**
+	 * 获取同组任务、同料盒中尚未被分配任务的任务条目id
+	 */
+	public Integer getSameBoxItem(AGVIOTaskItem item) {
+		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
+			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getState().intValue() == 0) {
+				// 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目id；否则直接返回原来的任务条目id
+				return item1.getId();
+			}
+		}
+		return item.getId();
 	}
 
 
