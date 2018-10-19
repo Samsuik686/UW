@@ -78,10 +78,9 @@ public class LSSLHandler {
 		
 		//匹配groupid
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
-			if(groupid.equals(item.getGroupId()) && item.getState().intValue() != 4) {
+			if(groupid.equals(item.getGroupId())) {
 				//更新tsakitems里对应item的robotid
 				TaskItemRedisDAO.updateTaskItemRobot(item, statusCmd.getRobotid());
-				break;
 			}
 		}
 	}

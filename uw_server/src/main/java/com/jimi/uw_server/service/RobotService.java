@@ -95,18 +95,15 @@ public class RobotService extends SelectService {
 
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相桶，且未被分配任务的任务条目，则发送回库指令
-						if (getSameBoxItem(item).intValue() == id) {
+						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同且未被分配任务的任务条目，则发送回库指令
+						Integer sameBoxItemId = getSameBoxItemId(item);
+						if (sameBoxItemId == null) {
 							LSSLHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-							PackingListItem packingListItem = PackingListItem.dao.findById(getSameBoxItem(item));
+							PackingListItem packingListItem = PackingListItem.dao.findById(sameBoxItemId);
 							AGVIOTaskItem itemInSameBox = new AGVIOTaskItem(packingListItem);
 							// 更新任务条目状态为已到达仓口
 							TaskItemRedisDAO.updateTaskItemState(itemInSameBox, 2);
-							// 更新任务条目的叉车id
-							TaskItemRedisDAO.updateTaskItemRobot(itemInSameBox, item.getRobotId());
-							// 更新任务条目的groupId，使其groupId与同料盒的任务条目一致
-							TaskItemRedisDAO.updateTaskItemGroupId(itemInSameBox, item.getGroupId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
@@ -139,15 +136,15 @@ public class RobotService extends SelectService {
 
 	/**
 	 * 获取同组任务、同料盒中尚未被分配任务的任务条目id
+	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目id；否则返回null
 	 */
-	public Integer getSameBoxItem(AGVIOTaskItem item) {
+	public Integer getSameBoxItemId(AGVIOTaskItem item) {
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
-			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getState().intValue() == 0) {
-				// 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目id；否则直接返回原来的任务条目id
-				return item1.getId();
+			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == 0) {
+				return item1.getId().intValue();
 			}
 		}
-		return item.getId();
+		return null;
 	}
 
 
