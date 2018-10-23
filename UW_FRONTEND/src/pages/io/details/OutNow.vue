@@ -4,6 +4,13 @@
 
 <template>
   <div>
+    <video controls="controls" id="sAudio" hidden>
+      <source src="./../../../assets/005-System05.ogg" type="video/ogg">
+    </video>
+    <video controls="controls" id="fAudio" hidden>
+      <source src="./../../../assets/141-Burst01.ogg" type="video/ogg">
+    </video>
+
     <global-tips :message="tipsComponentMsg" v-if="isTipsShow"/>
     <options/>
     <input type="text" title="scanner" id="out-check" v-model="scanText"
@@ -247,7 +254,7 @@
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
-                if(this.isFirst === true){
+                if(this.isFirst === true || this.compareArr(this.materialOutRecords,this.taskNowItems.details) === false){
                   this.materialOutRecords = this.taskNowItems.details;
                   this.actualQuantity = this.taskNowItems.actualQuantity;
                 }
@@ -293,6 +300,7 @@
           /*对比料号是否一致*/
           let tempArray = this.scanText.split("@");
           if (tempArray[0] !== this.taskNowItems.materialNo) {
+            this.failAudioPlay();
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {
@@ -311,12 +319,14 @@
             };
             axiosPost(options).then(response => {
               if (response.data.result === 200) {
+                this.successAudioPlay();
                 this.isTipsShow = true;
                 this.tipsComponentMsg = true;
                 setTimeout(() => {
                   this.isTipsShow = false;
                 }, 3000)
               } else {
+                this.failAudioPlay();
                 this.isTipsShow = true;
                 this.tipsComponentMsg = false;
                 setTimeout(() => {
@@ -477,6 +487,7 @@
           }
         }
         this.countActualQuantity();
+        this.setFocus();
       },
       // 计算实际数量
       countActualQuantity:function () {
@@ -486,7 +497,39 @@
           sum = sum + item.quantity;
         }
         this.actualQuantity = sum;
-      }
+      },
+      // 比较两个数组
+      compareArr:function(materialOutRecords,details){
+        if(materialOutRecords.length !== details.length){
+          return false;
+        }else{
+          for(let i = 0;i<materialOutRecords.length;i++){
+            if(materialOutRecords[i].materialId !== details[i].materialId){
+              return false;
+            }
+          }
+        }
+        return true;
+      },
+      // 扫描成功提示
+      successAudioPlay: function () {
+        let audio = document.getElementById('sAudio');
+        if (audio !== null) {
+          if (audio.paused) {
+            audio.play();
+          }
+        }
+        this.isFirst = true;
+      },
+      // 扫描失败提示
+      failAudioPlay: function () {
+        let audio = document.getElementById('fAudio');
+        if (audio !== null) {
+          if (audio.paused) {
+            audio.play();
+          }
+        }
+      },
     }
   }
 </script>

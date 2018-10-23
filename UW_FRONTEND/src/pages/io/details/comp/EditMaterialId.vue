@@ -76,7 +76,6 @@
           this.$alertWarning('格式不对');
           return;
         }
-        console.log(this.thisData.initQuantity);
         if(this.thisData.quantity> this.thisData.initQuantity){
           this.$alertWarning('修改的数量不能大于该料盘剩余数量');
           return;
