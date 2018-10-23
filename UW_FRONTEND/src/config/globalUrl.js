@@ -41,6 +41,10 @@ export const taskWindowParkingItems = url + '/task/getWindowParkingItem';
 export const taskInUrl = url + '/task/in';
 export const taskOutUrl = url + '/task/out';
 
+export const taskDeleteMaterialRecordUrl = url + '/task/deleteMaterialRecord';
+
+export const taskUpdateOutQuantityUrl = url + '/task/updateOutQuantity';
+
 export const taskFinishUrl = url + '/task/finishItem';
 
 //robot
