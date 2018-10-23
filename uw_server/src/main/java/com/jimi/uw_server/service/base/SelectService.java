@@ -127,7 +127,7 @@ public class SelectService {
 					String operator = "like";
 					int operatorStartIndex = whereUnit.indexOf("like");
 					String key = whereUnit.substring(0, operatorStartIndex);
-					String value = whereUnit.substring(operatorStartIndex + operator.length(), whereUnit.length());
+					String value = whereUnit.substring(operatorStartIndex + 4, whereUnit.length());
 					sql.append(key + " " + operator.toString() +" ? AND ");
 					questionValues.add("%" + value + "%");
 					if(index == whereUnits.length - 1) {

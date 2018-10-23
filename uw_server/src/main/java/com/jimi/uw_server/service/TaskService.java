@@ -45,8 +45,6 @@ public class TaskService {
 
 	private static final String GET_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
 
-	private static final String GET_NEW_TASK_ID_SQL = "SELECT MAX(id) as newId FROM task";
-
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
 
 	private static final String DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL = "DELETE FROM packing_list_item WHERE task_id = ?";
@@ -120,8 +118,7 @@ public class TaskService {
 				task.setCreateTime(new Date());
 				task.save();
 				// 获取新任务id
-				Task newTaskIdDao = Task.dao.findFirst(GET_NEW_TASK_ID_SQL);
-				Integer newTaskId = newTaskIdDao.get("newId");
+				Integer newTaskId = task.getId();
 
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
@@ -502,9 +499,10 @@ public class TaskService {
 					material.setRemainderQuantity(0);
 					material.update();
 					continue;
+				} else {
+					material.setRemainderQuantity(remainderQuantity);
+					material.update();
 				}
-				material.setRemainderQuantity(remainderQuantity);
-				material.update();
 			}
 		}
 
