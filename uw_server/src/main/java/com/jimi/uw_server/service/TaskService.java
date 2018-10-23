@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -68,6 +70,10 @@ public class TaskService {
 	private static final String GET_MATERIAL_BY_ID_SQL = "SELECT * FROM material WHERE id = ?";
 
 	private static final String GET_PACKING_LIST_ITEM_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
+
+	private static final String DELETE_TASK_LOG_SQL = "DELETE FROM task_log WHERE task_id = ? AND material_id = ?";
+
+	private static final String GET_TASK_LOG_SQL = "SELECT * FROM task_log WHERE task_id = ? AND material_id = ?";
 
 
 	public String createIOTask(Integer type, String fileName, String fullFileName) throws Exception {
@@ -439,15 +445,6 @@ public class TaskService {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
 		}
 
-		/*
-		 *  将物料表记录置位无效
-		 */
-		Material oldMaterial = Material.dao.findById(materialId);
-		oldMaterial.setRow(-1);
-		oldMaterial.setCol(-1);
-		oldMaterial.setRemainderQuantity(0);
-		oldMaterial.update();
-
 		// 写入一条出库任务日志
 		TaskLog taskLog = new TaskLog();
 		taskLog.setTaskId(packingListItem.getTaskId());
@@ -458,6 +455,59 @@ public class TaskService {
 		taskLog.setAuto(true);
 		taskLog.setTime(new Date());
 		return taskLog.save();
+	}
+
+
+	public boolean deleteMaterialRecord(Integer packListItemId, String materialId) {
+		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+		int taskId = packingListItem.getTaskId();
+		Task task = Task.dao.findById(taskId);
+		if (task.getType() == 0) {	// 若是入库，则删除掉入库记录，并删除掉物料实体表记录
+			Db.update(DELETE_TASK_LOG_SQL, taskId, materialId);
+			return Material.dao.deleteById(materialId);
+		} else {	// 若是出库，则将物料实体表记录重新置为有效,并删除掉出库记录
+			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, taskId, materialId);
+			Material material = Material.dao.findById(materialId);
+			material.setRow(0);
+			material.setCol(0);
+			material.setRemainderQuantity(taskLog.getQuantity());
+			material.update();
+			return TaskLog.dao.deleteById(taskLog.getId());
+		}
+	}
+
+
+	public void updateOutputQuantity(Integer packListItemId, String materialOutputRecords) {
+		if (materialOutputRecords != null) {
+			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+			int taskId = packingListItem.getTaskId();
+
+			JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
+
+			for (int i=0; i<jsonArray.size(); i++) {
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				String materialId = jsonObject.getString("materialId");
+				Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
+
+				// 修改任务日志的出库数量
+				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, taskId, materialId);
+				taskLog.setQuantity(quantity).update();
+				Material material = Material.dao.findById(materialId);
+				// 修改物料实体表对应的料盘剩余数量
+				int remainderQuantity = material.getRemainderQuantity() - quantity;
+				// 若该料盘没有库存了，则将物料实体表记录置为无效
+				if (remainderQuantity <= 0) {
+					material.setRow(-1);
+					material.setCol(-1);
+					material.setRemainderQuantity(0);
+					material.update();
+					continue;
+				}
+				material.setRemainderQuantity(remainderQuantity);
+				material.update();
+			}
+		}
+
 	}
 
 
@@ -485,7 +535,7 @@ public class TaskService {
 							wt.setDetails(taskLogs);
 							windowTaskItemsVOs.add(wt);
 						}
-					}	
+					}
 				}
 			}
 			// 分页，设置页码，每页显示条目等

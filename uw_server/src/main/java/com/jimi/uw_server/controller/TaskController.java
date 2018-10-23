@@ -140,6 +140,13 @@ public class TaskController extends Controller {
 	}
 
 
+	// 删除错误的料盘记录
+	@Log("删除掉料盘时间戳为为{materialId}的出入库记录")
+	public void deleteMaterialRecord(Integer packListItemId, String materialId) {
+		renderJson(ResultUtil.succeed(taskService.deleteMaterialRecord(packListItemId, materialId)));
+	}
+
+
 	// 完成任务条目
 	@Log("id号为{packListItemId}的任务条目出入库数量与计划数量不相符，叉车回库后，该任务条目的完成状态为{isFinish}(true表示已完成，false表示未完成)")
 	public void finishItem(Integer packListItemId, Boolean isFinish) {

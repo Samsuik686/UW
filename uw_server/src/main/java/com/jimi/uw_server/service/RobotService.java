@@ -79,7 +79,7 @@ public class RobotService extends SelectService {
 	/**
 	 * 叉车回库SL
 	 */
-	public String back(Integer id) throws Exception {
+	public String back(Integer id, String materialOutputRecords) throws Exception {
 		String resultString = "已成功发送SL指令！";
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if (item.getId().intValue() == id) {
@@ -95,7 +95,7 @@ public class RobotService extends SelectService {
 
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相桶，且未被分配任务的任务条目，则发送回库指令
+						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 						if (getSameBoxItem(item).intValue() == id) {
 							LSSLHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
@@ -108,6 +108,11 @@ public class RobotService extends SelectService {
 							// 更新任务条目的groupId，使其groupId与同料盒的任务条目一致
 							TaskItemRedisDAO.updateTaskItemGroupId(itemInSameBox, item.getGroupId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
+						}
+
+						// 在对出库任务执行回库操作时，调用 updateOutputQuantity 方法，以便「修改出库数」
+						if (Task.dao.findById(item.getTaskId()).getType() == 1) {
+							taskService.updateOutputQuantity(id, materialOutputRecords);
 						}
 
 					} else {

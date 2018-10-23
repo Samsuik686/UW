@@ -122,26 +122,40 @@ public class SelectService {
 			String[] whereUnits = filter.split("&");
 			int index = 0;
 			for (String whereUnit: whereUnits) {
-				//分割键值与运算符
-				int operatorStartIndex = -1;
-				StringBuffer operator = new StringBuffer();
-				for (int i = 0; i < whereUnit.length(); i++) {
-					char c = whereUnit.charAt(i);
-					if(c == '>' || c == '<' || c == '=' || c == '!') {
-						operator.append(c);
-						if(operatorStartIndex == -1) {
-							operatorStartIndex = i;
+				if (whereUnit.contains("like")) {	// 判断是否进行模糊查询
+					//分割键值与运算符
+					String operator = "like";
+					int operatorStartIndex = whereUnit.indexOf("like");
+					String key = whereUnit.substring(0, operatorStartIndex);
+					String value = whereUnit.substring(operatorStartIndex + operator.length(), whereUnit.length());
+					sql.append(key + " " + operator.toString() +" ? AND ");
+					questionValues.add("%" + value + "%");
+					if(index == whereUnits.length - 1) {
+						sql.delete(sql.lastIndexOf("AND"), sql.length());
+					}
+					index++;
+				} else {
+					//分割键值与运算符
+					int operatorStartIndex = -1;
+					StringBuffer operator = new StringBuffer();
+					for (int i = 0; i < whereUnit.length(); i++) {
+						char c = whereUnit.charAt(i);
+						if(c == '>' || c == '<' || c == '=' || c == '!') {
+							operator.append(c);
+							if(operatorStartIndex == -1) {
+								operatorStartIndex = i;
+							}
 						}
 					}
+					String key = whereUnit.substring(0, operatorStartIndex);
+					String value = whereUnit.substring(operatorStartIndex + operator.length(), whereUnit.length());
+					sql.append(key + operator.toString() +"? AND ");
+					questionValues.add(value);
+					if(index == whereUnits.length - 1) {
+						sql.delete(sql.lastIndexOf("AND"), sql.length());
+					}
+					index++;
 				}
-				String key = whereUnit.substring(0, operatorStartIndex);
-				String value = whereUnit.substring(operatorStartIndex + operator.length(), whereUnit.length());
-				sql.append(key + operator.toString() +"? AND ");
-				questionValues.add(value);
-				if(index == whereUnits.length - 1) {
-					sql.delete(sql.lastIndexOf("AND"), sql.length());
-				}
-				index++;
 			}
 		}
 	}
