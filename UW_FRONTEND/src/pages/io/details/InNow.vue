@@ -57,6 +57,9 @@
             <div class="col">
               <span class="card-text text-center">数量: </span>
             </div>
+            <div class="col">
+              <span class="card-text text-center">操作: </span>
+            </div>
           </div>
           <div class="dropdown-divider"></div>
           <div class="row card-body" v-for="item in taskNowItems.details">
@@ -65,6 +68,11 @@
             </div>
             <div class="col pl-4">
               <p class="card-text">{{item.quantity}}</p>
+            </div>
+           <div class="col pl-4">
+             <div class="btn" title="删除" @click="confirmDelete(item.materialId)">
+               <icon name="cancel" scale="2"></icon>
+             </div>
             </div>
           </div>
         </div>
@@ -95,6 +103,28 @@
         </div>
       </div>
     </div>
+
+    <div v-if="isDeleting" id="delete-window">
+      <div class="delete-panel">
+        <div class="delete-panel-container form-row flex-column justify-content-between">
+          <div class="form-row">
+            <div class="form-group mb-0">
+              <h3>确认删除：</h3>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-row col pl-2 pr-2">
+              你正在删除料盘唯一码为 "{{deleteMaterialId}}" 的扫描记录，请确认是否删除
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="form-row justify-content-around">
+            <a class="btn btn-secondary col mr-1 text-white" @click="isDeleting = false">取消</a>
+            <a class="btn btn-danger col ml-1 text-white" @click="deleteMaterialRecord">确定</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -103,7 +133,8 @@
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {robotBackUrl, taskWindowParkingItems, taskInUrl, taskFinishUrl} from "../../../config/globalUrl";
+  import {robotBackUrl, taskWindowParkingItems, taskInUrl, taskFinishUrl,taskDeleteMaterialRecordUrl} from "../../../config/globalUrl";
+  import {errHandler} from "../../../utils/errorHandler";
 
   export default {
     name: "InNow",
@@ -138,9 +169,9 @@
         isTipsShow: false,
         isPending: false,
         isMentions: false,
-
+        isDeleting:false,
         patchAutoFinishStack: 0,
-
+        deleteMaterialId:""
 
       }
     },
@@ -333,12 +364,40 @@
               this.isPending = false;
               callback();
             } else {
-              errorHandler(response.data.result)
+              errHandler(response.data.result)
             }
             this.isPending = false;
           })
         }
 
+      },
+
+      //确认删除
+      confirmDelete:function(materialId){
+        this.isDeleting = true;
+        this.deleteMaterialId = materialId;
+      },
+      //删除待定
+      deleteMaterialRecord:function(){
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url:taskDeleteMaterialRecordUrl,
+            data: {
+              packListItemId:this.taskNowItems.id,
+              materialId:this.deleteMaterialId
+            }
+          };
+          axiosPost(options).then(response => {
+            this.isDeleting = false;
+            if (response.data.result === 200) {
+              this.$alertSuccess("删除成功");
+            } else {
+              errHandler(response.data.result);
+            }
+            this.isPending = false;
+          })
+        }
       }
     }
   }
@@ -421,5 +480,34 @@
   .show > .btn-delay.dropdown-toggle:focus {
     box-shadow: 0 0 0 0.2rem rgba(252, 180, 93, 0.5);
   }
+  .delete-panel {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 101;
+  }
 
+  .delete-panel-container {
+    background: #ffffff;
+    height: 220px;
+    width: 400px;
+    z-index: 102;
+    border-radius: 10px;
+    box-shadow: 3px 3px 20px 1px #bbb;
+    padding: 30px 60px 10px 60px;
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+  }
+
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
 </style>

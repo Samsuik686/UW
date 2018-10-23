@@ -7,7 +7,7 @@
     <global-tips :message="tipsComponentMsg" v-if="isTipsShow"/>
     <options/>
     <input type="text" title="scanner" id="out-check" v-model="scanText"
-           @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
+           @blur="confirmSetFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
 
     <div class="io-now mt-1 mb-3" v-if="tipsMessage !==''">
       <p class="d-block text-center mt-5">{{tipsMessage}}</p>
@@ -30,13 +30,14 @@
             </div>
             <div class="col pr-0">
               <span class="col-form-label">实际: </span>
-              <p class="card-text form-control">{{taskNowItems.actualQuantity}}</p>
+              <p class="card-text form-control">{{actualQuantity}}</p>
             </div>
           </div>
           <div class="card-body row">
             <div class="col pr-0 pl-0">
               <span class="col-form-label">缺发数量/超发数量: </span>
-              <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
+              <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
+                actualQuantity)}}</p>
             </div>
           </div>
         </div>
@@ -57,14 +58,25 @@
             <div class="col">
               <span class="card-text text-center">数量: </span>
             </div>
+            <div class="col">
+              <span class="card-text text-center">操作: </span>
+            </div>
           </div>
           <div class="dropdown-divider"></div>
-          <div class="row card-body" v-for="item in taskNowItems.details">
+          <div class="row card-body" v-for="item in materialOutRecords">
             <div class="col pl-4">
               <p class="card-text">{{item.materialId}}</p>
             </div>
             <div class="col pl-4">
               <p class="card-text">{{item.quantity}}</p>
+            </div>
+            <div class="col pl-4">
+              <div class="btn pl-1 pr-1" title="修改出库数" @click="confirmEdit(item)">
+                <icon name="edit" scale="1.8"></icon>
+              </div>
+              <div class="btn pl-1 pr-1" title="删除" @click="confirmDelete(item)">
+                <icon name="cancel" scale="1.8"></icon>
+              </div>
             </div>
           </div>
         </div>
@@ -79,10 +91,10 @@
         </div>
         <div class="card-body">
           <p>该任务计划出库数量: {{taskNowItems.planQuantity}}</p>
-          <p>实际出库数量: {{taskNowItems.actualQuantity}}</p>
-          <p>{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
+          <p>实际出库数量: {{actualQuantity}}</p>
+          <p>{{overQuantity(taskNowItems.planQuantity, actualQuantity)}}</p>
           <div class="dropdown-divider"></div>
-          <p v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">
+          <p v-if="taskNowItems.planQuantity - actualQuantity > 0">
             当前实际出库数少于计划数，如果要将该任务条目置为已完成，请点击“确认完成”按钮</p>
           <p v-else>请确定是否出库</p>
         </div>
@@ -90,8 +102,33 @@
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
           <button class="btn btn-delay col ml-1 text-white" @click="delay"
-                  v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见</button>
+                  v-if="taskNowItems.planQuantity - actualQuantity > 0">稍候再见
+          </button>
           <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
+        </div>
+      </div>
+    </div>
+    <div v-if="isEditing" id="edit-window">
+      <EditMaterialId :editData="editData" @getEditData="getEditData"></EditMaterialId>
+    </div>
+    <div v-if="isDeleting" id="delete-window">
+      <div class="delete-panel">
+        <div class="delete-panel-container form-row flex-column justify-content-between">
+          <div class="form-row">
+            <div class="form-group mb-0">
+              <h3>确认删除：</h3>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-row col pl-2 pr-2">
+              你正在删除料盘唯一码为 "{{editData.materialId}}" 的扫描记录，请确认是否删除
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="form-row justify-content-around">
+            <a class="btn btn-secondary col mr-1 text-white" @click="isDeleting = false">取消</a>
+            <a class="btn btn-danger col ml-1 text-white" @click="deleteMaterialRecord">确定</a>
+          </div>
         </div>
       </div>
     </div>
@@ -100,16 +137,26 @@
 
 <script>
   import Options from './comp/QueryOptions'
+  import EditMaterialId from './comp/EditMaterialId'
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {robotBackUrl, taskWindowParkingItems, taskOutUrl,taskFinishUrl} from "../../../config/globalUrl";
+  import {
+    robotBackUrl,
+    taskWindowParkingItems,
+    taskOutUrl,
+    taskFinishUrl,
+    taskDeleteMaterialRecordUrl
+  } from "../../../config/globalUrl";
+  import {errHandler} from "../../../utils/errorHandler";
+  import eventBus from '@/utils/eventBus';
 
   export default {
     name: "OutNow",
     components: {
       Options,
-      GlobalTips
+      GlobalTips,
+      EditMaterialId
     },
     data() {
 
@@ -138,11 +185,26 @@
         isTipsShow: false,
         isPending: false,
         isMentions: false,
-
-        patchAutoFinishStack: 0
+        isDeleting: false,
+        isEditing: false,
+        isFirst:true,
+        patchAutoFinishStack: 0,
+        editData: {
+          packListItemId: "",
+          materialId: "",
+          quantity: 0,
+          initQuantity:0
+        },
+        materialOutRecords: [],
+        actualQuantity:0,
       }
     },
     mounted() {
+      eventBus.$on('closeEditPanel', () => {
+        this.isEditing = false;
+        this.setFocus();
+      });
+
       this.initData();
       this.setFocus();
       this.fetchData(this.currentWindowId);
@@ -155,8 +217,7 @@
         }
       }, 1000))
     },
-    watch: {
-    },
+    watch: {},
     computed: {
       ...mapGetters([
         'currentWindowId'
@@ -186,7 +247,14 @@
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
-                this.tipsMessage = ""
+                if(this.isFirst === true){
+                  this.materialOutRecords = this.taskNowItems.details;
+                  this.actualQuantity = this.taskNowItems.actualQuantity;
+                }
+                if(this.materialOutRecords.length > 0){
+                  this.isFirst = false;
+                }
+                this.tipsMessage = "";
               } else {
                 this.taskNowItems = {};
                 this.tipsMessage = "无数据"
@@ -268,7 +336,8 @@
           let options = {
             url: robotBackUrl,
             data: {
-              id: this.taskNowItems.id
+              id: this.taskNowItems.id,
+              materialOutputRecords:JSON.stringify(this.materialOutRecords)
             }
           };
           axiosPost(options).then(response => {
@@ -329,12 +398,94 @@
               this.isPending = false;
               callback();
             } else {
-              errorHandler(response.data.result)
+              errHandler(response.data.result)
             }
             this.isPending = false;
           })
         }
 
+      },
+      //确认编辑
+      confirmEdit: function (item) {
+        this.isEditing = true;
+        this.editData.packListItemId = this.taskNowItems.id;
+        this.editData.materialId = item.materialId;
+        this.editData.quantity = item.quantity;
+        for(let i =0;i<this.taskNowItems.details.length;i++){
+          let obj = this.taskNowItems.details[i];
+          if(obj.materialId === this.editData.materialId){
+            this.editData.initQuantity = obj.quantity;
+            break;
+          }
+        }
+        this.$nextTick(function () {
+          eventBus.$emit('replaceFocus', true);
+        })
+      },
+      //确认删除
+      confirmDelete: function (item) {
+        this.isDeleting = true;
+        this.editData.packListItemId = this.taskNowItems.id;
+        this.editData.materialId = item.materialId;
+        this.editData.quantity = item.quantity;
+      },
+      //删除
+      deleteMaterialRecord: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: taskDeleteMaterialRecordUrl,
+            data: {
+              packListItemId: this.editData.packListItemId,
+              materialId: this.editData.materialId
+            }
+          };
+          axiosPost(options).then(response => {
+            this.isDeleting = false;
+            if (response.data.result === 200) {
+              this.$alertSuccess("删除成功");
+              for(let i=0;i<this.materialOutRecords.length;i++){
+                if(this.editData.materialId === this.materialOutRecords[i].materialId){
+                  this.materialOutRecords.splice(i,1);
+                  break;
+                }
+              }
+              this.countActualQuantity();
+            } else {
+              errHandler(response.data.result);
+            }
+            this.isPending = false;
+          })
+        }
+      },
+      //判断是否setFocus
+      confirmSetFocus: function () {
+        if (this.isEditing === false) {
+          let that = this;
+          setTimeout(function () {
+            that.setFocus();
+          }, 500);
+        }
+      },
+      // 获取修改的数据
+      getEditData: function (thisData) {
+        this.isEditing = false;
+        for (let i = 0; i < this.materialOutRecords.length; i++) {
+          let item = this.materialOutRecords[i];
+          if (item.materialId === thisData.materialId) {
+            item.quantity = thisData.quantity;
+          }
+        }
+        this.countActualQuantity();
+      },
+      // 计算实际数量
+      countActualQuantity:function () {
+        let sum = 0;
+        for (let i = 0; i < this.materialOutRecords.length; i++) {
+          let item = this.materialOutRecords[i];
+          sum = sum + item.quantity;
+        }
+        this.actualQuantity = sum;
       }
     }
   }
@@ -362,6 +513,7 @@
     padding: 0;
     position: fixed;
   }
+
   .mention-box {
     position: fixed;
     display: flex;
@@ -374,6 +526,7 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 1001;
   }
+
   .mention-panel {
     background: #ffffff;
     min-height: 220px;
@@ -383,7 +536,6 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
-
 
   .btn-delay {
     color: #fff;
@@ -419,4 +571,34 @@
     box-shadow: 0 0 0 0.2rem rgba(252, 180, 93, 0.5);
   }
 
+  .delete-panel {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 101;
+  }
+
+  .delete-panel-container {
+    background: #ffffff;
+    height: 220px;
+    width: 400px;
+    z-index: 102;
+    border-radius: 10px;
+    box-shadow: 3px 3px 20px 1px #bbb;
+    padding: 30px 60px 10px 60px;
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+  }
+
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
 </style>
