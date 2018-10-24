@@ -94,7 +94,7 @@
           }).catch(err => {
             this.isPending = false;
             console.log(JSON.stringify(err));
-            alert(err);
+            this.$alertDanger(err);
           })
         }
       }

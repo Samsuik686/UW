@@ -108,7 +108,7 @@
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              alert('更新成功');
+              this.$alertSuccess('更新成功');
               this.isEditing = false;
               let tempUrl = this.$route.path;
               this.$router.replace('/_empty');
@@ -119,7 +119,7 @@
           }).catch(err => {
             this.isPending = false;
             console.log(JSON.stringify(err));
-            alert('请求超时，清刷新重试')
+            this.$alertDanger('请求超时，清刷新重试')
           })
         }
 

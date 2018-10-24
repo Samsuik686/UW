@@ -1,5 +1,5 @@
 <template>
-  <span :style="itemStyle">{{row.resultCode}}</span>
+  <span :style="itemStyle">{{row.resultString}}</span>
 </template>
 
 <script>
@@ -15,7 +15,6 @@
       }
     },
     mounted () {
-      console.log(this.row.resultCode)
       this.changeStyle(this.row.resultCode)
     },
     watch: {

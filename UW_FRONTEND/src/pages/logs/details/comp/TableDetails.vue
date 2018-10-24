@@ -134,7 +134,7 @@
             .catch(err => {
               this.isPending = false;
               console.log(JSON.stringify(err));
-              alert('请求超时，请刷新重试')
+              this.$alertDanger('请求超时，请刷新重试')
               this.setLoading(false);
             })
         }
