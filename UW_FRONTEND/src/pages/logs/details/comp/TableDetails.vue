@@ -25,7 +25,8 @@
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed'
+          'table-layout': 'fixed',
+          'white-space': 'pre-wrap'
 
         },
         HeaderSettings: false,
@@ -125,6 +126,9 @@
                 item.showId = index + 1 + this.query.offset;
               });
               this.total = response.data.data.totalRow;
+              this.setLoading(false);
+            } else if (response.data.result === 412) {
+              this.$alertWarning(response.data.data);
               this.setLoading(false);
             } else {
               errHandler(response.data.result)

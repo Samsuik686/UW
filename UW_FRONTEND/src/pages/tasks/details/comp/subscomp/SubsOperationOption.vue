@@ -20,7 +20,7 @@
             </div>
           </div>
           <div class="dropdown-divider"></div>
-          <div class="form-row" v-for="item in row.details">
+          <div class="form-row details-content" v-for="item in row.details">
             <div class="col pl-2 pr-2">
               <p class="text-center">{{item.materialId}}</p>
             </div>
@@ -53,9 +53,7 @@
         isDetailsShowing: false
       }
     },
-    methods: {
-
-    }
+    methods: {}
   }
 </script>
 
@@ -86,13 +84,22 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
+
   .details-panel-container h3 {
 
   }
+
   .details-panel-container p {
     margin: 0;
     line-height: 22px;
   }
+
+  .details-content {
+    overflow-y: scroll;
+    max-height: 350px;
+
+  }
+
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
   }
@@ -100,4 +107,5 @@
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }
+
 </style>

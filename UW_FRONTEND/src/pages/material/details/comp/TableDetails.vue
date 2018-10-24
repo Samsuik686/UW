@@ -4,7 +4,7 @@
     <datatable
       v-bind="$data"
     ></datatable>
-  <entity-details v-if="isDetailsActive"/>
+    <entity-details v-if="isDetailsActive"/>
   </div>
 </template>
 
@@ -15,6 +15,7 @@
   import {errHandler} from "../../../../utils/errorHandler";
   import OperationOptions from "./subscomp/OperationOptions";
   import EntityDetails from './EntityDetails'
+
   export default {
     name: "Details",
     components: {
@@ -26,7 +27,8 @@
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed'
+          'table-layout': 'fixed',
+          'white-space': 'pre-wrap'
 
         },
         HeaderSettings: false,
@@ -103,7 +105,7 @@
           {field: 'enabled', title: '可用性', visible: false},
           {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
           {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},
-          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'} }
+          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}
 
         ];
         this.total = 0;
@@ -121,12 +123,14 @@
                 item.showId = index + 1 + this.query.offset;
               });
               this.total = response.data.data.totalRow
+            } else if (response.data.result === 412) {
+              this.$alertWarning(response.data.data);
             } else {
               errHandler(response.data.result)
             }
           })
             .catch(err => {
-              if (JSON.stringify(err) !== '{}'){
+              if (JSON.stringify(err) !== '{}') {
                 this.isPending = false;
                 console.log(JSON.stringify(err));
                 this.$alertDanger('请求超时，请刷新重试');
@@ -138,8 +142,7 @@
       dataFilter: function () {
         let options = {
           url: materialCountUrl,
-          data: {
-          }
+          data: {}
         };
         options.data.pageNo = this.query.offset / this.query.limit + 1;
         options.data.pageSize = this.query.limit;
