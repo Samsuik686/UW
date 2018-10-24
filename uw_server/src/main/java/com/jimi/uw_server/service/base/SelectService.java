@@ -167,14 +167,14 @@ public class SelectService {
 			try {
 				return Db.paginate(1, PropKit.use("properties.ini").getInt("defaultPageSize"), resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
-				throw new OperationException("请勿输入非法字符！");
+				throw new OperationException("请勿输入非法字符，如“!”或“$”");
 			}
 			
 		}else {
 			try {
 				return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
-				throw new OperationException("请勿输入非法字符！");
+				throw new OperationException("请勿输入非法字符，如“!”或“$”");
 			}
 		}
 	}

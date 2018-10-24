@@ -65,7 +65,7 @@ public class TaskController extends Controller {
 
 
 	// 令指定任务开始
-	@Log("开始任务编号为{id}的任务,绑定的仓口为{window}")
+	@Log("开始任务编号为{id}的任务，绑定的仓口为{window}")
 	public void start(Integer id, Integer window) {
 		if(taskService.start(id, window)) {
 			renderJson(ResultUtil.succeed());

@@ -53,7 +53,7 @@ public class UserController extends Controller {
 
 
 	// 添加新用户
-	@Log("添加用户名为{uid}的用户,用户姓名为{name},用户类型为{type}")
+	@Log("添加用户名为{uid}的用户，用户姓名为{name}，用户类型为{type}")
 	public void add(String uid, String name, String password, Integer type) {
 		if(userService.add(uid, name, password, type)) {
 			renderJson(ResultUtil.succeed());
@@ -64,7 +64,7 @@ public class UserController extends Controller {
 
 
 	// 更新用户信息
-	@Log("更新用户{uid}的信息,更新后的用户姓名为{name},用户类型为{type}(1表示超级管理员,2表示普通管理员),是否标记为删除:{enabled} (false 表示 是,true 表示 否)")
+	@Log("更新用户{uid}的信息，更新后的用户姓名为{name}，用户类型为{type}(1表示超级管理员，2表示普通管理员)，是否标记为删除：{enabled} (false 表示 是，true 表示 否)")
 	public void update(String uid, String name, String password, Boolean enabled, Integer type) {
 		if(userService.update(uid, name, password, enabled, type)) {
 			renderJson(ResultUtil.succeed());

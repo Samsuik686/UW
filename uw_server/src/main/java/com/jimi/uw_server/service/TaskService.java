@@ -37,11 +37,9 @@ public class TaskService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 	
-	private static final Object LOCK = new Object();
+	private static final Object CREATEIOTASK_LOCK = new Object();
 
 	private static final String GET_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
-
-	private static final String GET_NEW_TASK_ID_SQL = "SELECT MAX(id) as newId FROM task";
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
 
@@ -75,36 +73,28 @@ public class TaskService {
 		// 如果文件格式不对，则提示检查文件格式
 		if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
 			//清空upload目录下的文件
-			if (file.exists()) {
-				file.delete();
-			}
-
+			deleteTempFileAndTaskRecords(file, null);
 			resultString = "创建任务失败，请检查套料单的文件格式是否正确！";
 			return resultString;
 		}
 
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
-		// 如果套料单表头不对，则提示检查套料单表头
+		// 如果套料单表头不对，则提示检查套料单表头，同时检查套料单表格中是否有料号记录
 		if (items == null || items.size() == 0) {
-			if (file.exists()) {
-				file.delete();
-			}
-
+			deleteTempFileAndTaskRecords(file, null);
 			resultString = "创建任务失败，请检查套料单的表头是否正确！";
 			return resultString;
 		} else {
-			synchronized(LOCK) {
+			synchronized(CREATEIOTASK_LOCK) {
 				// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
 				if (Task.dao.find(GET_FILE_NAME_SQL, fileName).size() > 0) {
 					//清空upload目录下的文件
-					if (file.exists()) {
-						file.delete();
-					}
-					resultString = "已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
+					deleteTempFileAndTaskRecords(file, null);
+					resultString = "创建任务失败，已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
 					return resultString;
 				}
-				// 如果套料单格式正确，则创建一条新的任务记录
+				// 创建一条新的任务记录
 				Task task = new Task();
 				task.setType(type);
 				task.setFileName(fileName);
@@ -112,69 +102,83 @@ public class TaskService {
 				task.setCreateTime(new Date());
 				task.save();
 				// 获取新任务id
-				Task newTaskIdDao = Task.dao.findFirst(GET_NEW_TASK_ID_SQL);
-				Integer newTaskId = newTaskIdDao.get("newId");
+				Integer newTaskId = task.getId();
 
+				// 从套料单电子表格第四行开始有任务记录
+				int i = 4;
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
-					// 检查套料单中是否存在非法字符
-					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
-						if (file.exists()) {
-							file.delete();
+					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) {		// 只读取有序号的行数据
+
+						if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
+							deleteTempFileAndTaskRecords(file, newTaskId);
+							resultString = "创建任务失败，请检查套料单表格第" + i + "行的料号或需求数列是否填写了准确信息！";
+							return resultString;
 						}
-						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
-						Task.dao.deleteById(newTaskId);
-						resultString = "创建任务失败，请检查套料单中是否存在非法字符！";
-						return resultString;
-					}
-					// 根据料号找到对应的物料类型
-					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());
-					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
-					if (noDao == null) {
-						if (file.exists()) {
-							file.delete();
+						if (item.getQuantity() <= 0) {
+							deleteTempFileAndTaskRecords(file, newTaskId);
+							resultString = "创建任务失败，套料单表格第" + i + "行的需求数为" + item.getQuantity() + "，需求数必须大于0！";
+							return resultString;
 						}
-						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
-						Task.dao.deleteById(newTaskId);
-						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用！";
-						return resultString;
-					}
-					// 判断套料单中是否存在相同的料号
-					if (MaterialType.dao.find(GET_MATERIAL_TYPE_ID_SQL, noDao.getId(), newTaskId).size() > 0) {
-						//清空upload目录下的文件
-						if (file.exists()) {
-							file.delete();
+
+						// 根据料号找到对应的物料类型
+						MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());
+						// 判断物料类型表中是否存在对应的料号且未被禁用
+						if (noDao == null) {
+							deleteTempFileAndTaskRecords(file, newTaskId);
+							resultString = "创建任务失败，套料单表格第" + i + "行，料号为“" + item.getNo() + "”的物料没有记录在物料类型表中或已被禁用！";
+							return resultString;
 						}
-						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
-						Task.dao.deleteById(newTaskId);
-						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料在套料单中重复出现！";
+						// 判断套料单中是否出现重复料号
+						if (MaterialType.dao.find(GET_MATERIAL_TYPE_ID_SQL, noDao.getId(), newTaskId).size() > 0) {
+							deleteTempFileAndTaskRecords(file, newTaskId);
+							resultString = "创建任务失败，套料单表格第" + i + "行，料号为“" + item.getNo() + "”的物料在套料单中重复出现！";
+							return resultString;
+						}
+
+						PackingListItem packingListItem = new PackingListItem();
+
+						// 将任务条目插入套料单
+						Integer materialTypeId = noDao.getId();
+						// 添加物料类型id
+						packingListItem.setMaterialTypeId(materialTypeId);
+						// 获取计划出库数量
+						Integer planQuantity = item.getQuantity();
+						// 添加计划出入库数量
+						packingListItem.setQuantity(planQuantity);
+						// 添加任务id
+						packingListItem.setTaskId(newTaskId);
+						// 保存该记录到套料单表
+						packingListItem.save();
+
+						i++;
+					} else if (i == 4) {	// 若第四行就没有序号，则说明套料单表格没有一条任务记录
+						deleteTempFileAndTaskRecords(file, newTaskId);
+						resultString = "创建任务失败，套料单表格没有任何有效的物料信息记录！";
 						return resultString;
+					} else {
+						break;
 					}
 
-					PackingListItem packingListItem = new PackingListItem();
-
-					// 若物料类型表中存在对应的料号，且该物料未被禁用，则将任务条目插入套料单
-					Integer materialTypeId = noDao.getId();
-					// 添加物料类型id
-					packingListItem.setMaterialTypeId(materialTypeId);
-					// 获取计划出库数量
-					Integer planQuantity = item.getQuantity();
-					// 添加计划出入库数量
-					packingListItem.setQuantity(planQuantity);
-					// 添加任务id
-					packingListItem.setTaskId(newTaskId);
-					// 保存该记录到套料单表
-					packingListItem.save();
-				}
-
-				if (file.exists()) {
-					file.delete();
-				}
-				
+					}
+					
+				deleteTempFileAndTaskRecords(file, null);
 				}
 			}
 
 		return resultString;
+	}
+
+
+	public void deleteTempFileAndTaskRecords(File file, Integer newTaskId) {
+		//清空upload目录下的文件
+		if (file.exists()) {
+			file.delete();
+		}
+		if (newTaskId != null) {
+			Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
+			Task.dao.deleteById(newTaskId);
+		}
 	}
 
 
