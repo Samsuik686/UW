@@ -6,10 +6,10 @@ import java.util.List;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
-import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.vo.MaterialTypeVO;
+import com.jimi.uw_server.model.vo.MaterialVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 
@@ -27,8 +27,6 @@ public class MaterialService extends SelectService{
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 	
 	private static final String GET_SPECIFIED_POSITION_MATERIAL_TYEP_SQL = "SELECT * FROM material_type WHERE row = ? AND col = ? AND height = ?";
-
-	private	static final String GET_ENTITIES_SQL = "SELECT material.id, material.type, material.row, material.col, material.remainder_quantity as remainderQuantity FROM material, material_type WHERE type = ? AND material_type.id = material.type AND material_type.enabled = 1";
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND enabled = 1";
 
@@ -57,13 +55,19 @@ public class MaterialService extends SelectService{
 	}
 
 	public Object getEntities(Integer type, Integer pageNo, Integer pageSize) {
-		List<Material> materialEntities = Material.dao.find(GET_ENTITIES_SQL, type);
+		String filter = "type=" + type;
+		Page<Record> result = selectService.select(new String[] {"material"}, null, pageNo, pageSize, null, null, filter);
+		List<MaterialVO> materialVOs = new ArrayList<MaterialVO>();
+		for (Record res : result.getList()) {
+			MaterialVO m = new MaterialVO(res.get("id"), res.get("row"), res.get("col"), res.get("remainder_quantity"));
+			materialVOs.add(m);
+		}
 
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(materialEntities.size());
-		pagePaginate.setList(materialEntities);
+		pagePaginate.setTotalRow(result.getTotalRow());
+		pagePaginate.setList(materialVOs);
 
 		return pagePaginate;
 	}
