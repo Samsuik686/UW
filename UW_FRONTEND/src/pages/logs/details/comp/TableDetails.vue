@@ -8,6 +8,7 @@
 </template>
 
 <script>
+  import HighLight from './HighLight'
   import {axiosPost} from "../../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
   import {logsUrl} from "../../../../config/globalUrl";
@@ -16,13 +17,16 @@
 
   export default {
     name: "Details",
-    components: {},
+    components: {
+      HighLight
+    },
     data() {
       return {
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed'
+          'table-layout': 'fixed',
+          'white-space': 'pre-wrap'
 
         },
         HeaderSettings: false,
@@ -123,6 +127,9 @@
               });
               this.total = response.data.data.totalRow;
               this.setLoading(false);
+            } else if (response.data.result === 412) {
+              this.$alertWarning(response.data.data);
+              this.setLoading(false);
             } else {
               errHandler(response.data.result)
               this.setLoading(false);
@@ -131,7 +138,7 @@
             .catch(err => {
               this.isPending = false;
               console.log(JSON.stringify(err));
-              alert('请求超时，请刷新重试')
+              this.$alertDanger('请求超时，请刷新重试')
               this.setLoading(false);
             })
         }

@@ -24,9 +24,9 @@
               <h3>确认删除：</h3>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-row col pl-2 pr-2">
-              你正在删除料号为 "{{rowData.no}}" 的物料，请确认是否删除
+          <div class="form-row w-100">
+            <div class="text-center">
+                <p>你正在删除料号为 "{{rowData.no}}" 的物料，请确认是否删除</p>
             </div>
           </div>
           <div class="dropdown-divider"></div>
@@ -143,7 +143,7 @@
 
   .delete-panel-container {
     background: #ffffff;
-    height: 220px;
+    min-height: 220px;
     width: 400px;
     z-index: 102;
     border-radius: 10px;

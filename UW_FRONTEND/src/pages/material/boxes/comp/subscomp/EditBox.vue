@@ -46,6 +46,7 @@
   import {updateBoxUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
+  import _ from 'lodash'
 
   export default {
     name: "EditMaterial",
@@ -92,6 +93,9 @@
             }
           }
           this.isPending = true;
+          for (let index in this.thisData){
+            this.thisData[index] = _.trim(this.thisData[index])
+          }
           let options = {
             url: updateBoxUrl,
             data: this.thisData
@@ -104,11 +108,14 @@
               let tempUrl = this.$route.path;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
+            } else if (response.data.result >= 412 && response.data.result < 500) {
+              this.$alertWarning(response.data.data)
+              this.closeEditPanel();
             } else {
-              this.isPending = false;
               errHandler(response.data.result);
               this.closeEditPanel()
             }
+            this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err)) {
               this.isPending = false;

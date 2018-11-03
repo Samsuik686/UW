@@ -60,6 +60,7 @@
   import {mapGetters, mapActions} from 'vuex'
   import {userAddUrl, userTypeUrl} from "../../config/globalUrl";
   import {errHandler} from "../../utils/errorHandler";
+  import _ from 'lodash';
 
   export default {
     name: "UserConfig",
@@ -166,6 +167,9 @@
           let user = this.userData;
           if (user.uid !== "" || user.password !== "" || user.type !== "" || user.name !== "") {
             let optData = JSON.parse(JSON.stringify(user));
+            for (let i in optData) {
+              optData[i] = _.trim(optData[i])
+            }
             let options = {
               url: userAddUrl,
               data: optData
