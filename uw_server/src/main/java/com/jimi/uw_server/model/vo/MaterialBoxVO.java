@@ -11,9 +11,6 @@ import com.jimi.uw_server.model.MaterialBox;
 
 public class MaterialBoxVO extends MaterialBox {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 3689388827559340799L;
 
 	private String enabledString;

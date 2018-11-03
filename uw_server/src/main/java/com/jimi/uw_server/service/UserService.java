@@ -50,6 +50,12 @@ public class UserService extends SelectService{
 		if(User.dao.find(UNIQUE_USER_CHECK_SQL, uid).size() != 0) {
 			throw new OperationException("用户" + uid + "已存在！");
 		}
+		if (uid.contains("!") || uid.contains("$")) {
+			throw new OperationException("请勿往用户名中添加非法字符，如“!”或“$”！");
+		}
+		if (name.contains("!") || name.contains("$")) {
+			throw new OperationException("请勿往用户描述中添加非法字符，如“!”或“$”！");
+		}
 		User user = new User();
 		user.setUid(uid);
 		user.setName(name);
@@ -64,6 +70,9 @@ public class UserService extends SelectService{
 		User user = User.dao.findById(uid);
 		user.setUid(uid);
 		if (!(name == null)) {
+			if (name.contains("!") || name.contains("$")) {
+				throw new OperationException("请勿往用户描述中添加非法字符，如“!”或“$”！");
+			}
 			user.setName(name);
 		}
 		if (!(password == null)) {

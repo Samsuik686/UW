@@ -13,8 +13,6 @@ public class MaterialTypeVO extends MaterialType{
 
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 
-//	private static final String GET_BOX_ID_SQL = "SELECT box FROM material WHERE type = ?";
-
 	private String enabledString;
 
 	private Integer quantity;
@@ -28,8 +26,9 @@ public class MaterialTypeVO extends MaterialType{
 		}
 		return quantity;
 	}
-	
-	public String getEnabledString(Boolean enabled) {
+
+
+	public String getEnabledString(boolean enabled) {
 		if (enabled) {
 			this.enabledString = "是";
 		} else {
@@ -38,21 +37,11 @@ public class MaterialTypeVO extends MaterialType{
 		return enabledString;
 	}
 
-//	public List<Integer> getBoxId(Integer id) {
-//		List<Integer> boxIdList = new ArrayList<Integer>();
-//		List<Material> material = Material.dao.find(GET_BOX_ID_SQL, id);
-//		for (Material m : material) {
-//			Integer boxId = m.get("box");
-//			boxIdList.add(boxId);
-//		}
-//		return boxIdList;
-//	}
 
 	public MaterialTypeVO(Integer id, String no, String specification, Boolean enabled) {
 		this.setId(id);
 		this.setNo(no);
 		this.setSpecification(specification);
-//		this.set("boxIdList", getBoxId(id));
 		this.setEnabled(enabled);
 		this.set("enabledString", getEnabledString(enabled));
 		this.set("quantity", getQuantity(id));

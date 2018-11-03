@@ -7,12 +7,20 @@ import com.jimi.uw_server.util.ExcelHelper.Excel;
  * @createTime 2018年7月5日 上午11:23:18 
  */
 public class PackingListItemBO {
-	
+
+	@Excel(col=0, head="序号")
+	private Integer serialNumber;
 	@Excel(col=1, head="料号")
 	private String no;
 	@Excel(col=6, head="需求数")
 	private Integer quantity;
 
+	public Integer getSerialNumber() {
+		return serialNumber;
+	}
+	public void setSerialNumber(Integer serialNumber) {
+		this.serialNumber = serialNumber;
+	}
 	public String getNo() {
 		return no;
 	}

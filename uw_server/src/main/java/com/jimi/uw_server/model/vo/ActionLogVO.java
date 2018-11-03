@@ -26,10 +26,10 @@ public class ActionLogVO extends ActionLog {
 			this.resultString = "权限不足";	
 			break;
 		case 400:
-			this.resultString = "参数错误";
+			this.resultString = "客户端异常";
 			break;
 		case 412:
-			this.resultString = "操作错误";
+			this.resultString = "操作无效";
 			break;
 		default:
 			this.resultString = "服务器异常";

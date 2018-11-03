@@ -91,11 +91,14 @@ public class MaterialService extends SelectService{
 			resultString = "该物料已存在，请不要添加重复的物料类型号！";
 			return resultString;
 		}
+		if (no.contains("!") || no.contains("$")) {
+			resultString = "请勿往料号中添加非法字符，如“!”或“$”！";
+			return resultString;
+		}
 		MaterialType materialType = new MaterialType();
 		materialType.setNo(no);
 		materialType.setSpecification(specification);
 		materialType.setEnabled(true);
-		materialType.save();
 		return resultString;
 	}
 
