@@ -20,12 +20,14 @@
             </div>
           </div>
           <div class="dropdown-divider"></div>
-          <div class="form-row details-content" v-for="item in row.details">
-            <div class="col pl-2 pr-2">
-              <p class="text-center">{{item.materialId}}</p>
-            </div>
-            <div class="col pl-2 pr-2">
-              <p class="text-center">{{item.quantity}}</p>
+          <div class="details-content">
+            <div class="form-row mt-1 mb-1" v-for="item in row.details">
+              <div class="col pl-2 pr-2">
+                <p class="text-center">{{item.materialId}}</p>
+              </div>
+              <div class="col pl-2 pr-2">
+                <p class="text-center">{{item.quantity}}</p>
+              </div>
             </div>
           </div>
           <div class="form-row" v-if="row.details.length === 0">
@@ -96,6 +98,7 @@
 
   .details-content {
     overflow-y: scroll;
+    overflow-x: hidden;
     max-height: 350px;
 
   }
