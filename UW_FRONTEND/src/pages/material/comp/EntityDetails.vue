@@ -94,7 +94,7 @@
             } else if (response.data.result === 501) {
               this.$alertWarning(response.data.data)
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
             this.setLoading(false)
           })

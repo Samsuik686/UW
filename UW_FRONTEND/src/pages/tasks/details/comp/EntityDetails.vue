@@ -87,7 +87,7 @@
               this.data = response.data.data.list;
               this.total = response.data.data.totalRow;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
             this.setLoading(false)
           })

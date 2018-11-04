@@ -113,7 +113,7 @@
               this.tableData.total = response.data.data.totalRow;
             }
           } else {
-            errHandler(response.data.result)
+            errHandler(response.data)
           }
           this.setLoading(false)
         })

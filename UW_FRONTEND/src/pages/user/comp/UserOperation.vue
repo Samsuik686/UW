@@ -114,7 +114,7 @@
               this.$router.push('/_empty');
               this.$router.replace(tempUrl)
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           }).catch(err => {
             this.isPending = false;

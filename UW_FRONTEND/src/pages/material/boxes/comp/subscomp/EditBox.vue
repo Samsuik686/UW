@@ -112,7 +112,7 @@
               this.$alertWarning(response.data.data)
               this.closeEditPanel();
             } else {
-              errHandler(response.data.result);
+              errHandler(response.data);
               this.closeEditPanel()
             }
             this.isPending = false;

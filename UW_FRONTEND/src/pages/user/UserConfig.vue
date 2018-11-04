@@ -185,7 +185,7 @@
               } else if (response.data.result === 412) {
                 this.$alertWarning(response.data.data);
               } else {
-                errHandler(response.data.result)
+                errHandler(response.data)
               }
             })
               .catch(err => {

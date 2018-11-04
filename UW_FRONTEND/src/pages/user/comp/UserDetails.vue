@@ -108,7 +108,7 @@
               this.$alertWarning(response.data.data);
             } else {
               this.isPending = false;
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {

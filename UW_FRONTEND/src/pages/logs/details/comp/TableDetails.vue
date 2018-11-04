@@ -131,7 +131,7 @@
               this.$alertWarning(response.data.data);
               this.setLoading(false);
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
               this.setLoading(false);
             }
           })
