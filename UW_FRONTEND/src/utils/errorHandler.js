@@ -31,7 +31,7 @@ export const errHandler = function (data) {
       alertWarning(data.data);
       break;
     case 500:
-      alertDanger(data.data);
+      alertDanger("服务器内部错误，请联系管理员");
       break;
     case 501:
       alertDanger(data.data);
