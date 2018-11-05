@@ -116,14 +116,12 @@ public class LSSLHandler {
 	}
 
 
+	// 将任务条目状态回滚到0
 	private static void nextRound(AGVIOTaskItem item) {
-		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到0
-		if (Task.dao.findById(item.getTaskId()).getType() == 1) {
-			if (!item.getIsForceFinish()) {
-				TaskItemRedisDAO.updateTaskItemState(item, 0);
-				TaskItemRedisDAO.updateTaskItemRobot(item, 0);
-				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
-			}
+		if (!item.getIsForceFinish()) {
+			TaskItemRedisDAO.updateTaskItemState(item, 0);
+			TaskItemRedisDAO.updateTaskItemRobot(item, 0);
+			TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 		}
 	}
 
