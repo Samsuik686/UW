@@ -106,6 +106,11 @@ public class TaskController extends Controller {
 	}
 
 
+	// 获取指定仓口任务条目
+	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
+		renderJson(ResultUtil.succeed(taskService.getWindowTaskItems(id, pageNo, pageSize)));
+	}
+
 	// 获取指定仓口停泊条目
 	public void getWindowParkingItem(Integer id) {
 		renderJson(ResultUtil.succeed(taskService.getWindowParkingItem(id)));
@@ -141,7 +146,7 @@ public class TaskController extends Controller {
 
 
 	// 删除错误的料盘记录
-	@Log("删除掉料盘时间戳为为{materialId}的出入库记录")
+	@Log("删除掉料盘时间戳为{materialId}的出入库记录，该料盘绑定的任务条目id为{packListItemId}")
 	public void deleteMaterialRecord(Integer packListItemId, String materialId) {
 		renderJson(ResultUtil.succeed(taskService.deleteMaterialRecord(packListItemId, materialId)));
 	}
@@ -154,10 +159,22 @@ public class TaskController extends Controller {
 	}
 
 
-	// 获取指定仓口任务条目
-	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
-		renderJson(ResultUtil.succeed(taskService.getWindowTaskItems(id, pageNo, pageSize)));
+	// 料盘截料后重新入库
+	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId}")
+	public void backAfterCutting(Integer packingListItemId, String materialId) {
+		String resultString = taskService.backAfterCutting(packingListItemId, materialId);
+		if(resultString.equals("添加成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			throw new OperationException(resultString);
+		}
 	}
 
+
+	// 料盘截料后重新入库
+	@Log("将任务id为{id}的任务优先级设置为{priority}")
+	public void setPriority(Integer id, Integer priority) {
+		renderJson(ResultUtil.succeed(taskService.setPriority(id, priority)));
+	}
 
 }

@@ -72,4 +72,13 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 		return get("production_time");
 	}
 
+	public M setIsInBox(java.lang.Boolean isInBox) {
+		set("is_in_box", isInBox);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getIsInBox() {
+		return get("is_in_box");
+	}
+
 }

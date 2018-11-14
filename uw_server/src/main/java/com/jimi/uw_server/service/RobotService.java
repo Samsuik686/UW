@@ -96,23 +96,20 @@ public class RobotService extends SelectService {
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
-						if (getSameBoxItem(item).intValue() == id) {
+						Integer sameBoxItemId = getSameBoxItemId(item);
+						if (sameBoxItemId == null) {
 							LSSLHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-							PackingListItem packingListItem = PackingListItem.dao.findById(getSameBoxItem(item));
-							AGVIOTaskItem itemInSameBox = new AGVIOTaskItem(packingListItem);
+							PackingListItem packingListItem = PackingListItem.dao.findById(sameBoxItemId);
+							AGVIOTaskItem itemInSameBox = new AGVIOTaskItem(packingListItem, item.getPriority());
 							// 更新任务条目状态为已到达仓口
 							TaskItemRedisDAO.updateTaskItemState(itemInSameBox, 2);
-							// 更新任务条目的叉车id
-							TaskItemRedisDAO.updateTaskItemRobot(itemInSameBox, item.getRobotId());
-							// 更新任务条目的groupId，使其groupId与同料盒的任务条目一致
-							TaskItemRedisDAO.updateTaskItemGroupId(itemInSameBox, item.getGroupId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
 						// 在对出库任务执行回库操作时，调用 updateOutputQuantity 方法，以便「修改出库数」
 						if (Task.dao.findById(item.getTaskId()).getType() == 1) {
-							taskService.updateOutputQuantity(id, materialOutputRecords);
+							taskService.updateOutputQuantityAndMaterialInfo(item, materialOutputRecords);
 						}
 
 					} else {
@@ -144,20 +141,20 @@ public class RobotService extends SelectService {
 
 	/**
 	 * 获取同组任务、同料盒中尚未被分配任务的任务条目id
+	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目id；否则返回null
 	 */
-	public Integer getSameBoxItem(AGVIOTaskItem item) {
+	public Integer getSameBoxItemId(AGVIOTaskItem item) {
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
-			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getState().intValue() == 0) {
-				// 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目id；否则直接返回原来的任务条目id
-				return item1.getId();
+			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == 0) {
+				return item1.getId().intValue();
 			}
 		}
-		return item.getId();
+		return null;
 	}
 
 
 	/**
-	 * 入库前扫料盘，发LS指令给叉车
+	 * 物料入库/截料后重新入库扫料盘，将任务条目状态设置为0
 	 */
 	public String call(Integer id, String no) throws Exception {
 		synchronized(CALL_LOCK) {
@@ -171,39 +168,21 @@ public class RobotService extends SelectService {
 				return resultString;
 			}
 
-			// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
-			if (item.getFinishTime() != null) {
-				resultString = "该任务条目已完成，请勿重复扫描！";
-				return resultString;
-			}
-
-			if (Task.dao.findById(taskId).getType() == 1) {
-				resultString = "出库任务不需要调用该接口！";
-				return resultString;
-			}
-
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {
-					// 该入库任务条目已经执行过一遍但是还没标记为已完成状态，则将该任务条目再次回滚到0
-					if (redisTaskItem.getState() == 4 && !redisTaskItem.getIsForceFinish()) {
-						AGVIOTaskItem taskItem = new AGVIOTaskItem(item);
-						TaskItemRedisDAO.updateTaskItemState(taskItem, 0);
-						TaskItemRedisDAO.updateTaskItemRobot(taskItem, 0);
-						TaskItemRedisDAO.updateTaskItemBoxId(taskItem, 0);
+					// 若任务条目状态为 -1，则将其状态更新为 0
+					if (redisTaskItem.getState() == -1) {
+						TaskItemRedisDAO.updateTaskItemState(redisTaskItem, 0);
+						TaskItemRedisDAO.updateTaskItemRobot(redisTaskItem, 0);
+						TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 						return resultString;
-					} else {	// 否则，提示重复扫描
-						resultString = "该物料已经扫描过，请勿重复扫描！";
+					} else {
+						resultString = "该物料对应的任务条目正在执行中或已完成，请勿重复扫描！";
 						return resultString;
 					}
 				}
 			}
-
-			// 根据套料单、物料类型表生成任务条目
-			List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
-			AGVIOTaskItem a = new AGVIOTaskItem(item);
-			taskItems.add(a);
-			TaskItemRedisDAO.addTaskItem(taskItems);
 			return resultString;
 		}
 	}

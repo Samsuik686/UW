@@ -54,6 +54,15 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 		return getInt("state");
 	}
 
+	public M setPriority(java.lang.Integer priority) {
+		set("priority", priority);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getPriority() {
+		return getInt("priority");
+	}
+
 	public M setCreateTime(java.util.Date createTime) {
 		set("create_time", createTime);
 		return (M)this;

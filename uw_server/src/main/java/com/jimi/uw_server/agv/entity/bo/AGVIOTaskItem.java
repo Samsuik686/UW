@@ -32,12 +32,15 @@ public class AGVIOTaskItem {
 	 */
 	private Boolean isForceFinish;
 
-	private String groupId;
+	/**
+	 * 1：最低优先级 2：普通优先级  3：最高优先级
+	 */
+	private Integer priority;
 	
 	public AGVIOTaskItem() {}
 	
 	
-	public AGVIOTaskItem(PackingListItem packingListItem) {
+	public AGVIOTaskItem(PackingListItem packingListItem, Integer priority) {
 		this.id = packingListItem.getId();
 		this.taskId = packingListItem.getTaskId();
 		this.materialTypeId = packingListItem.getMaterialTypeId();
@@ -46,7 +49,19 @@ public class AGVIOTaskItem {
 		this.state = 0;
 		this.boxId = 0;
 		this.isForceFinish = false;
-		this.groupId = packingListItem.getMaterialTypeId() + ":" + packingListItem.getTaskId();
+		this.priority = priority;
+	}
+
+	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
+		this.id = packingListItem.getId();
+		this.taskId = packingListItem.getTaskId();
+		this.materialTypeId = packingListItem.getMaterialTypeId();
+		this.quantity = packingListItem.getQuantity();
+		this.robotId = 0;
+		this.state = state;
+		this.boxId = 0;
+		this.isForceFinish = false;
+		this.priority = priority;
 	}
 
 	public Integer getRobotId() {
@@ -113,12 +128,16 @@ public class AGVIOTaskItem {
 		this.isForceFinish = isForceFinish;
 	}
 
-	public String getGroupId() {
-		return groupId;
+	public Integer getPriority() {
+		return priority;
 	}
 
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
+	public void setPriority(Integer priority) {
+		this.priority = priority;
+	}
+
+	public String getGroupId() {
+		return boxId + ":" + taskId;
 	}
 
 }
