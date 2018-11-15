@@ -35,6 +35,8 @@ axios.interceptors.response.use(
     if (res.data.result === 401){
       store.commit('setLoginToken', '');
       localStorage.removeItem('token');
+      store.commit('setUser','');
+      localStorage.removeItem('user');
       router.replace({
         path: '/login',
         query: {redirect: router.currentRoute.fullPath}

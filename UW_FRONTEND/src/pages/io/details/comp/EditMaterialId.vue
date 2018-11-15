@@ -50,10 +50,8 @@
       }
     },
     mounted() {
-      eventBus.$on('replaceFocus', (type) => {
-        if (type === true) {
+      eventBus.$on('replaceFocus', () => {
           document.getElementById("quantity").focus();
-        }
       });
       this.thisData.quantity = this.editData.quantity;
       this.thisData.materialId = this.editData.materialId;

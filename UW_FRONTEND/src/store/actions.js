@@ -1,3 +1,4 @@
+import {configData} from "./getters";
 
 
 export const setLoginToken = ({commit}, token) => {
@@ -36,7 +37,9 @@ export const setTaskActiveState = ({commit}, isTaskDetailsActive) => {
 export const setTaskData = ({commit}, taskDetails) => {
   commit('setTaskData', taskDetails)
 };
-
+export const setUser = ({commit},user) => {
+  commit('setUser',user);
+};
 export const setUserTypeList = ({commit}, userTypeList) => {
   commit('setUserTypeList', userTypeList)
 };
@@ -46,4 +49,10 @@ export const setCurrentWindow = ({commit}, currentWindowId) => {
 };
 export const setCurrentOprType = ({commit}, currentOprType) => {
   commit('setCurrentOprType', currentOprType)
+};
+export const setConfigData = ({commit},configData) => {
+  commit('setConfigData',configData)
+};
+export const setEditMaterialOutRecords = ({commit},editMaterialOutRecords) => {
+  commit('setEditMaterialOutRecords',editMaterialOutRecords)
 };

@@ -139,6 +139,8 @@
         </div>
       </div>
     </div>
+    <cut-now v-if="isCutting" :item="taskNowItems" :currentWindowId="currentWindowId"
+             :messageTip="tipsMessage"></cut-now>
   </div>
 </template>
 
@@ -157,10 +159,13 @@
   } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
   import eventBus from '@/utils/eventBus';
+  import CutNow from "./comp/CutNow";
+  import {outMaterialOutRecords} from "../../../store/getters";
 
   export default {
     name: "OutNow",
     components: {
+      CutNow,
       Options,
       GlobalTips,
       EditMaterialId
@@ -194,16 +199,16 @@
         isMentions: false,
         isDeleting: false,
         isEditing: false,
-        isFirst:true,
+        isCutting: false,
         patchAutoFinishStack: 0,
         editData: {
           packListItemId: "",
           materialId: "",
           quantity: 0,
-          initQuantity:0
+          initQuantity: 0
         },
         materialOutRecords: [],
-        actualQuantity:0,
+        actualQuantity: 0
       }
     },
     mounted() {
@@ -211,7 +216,18 @@
         this.isEditing = false;
         this.setFocus();
       });
+      eventBus.$on('initCutPanel', () => {
+        this.isCutting = true;
+      });
+      eventBus.$on('closeCutPanel', () => {
+        this.isCutting = false;
+        this.setFocus();
+      });
 
+      if(this.editMaterialOutRecords !== []){
+        this.materialOutRecords = this.editMaterialOutRecords;
+      }
+      this.countActualQuantity();
       this.initData();
       this.setFocus();
       this.fetchData(this.currentWindowId);
@@ -227,11 +243,11 @@
     watch: {},
     computed: {
       ...mapGetters([
-        'currentWindowId'
+        'currentWindowId', 'user', 'configData','editMaterialOutRecords'
       ]),
     },
     methods: {
-      ...mapActions(['setCurrentOprType']),
+      ...mapActions(['setCurrentOprType','setEditMaterialOutRecords']),
 
       initData: function () {
         this.taskNowItems = {};
@@ -254,12 +270,10 @@
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
-                if(this.isFirst === true || this.compareArr(this.materialOutRecords,this.taskNowItems.details) === false){
+                if (this.compareArr(this.materialOutRecords, this.taskNowItems.details) === false) {
                   this.materialOutRecords = this.taskNowItems.details;
                   this.actualQuantity = this.taskNowItems.actualQuantity;
-                }
-                if(this.materialOutRecords.length > 0){
-                  this.isFirst = false;
+                  this.setEditMaterialOutRecords(this.materialOutRecords);
                 }
                 this.tipsMessage = "";
               } else {
@@ -339,7 +353,6 @@
         }
         this.scanText = "";
       },
-
       setBack: function () {
         if (!this.isPending) {
           this.isPending = true;
@@ -347,7 +360,7 @@
             url: robotBackUrl,
             data: {
               id: this.taskNowItems.id,
-              materialOutputRecords:JSON.stringify(this.materialOutRecords)
+              materialOutputRecords: JSON.stringify(this.materialOutRecords)
             }
           };
           axiosPost(options).then(response => {
@@ -386,12 +399,10 @@
           this.setBack();
         }
       },
-
       delay: function () {
         this.isMentions = false;
         this.setFinishItem(false, this.setBack)
       },
-
       //调用finishItem接口，用于需要出入库实际数与计划数不同的地方
       setFinishItem: function (boolean, callback) {
         if (!this.isPending) {
@@ -417,17 +428,17 @@
       },
       //确认编辑
       confirmEdit: function (item) {
-        this.isEditing = true;
         this.editData.packListItemId = this.taskNowItems.id;
         this.editData.materialId = item.materialId;
         this.editData.quantity = item.quantity;
-        for(let i =0;i<this.taskNowItems.details.length;i++){
+        for (let i = 0; i < this.taskNowItems.details.length; i++) {
           let obj = this.taskNowItems.details[i];
-          if(obj.materialId === this.editData.materialId){
+          if (obj.materialId === this.editData.materialId) {
             this.editData.initQuantity = obj.quantity;
             break;
           }
         }
+        this.isEditing = true;
         this.$nextTick(function () {
           eventBus.$emit('replaceFocus', true);
         })
@@ -454,9 +465,9 @@
             this.isDeleting = false;
             if (response.data.result === 200) {
               this.$alertSuccess("删除成功");
-              for(let i=0;i<this.materialOutRecords.length;i++){
-                if(this.editData.materialId === this.materialOutRecords[i].materialId){
-                  this.materialOutRecords.splice(i,1);
+              for (let i = 0; i < this.materialOutRecords.length; i++) {
+                if (this.editData.materialId === this.materialOutRecords[i].materialId) {
+                  this.materialOutRecords.splice(i, 1);
                   break;
                 }
               }
@@ -470,27 +481,28 @@
       },
       //判断是否setFocus
       confirmSetFocus: function () {
-        if (this.isEditing === false) {
-          let that = this;
-          setTimeout(function () {
-            that.setFocus();
-          }, 500);
+        if (this.isEditing === false && this.isCutting === false) {
+          this.setFocus();
         }
       },
       // 获取修改的数据
       getEditData: function (thisData) {
         this.isEditing = false;
+        let remainingQuantity  = thisData.initQuantity - thisData.quantity;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
           let item = this.materialOutRecords[i];
           if (item.materialId === thisData.materialId) {
             item.quantity = thisData.quantity;
           }
         }
+        this.$alertSuccess("修改成功");
+        this.setEditMaterialOutRecords(this.materialOutRecords);
         this.countActualQuantity();
         this.setFocus();
+        //this.printBarcode(thisData.materialId,remainingQuantity);
       },
       // 计算实际数量
-      countActualQuantity:function () {
+      countActualQuantity: function () {
         let sum = 0;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
           let item = this.materialOutRecords[i];
@@ -499,12 +511,12 @@
         this.actualQuantity = sum;
       },
       // 比较两个数组
-      compareArr:function(materialOutRecords,details){
-        if(materialOutRecords.length !== details.length){
+      compareArr: function (materialOutRecords, details) {
+        if (materialOutRecords.length !== details.length) {
           return false;
-        }else{
-          for(let i = 0;i<materialOutRecords.length;i++){
-            if(materialOutRecords[i].materialId !== details[i].materialId){
+        } else {
+          for (let i = 0; i < materialOutRecords.length; i++) {
+            if (materialOutRecords[i].materialId !== details[i].materialId) {
               return false;
             }
           }
@@ -519,7 +531,6 @@
             audio.play();
           }
         }
-        this.isFirst = true;
       },
       // 扫描失败提示
       failAudioPlay: function () {
@@ -530,6 +541,43 @@
           }
         }
       },
+      // 请求打印
+      printBarcode: function (materialId,remainingQuantity) {
+        if(this.configData.printerIP === ""){
+          this.$alertWarning("请在设置界面填写打印机IP");
+          return;
+        }
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: window.g.PRINTER_URL,
+            data: {
+              printerIP:this.configData.printerIP,
+              materialId:materialId,
+              materialNo:this.taskNowItems.materialNo,
+              remainingQuantity: remainingQuantity,
+              productDate: "2018-11-8",
+              user: this.user,
+              supplier: "范例表"
+            }
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.code === 200) {
+              this.$alertSuccess(response.data.msg);
+            } else if (response.data.code === 400) {
+              this.$alertWarning(response.data.msg);
+            } else {
+              this.$alertDanger(response.data.msg);
+            }
+          }).catch(err => {
+            if (JSON.stringify(err) !== '{}') {
+              this.isPending = false;
+              this.$alertDanger(JSON.stringify(err))
+            }
+          })
+        }
+      }
     }
   }
 </script>

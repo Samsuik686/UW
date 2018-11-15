@@ -46,6 +46,8 @@ export const taskDeleteMaterialRecordUrl = url + '/task/deleteMaterialRecord';
 export const taskUpdateOutQuantityUrl = url + '/task/updateOutQuantity';
 
 export const taskFinishUrl = url + '/task/finishItem';
+export const taskSetPriorityUrl = url + '/task/setPriority';
+export const taskBackAfterCuttingUrl = url + '/task/backAfterCutting'
 
 //robot
 export const robotSelectUrl = url + '/manage/robot/select';

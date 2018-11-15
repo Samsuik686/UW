@@ -17,6 +17,9 @@
             <option value="1">入库</option>
             <option value="2">出库</option>
           </select>
+        </div >
+        <div class="form-group row align-items-end" v-if="isShow">
+          <div class="btn btn-primary ml-3 mr-4" @click="initCutPanel">截料后重新入库</div>
         </div>
         <!--<div class="form-group row align-items-end" v-if="$route.path === '/io/preview'">-->
         <!--<div class="btn btn-primary ml-3 mr-4" @click="routerReload">刷新数据</div>-->
@@ -31,6 +34,7 @@
   import {axiosPost} from "../../../../utils/fetchData";
   import {getLogsQuery} from "../../../../config/logsApiConfig";
   import _ from 'lodash'
+  import eventBus from "../../../../utils/eventBus";
 
   export default {
     name: "Options",
@@ -39,7 +43,8 @@
       return {
         windowsList: [],
         thisWindow: '',
-        windowType: ''
+        windowType: '',
+        isShow:false
       }
     },
     created() {
@@ -49,6 +54,7 @@
           this.windowType = 1;
           break;
         case '/io/outnow':
+          this.isShow = true;
           this.windowType = 2;
           break;
         case '/io/preview':
@@ -143,6 +149,9 @@
         let tempPath = this.$route.path;
         this.$router.push('_empty');
         this.$router.push(tempPath)
+      },
+      initCutPanel:function(){
+        eventBus.$emit('initCutPanel',true);
       }
     }
   }

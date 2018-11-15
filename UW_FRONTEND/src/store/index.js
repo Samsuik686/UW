@@ -9,6 +9,7 @@ Vue.use(Vuex);
 const state = {
   /*登录回传标识 用于请求中验证*/
   token: '',
+  user:'',
 
   /*加载状态 用于控制'@/components/Loading.vue显示'*/
   isLoading: false,
@@ -40,7 +41,15 @@ const state = {
   /*缓存出入库页面运行仓口ID*/
   currentWindowId: '',
   /*缓存出入库类型*/
-  currentOprType:''
+  currentOprType:'',
+
+  /*配置页面信息*/
+  configData:{
+    printerIP:""
+  },
+  /*出库界面修改出库数*/
+  editMaterialOutRecords:[]
+
 };
 
 const store = new Vuex.Store({

@@ -1,8 +1,13 @@
-import {currentOprType} from "./getters";
+import {configData, currentOprType} from "./getters";
 
 export const setLoginToken = (state, token) => {
   state.token = token;
 };
+
+export const setUser = (state,user) => {
+  state.user = user;
+};
+
 export const setLogsRouter = (state, logsRouterData) => {
   state.logsRouterApi = logsRouterData;
 };
@@ -45,4 +50,10 @@ export const setCurrentWindow = (state, currentWindowId) => {
 };
 export const setCurrentOprType = (state, currentOprType) => {
   state.currentOprType = currentOprType
+};
+export const setConfigData = (state,configData) => {
+  state.configData.printerIP = configData.printerIP;
+};
+export const setEditMaterialOutRecords = (state,editMaterialOutRecords) => {
+  state.editMaterialOutRecords = editMaterialOutRecords;
 };
