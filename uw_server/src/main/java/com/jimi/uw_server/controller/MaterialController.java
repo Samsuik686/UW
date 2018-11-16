@@ -1,5 +1,10 @@
 package com.jimi.uw_server.controller;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
+import javax.servlet.http.HttpServletResponse;
+
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
 import com.jfinal.core.paragetter.Para;
@@ -7,8 +12,10 @@ import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
+import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ResultUtil;
+import com.jimi.uw_server.util.TokenBox;
 
 /**
  * 物料控制层
@@ -18,6 +25,8 @@ import com.jimi.uw_server.util.ResultUtil;
 public class MaterialController extends Controller {
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+
+	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
 	// 统计物料类型信息
@@ -84,5 +93,40 @@ public class MaterialController extends Controller {
 			throw new OperationException(resultString);
 		}
 	}
+
+
+	public void getMaterialRecords(Integer type, Integer pageNo, Integer pageSize) {
+		// 获取当前使用系统的用户，以便获取操作员用户名
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, pageNo, pageSize, user.getName())));
+	}
+
+
+	public void exportMaterialReport() {
+		OutputStream output = null;
+		try {
+			// 设置响应
+			String fileName = "物料报表";
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String((fileName).getBytes("utf-8"), "utf-8"));	// iso-8859-1
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			materialService.exportMaterialReport(fileName, output);
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
+		}
+		renderNull();
+	}
+
 
 }

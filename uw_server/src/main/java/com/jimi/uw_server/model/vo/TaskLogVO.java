@@ -37,6 +37,8 @@ public class TaskLogVO extends TaskLog {
 			this.taskTypeString = "盘点";
 		}  else if (taskType == 3) {
 			this.taskTypeString = "位置优化";
+		} else if (taskType == 4) {
+			this.taskTypeString = "退料入库";
 		}
 		return taskTypeString;
 	}
@@ -47,10 +49,9 @@ public class TaskLogVO extends TaskLog {
 		return operatorName;
 	}
 
-	public TaskLogVO(Integer id, Integer taskId, Integer type, String materialId, String materialNo, Integer quantity,
-			String operator, boolean auto, Date time) {
+	public TaskLogVO(Integer id, Integer packingListItemId, Integer type, String materialId, String materialNo, Integer quantity, String operator, boolean auto, Date time) {
 		this.setId(id);
-		this.set("taskId", taskId);
+		this.set("packingListItemId", packingListItemId);
 		this.set("taskType", getTaskType(type));
 		this.set("materialId", materialId);
 		this.set("materialNo", materialNo);

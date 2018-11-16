@@ -21,6 +21,8 @@ public class TaskVO extends Task{
 			this.typeString = "盘点";
 		}  else if (type == 3) {
 			this.typeString = "位置优化";
+		} else if (type == 4) {
+			this.typeString = "退料入库";
 		}
 		return typeString;
 	}

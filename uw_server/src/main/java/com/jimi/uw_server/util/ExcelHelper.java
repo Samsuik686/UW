@@ -4,6 +4,7 @@ import java.io.File;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -24,9 +25,13 @@ import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.jimi.uw_server.model.MaterialType;
 
 /**
  * 处理Excel表的常用工具类
@@ -104,8 +109,74 @@ public class ExcelHelper{
 	public static ExcelHelper create(boolean isNewVersion) {
 		return new ExcelHelper(isNewVersion);
 	}
-	
-	
+
+
+	/**
+	 * 输出到流，可以设置是否自动列宽
+	 * @param outputStream
+	 * @param autoColumnWidth
+	 * @throws IOException
+	 */
+	public void write(OutputStream outputStream, boolean autoColumnWidth) throws IOException {
+		if(autoColumnWidth) {
+			autoColumnWidth();
+		}
+		workbook.write(outputStream);
+	}
+
+
+	/**
+	 * 在指定位置设置一个值，不带样式
+	 */
+	public void set(int rowNum, int colNum, Object value) {
+		set(rowNum, colNum, value, null);
+	}
+
+
+	/**
+	 * 在指定位置设置一个值
+	 */
+	public void set(int rowNum, int colNum, Object value, CellStyle style) {
+		Row row = workbook.getSheetAt(currentSheetNum).getRow(rowNum);
+		if(row == null) {
+			row = workbook.getSheetAt(currentSheetNum).createRow(rowNum);
+		}
+		Cell cell = row.getCell(colNum);
+		if(cell == null) {
+			cell = row.createCell(colNum);
+		}
+		if(style != null) {
+			cell.setCellStyle(style);
+		}
+		if(value == null) {
+			return;
+		}
+		final String valueClassName = value.getClass().getName();
+		switch (valueClassName) {
+			case "java.util.Date":
+				cell.setCellValue((Date) value);
+				break;
+			case "double":
+			case "java.lang.Double":
+				cell.setCellValue((double) value);
+				break;
+			case "int":
+			case "java.lang.Integer":
+				cell.setCellValue((int)value);
+				break;
+			case "boolean":
+			case "java.lang.Boolean":
+				cell.setCellValue((boolean)value);
+				break;
+			case "java.lang.String":
+				cell.setCellValue((String)value);
+				break;
+			default:
+				break;
+		}
+	}
+
+
 	/**
 	 * 构造Helper，为旧版excel
 	 */
@@ -405,4 +476,65 @@ public class ExcelHelper{
 		}
 	}
 	
+
+	/**
+	 * 根据传入的值生成Excel
+	 * @param records 传入的集合对象
+	 * @param title Excel名称
+	 * @param field 对象的各个字段集合
+	 * @param head 显示在Excel表里的字段名称集合
+	 * @date 2018年10月16日 上午9:07:42
+	 */
+	public void fill(List<?> records, String title, String[] field, String[] head){
+		fill(headStyle, bodyStyle, records, 1, field, head);
+		Sheet sheet = workbook.getSheetAt(currentSheetNum);
+		if(sheet.getRow(1) == null){
+			return;
+		} 
+		int lastCellNum = sheet.getRow(1).getLastCellNum();
+		CellRangeAddress cra = new CellRangeAddress(0, 0, 0, lastCellNum - 1);
+        //在sheet里增加合并单元格  
+		sheet.addMergedRegion(cra);
+        Row row = sheet.createRow(0);
+        Cell cell = row.createCell(0);
+        cell.setCellValue(title);
+        //设置样式
+        CellStyle style = workbook.createCellStyle();
+        style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+		Font font = workbook.createFont();
+		font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+		font.setFontName("Arial");
+		font.setFontHeightInPoints((short) 16);
+		style.setFont(font);
+		cell.setCellStyle(style);
+	}
+
+
+	/**
+	 * 根据实体类列表从某一行开始填写表格，使用自定义样式
+	 * 需要在实体类的每个属性中注解@Excel，col属性代表列号，从0开始，head属性表示该字段的表头描述
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 */
+	public void fill(CellStyle headStyle, CellStyle bodyStyle, List<?> records, int startRowNum, String[] field, String[] head) {
+		if(records != null) {
+			for (int i = 1; i <= records.size(); i++) {
+				MaterialType record = (MaterialType) records.get(i - 1);
+				for (int j = 0; j < head.length; j++) {
+					//如果是第一行则填写表头
+					if(i == startRowNum) {
+						set(i, j, head[j], headStyle);
+					}
+					try {
+						set(i + 1, j, record.get(field[j]) == null ? "" : record.get(field[j]).toString(), bodyStyle);
+					}catch (IllegalArgumentException e2) {
+						logger.error("调用ExcelHelper.fill()中field.get()方法时出错");
+						e2.printStackTrace();
+					}
+				}				
+			}
+		}
+	}
+
+
 }

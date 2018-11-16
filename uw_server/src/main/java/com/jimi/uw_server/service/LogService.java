@@ -6,6 +6,8 @@ import java.util.List;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.ActionLogVO;
 import com.jimi.uw_server.model.vo.PositionLogVO;
 import com.jimi.uw_server.model.vo.TaskLogVO;
@@ -39,17 +41,17 @@ public class LogService extends SelectService {
 
 
 	public Object selectTaskLog(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		Page<Record> result = selectService.select(new String[] {"task_log", "task", "material_type", "material", "user"}, new String[] {"task_log.task_id = task.id", "task_log.material_id = material.id", "material_type.id = material.type", "task_log.operator = user.uid"}, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] {"task_log", "packing_list_item", "material_type", "material", "user"}, new String[] {"task_log.packing_list_item_id = packing_list_item.id", "task_log.material_id = material.id", "material_type.id = material.type", "task_log.operator = user.uid"}, pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskLogVO> taskLogVOs = new ArrayList<TaskLogVO>();
 		for (Record res : result.getList()) {
-			TaskLogVO t = new TaskLogVO(res.get("TaskLog_Id"), res.get("TaskLog_TaskId"), res.get("Task_Type"), res.get("TaskLog_MaterialId"), res.get("MaterialType_No"), res.get("TaskLog_Quantity"), res.get("User_Uid"), res.get("TaskLog_Auto"), res.get("TaskLog_Time"));
-			taskLogVOs.add(t);
+			PackingListItem packingListItem = PackingListItem.dao.findById(Integer.parseInt(res.get("TaskLog_PackingListItemId").toString()));
+			Task task = Task.dao.findById(packingListItem.getTaskId());
+			TaskLogVO t = new TaskLogVO(res.get("TaskLog_Id"), res.get("TaskLog_PackingListItemId"), task.getType(), res.get("TaskLog_MaterialId"), res.get("MaterialType_No"), res.get("TaskLog_Quantity"), res.get("User_Uid"), res.get("TaskLog_Auto"), res.get("TaskLog_Time"));taskLogVOs.add(t);
 		}
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setTotalRow(result.getTotalRow());
-
 		pagePaginate.setList(taskLogVOs);
 
 		return pagePaginate;

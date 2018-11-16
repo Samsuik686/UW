@@ -53,7 +53,7 @@ public class TaskService {
 
 	private static final String GET_TASK_ITEMS_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
-	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id IN (SELECT id FROM material WHERE type = ?)";
+	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE packing_list_item_id = ? AND material_id IN (SELECT id FROM material WHERE type = ?)";
 
 	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
 
@@ -61,9 +61,11 @@ public class TaskService {
 
 	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1)";
 
+	private static final String GET_RETURN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 4)";
+
 	private static final String GET_TASK_IN_REDIS_SQL = "SELECT * FROM task WHERE id = ?";
 
-	private static final String GET_MATERIAL_ID_IN_SAME_TASK_SQL = "SELECT * FROM task_log WHERE material_id = ? AND task_id = ?";
+	private static final String GET_MATERIAL_ID_IN_SAME_TASK_SQL = "SELECT * FROM task_log WHERE material_id = ? AND packing_list_item_id = ?";
 
 	private static final String GET_MATERIAL_BY_ID_SQL = "SELECT * FROM material WHERE id = ?";
 
@@ -207,7 +209,7 @@ public class TaskService {
 					AGVIOTaskItem a = new AGVIOTaskItem(item, -1, task.getPriority());
 					taskItems.add(a);
 				}
-			} else if (task.getType() == 1) {		// 如果任务类型为入库，则将任务条目加载到redis中，将任务条目状态设置为0
+			} else if (task.getType() == 1 || task.getType() == 4) {		// 如果任务类型为入库或退料入库，则将任务条目加载到redis中，将任务条目状态设置为0
 				for (PackingListItem item : items) {
 					AGVIOTaskItem a = new AGVIOTaskItem(item, task.getPriority());
 					taskItems.add(a);
@@ -252,14 +254,14 @@ public class TaskService {
 	public Object check(Integer id, Integer type, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
 		// 如果任务类型为出入库
-		if (type == 0 || type == 1) {
+		if (type == 0 || type == 1 || type == 4) {
 			// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
 			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, null);
 
 			// 遍历同一个任务id的套料单数据
 			for (Record packingListItem : packingListItems.getList()) {
 				// 查询task_log中的material_id,quantity
-				List<TaskLog> taskLog = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, id, packingListItem.get("MaterialType_Id"));
+				List<TaskLog> taskLog = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_Id"));
 				Integer actualQuantity = 0;
 				// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 				for (TaskLog tl : taskLog) {
@@ -303,6 +305,9 @@ public class TaskService {
 				break;
 			case 2:
 				windowIds = Window.dao.find(GET_OUT_TASK_WINDOWS_SQL);
+				break;
+			case 3:
+				windowIds = Window.dao.find(GET_RETURN_TASK_WINDOWS_SQL);
 				break;
 			default:
 				break;
@@ -439,10 +444,8 @@ public class TaskService {
 
 
 	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, User user) {
-		// 根据套料单id，获取对应的任务记录
-		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
-		Task task = Task.dao.findById(packingListItem.getTaskId());
-		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, task.getId()).size() != 0) {
+
+		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
 		}
 		if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
@@ -460,6 +463,7 @@ public class TaskService {
 		}
 		Material material = new Material();
 		material.setId(materialId);
+		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 		material.setType(packingListItem.getMaterialTypeId());
 		material.setBox(boxId);
 		material.setRow(0);
@@ -470,7 +474,7 @@ public class TaskService {
 
 		// 写入一条入库任务日志
 		TaskLog taskLog = new TaskLog();
-		taskLog.setTaskId(packingListItem.getTaskId());
+		taskLog.setPackingListItemId(packListItemId);
 		taskLog.setMaterialId(materialId);
 		taskLog.setQuantity(quantity);
 		taskLog.setOperator(user.getUid());
@@ -482,17 +486,14 @@ public class TaskService {
 
 
 	public boolean out(Integer packListItemId, String materialId, Integer quantity, User user) {
-		// 根据套料单id，获取对应的任务记录
-		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
-		Task task = Task.dao.findById(packingListItem.getTaskId());
 		// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
-		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, task.getId()).size() != 0) {
+		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
 		}
 
 		// 写入一条出库任务日志
 		TaskLog taskLog = new TaskLog();
-		taskLog.setTaskId(packingListItem.getTaskId());
+		taskLog.setPackingListItemId(packListItemId);
 		taskLog.setMaterialId(materialId);
 		taskLog.setQuantity(quantity);
 		taskLog.setOperator(user.getUid());
@@ -507,10 +508,10 @@ public class TaskService {
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 		int taskId = packingListItem.getTaskId();
 		Task task = Task.dao.findById(taskId);
-		if (task.getType() == 0) {	// 若是入库，则删除掉入库记录，并删除掉物料实体表记录
+		if (task.getType() == 0 || task.getType() == 4) {	// 若是入库或退料入库任务，则删除掉入库记录，并删除掉物料实体表记录
 			Db.update(DELETE_TASK_LOG_SQL, taskId, materialId);
 			return Material.dao.deleteById(materialId);
-		} else {	// 若是出库，则将物料实体表记录重新置为有效,并删除掉出库记录
+		} else {	// 若是出库任务，则将物料实体表记录重新置为有效,并删除掉出库记录
 			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, taskId, materialId);
 			Material material = Material.dao.findById(materialId);
 			material.setRow(0);

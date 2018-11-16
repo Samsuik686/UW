@@ -18,13 +18,13 @@ public abstract class BaseTaskLog<M extends BaseTaskLog<M>> extends Model<M> imp
 		return getInt("id");
 	}
 
-	public M setTaskId(java.lang.Integer taskId) {
-		set("task_id", taskId);
+	public M setPackingListItemId(java.lang.Integer packingListItemId) {
+		set("packing_list_item_id", packingListItemId);
 		return (M)this;
 	}
 	
-	public java.lang.Integer getTaskId() {
-		return getInt("task_id");
+	public java.lang.Integer getPackingListItemId() {
+		return getInt("packing_list_item_id");
 	}
 
 	public M setMaterialId(java.lang.String materialId) {
