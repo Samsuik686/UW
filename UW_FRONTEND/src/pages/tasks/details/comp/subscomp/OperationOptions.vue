@@ -40,7 +40,7 @@
     methods: {
       ...mapActions(['setTaskActiveState', 'setTaskData', 'setLoading']),
       checkTaskDetails: function (val) {
-        if (val.type <= 1) {
+        if (val.type <= 1 || val.type > 3) {
           this.setLoading(true);
           this.setTaskActiveState(true);
           this.setTaskData('');

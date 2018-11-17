@@ -26,7 +26,8 @@
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed'
+          'table-layout': 'fixed',
+          'white-space': 'pre-wrap'
 
         },
         HeaderSettings: false,

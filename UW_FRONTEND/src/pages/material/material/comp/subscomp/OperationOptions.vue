@@ -1,5 +1,8 @@
 <template>
   <div class="user-options form-row">
+    <div class="btn pl-1 pr-1" title="收发记录" @click="getMaterialRecords(row)">
+      <icon name="card" scale="1.8"></icon>
+    </div>
     <div class="btn pl-1 pr-1" title="详细" @click="checkMaterialDetails(row)">
       <icon name="list" scale="1.8"></icon>
     </div>
@@ -37,21 +40,26 @@
         </div>
       </div>
     </div>
-  </div>
+    <div v-if="isDetailsShowing" >
+      <io-details :detailsID="detailsID"/>
+    </div>
+    </div>
 </template>
 
 <script>
   import EditMaterial from './EditMaterial'
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
-  import {materialUpdateUrl} from "../../../../../config/globalUrl";
+  import {materialUpdateUrl, getMaterialRecordsUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
+  import IODetails from "./IODetails";
 
   export default {
     name: "OperationOptions",
     props: ['row'],
     components: {
+      'io-details': IODetails,
       EditMaterial
     },
     data() {
@@ -59,12 +67,27 @@
         isEditing: false,
         isDeleting: false,
         rowData: {},
-        isPending: false
+        isDetailsShowing: false,
+
+        isPending: false,
+        detailsID: ''
+      }
+    },
+    watch: {
+      'detailsData.query': {
+        handler(val) {
+          this.setLoading(true);
+          this.dataFilter(val);
+        },
+        deep: true
       }
     },
     mounted() {
       eventBus.$on('closeEditPanel', () => {
         this.isEditing = false;
+      });
+      eventBus.$on('closeIODetailsPanel', () => {
+        this.isDetailsShowing = false;
       })
     },
     computed: {
@@ -118,6 +141,10 @@
             }
           })
         }
+      },
+      getMaterialRecords: function (val) {
+        this.detailsID = val.id;
+        this.isDetailsShowing = true;
       }
     }
   }
@@ -158,4 +185,5 @@
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }
+
 </style>

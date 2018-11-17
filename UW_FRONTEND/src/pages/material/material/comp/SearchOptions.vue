@@ -15,6 +15,9 @@
       <div class="form-group row align-items-end">
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增物料</a>
       </div>
+      <div class="form-group row align-items-end">
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="exportReport">导出物料列表</a>
+      </div>
     </div>
     <transition name="fade">
       <div v-if="isAdding" id="add-window">
@@ -28,9 +31,11 @@
   import AddMaterial from './subscomp/AddMaterial'
   import eventBus from '@/utils/eventBus'
   import {mapGetters, mapActions} from 'vuex';
-  import {materialCountUrl} from "../../../../config/globalUrl";
+  import {materialCountUrl, exportReportUrl} from "../../../../config/globalUrl";
   import 'vue-datetime/dist/vue-datetime.css'
   import _ from 'lodash'
+  import {downloadFile} from "../../../../utils/fetchData";
+  import {errHandler} from "../../../../utils/errorHandler";
 
   export default {
     name: "Options",
@@ -63,7 +68,8 @@
         ],
         copyQueryOptions: [],
         queryString: "",
-        isAdding: false
+        isAdding: false,
+        isPending: false
       }
     },
     mounted: function () {
@@ -128,6 +134,27 @@
       thisFetch: function () {
         this.createQueryString();
         this.fetchData()
+      },
+      exportReport: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let data = {
+            '#TOKEN#': this.$store.state.token
+          };
+          downloadFile(exportReportUrl, data);
+          let count = 0;
+          let mark = setInterval(() => {
+            count++;
+            if (count > 9) {
+              count = 0;
+              clearInterval(mark);
+              this.isPending = false
+            }
+          }, 1000);
+          this.$alertSuccess('请求成功，请等待下载');
+        } else {
+          this.$alertInfo('请稍后再试')
+        }
       }
     }
   }
@@ -140,9 +167,11 @@
     border-radius: 8px;
     padding: 10px;
   }
+
   #add-window {
     z-index: 100;
   }
+
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
   }

@@ -27,10 +27,11 @@
     name: "EntityDetails",
     data() {
       return {
-        fixHeaderAndSetBodyMaxHeight: 550,
+        fixHeaderAndSetBodyMaxHeight: 450,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed'
+          'table-layout': 'fixed',
+          'white-space': 'pre-wrap'
         },
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80],

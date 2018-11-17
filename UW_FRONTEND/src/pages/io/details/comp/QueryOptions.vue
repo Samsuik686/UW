@@ -16,6 +16,7 @@
                   :disabled="$route.path !== '/io/preview'" @change="setPreset">
             <option value="1">入库</option>
             <option value="2">出库</option>
+            <option value="3">退料</option>
           </select>
         </div>
         <!--<div class="form-group row align-items-end" v-if="$route.path === '/io/preview'">-->
