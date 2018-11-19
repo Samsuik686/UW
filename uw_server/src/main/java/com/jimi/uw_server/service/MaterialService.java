@@ -49,7 +49,7 @@ public class MaterialService extends SelectService{
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
-			filter = filter.concat("&enabled=1");
+			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
 		}
@@ -88,7 +88,7 @@ public class MaterialService extends SelectService{
 	public String addType(String no, String specification) {
 		String resultString = "添加成功！";
 		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no).size() != 0) {
-			resultString = "该物料已存在，请不要添加重复的物料类型号！";
+			resultString = "该物料已存在，请不要添加重复的料号！";
 			return resultString;
 		}
 		if (no.contains("!") || no.contains("$")) {
@@ -99,12 +99,17 @@ public class MaterialService extends SelectService{
 		materialType.setNo(no);
 		materialType.setSpecification(specification);
 		materialType.setEnabled(true);
+		materialType.save();
 		return resultString;
 	}
 
 
 	public String updateType(MaterialType materialType) {
 		String resultString = "更新成功！";
+		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, materialType.getNo()).size() != 0) {
+			resultString = "该物料已存在，请不要添加重复的料号！";
+			return resultString;
+		}
 		if (!materialType.getEnabled()) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, materialType.getId());
 			if (m.get("quantity") != null) {
@@ -127,7 +132,7 @@ public class MaterialService extends SelectService{
 	public Object getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
-			filter = filter.concat("&enabled=1");
+			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
 		}
@@ -168,6 +173,10 @@ public class MaterialService extends SelectService{
 
 	public String updateBox(MaterialBox materialBox) {
 		String resultString = "更新成功！";
+		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL, materialBox.getArea(), materialBox.getRow(), materialBox.getCol(), materialBox.getHeight()).size() != 0) {
+			resultString = "该位置已有料盒存在，请不要在该位置添加料盒！";
+			return resultString;
+		}
 		if (!materialBox.getEnabled()) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, materialBox.getId());
 			if (m.get("quantity") != null) {

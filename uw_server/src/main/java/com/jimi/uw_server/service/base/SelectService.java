@@ -52,7 +52,7 @@ public class SelectService {
 	 * @param pageSize 每页的条目数
 	 * @param ascBy 按指定字段升序，不可和descBy同时使用
 	 * @param descBy 按指定字段降序，不可和ascBy同时使用
-	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用&隔开
+	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
 	 * @return Page对象
 	 */
 	public Page<Record> select(String[] tables, String[] refers, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter){
@@ -72,7 +72,7 @@ public class SelectService {
 	 * @param pageSize 每页的条目数
 	 * @param ascBy 按指定字段升序，不可和descBy同时使用
 	 * @param descBy 按指定字段降序，不可和ascBy同时使用
-	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用&隔开
+	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
 	 * @return Page对象
 	 */
 	public Page<Record> select(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter){
@@ -119,7 +119,7 @@ public class SelectService {
 		//判断filter存在与否
 		if(filter != null) {
 			sql.append(" WHERE ");
-			String[] whereUnits = filter.split("&");
+			String[] whereUnits = filter.split("#&#");
 			int index = 0;
 			for (String whereUnit: whereUnits) {
 				//分割键值与运算符
@@ -169,7 +169,7 @@ public class SelectService {
 			} catch (ActiveRecordException a) {
 				throw new OperationException("请勿输入非法字符，如“!”或“$”");
 			}
-			
+
 		}else {
 			try {
 				return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());

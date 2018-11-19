@@ -361,11 +361,10 @@ public class TaskService {
 		if (id != null) {
 			Window window = Window.dao.findById(id);
 			// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
-			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, null);
-			List<WindowTaskItemsVO> windowTaskItemsVOs = new ArrayList<WindowTaskItemsVO>();
-			List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
+			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
+			List<WindowTaskItemsVO> windowTaskItemVOs = new ArrayList<WindowTaskItemsVO>();
 			int totalRow = 0;
-			for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 				if (redisTaskItem.getTaskId().intValue() == window.getBindTaskId().intValue()) {
 					totalRow += 1;
 					for (Record windowTaskItem : windowTaskItems.getList()) {
@@ -378,11 +377,21 @@ public class TaskService {
 						}
 						if (windowTaskItem.get("PackingListItem_Id").equals(redisTaskItem.getId())) {
 							Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, window.getBindTaskId());
-							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), actualQuantity,  windowTaskItem.get("PackingListItem_FinishTime"));
+							WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), actualQuantity, windowTaskItem.get("PackingListItem_FinishTime"));
 							wt.setDetails(taskLogs);
-							windowTaskItemsVOs.add(wt);
+							windowTaskItemVOs.add(wt);
 						}
 					}	
+				}
+			}
+			List<WindowTaskItemsVO> windowTaskItemSubVOs = new ArrayList<WindowTaskItemsVO>();
+			int startIndex = (pageNo-1) * pageSize;
+			int endIndex = (pageNo-1) * pageSize + pageSize;
+			// 不用 endIndex 作为数组结尾是为了避免数组越界
+			for (int i=startIndex; i<windowTaskItemVOs.size(); i++) {
+				windowTaskItemSubVOs.add(windowTaskItemVOs.get(i));
+				if (i == endIndex-1) {
+					break;
 				}
 			}
 			// 分页，设置页码，每页显示条目等
@@ -390,7 +399,7 @@ public class TaskService {
 			pagePaginate.setPageSize(pageSize);
 			pagePaginate.setPageNumber(pageNo);
 			pagePaginate.setTotalRow(totalRow);
-			pagePaginate.setList(windowTaskItemsVOs);
+			pagePaginate.setList(windowTaskItemSubVOs);
 
 			return pagePaginate;
 		} else {
@@ -401,8 +410,7 @@ public class TaskService {
 
 
 	public Object getWindowParkingItem(Integer id) {
-		List<AGVIOTaskItem> redisTaskItems = TaskItemRedisDAO.getTaskItems();
-		for (AGVIOTaskItem redisTaskItem : redisTaskItems) {
+		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 			if(redisTaskItem.getState().intValue() == 2) {
 				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {

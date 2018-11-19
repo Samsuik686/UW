@@ -98,6 +98,7 @@ public class LSSLHandler {
 				if(item.getState() == 1) {//LS执行完成时
 					//更改taskitems里对应item状态为2（已拣料到站）***
 					TaskItemRedisDAO.updateTaskItemState(item, 2);
+					break;
 
 				}else if(item.getState() == 3) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
@@ -193,7 +194,7 @@ public class LSSLHandler {
 		List<MaterialBox> specifiedPositionMaterialBoxes = materialService.listByXYZ(materialBox.getRow(), materialBox.getCol(), materialBox.getHeight());
 		for (MaterialBox mb: specifiedPositionMaterialBoxes) {
 			mb.setIsOnShelf(isOnShelf);
-			materialService.updateBox(mb);
+			mb.update();
 		}
 	}
 
