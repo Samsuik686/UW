@@ -100,6 +100,10 @@ const router = new Router({
             {
               path: 'preview',
               component: IoPreview
+            },
+            {
+              path: 'return',
+              component: InNow
             }
           ]
         }

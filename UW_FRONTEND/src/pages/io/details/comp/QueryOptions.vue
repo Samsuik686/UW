@@ -52,11 +52,16 @@
         case '/io/outnow':
           this.windowType = 2;
           break;
+        case '/io/return':
+          this.windowType = 3;
+          break;
         case '/io/preview':
           if (this.currentOprType === '1') {
             this.windowType = 1
           } else if (this.currentOprType === '2') {
             this.windowType = 2
+          } else if (this.currentOprType === '3') {
+            this.windowType = 3
           } else {
             this.windowType = 1;
           }
@@ -87,11 +92,17 @@
             this.windowType = 2;
             this.setPreset();
             break;
+          case '/io/return':
+            this.windowType = 3;
+            this.setPreset();
+            break;
           case '/io/preview':
             if (this.currentOprType === '1') {
               this.windowType = 1
             } else if (this.currentOprType === '2') {
               this.windowType = 2
+            } else if (this.currentOprType === '3') {
+              this.windowType = 3
             } else {
               this.windowType = 1;
             }
