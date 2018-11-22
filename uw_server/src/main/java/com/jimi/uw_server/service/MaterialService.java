@@ -55,6 +55,8 @@ public class MaterialService extends SelectService{
 
 	public static final String GET_TASK_LOGS_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? ORDER BY task_log.time";
 
+	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
+
 
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -188,7 +190,7 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public Object getMaterialRecords(Integer type, Integer pageNo, Integer pageSize, String operator) {
+	public Object getMaterialRecords(Integer type, Integer pageNo, Integer pageSize) {
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
 		List<TaskLog> taskLogList = TaskLog.dao.find(GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL, type);	// 查询该物料类型的所有出入库任务日志
 		int remainderQuantity = 0;		// 结余数
@@ -208,18 +210,19 @@ public class MaterialService extends SelectService{
 				lossQuantity += superIssuedQuantity - actualQuantity;
 				superIssuedQuantity = 0;
 			}
-			RecordItem ri = new RecordItem(pItem, task.getFileName(), task.getType(), actualQuantity, remainderQuantity, superIssuedQuantity, lossQuantity, operator, taskLog.getTime());
+			RecordItem ri = new RecordItem(pItem.getMaterialTypeId(), pItem.getQuantity(), task.getFileName(), task.getType(), actualQuantity, remainderQuantity, superIssuedQuantity, lossQuantity, taskLog.getOperator(), taskLog.getTime());
 			recordItemList.add(ri);
 		}
 		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
 		int startIndex = (pageNo-1) * pageSize;
 		int endIndex = (pageNo-1) * pageSize + pageSize;
-		// 不用 endIndex 作为数组结尾是为了避免数组越界
-		for (int i=startIndex; i<taskLogList.size(); i++) {
+		int i = startIndex;
+		while (i < taskLogList.size()) {
 			recordItemSubList.add(recordItemList.get(i));
 			if (i == endIndex-1) {
 				break;
 			}
+			i++;
 		}
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
@@ -230,14 +233,14 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public void exportMaterialReport(String filaName, OutputStream output) throws IOException {
-		List<MaterialType> materialList = MaterialType.dao.find("SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id");
+	public void exportMaterialReport(String fileName, OutputStream output) throws IOException {
+		List<Record> materialRecord = Db.find(GET_MATERIAL_REPORT_SQL);
 		String[] field = null;
 		String[] head = null;
 		field = new String[] { "id", "no", "specification", "box", "row", "col", "height", "quantity"};
 		head =  new String[] { "物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};	
-		ExcelHelper helper = ExcelHelper.create(true);
-		helper.fill(materialList, filaName, field, head);
+		ExcelHelper helper = ExcelHelper.create(false);
+		helper.fill(materialRecord, fileName, field, head);
 		helper.write(output, true);
 	}
 

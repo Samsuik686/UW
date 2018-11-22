@@ -31,7 +31,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.jimi.uw_server.model.MaterialType;
+import com.jfinal.plugin.activerecord.Record;
 
 /**
  * 处理Excel表的常用工具类
@@ -485,7 +485,7 @@ public class ExcelHelper{
 	 * @param head 显示在Excel表里的字段名称集合
 	 * @date 2018年10月16日 上午9:07:42
 	 */
-	public void fill(List<?> records, String title, String[] field, String[] head){
+	public void fill(List<Record> records, String title, String[] field, String[] head){
 		fill(headStyle, bodyStyle, records, 1, field, head);
 		Sheet sheet = workbook.getSheetAt(currentSheetNum);
 		if(sheet.getRow(1) == null){
@@ -516,10 +516,10 @@ public class ExcelHelper{
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	public void fill(CellStyle headStyle, CellStyle bodyStyle, List<?> records, int startRowNum, String[] field, String[] head) {
+	public void fill(CellStyle headStyle, CellStyle bodyStyle, List<Record> records, int startRowNum, String[] field, String[] head) {
 		if(records != null) {
 			for (int i = 1; i <= records.size(); i++) {
-				MaterialType record = (MaterialType) records.get(i - 1);
+				Record record = records.get(i - 1);
 				for (int j = 0; j < head.length; j++) {
 					//如果是第一行则填写表头
 					if(i == startRowNum) {

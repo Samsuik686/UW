@@ -2,10 +2,8 @@ package com.jimi.uw_server.model.bo;
 
 import java.util.Date;
 
-import com.jimi.uw_server.model.PackingListItem;
-
 /**
- * 
+ * 出入库记录业务对象
  * @author HardyYao
  * @createTime 2018年11月14日  下午2:38:54
  */
@@ -38,11 +36,11 @@ public class RecordItem {
 
 	private Date ioTime;
 
-	public RecordItem(PackingListItem packingListItem, String fileName, Integer type, Integer actualQuantity, Integer remainderQuantity, Integer superIssuedQuantity, Integer lossQuantity, String operator, Date ioTime) {
-		this.materialTypeId = packingListItem.getMaterialTypeId();
+	public RecordItem(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, Integer remainderQuantity, Integer superIssuedQuantity, Integer lossQuantity, String operator, Date ioTime) {
+		this.materialTypeId = materialTypeId;
 		this.fileName = fileName;
 		this.setTaskType(type);
-		this.planQuantity = packingListItem.getQuantity();
+		this.planQuantity = planQuantity;
 		this.actualQuantity = actualQuantity;
 		this.remainderQuantity = remainderQuantity;
 		this.superIssuedQuantity = superIssuedQuantity;

@@ -12,10 +12,9 @@ import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ResultUtil;
-import com.jimi.uw_server.util.TokenBox;
+
 
 /**
  * 物料控制层
@@ -96,17 +95,14 @@ public class MaterialController extends Controller {
 
 
 	public void getMaterialRecords(Integer type, Integer pageNo, Integer pageSize) {
-		// 获取当前使用系统的用户，以便获取操作员用户名
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, pageNo, pageSize, user.getName())));
+		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, pageNo, pageSize)));
 	}
 
 
 	public void exportMaterialReport() {
 		OutputStream output = null;
 		try {
-			// 设置响应
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
 			String fileName = "物料报表";
 			HttpServletResponse response = getResponse();
 			response.reset();
