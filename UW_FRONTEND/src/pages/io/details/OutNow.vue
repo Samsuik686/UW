@@ -499,7 +499,7 @@
         this.setEditMaterialOutRecords(this.materialOutRecords);
         this.countActualQuantity();
         this.setFocus();
-        //this.printBarcode(thisData.materialId,remainingQuantity);
+        this.printBarcode(thisData.materialId,remainingQuantity);
       },
       // 计算实际数量
       countActualQuantity: function () {
@@ -554,7 +554,7 @@
             data: {
               printerIP:this.configData.printerIP,
               materialId:materialId,
-              materialNo:this.taskNowItems.materialNo,
+              materialNo:"0.01.0001",
               remainingQuantity: remainingQuantity,
               productDate: "2018-11-8",
               user: this.user,

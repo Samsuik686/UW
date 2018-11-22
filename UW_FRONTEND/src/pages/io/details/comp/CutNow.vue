@@ -151,8 +151,6 @@
           if (this.scanText === "###finished###") {
             this.robotBack();
           } else {
-            console.log(tempArray[0],this.taskNowItems.materialNo);
-            console.log(tempArray[0] === this.taskNowItems.materialNo);
             if (tempArray[0] !== this.taskNowItems.materialNo) {
               this.failAudioPlay();
               this.isTipsShow = true;

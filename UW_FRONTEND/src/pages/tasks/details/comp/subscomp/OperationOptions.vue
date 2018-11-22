@@ -62,7 +62,7 @@
         }
       },
       confirmSetting:function(row){
-        if(row.stateString === "未开始"){
+        if(row.stateString === "未开始" || row.stateString === "进行中"){
           this.isSetting = true;
         }else{
           this.$alertWarning("该状态不能设置优先级");
