@@ -9,6 +9,7 @@ import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.LSSLHandler;
+import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
@@ -47,7 +48,7 @@ public class TaskPool extends Thread{
 				//判断til是否为空或者cn为0
 				int cn = countFreeRobot();
 				List<AGVIOTaskItem> taskItems = new ArrayList<>();
-				TaskItemRedisDAO.appendSortedTaskItems(taskItems);
+				TaskItemRedisDAO.appendTaskItems(taskItems);
 				if (taskItems.isEmpty() || cn == 0) {
 					continue;
 				}
@@ -73,7 +74,7 @@ public class TaskPool extends Thread{
 			AGVIOTaskItem item = taskItems.get(a);
 
 			// 0. 判断任务条目状态是否为0
-			if (item.getState() == 0) {
+			if (item.getState() == TaskItemState.UNALLOCATED) {
 				// 1. 根据item的任务id获取任务类型
 				Task task = Task.dao.findById(item.getTaskId());
 				Integer taskType = task.getType();

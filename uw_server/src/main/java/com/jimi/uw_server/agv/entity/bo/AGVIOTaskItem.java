@@ -23,7 +23,7 @@ public class AGVIOTaskItem {
 	private Integer boxId;
 
 	/**
-	 * 0：未分配 1：已分配拣料 2：已拣料到站 3：已分配回库 4：已回库完成
+	 * -1：不可分配  0：未分配  1：已分配拣料  2：已拣料到站  3：已分配回库  4：已回库完成
 	 */
 	private Integer state;
 
@@ -33,24 +33,16 @@ public class AGVIOTaskItem {
 	private Boolean isForceFinish;
 
 	/**
-	 * 1：最低优先级 2：普通优先级  3：最高优先级
+	 * 任务优先级，取值范围：1-9；数值越大，优先级越高
 	 */
 	private Integer priority;
-	
+
+	/**
+	 * false：该任务条目对应的物料不需要截料	true：该任务条目对应的物料需要截料
+	 */
+	private Boolean isNeedCut;
+
 	public AGVIOTaskItem() {}
-	
-	
-	public AGVIOTaskItem(PackingListItem packingListItem, Integer priority) {
-		this.id = packingListItem.getId();
-		this.taskId = packingListItem.getTaskId();
-		this.materialTypeId = packingListItem.getMaterialTypeId();
-		this.quantity = packingListItem.getQuantity();
-		this.robotId = 0;
-		this.state = 0;
-		this.boxId = 0;
-		this.isForceFinish = false;
-		this.priority = priority;
-	}
 
 	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
 		this.id = packingListItem.getId();
@@ -58,10 +50,11 @@ public class AGVIOTaskItem {
 		this.materialTypeId = packingListItem.getMaterialTypeId();
 		this.quantity = packingListItem.getQuantity();
 		this.robotId = 0;
-		this.state = state;
+		this.setState(state);
 		this.boxId = 0;
 		this.isForceFinish = false;
 		this.priority = priority;
+		this.isNeedCut = false;
 	}
 
 	public Integer getRobotId() {
@@ -138,6 +131,14 @@ public class AGVIOTaskItem {
 
 	public String getGroupId() {
 		return boxId + ":" + taskId;
+	}
+
+	public Boolean getIsNeedCut() {
+		return isNeedCut;
+	}
+
+	public void setIsNeedCut(Boolean isNeedCut) {
+		this.isNeedCut = isNeedCut;
 	}
 
 }

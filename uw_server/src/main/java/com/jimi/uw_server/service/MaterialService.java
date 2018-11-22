@@ -132,7 +132,7 @@ public class MaterialService extends SelectService{
 		List<MaterialBoxVO> MaterialBoxVOs = new ArrayList<MaterialBoxVO>();
 		for (Record res : result.getList()) {
 			MaterialBoxVO m = new MaterialBoxVO(res.get("id"), res.get("area"), res.get("row"), res.get("col"), res.get("height"), 
-					res.get("enabled"));
+					res.get("enabled"), res.get("is_on_shelf"));
 			MaterialBoxVOs.add(m);
 		}
 		PagePaginate pagePaginate = new PagePaginate();

@@ -12,7 +12,9 @@ import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.util.PriorityComparator;
+import com.jimi.uw_server.comparator.PriorityComparator;
+
+
 
 /**
  * AGV任务条目Redis数据访问对象
@@ -47,10 +49,10 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 添加任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务id轮流排序<br>
+	 * 添加任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务优先级轮流排序<br>
 	 */
 	public synchronized static void addTaskItem(List<AGVIOTaskItem> taskItems) {
-		appendSortedTaskItems(taskItems);
+		appendTaskItems(taskItems);
 		Map<Integer, Queue<AGVIOTaskItem>> groupByTaskIdMap = new HashMap<>();
 		for (AGVIOTaskItem item : taskItems) {
 			
@@ -75,6 +77,7 @@ public class TaskItemRedisDAO {
 			if(emptyQueue == groupByTaskIdMap.size()) {
 				break;
 			}
+			taskItems.sort(new PriorityComparator());
 		}
 		Collections.reverse(items);
 		cache.del("til");
@@ -145,6 +148,22 @@ public class TaskItemRedisDAO {
 
 
 	/**
+	 * 更新任务条目为需要截料，标识该任务条目对应的物料需要截料<br>
+	 */
+	public synchronized static void updateTaskIsNeedCut(AGVIOTaskItem taskItem, boolean isNeedCut) {
+		for (int i = 0; i < cache.llen("til"); i++) {
+			byte[] item = cache.lindex("til", i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
+				agvioTaskItem.setIsNeedCut(isNeedCut);
+				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
 	 * 更新任务条目盒号<br>
 	 */
 	public synchronized static void updateTaskItemBoxId(AGVIOTaskItem taskItem, int boxId) {
@@ -181,19 +200,18 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static List<AGVIOTaskItem> getTaskItems() {
 		List<AGVIOTaskItem> taskItems = new ArrayList<>();
-		return appendSortedTaskItems(taskItems);
+		return appendTaskItems(taskItems);
 	}
 
 
 	/**
 	 * 把redis的til内容追加到参数里然后返回
 	 */
-	public synchronized static List<AGVIOTaskItem> appendSortedTaskItems(List<AGVIOTaskItem> taskItems) {
+	public synchronized static List<AGVIOTaskItem> appendTaskItems(List<AGVIOTaskItem> taskItems) {
 		List<byte[]> items = cache.lrange("til", 0, -1);
 		for (byte[] item : items) {
 			taskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
 		}
-		taskItems.sort(new PriorityComparator());
 		return taskItems;
 	} 
 

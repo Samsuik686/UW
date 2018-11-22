@@ -7,6 +7,7 @@ import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.TaskService;
@@ -29,7 +30,7 @@ public class TaskController extends Controller {
 	@Log("创建任务类型为{type}的任务")
 	public void create(UploadFile file, Integer type) throws Exception {
 		// 如果是创建「出入库任务」，入库type为0，出库type为1
-		if (type.equals(0) || type.equals(1)) {
+		if (type == TaskType.IN || type == TaskType.OUT) {
 			file = getFile();
 			String fileName = file.getFileName();
 			String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
@@ -44,11 +45,11 @@ public class TaskController extends Controller {
 
 		}
 		
-		else if (type.equals(2) ) {	//如果是创建「盘点任务」
+		else if (type == TaskType.INVENTORY) {	//如果是创建「盘点任务」
 			renderJson(ResultUtil.failed("该功能尚在开发中！"));
 		}
 		
-		else if (type.equals(3)) {	//如果是创建「位置优化任务」
+		else if (type == TaskType.LOCATIONOPTIZATION) {	//如果是创建「位置优化任务」
 			renderJson(ResultUtil.failed("该功能尚在开发中！"));
 		}
 		

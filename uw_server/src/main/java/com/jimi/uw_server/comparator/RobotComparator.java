@@ -1,4 +1,4 @@
-package com.jimi.uw_server.util;
+package com.jimi.uw_server.comparator;
 
 import java.util.Comparator;
 
@@ -15,7 +15,6 @@ public class RobotComparator implements Comparator<RobotVO> {
 
 	@Override
 	public int compare(RobotVO r1, RobotVO r2) {
-
 		if (r1.getId() > r2.getId()) {	// 根据叉车ID，进行升序排序
 			return 1;
 		} else {
