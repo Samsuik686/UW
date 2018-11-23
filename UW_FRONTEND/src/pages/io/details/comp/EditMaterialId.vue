@@ -44,7 +44,8 @@
           packListItemId: "",
           materialId: '',
           quantity:0,
-          initQuantity:0
+          initQuantity:0,
+          productionTime:''
         },
         isPending: false
       }
@@ -57,6 +58,7 @@
       this.thisData.materialId = this.editData.materialId;
       this.thisData.packListItemId = this.editData.packListItemId;
       this.thisData.initQuantity = this.editData.initQuantity;
+      this.thisData.productionTime = this.editData.productionTime;
     },
     methods: {
       closeEditPanel: function () {

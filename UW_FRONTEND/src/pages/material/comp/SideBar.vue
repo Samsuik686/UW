@@ -18,6 +18,11 @@
                  :class="activeItem === 'material' ? 'active' : ''">物料管理
             </div>
           </div>
+          <div @click="toggleState('supplier')">
+            <div class="sidebar-link" @click="linkTo('supplier')"
+                 :class="activeItem === 'supplier' ? 'active' : ''">供应商管理
+            </div>
+          </div>
         </div>
       </div>
     </nav>

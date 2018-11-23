@@ -16,6 +16,10 @@
           <!--<option value="3">位置优化</option>-->
         </select>
       </div>
+      <div class="form-row">
+        <label for="type-supplier" class="col-form-label">供应商:</label>
+        <input id="type-supplier" type="text" class="form-control" v-model="supplierName" autocomplete="off">
+      </div>
       <div class="form-row" v-if="taskType < 2">
         <div class="form-row pl-1 pr-1">
           <label for="upload-comp" class="col-form-label">选择文件:</label>
@@ -49,7 +53,8 @@
         fileName: '',
         taskType: '',
         isPending: false,
-        thisFile: ''
+        thisFile: '',
+        supplierName:''
       }
     },
     methods: {
@@ -70,8 +75,9 @@
             this.isPending = true;
             let formData = new FormData();
             if (this.taskType < 2) {
-              if (this.thisFile !== "") {
+              if (this.thisFile !== "" && this.supplierName !== "") {
                 formData.append('file', this.thisFile);
+                formData.append('supplierName',this.supplierName);
               } else {
                 this.$alertWarning("内容不可为空");
                 this.isPending = false;

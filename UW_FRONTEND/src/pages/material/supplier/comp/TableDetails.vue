@@ -1,38 +1,30 @@
-<!--物料管理-->
+<!--供应商管理-->
 <template>
   <div class="main-details mt-1 mb-3">
     <datatable
       v-bind="$data"
     ></datatable>
-  <entity-details v-if="isDetailsActive"/>
   </div>
 </template>
 
 <script>
   import {axiosPost} from "../../../../utils/fetchData";
-  import {mapGetters, mapActions} from 'vuex'
-  import {materialAddUrl, materialCountUrl, materialEntityUrl, materialUpdateUrl} from "../../../../config/globalUrl";
   import {errHandler} from "../../../../utils/errorHandler";
+  import {supplierSelectUrl} from "../../../../config/globalUrl";
+  import {mapActions} from 'vuex'
   import OperationOptions from "./subscomp/OperationOptions";
-  import EntityDetails from '../../comp/EntityDetails'
   export default {
-    name: "Details",
-    components: {
-      OperationOptions,
-      EntityDetails
-    },
-    data() {
-      return {
+    name: "TableDetails",
+    data(){
+      return{
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
           'table-layout': 'fixed'
-
         },
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80, 100],
         data: [],
-        //srcData: [],
         columns: [],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -41,10 +33,10 @@
         filter: '',
       }
     },
-    created() {
+    created(){
       this.init();
       let options = {
-        url: materialCountUrl,
+        url:supplierSelectUrl,
         data: {
           pageNo: 1,
           pageSize: 20
@@ -52,18 +44,15 @@
       };
       this.fetchData(options)
     },
-    computed: {
-      ...mapGetters([
-        'isDetailsActive'
-      ]),
-
+    components:{
+      OperationOptions
     },
     watch: {
       $route: function (route) {
         this.init();
         this.setLoading(true);
         let options = {
-          url: materialCountUrl,
+          url: supplierSelectUrl,
           data: {
             pageNo: 1,
             pageSize: 20
@@ -76,7 +65,6 @@
           this.filter = "";
         }
         this.fetchData(options)
-
       },
       query: {
         handler(query) {
@@ -86,23 +74,15 @@
         deep: true
       }
     },
-    mounted: function () {
-    },
-    methods: {
+    methods:{
       ...mapActions(['setTableRouter', 'setLoading']),
       init: function () {
         this.data = [];
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
-          {field: 'id', title: '物料类型号', colStyle: {'width': '70px'}},
-          {field: 'no', title: '料号', colStyle: {'width': '120px'}},
-          {field: 'supplierName', title: '供应商', colStyle: {'width': '100px'}},
-          {field: 'specification', title: '规格', colStyle: {'width': '180px'}},
-          {field: 'enabled', title: '可用性', visible: false},
-          {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
-          {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},
+          {field: 'id', title: '供应商号', colStyle: {'width': '70px'}},
+          {field: 'name', title: '供应商名', colStyle: {'width': '80px'}},
           {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'} }
-
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
@@ -135,7 +115,7 @@
       },
       dataFilter: function () {
         let options = {
-          url: materialCountUrl,
+          url: supplierSelectUrl,
           data: {
           }
         };
@@ -158,5 +138,4 @@
     padding: 10px;
     min-height: 500px;
   }
-
 </style>

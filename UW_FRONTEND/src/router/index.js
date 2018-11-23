@@ -7,6 +7,7 @@ import Main from '../pages/Main'
 import MaterialMain from '../pages/material/MaterialMain'
 import BoxesModule from '../pages/material/boxes/BoxesModule'
 import MaterialModule from '../pages/material/material/MaterialModule'
+import SupplierModule from '../pages/material/supplier/SupplierModule'
 import LogsMain from '../pages/logs/LogsMain'
 import LogsModule from '../pages/logs/details/TableModule'
 import TasksMain from '../pages/tasks/TaskMain'
@@ -49,6 +50,10 @@ const router = new Router({
             {
               path: 'boxes',
               component: BoxesModule
+            },
+            {
+              path: 'supplier',
+              component: SupplierModule
             }
           ]
         },
@@ -86,9 +91,9 @@ const router = new Router({
           component: UserConfig
         },
         {
-          path:'config',
-          name:'ConfigMain',
-          component:ConfigMain
+          path: 'config',
+          name: 'ConfigMain',
+          component: ConfigMain
         },
         {
           path: 'io',
@@ -125,11 +130,11 @@ const router = new Router({
 if (localStorage.getItem('token')) {
   store.commit('setLoginToken', localStorage.getItem('token'))
 }
-if(localStorage.getItem('user')){
-  store.commit('setUser',localStorage.getItem('user'));
+if (localStorage.getItem('user')) {
+  store.commit('setUser', localStorage.getItem('user'));
 }
-if(localStorage.getItem('configData')){
-  store.commit('setConfigData',JSON.parse(localStorage.getItem("configData")));
+if (localStorage.getItem('configData')) {
+  store.commit('setConfigData', JSON.parse(localStorage.getItem("configData")));
 }
 
 

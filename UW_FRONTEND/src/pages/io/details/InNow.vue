@@ -29,6 +29,8 @@
             <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
             <span class="col-form-label">类型: </span>
             <p class="card-text form-control">{{taskNowItems.type}}</p>
+            <span class="col-form-label">供应商: </span>
+            <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
           </div>
           <div class="card-body row">
             <div class="col pl-0">
@@ -41,9 +43,20 @@
             </div>
           </div>
           <div class="card-body row">
+            <div class="col pl-0">
+              <span class="col-form-label">库存: </span>
+              <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+            </div>
+            <div class="col pr-0">
+              <span class="col-form-label">历史已超发: </span>
+              <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
+            </div>
+          </div>
+          <div class="card-body row">
             <div class="col pr-0 pl-0">
-              <span class="col-form-label">欠入数量/超入数量:</span>
-              <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
+              <span class="col-form-label">本次欠入数量/超入数量:</span>
+              <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
+                taskNowItems.actualQuantity)}}</p>
             </div>
           </div>
         </div>
@@ -65,6 +78,9 @@
               <span class="card-text text-center">数量: </span>
             </div>
             <div class="col">
+              <span class="card-text text-center">生产日期: </span>
+            </div>
+            <div class="col">
               <span class="card-text text-center">操作: </span>
             </div>
           </div>
@@ -76,10 +92,13 @@
             <div class="col pl-4">
               <p class="card-text">{{item.quantity}}</p>
             </div>
-           <div class="col pl-4">
-             <div class="btn" title="删除" @click="confirmDelete(item.materialId)">
-               <icon name="cancel" scale="2"></icon>
-             </div>
+            <div class="col pl-4">
+              <p class="card-text">{{item.productionTime}}</p>
+            </div>
+            <div class="col pl-4">
+              <div class="btn" title="删除" @click="confirmDelete(item.materialId)">
+                <icon name="cancel" scale="2"></icon>
+              </div>
             </div>
           </div>
         </div>
@@ -105,7 +124,8 @@
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
           <button class="btn btn-primary col ml-1 text-white" @click="delay"
-                  v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见</button>
+                  v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见
+          </button>
           <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
         </div>
       </div>
@@ -140,7 +160,13 @@
   import GlobalTips from './comp/GlobalTips'
   import {axiosPost} from "../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {robotBackUrl, taskWindowParkingItems, taskInUrl, taskFinishUrl,taskDeleteMaterialRecordUrl} from "../../../config/globalUrl";
+  import {
+    robotBackUrl,
+    taskWindowParkingItems,
+    taskInUrl,
+    taskFinishUrl,
+    taskDeleteMaterialRecordUrl
+  } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
 
   export default {
@@ -153,20 +179,37 @@
 
       return {
         /* --item sample--
+        {
+          "result": 200,
           "data": {
-          "id": 1,
-          "fileName": "套料单1",
-          "type": "出库",
-          "materialNo": "KBG132123",
-          "planQuantity": 10000,
-          "actualQuantity": 10100,
-          "details": [
-                  {
-                    "materialId": "29301282",
-                    "quantity": 2000
-                  }
-               ]
-           }
+            "id": 1,
+            "fileName": "套料单1",
+            "type": "出库",
+            "materialNo": "KBG132123",
+            "supplierName": "智锐得",
+            "remainderQuantity": 20000,
+            "superIssuedQuantity": 1000,
+            "planQuantity": 10000,
+            "actualQuantity": 11000,
+            "details": [
+             {
+                "materialId": "29301282",
+                "quantity": 2000,
+                "productionTime" : "2018-09-06 00:00:00"
+             },
+            {
+                "materialId": "39301282",
+                "quantity": 8000,
+                "productionTime" : "2018-09-06 00:00:00"
+             },
+            {
+                "materialId": "49301282",
+                "quantity": 3000,
+                "productionTime" : "2018-09-06 00:00:00"
+            }
+          ]
+        }
+        }
            --sample ends-- */
         taskNowItems: {},
 
@@ -176,9 +219,9 @@
         isTipsShow: false,
         isPending: false,
         isMentions: false,
-        isDeleting:false,
+        isDeleting: false,
         patchAutoFinishStack: 0,
-        deleteMaterialId:""
+        deleteMaterialId: ""
 
       }
     },
@@ -383,19 +426,19 @@
       },
 
       //确认删除
-      confirmDelete:function(materialId){
+      confirmDelete: function (materialId) {
         this.isDeleting = true;
         this.deleteMaterialId = materialId;
       },
       //删除待定
-      deleteMaterialRecord:function(){
+      deleteMaterialRecord: function () {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url:taskDeleteMaterialRecordUrl,
+            url: taskDeleteMaterialRecordUrl,
             data: {
-              packListItemId:this.taskNowItems.id,
-              materialId:this.deleteMaterialId
+              packListItemId: this.taskNowItems.id,
+              materialId: this.deleteMaterialId
             }
           };
           axiosPost(options).then(response => {
@@ -453,6 +496,7 @@
     border: none;
     padding: 0;
   }
+
   .mention-box {
     position: fixed;
     display: flex;
@@ -465,6 +509,7 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 1001;
   }
+
   .mention-panel {
     background: #ffffff;
     min-height: 220px;
@@ -508,6 +553,7 @@
   .show > .btn-delay.dropdown-toggle:focus {
     box-shadow: 0 0 0 0.2rem rgba(252, 180, 93, 0.5);
   }
+
   .delete-panel {
     position: fixed;
     display: flex;

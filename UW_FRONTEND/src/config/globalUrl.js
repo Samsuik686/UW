@@ -55,3 +55,8 @@ export const robotSwitchUrl = url + '/manage/robot/switch';
 export const robotPauseUrl = url + '/manage/robot/pause';
 export const robotBackUrl = url + '/manage/robot/back';
 export const robotCallUrl = url + '/manage/robot/call';
+
+//supplier
+export const supplierAddUrl = url + '/manage/supplier/add';
+export const supplierUpdateUrl = url + '/manage/supplier/update';
+export const supplierSelectUrl = url + '/manage/supplier/getSuppliers';

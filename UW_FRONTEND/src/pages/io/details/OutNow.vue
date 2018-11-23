@@ -29,6 +29,8 @@
             <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
             <span class="col-form-label">类型: </span>
             <p class="card-text form-control">{{taskNowItems.type}}</p>
+            <span class="col-form-label">供应商: </span>
+            <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
           </div>
           <div class="card-body row">
             <div class="col pl-0">
@@ -41,8 +43,18 @@
             </div>
           </div>
           <div class="card-body row">
+            <div class="col pl-0">
+              <span class="col-form-label">库存: </span>
+              <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+            </div>
+            <div class="col pr-0">
+              <span class="col-form-label">历史已超发: </span>
+              <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
+            </div>
+          </div>
+          <div class="card-body row">
             <div class="col pr-0 pl-0">
-              <span class="col-form-label">缺发数量/超发数量: </span>
+              <span class="col-form-label">本次缺发数量/超发数量: </span>
               <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
                 actualQuantity)}}</p>
             </div>
@@ -66,6 +78,9 @@
               <span class="card-text text-center">数量: </span>
             </div>
             <div class="col">
+              <span class="card-text text-center">生产日期: </span>
+            </div>
+            <div class="col">
               <span class="card-text text-center">操作: </span>
             </div>
           </div>
@@ -76,6 +91,9 @@
             </div>
             <div class="col pl-4">
               <p class="card-text">{{item.quantity}}</p>
+            </div>
+            <div class="col pl-4">
+              <p class="card-text">{{item.productionTime}}</p>
             </div>
             <div class="col pl-4">
               <div class="btn pl-1 pr-1" title="修改出库数" @click="confirmEdit(item)">
@@ -174,20 +192,37 @@
 
       return {
         /* --item sample--
+        {
+          "result": 200,
           "data": {
-          "id": 1,
-          "fileName": "套料单1",
-          "type": "出库",
-          "materialNo": "KBG132123",
-          "planQuantity": 10000,
-          "actualQuantity": 10100,
-          "details": [
-                  {
-                    "materialId": "29301282",
-                    "quantity": 2000
-                  }
-               ]
-           }
+            "id": 1,
+            "fileName": "套料单1",
+            "type": "出库",
+            "materialNo": "KBG132123",
+            "supplierName": "智锐得",
+            "remainderQuantity": 20000,
+            "superIssuedQuantity": 1000,
+            "planQuantity": 10000,
+            "actualQuantity": 11000,
+            "details": [
+             {
+                "materialId": "29301282",
+                "quantity": 2000,
+                "productionTime" : "2018-09-06 00:00:00"
+             },
+            {
+                "materialId": "39301282",
+                "quantity": 8000,
+                "productionTime" : "2018-09-06 00:00:00"
+             },
+            {
+                "materialId": "49301282",
+                "quantity": 3000,
+                "productionTime" : "2018-09-06 00:00:00"
+            }
+          ]
+        }
+        }
            --sample ends-- */
         taskNowItems: {},
 
@@ -205,7 +240,8 @@
           packListItemId: "",
           materialId: "",
           quantity: 0,
-          initQuantity: 0
+          initQuantity: 0,
+          productionTime:'',
         },
         materialOutRecords: [],
         actualQuantity: 0
@@ -226,8 +262,8 @@
 
       if(this.editMaterialOutRecords !== []){
         this.materialOutRecords = this.editMaterialOutRecords;
+        this.countActualQuantity();
       }
-      this.countActualQuantity();
       this.initData();
       this.setFocus();
       this.fetchData(this.currentWindowId);
@@ -438,6 +474,7 @@
             break;
           }
         }
+        this.editData.productionTime = item.productionTime;
         this.isEditing = true;
         this.$nextTick(function () {
           eventBus.$emit('replaceFocus', true);
@@ -499,9 +536,9 @@
         this.setEditMaterialOutRecords(this.materialOutRecords);
         this.countActualQuantity();
         this.setFocus();
-        this.printBarcode(thisData.materialId,remainingQuantity);
+        this.printBarcode(thisData.materialId,remainingQuantity,thisData.productionTime);
       },
-      // 计算实际数量
+      // 计算实际数量和统计超发数量
       countActualQuantity: function () {
         let sum = 0;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
@@ -542,7 +579,7 @@
         }
       },
       // 请求打印
-      printBarcode: function (materialId,remainingQuantity) {
+      printBarcode: function (materialId,remainingQuantity,productionTime) {
         if(this.configData.printerIP === ""){
           this.$alertWarning("请在设置界面填写打印机IP");
           return;
@@ -554,11 +591,11 @@
             data: {
               printerIP:this.configData.printerIP,
               materialId:materialId,
-              materialNo:"0.01.0001",
+              materialNo:this.taskNowItems.materialNo,
               remainingQuantity: remainingQuantity,
-              productDate: "2018-11-8",
+              productDate:productionTime,
               user: this.user,
-              supplier: "范例表"
+              supplier:this.taskNowItems.supplierName
             }
           };
           axiosPost(options).then(response => {

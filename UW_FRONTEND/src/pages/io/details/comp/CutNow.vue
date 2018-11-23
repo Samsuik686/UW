@@ -40,6 +40,8 @@
                   <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
                   <span class="col-form-label">类型: </span>
                   <p class="card-text form-control">{{taskNowItems.type}}</p>
+                  <span class="col-form-label">供应商: </span>
+                  <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
                 </div>
                 <div class="card-body row">
                   <div class="col pl-0">
@@ -52,8 +54,18 @@
                   </div>
                 </div>
                 <div class="card-body row">
+                  <div class="col pl-0">
+                    <span class="col-form-label">库存: </span>
+                    <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+                  </div>
+                  <div class="col pr-0">
+                    <span class="col-form-label">历史已超发: </span>
+                    <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
+                  </div>
+                </div>
+                <div class="card-body row">
                   <div class="col pr-0 pl-0">
-                    <span class="col-form-label">欠入数量/超入数量:</span>
+                    <span class="col-form-label">本次缺发数量/超发数量:</span>
                     <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
                       taskNowItems.actualQuantity)}}</p>
                   </div>
@@ -76,6 +88,9 @@
                   <div class="col">
                     <span class="card-text text-center">数量: </span>
                   </div>
+                  <div class="col">
+                    <span class="card-text text-center">生产日期: </span>
+                  </div>
                 </div>
                 <div class="dropdown-divider"></div>
                 <div class="row card-body" v-for="item in taskNowItems.details">
@@ -84,6 +99,9 @@
                   </div>
                   <div class="col pl-4">
                     <p class="card-text">{{item.quantity}}</p>
+                  </div>
+                  <div class="col pl-4">
+                    <p class="card-text">{{item.productionTime}}</p>
                   </div>
                 </div>
               </div>

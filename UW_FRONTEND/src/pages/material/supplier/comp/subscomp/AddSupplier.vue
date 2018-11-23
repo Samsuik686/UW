@@ -3,24 +3,13 @@
     <div class="add-panel-container form-row flex-column justify-content-between">
       <div class="form-row">
         <div class="form-group mb-0">
-          <h3>添加物料类型：</h3>
+          <h3>添加供应商：</h3>
         </div>
       </div>
       <div class="form-row">
-        <div class="form-row col-4 pl-2 pr-2">
-          <label for="material-no" class="col-form-label">料号:</label>
-          <input type="text" id="material-no" class="form-control" v-model="thisData.no"  autocomplete="off">
-          <span class="form-span col"></span>
-        </div>
-        <div class="form-row col-4 pl-2 pr-2">
-          <label for="material-specification" class="col-form-label">规格:</label>
-          <input type="text" id="material-specification" class="form-control" v-model="thisData.specification"  autocomplete="off">
-          <span class="form-span col"></span>
-        </div>
-        <div class="form-row col-4 pl-2 pr-2">
-          <label for="material-supplier" class="col-form-label">供应商:</label>
-          <input type="text" id="material-supplier" class="form-control" v-model="thisData.supplier"  autocomplete="off">
-          <span class="form-span col"></span>
+        <div class="form-row col">
+          <label for="supplier-name" class="col-form-label">供应商名:</label>
+          <input type="text" id="supplier-name" class="form-control" v-model="thisData.name" autocomplete="off">
         </div>
       </div>
       <div class="dropdown-divider"></div>
@@ -28,28 +17,22 @@
         <button class="btn btn-secondary col mr-1 text-white" @click="closeAddPanel">取消</button>
         <button class="btn btn-primary col ml-1 text-white" @click="submitAdding">提交</button>
       </div>
-
     </div>
   </div>
 </template>
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {materialAddUrl} from "../../../../../config/globalUrl";
+  import {supplierAddUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
   export default {
-    name: "AddMaterial",
+    name: "AddSupplier",
     data() {
       return {
         thisData: {
-          no: '',
-          specification: '',
-          supplier:''
-        },
-        warningMsg: {
-
+          name:''
         },
         isPending: false
       }
@@ -60,12 +43,6 @@
       },
       submitAdding: function () {
         if (!this.isPending) {
-          for (let i in this.warningMsg) {
-            if (this.warningMsg[i] !== "") {
-              this.$alertWarning("请输入正确格式！");
-              return
-            }
-          }
           for (let item in this.thisData) {
             if (this.thisData[item] === '') {
               this.$alertWarning('内容不能为空');
@@ -74,7 +51,7 @@
           }
           this.isPending = true;
           let options = {
-            url: materialAddUrl,
+            url: supplierAddUrl,
             data: this.thisData
           };
           axiosPost(options).then(response => {
@@ -86,7 +63,7 @@
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result === 412) {
-              this.$alertWarning('请勿添加重复料号')
+              this.$alertWarning('请勿添加重复供应商')
             } else {
               this.isPending = false;
               errHandler(response.data.result)
@@ -94,14 +71,6 @@
           })
         }
       },
-      validate: function (type, regx, msg) {
-        let reg = new RegExp(regx);
-        if (!reg.test(this.thisData[type])) {
-          this.warningMsg[type + 'Msg'] = '*' + msg
-        } else {
-          this.warningMsg[type + 'Msg'] = ""
-        }
-      }
     }
   }
 </script>
@@ -128,12 +97,5 @@
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
-  }
-  .form-span {
-    display: block;
-    height: 20px;
-    line-height: 20px;
-    font-size: 10px;
-    color: darkred;
   }
 </style>
