@@ -1,5 +1,8 @@
 <template>
   <div class="user-options form-row">
+    <div class="btn pl-1 pr-1" title="收发记录" @click="getMaterialRecords(row)">
+      <icon name="card" scale="1.8"></icon>
+    </div>
     <div class="btn pl-1 pr-1" title="详细" @click="checkMaterialDetails(row)">
       <icon name="list" scale="1.8"></icon>
     </div>
@@ -24,9 +27,9 @@
               <h3>确认删除：</h3>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-row col pl-2 pr-2">
-              你正在删除料号为 "{{rowData.no}}" 的物料，请确认是否删除
+          <div class="form-row w-100">
+            <div class="text-center">
+                <p>你正在删除料号为 "{{rowData.no}}" 的物料，请确认是否删除</p>
             </div>
           </div>
           <div class="dropdown-divider"></div>
@@ -37,21 +40,26 @@
         </div>
       </div>
     </div>
-  </div>
+    <div v-if="isDetailsShowing" >
+      <io-details :detailsID="detailsID"/>
+    </div>
+    </div>
 </template>
 
 <script>
   import EditMaterial from './EditMaterial'
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
-  import {materialUpdateUrl} from "../../../../../config/globalUrl";
+  import {materialUpdateUrl, getMaterialRecordsUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
+  import IODetails from "./IODetails";
 
   export default {
     name: "OperationOptions",
     props: ['row'],
     components: {
+      'io-details': IODetails,
       EditMaterial
     },
     data() {
@@ -59,12 +67,27 @@
         isEditing: false,
         isDeleting: false,
         rowData: {},
-        isPending: false
+        isDetailsShowing: false,
+
+        isPending: false,
+        detailsID: ''
+      }
+    },
+    watch: {
+      'detailsData.query': {
+        handler(val) {
+          this.setLoading(true);
+          this.dataFilter(val);
+        },
+        deep: true
       }
     },
     mounted() {
       eventBus.$on('closeEditPanel', () => {
         this.isEditing = false;
+      });
+      eventBus.$on('closeIODetailsPanel', () => {
+        this.isDetailsShowing = false;
       })
     },
     computed: {
@@ -107,7 +130,7 @@
 
             } else {
               this.isPending = false;
-              errHandler(response.data.result);
+              errHandler(response.data);
               this.isDeleting = false;
             }
           }).catch(err => {
@@ -118,6 +141,10 @@
             }
           })
         }
+      },
+      getMaterialRecords: function (val) {
+        this.detailsID = val.id;
+        this.isDetailsShowing = true;
       }
     }
   }
@@ -143,7 +170,7 @@
 
   .delete-panel-container {
     background: #ffffff;
-    height: 220px;
+    min-height: 220px;
     width: 400px;
     z-index: 102;
     border-radius: 10px;
@@ -158,4 +185,5 @@
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }
+
 </style>

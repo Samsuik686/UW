@@ -194,7 +194,7 @@
 
               this.robotData = thisData;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
@@ -281,7 +281,7 @@
               // this.$router.push(path);
             } else {
               this.isPending = false;
-              errHandler(response.data.result);
+              errHandler(response.data);
             }
 
           }).catch(err => {

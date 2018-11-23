@@ -46,7 +46,7 @@
   import {addBoxUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
-
+  import _ from 'lodash'
   export default {
     name: "AddMaterial",
     data() {
@@ -82,6 +82,9 @@
             }
           }
           this.isPending = true;
+          for (let index in this.thisData){
+            this.thisData[index] = _.trim(this.thisData[index])
+          }
           let options = {
             url: addBoxUrl,
             data: this.thisData
@@ -94,12 +97,12 @@
               let tempUrl = this.$route.path;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
-            } else if (response.data.result === 412) {
-              this.$alertWarning('请勿添加重复料号')
+            } else if (response.data.result >= 412 && response.data.result < 500) {
+              this.$alertWarning(response.data.data)
             } else {
-              this.isPending = false;
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
+            this.isPending = false;
           })
         }
       },

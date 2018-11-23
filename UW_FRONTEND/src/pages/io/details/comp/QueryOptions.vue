@@ -16,6 +16,7 @@
                   :disabled="$route.path !== '/io/preview'" @change="setPreset">
             <option value="1">入库</option>
             <option value="2">出库</option>
+            <option value="3">退料</option>
           </select>
         </div >
         <div class="form-group row align-items-end" v-if="isShow">
@@ -57,11 +58,16 @@
           this.isShow = true;
           this.windowType = 2;
           break;
+        case '/io/return':
+          this.windowType = 3;
+          break;
         case '/io/preview':
           if (this.currentOprType === '1') {
             this.windowType = 1
           } else if (this.currentOprType === '2') {
             this.windowType = 2
+          } else if (this.currentOprType === '3') {
+            this.windowType = 3
           } else {
             this.windowType = 1;
           }
@@ -92,11 +98,17 @@
             this.windowType = 2;
             this.setPreset();
             break;
+          case '/io/return':
+            this.windowType = 3;
+            this.setPreset();
+            break;
           case '/io/preview':
             if (this.currentOprType === '1') {
               this.windowType = 1
             } else if (this.currentOprType === '2') {
               this.windowType = 2
+            } else if (this.currentOprType === '3') {
+              this.windowType = 3
             } else {
               this.windowType = 1;
             }

@@ -118,13 +118,17 @@
                 value: '1',
                 string: '出库'
               },
+              // {
+              //   value: '2',
+              //   string: '盘点'
+              // },
+              // {
+              //   value: '3',
+              //   string: '位置优化'
+              // },
               {
-                value: '2',
-                string: '盘点'
-              },
-              {
-                value: '3',
-                string: '位置优化'
+                value: '4',
+                string: '退料'
               }
             ]
           },
@@ -201,13 +205,17 @@
                 value: '1',
                 string: '出库'
               },
+              // {
+              //   value: '2',
+              //   string: '盘点'
+              // },
+              // {
+              //   value: '3',
+              //   string: '位置优化'
+              // },
               {
-                value: '2',
-                string: '盘点'
-              },
-              {
-                value: '3',
-                string: '位置优化'
+                value: '4',
+                string: '退料'
               }
             ]
           },

@@ -13,6 +13,8 @@ export const materialUpdateUrl = url + '/manage/material/updateType';
 export const getBoxesUrl = url + '/manage/material/getBoxes';
 export const addBoxUrl = url + '/manage/material/addBox';
 export const updateBoxUrl = url + '/manage/material/updateBox';
+export const exportReportUrl = url + '/manage/material/exportMaterialReport';
+export const getMaterialRecordsUrl = url + '/manage/material/getMaterialRecords';
 
 //logs
 export const logsUrl = url + '/log/select';

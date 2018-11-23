@@ -20,6 +20,10 @@
             <div class="sidebar-link" @click="linkTo('outnow')"
                  :class="activeItem === 'outnow' ? 'active' : ''">即时出库任务操作</div>
           </div>
+          <div @click="toggleState('return')">
+            <div class="sidebar-link" @click="linkTo('return')"
+                 :class="activeItem === 'return' ? 'active' : ''">退料任务操作</div>
+          </div>
         </div>
       </div>
     </nav>
@@ -29,7 +33,7 @@
       </div>
       <span class=" mt-auto">* 扫描此二维码或点击侧边栏以跳转到仓口入库页面</span>
     </div>
-    <div class="m-2 mt-auto" v-else-if="$route.path === '/io/innow'">
+    <div class="m-2 mt-auto" v-else-if="$route.path === '/io/innow' || $route.path === '/io/return'">
       <div class="row ml-auto mr-auto mt-4">
         <img src="static/img/toCallQRCode.png" class="img-style">
       </div>
@@ -62,6 +66,9 @@
         case '/io/preview':
           this.toggleState('preview');
           break;
+        case '/io/return':
+          this.toggleState('return');
+          break;
       }
     },
     watch: {
@@ -75,6 +82,9 @@
             break;
           case '/io/preview':
             this.toggleState('preview');
+            break;
+          case '/io/return':
+            this.toggleState('return');
             break;
         }
       }

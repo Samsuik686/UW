@@ -21,7 +21,7 @@ export const getLogsQuery = (name) => {
 const TASK_CONFIG = [
   {field: "id", title: '序号', visible: false},
   {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
-  {field: "taskId", title: '任务ID', colStyle: {'width': '70px'}},
+  {field: "packingListItemId", title: '任务ID', colStyle: {'width': '70px'}},
   {field: "taskType", title: '任务类型', colStyle: {'width': '70px'}},
   {field: "materialId", title: '料盘唯一码', colStyle: {'width': '70px'}},
   {field: "materialNo", title: '料号', colStyle: {'width': '120px'}},
@@ -38,6 +38,8 @@ const ACTION_CONFIG = [
   {field: 'ip', title: 'IP地址', colStyle: {'width': '120px'}},
   {field: 'uid', title: '用户', colStyle: {'width': '80px'}},
   {field: 'action', title: '操作', colStyle: {'width': '200px'}},
+  // {field: 'resultCode', title: '结果码', colStyle: {'width': '60px'}, tdComp: 'HighLight'},
+  {field: 'resultString', title: '操作结果', colStyle: {'width': '80px'}, tdComp: 'HighLight'},
   {field: 'time', title: '时间', colStyle: {'width': '170px'}}
 
 ];
@@ -83,7 +85,7 @@ const ACTION_QUERY = [
 
 const TASK_QUERY = [
   {
-    id: 'task_id',
+    id: 'packing_list_item_id',
     name: '任务ID',
     model: '',
     type: 'text'

@@ -19,22 +19,22 @@ const resHandler = function (attr) {
   })
 }
 
-export const errHandler = function (code) {
-  switch (code) {
+export const errHandler = function (data) {
+  switch (data.result) {
     case 400:
-      alertDanger("请求逻辑错误，请联系管理员");
+      alertDanger(data.data);
       break;
     case 401:
-      alertWarning("权限不足");
+      alertWarning(data.data);
       break;
     case 412:
-      alertWarning("操作错误");
+      alertWarning(data.data);
       break;
     case 500:
-      alertDanger("服务器异常，请联系管理员");
+      alertDanger("服务器内部错误，请联系管理员");
       break;
     case 501:
-      alertDanger("未知错误，请联系管理员");
+      alertDanger(data.data);
       break;
     default:
       break;

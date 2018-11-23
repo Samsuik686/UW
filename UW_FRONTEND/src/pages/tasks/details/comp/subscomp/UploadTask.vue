@@ -14,6 +14,8 @@
           <option value="1">出库</option>
           <!--<option value="2">盘点</option>-->
           <!--<option value="3">位置优化</option>-->
+          <option value="4">退料入库</option>
+
         </select>
       </div>
       <div class="form-row">
@@ -105,7 +107,7 @@
               }
               else {
                 this.isPending = false;
-                errHandler(res.data.result)
+                errHandler(res.data)
               }
             })
           } else {
