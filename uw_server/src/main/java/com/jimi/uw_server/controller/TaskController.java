@@ -27,13 +27,13 @@ public class TaskController extends Controller {
 
 	// 创建任务
 	@Log("创建任务类型为{type}的任务")
-	public void create(UploadFile file, Integer type) throws Exception {
+	public void create(UploadFile file, Integer type, String supplierName) throws Exception {
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4
 		if (type.equals(0) || type.equals(1) || type.equals(4)) {
 			file = getFile();
 			String fileName = file.getFileName();
 			String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
-			String resultString = taskService.createIOTask(type, fileName, fullFileName);
+			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplierName);
 
 			if(resultString.equals("添加成功！")) {
 				renderJson(ResultUtil.succeed());

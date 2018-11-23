@@ -21,6 +21,7 @@ import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.MaterialController;
 import com.jimi.uw_server.controller.RobotController;
+import com.jimi.uw_server.controller.SupplierController;
 import com.jimi.uw_server.controller.TaskController;
 import com.jimi.uw_server.controller.UserController;
 import com.jimi.uw_server.interceptor.AccessInterceptor;
@@ -92,6 +93,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manage/robot", RobotController.class);
 		me.add("/manage/material", MaterialController.class);
 		me.add("/manage/user", UserController.class);
+		me.add("/manage/supplier", SupplierController.class);
 	}
 
 	@Override

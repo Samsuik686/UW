@@ -2,16 +2,22 @@ package com.jimi.uw_server.model.vo;
 
 import java.util.Date;
 
+import com.jimi.uw_server.model.MaterialType;
+import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 
+@SuppressWarnings("serial")
 public class TaskVO extends Task{
 
-	private static final long serialVersionUID = -5623582632249846864L;
+	private static final String GET_PACKING_LIST_ITEM_BY_TASK_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
 	private String typeString;
 	
 	private String stateString;
-	
+
+	private String supplierName;
+
 	public String getTypeString(Integer type) {
 		if (type == 0) {
 			this.typeString = "入库";
@@ -42,6 +48,17 @@ public class TaskVO extends Task{
 		return stateString;
 	}
 
+	public String getSupplierName() {
+		return supplierName;
+	}
+
+	public void setSupplierName(Integer taskId) {
+		PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKING_LIST_ITEM_BY_TASK_ID_SQL, taskId);
+		MaterialType m = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
+		Supplier s = Supplier.dao.findById(m.getSupplier());
+		String name = s.getName();
+		this.supplierName = name;
+	}
 
 	public TaskVO(Integer id, Integer state, Integer type, String fileName, Date createTime) {
 		this.setId(id);
@@ -50,6 +67,8 @@ public class TaskVO extends Task{
 		this.setType(type);
 		this.set("typeString", getTypeString(type));
 		this.set("fileName", fileName);
+		this.setSupplierName(id);
+		this.set("supplierName", getSupplierName());
 		this.set("createTimeString", createTime);
 	}
 

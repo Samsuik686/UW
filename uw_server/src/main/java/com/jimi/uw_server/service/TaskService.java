@@ -17,6 +17,7 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.User;
@@ -45,7 +46,7 @@ public class TaskService {
 
 	private static final String GET_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
 
-	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? and enabled = 1";
+	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
 	private static final String DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL = "DELETE FROM packing_list_item WHERE task_id = ?";
 	
@@ -53,7 +54,7 @@ public class TaskService {
 
 	private static final String GET_TASK_ITEMS_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
-	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE packing_list_item_id = ? AND material_id IN (SELECT id FROM material WHERE type = ?)";
+	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
 
@@ -73,10 +74,12 @@ public class TaskService {
 
 	private static final String DELETE_TASK_LOG_SQL = "DELETE FROM task_log WHERE task_id = ? AND material_id = ?";
 
-	private static final String GET_TASK_LOG_SQL = "SELECT * FROM task_log WHERE task_id = ? AND material_id = ?";
+	private static final String GET_TASK_LOG_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
+
+	private static final String GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 
 
-	public String createIOTask(Integer type, String fileName, String fullFileName) throws Exception {
+	public String createIOTask(Integer type, String fileName, String fullFileName, String supplierName) throws Exception {
 		String resultString = "添加成功！";
 		File file = new File(fullFileName);
 
@@ -121,6 +124,21 @@ public class TaskService {
 				task.save();
 				// 获取新任务id
 				Integer newTaskId = task.getId();
+				// 获取供应商id
+				Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
+				Integer supplierId;
+				if (s != null) {
+					supplierId = s.getId();
+				} else {
+					if (file.exists()) {
+						file.delete();
+					}
+					Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
+					Task.dao.deleteById(newTaskId);
+					resultString = "创建任务失败，请填写正确的供应商名！";
+					return resultString;
+				}
+				
 
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
 				for (PackingListItemBO item : items) {
@@ -135,7 +153,7 @@ public class TaskService {
 						return resultString;
 					}
 					// 根据料号找到对应的物料类型id
-					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo());
+					MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), supplierId);
 					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 					if (noDao == null) {
 						if (file.exists()) {
@@ -143,7 +161,7 @@ public class TaskService {
 						}
 						Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, newTaskId);
 						Task.dao.deleteById(newTaskId);
-						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用！";
+						resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是供应商与料号对应不上！";
 						return resultString;
 					}
 					// 判断套料单中是否存在相同的料号
@@ -318,7 +336,6 @@ public class TaskService {
 
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
-
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
 		for (Record res : result.getList()) {
 			TaskVO t = new TaskVO(res.get("id"), res.get("state"), res.get("type"), res.get("file_name"), res.get("create_time"));
@@ -383,7 +400,7 @@ public class TaskService {
 					totalRow += 1;
 					for (Record windowTaskItem : windowTaskItems.getList()) {
 						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getTaskId(), redisTaskItem.getMaterialTypeId());
+						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
 						Integer actualQuantity = 0;
 						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 						for (TaskLog tl : taskLogs) {
@@ -425,13 +442,13 @@ public class TaskService {
 
 					for (Record windowParkingListItem : windowParkingListItems.getList()) {
 						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getTaskId(), redisTaskItem.getMaterialTypeId());
+						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
 						Integer actualQuantity = 0;
 						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 						for (TaskLog tl : taskLogs) {
 							actualQuantity += tl.getQuantity();
 						}
-						WindowParkingListItemVO wp = new WindowParkingListItemVO(windowParkingListItem.get("PackingListItem_Id"), task.getFileName(),  task.getType(), windowParkingListItem.get("MaterialType_No"), windowParkingListItem.get("PackingListItem_Quantity"), actualQuantity);
+						WindowParkingListItemVO wp = new WindowParkingListItemVO(windowParkingListItem.get("PackingListItem_Id"), task.getFileName(),  task.getType(), windowParkingListItem.get("MaterialType_No"), windowParkingListItem.get("PackingListItem_Quantity"), actualQuantity, redisTaskItem.getMaterialTypeId());
 						wp.setDetails(taskLogs);
 						return wp;
 					}
@@ -444,7 +461,6 @@ public class TaskService {
 
 
 	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, User user) {
-
 		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
 		}
@@ -452,9 +468,7 @@ public class TaskService {
 			throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
 		}
 
-		/*
-		 *  新增物料表记录
-		 */
+		// 新增物料表记录
 		int boxId = 0;
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if (item.getId().intValue() == packListItemId) {
@@ -512,7 +526,7 @@ public class TaskService {
 			Db.update(DELETE_TASK_LOG_SQL, taskId, materialId);
 			return Material.dao.deleteById(materialId);
 		} else {	// 若是出库任务，则将物料实体表记录重新置为有效,并删除掉出库记录
-			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, taskId, materialId);
+			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, packListItemId, materialId);
 			Material material = Material.dao.findById(materialId);
 			material.setRow(0);
 			material.setCol(0);
@@ -525,18 +539,14 @@ public class TaskService {
 
 	public void updateOutputQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords) {
 		if (materialOutputRecords != null) {
-			PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
-			int taskId = packingListItem.getTaskId();
-
 			JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
-
 			for (int i=0; i<jsonArray.size(); i++) {
 				JSONObject jsonObject = jsonArray.getJSONObject(i);
 				String materialId = jsonObject.getString("materialId");
 				Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
 
 				// 修改任务日志的出库数量
-				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, taskId, materialId);
+				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, item.getId(), materialId);
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
 				if (quantity != material.getRemainderQuantity()) {
@@ -564,9 +574,7 @@ public class TaskService {
 
 	public String backAfterCutting(Integer packingListItemId, String materialId) {
 		String resultString = "添加成功！";
-		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
-		int taskId = packingListItem.getTaskId();
-		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, taskId, materialId);
+		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, packingListItemId, materialId);
 		Material material = Material.dao.findById(materialId);
 		if (taskLog == null) {
 			resultString = "扫错料盘，该料盘不需要放回该料盒!";

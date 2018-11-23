@@ -36,6 +36,15 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getStr("specification");
 	}
 
+	public M setSupplier(java.lang.Integer supplier) {
+		set("supplier", supplier);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSupplier() {
+		return getInt("supplier");
+	}
+
 	public M setEnabled(java.lang.Boolean enabled) {
 		set("enabled", enabled);
 		return (M)this;

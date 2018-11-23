@@ -2,7 +2,6 @@ package com.jimi.uw_server.model.vo;
 
 import java.util.Date;
 import java.util.List;
-
 import com.jimi.uw_server.model.TaskLog;
 
 /**
@@ -10,12 +9,10 @@ import com.jimi.uw_server.model.TaskLog;
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */
+@SuppressWarnings("serial")
 public class WindowTaskItemsVO extends TaskLog {
 
-	private static final long serialVersionUID = -2631121149118866618L;
-	
 	private List<?> details;
-
 
 	public String getType(Integer type) {
 		String typeString = "入库";
@@ -43,7 +40,6 @@ public class WindowTaskItemsVO extends TaskLog {
 		} else {
 			this.set("finishTime", finishTime);
 		}
-		
 	}
 
 	public List<?> getDetails() {

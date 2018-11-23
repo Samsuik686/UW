@@ -11,7 +11,6 @@ import com.jfinal.core.paragetter.Para;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -41,9 +40,9 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加料号为{no}的物料类型,规格号为{specification}")
-	public void addType(String no, String specification) {
-		String resultString = materialService.addType(no, specification);
+	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}")
+	public void addType(String no, String specification, String supplierName) {
+		String resultString = materialService.addType(no, specification, supplierName);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -54,8 +53,8 @@ public class MaterialController extends Controller {
 
 	// 更新物料类型#
 	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
-	public void updateType(@Para("") MaterialType materialType) {
-		String resultString = materialService.updateType(materialType);
+	public void updateType(Integer id, String specification, String supplierName, Boolean enabled) {
+		String resultString = materialService.updateType(id, specification, supplierName, enabled);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

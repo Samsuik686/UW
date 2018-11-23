@@ -32,8 +32,8 @@ public class RobotService extends SelectService {
 
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ?)";
 
-	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id as materialId, quantity FROM task_log WHERE task_id = ? AND material_id In (SELECT id FROM material WHERE type = ?)";
-
+	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
+	
 	private static final Object BACK_LOCK = new Object();
 
 	private static final Object CALL_LOCK = new Object();
@@ -88,7 +88,7 @@ public class RobotService extends SelectService {
 						// 更新任务条目状态为已分配回库
 						TaskItemRedisDAO.updateTaskItemState(item, 3);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
-						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
+						Integer actualQuantity = getActualIOQuantity(item.getId());
 						if (actualQuantity >= item.getQuantity()) {
 							taskService.finishItem(id, true);
 						}
@@ -127,9 +127,9 @@ public class RobotService extends SelectService {
 	/**
 	 * 获取任务条目实际出入库数量
 	 */
-	public Integer getActualIOQuantity(Integer taskId, Integer materialTypeId) {
+	public Integer getActualIOQuantity(Integer packingListItemId) {
 		// 查询task_log中的material_id,quantity
-		List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, taskId, materialTypeId);
+		List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, packingListItemId);
 		Integer actualQuantity = 0;
 		// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 		for (TaskLog tl : taskLogs) {

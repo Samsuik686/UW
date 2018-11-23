@@ -18,15 +18,6 @@ public abstract class BaseTaskLog<M extends BaseTaskLog<M>> extends Model<M> imp
 		return getInt("id");
 	}
 
-	public M setPackingListItemId(java.lang.Integer packingListItemId) {
-		set("packing_list_item_id", packingListItemId);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getPackingListItemId() {
-		return getInt("packing_list_item_id");
-	}
-
 	public M setMaterialId(java.lang.String materialId) {
 		set("material_id", materialId);
 		return (M)this;
@@ -34,6 +25,15 @@ public abstract class BaseTaskLog<M extends BaseTaskLog<M>> extends Model<M> imp
 	
 	public java.lang.String getMaterialId() {
 		return getStr("material_id");
+	}
+
+	public M setPackingListItemId(java.lang.Integer packingListItemId) {
+		set("packing_list_item_id", packingListItemId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getPackingListItemId() {
+		return getInt("packing_list_item_id");
 	}
 
 	public M setQuantity(java.lang.Integer quantity) {

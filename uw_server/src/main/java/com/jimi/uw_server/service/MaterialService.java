@@ -13,6 +13,7 @@ import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.bo.RecordItem;
@@ -57,6 +58,8 @@ public class MaterialService extends SelectService{
 
 	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
+	public static final String GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
+
 
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -68,7 +71,7 @@ public class MaterialService extends SelectService{
 		Page<Record> result = selectService.select(new String[] {"material_type"}, null, pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
 		for (Record res : result.getList()) {
-			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("specification"), res.get("enabled"));
+			MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("specification"), res.get("supplier"), res.get("enabled"));
 			materialTypeVOs.add(m);
 		}
 
@@ -96,25 +99,34 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public String addType(String no, String specification) {
+	public String addType(String no, String specification, String supplierName) {
 		String resultString = "添加成功！";
 		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no).size() != 0) {
 			resultString = "该物料已存在，请不要添加重复的物料类型号！";
 			return resultString;
 		}
+		Integer supplier;
+		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
+		if (s != null) {
+			supplier = s.getId();
+		} else {
+			resultString = "新增物料失败，请填写正确的供应商名或将新增对应的供应商！";
+			return resultString;
+		}
 		MaterialType materialType = new MaterialType();
 		materialType.setNo(no);
 		materialType.setSpecification(specification);
+		materialType.setSupplier(supplier);
 		materialType.setEnabled(true);
 		materialType.save();
 		return resultString;
 	}
 
 
-	public String updateType(MaterialType materialType) {
+	public String updateType(Integer id, String specification, String supplierName, Boolean enabled) {
 		String resultString = "更新成功！";
-		if (!materialType.getEnabled()) {
-			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, materialType.getId());
+		if (!enabled) {
+			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL,id);
 			if (m.get("quantity") != null) {
 				Integer quantity = Integer.parseInt(m.get("quantity").toString());
 				if (quantity > 0) {
@@ -122,11 +134,23 @@ public class MaterialService extends SelectService{
 					return resultString;
 					}
 				}
-			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_IN_PROCESS_SQL, materialType.getId()) != null) {
+			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_IN_PROCESS_SQL, id) != null) {
 				resultString = "当前有某个尚未完成的任务已经绑定了该物料，禁止删除该物料！";
 				return resultString;
 			}
 		}
+		Integer supplier;
+		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
+		if (s != null) {
+			supplier = s.getId();
+		} else {
+			resultString = "更新物料失败，请填写正确的供应商名或将新增对应的供应商！";
+			return resultString;
+		}
+		MaterialType materialType = MaterialType.dao.findById(id);
+		materialType.setSpecification(specification);
+		materialType.setSupplier(supplier);
+		materialType.setEnabled(enabled);
 		materialType.update();
 		return resultString;
 	}
@@ -192,10 +216,33 @@ public class MaterialService extends SelectService{
 
 	public Object getMaterialRecords(Integer type, Integer pageNo, Integer pageSize) {
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
-		List<TaskLog> taskLogList = TaskLog.dao.find(GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL, type);	// 查询该物料类型的所有出入库任务日志
+		recordItemList = getRecordItemList(type);
+		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
+		int startIndex = (pageNo-1) * pageSize;
+		int endIndex = (pageNo-1) * pageSize + pageSize;
+		int i = startIndex;
+		while (i < recordItemList.size()) {
+			recordItemSubList.add(recordItemList.get(i));
+			if (i == endIndex-1) {
+				break;
+			}
+			i++;
+		}
+		PagePaginate pagePaginate = new PagePaginate();
+		pagePaginate.setPageSize(pageSize);
+		pagePaginate.setPageNumber(pageNo);
+		pagePaginate.setTotalRow(recordItemList.size());
+		pagePaginate.setList(recordItemSubList);
+		return pagePaginate;
+	}
+
+
+	public List<RecordItem> getRecordItemList(int type) {
 		int remainderQuantity = 0;		// 结余数
 		int superIssuedQuantity = 0;		// 累计超发数
 		int lossQuantity = 0;		// 累计破损数
+		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
+		List<TaskLog> taskLogList = TaskLog.dao.find(GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL, type);	// 查询该物料类型的所有出入库任务日志
 		for (TaskLog taskLog : taskLogList) {
 			PackingListItem pItem = PackingListItem.dao.findById(taskLog.getPackingListItemId());
 			Task task = Task.dao.findById(pItem.getTaskId());
@@ -213,23 +260,7 @@ public class MaterialService extends SelectService{
 			RecordItem ri = new RecordItem(pItem.getMaterialTypeId(), pItem.getQuantity(), task.getFileName(), task.getType(), actualQuantity, remainderQuantity, superIssuedQuantity, lossQuantity, taskLog.getOperator(), taskLog.getTime());
 			recordItemList.add(ri);
 		}
-		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
-		int startIndex = (pageNo-1) * pageSize;
-		int endIndex = (pageNo-1) * pageSize + pageSize;
-		int i = startIndex;
-		while (i < taskLogList.size()) {
-			recordItemSubList.add(recordItemList.get(i));
-			if (i == endIndex-1) {
-				break;
-			}
-			i++;
-		}
-		PagePaginate pagePaginate = new PagePaginate();
-		pagePaginate.setPageSize(pageSize);
-		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(recordItemList.size());
-		pagePaginate.setList(recordItemSubList);
-		return pagePaginate;
+		return recordItemList;
 	}
 
 
