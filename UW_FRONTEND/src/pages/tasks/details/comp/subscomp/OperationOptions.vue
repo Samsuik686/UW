@@ -1,15 +1,20 @@
 <template>
   <div class="user-options form-row">
+    <div class="btn pl-1 pr-1" title="设置优先级" @click="confirmSetting(row)">
+      <icon name="config" scale="1.8"></icon>
+    </div>
     <div class="btn pl-1 pr-1" title="详细" @click="checkTaskDetails(row)">
       <icon name="list" scale="1.8"></icon>
     </div>
     <div class="btn pl-1 pr-1" title="状态" @click="isEditing = true">
       <icon name="menu" scale="1.8"></icon>
     </div>
-    <div v-if="isEditing" id="edit-window">
+    <div v-if="isEditing" class="edit-window">
       <edit-status :editData="row"/>
     </div>
-
+    <div v-if="isSetting" class="edit-window">
+      <set-priority :editData="row"/>
+    </div>
   </div>
 </template>
 
@@ -17,21 +22,27 @@
   import EditStatus from './EditStatus'
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
+  import SetPriority from "./SetPriority";
 
   export default {
     name: "OperationOptions",
     props: ['row'],
     components: {
+      SetPriority,
       EditStatus
     },
     data() {
       return {
-        isEditing: false
+        isEditing: false,
+        isSetting:false
       }
     },
     mounted() {
       eventBus.$on('closeTaskStatusPanel', () => {
         this.isEditing = false;
+      });
+      eventBus.$on('closeTaskPriorityPanel', () => {
+        this.isSetting = false;
       })
     },
     computed: {
@@ -49,13 +60,20 @@
           this.$alertInfo('暂不支持此类型任务的详情查看');
           return;
         }
+      },
+      confirmSetting:function(row){
+        if(row.stateString === "未开始" || row.stateString === "进行中"){
+          this.isSetting = true;
+        }else{
+          this.$alertWarning("该状态不能设置优先级");
+        }
       }
     }
   }
 </script>
 
 <style scoped>
-  #edit-window {
+  .edit-window {
     z-index: 100;
   }
 

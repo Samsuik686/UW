@@ -37,9 +37,9 @@
       'text-comp': {
         props: ['opt', 'callback'],
         template: '<div class="form-group col pr-3"">\n' +
-        '           <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback" autocomplete="off">\n' +
-        '          </div>'
+          '           <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback" autocomplete="off">\n' +
+          '          </div>'
       },
       'date-comp': {
         props: ['opt'],
@@ -47,28 +47,28 @@
           Datetime
         },
         template: '<div class="row">\n' +
-        '    <div class="form-group col pr-3">\n' +
-        '      <label>创建时间  从：</label>\n' +
-        '      <datetime v-model="opt.modelFrom" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai"/>\n' +
-        '    </div>\n' +
-        '    <div class="form-group col pr-3">\n' +
-        '      <label>至：</label>\n' +
-        '      <datetime v-model="opt.modelTo" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai"/>\n' +
-        '    </div>\n' +
-        '  </div>'
+          '    <div class="form-group col pr-3">\n' +
+          '      <label>创建时间  从：</label>\n' +
+          '      <datetime v-model="opt.modelFrom" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai"/>\n' +
+          '    </div>\n' +
+          '    <div class="form-group col pr-3">\n' +
+          '      <label>至：</label>\n' +
+          '      <datetime v-model="opt.modelTo" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai"/>\n' +
+          '    </div>\n' +
+          '  </div>'
 
       },
       'select-comp': {
         props: ['opt'],
         template: '<div class="row">\n' +
-        '      <div class="form-group col pr-3">\n' +
-        '        <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '        <select :id="opt.id" v-model="opt.model" class="custom-select">\n' +
-        '          <option value="" disabled>请选择</option>\n' +
-        '          <option :value="item.value"  v-for="item in opt.list">{{item.string}}</option>\n' +
-        '        </select>\n' +
-        '      </div>\n' +
-        '    </div>'
+          '      <div class="form-group col pr-3">\n' +
+          '        <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '        <select :id="opt.id" v-model="opt.model" class="custom-select">\n' +
+          '          <option value="" disabled>请选择</option>\n' +
+          '          <option :value="item.value"  v-for="item in opt.list">{{item.string}}</option>\n' +
+          '        </select>\n' +
+          '      </div>\n' +
+          '    </div>'
       },
       UploadTask
     },
@@ -157,8 +157,7 @@
         this.isUploading = false;
       })
     },
-    computed: {
-    },
+    computed: {},
     watch: {},
     methods: {
       ...mapActions(['setLoading']),
@@ -249,11 +248,18 @@
           if (item.type === 'text' || item.type === 'select') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
-                this.queryString += (item.id + "=" + _.trim(item.model))
+                if (item.id === "file_name") {
+                  this.queryString += (item.id + "like" + _.trim(item.model));
+                } else {
+                  this.queryString += (item.id + "=" + _.trim(item.model));
+                }
               } else {
-                this.queryString += ("&" + item.id + "=" + _.trim(item.model))
+                if (item.id === "file_name") {
+                  this.queryString += ("&" + item.id + "like" + _.trim(item.model))
+                } else {
+                  this.queryString += ("&" + item.id + "=" + _.trim(item.model))
+                }
               }
-
             } else {
               this.setLoading(false)
             }

@@ -1,6 +1,9 @@
 export const token = (state) => {
   return state.token;
 };
+export const user = (state) => {
+  return state.user;
+};
 
 export const logsRouterApi = (state) => {
   return state.logsRouterApi;
@@ -44,4 +47,10 @@ export const currentWindowId = (state) => {
 };
 export const currentOprType = (state) => {
   return state.currentOprType
+};
+export const configData = (state) => {
+  return state.configData;
+};
+export const editMaterialOutRecords = (state) => {
+  return state.editMaterialOutRecords;
 };

@@ -12,6 +12,7 @@ import LogsModule from '../pages/logs/details/TableModule'
 import TasksMain from '../pages/tasks/TaskMain'
 import RobotMain from '../pages/robot/RobotMain'
 import Login from '../pages/user/Login'
+import ConfigMain from '../pages/config/ConfigMain'
 import UserConfig from '../pages/user/UserConfig'
 import IoMain from '../pages/io/IoMain'
 import OutNow from '../pages/io/details/OutNow'
@@ -85,6 +86,11 @@ const router = new Router({
           component: UserConfig
         },
         {
+          path:'config',
+          name:'ConfigMain',
+          component:ConfigMain
+        },
+        {
           path: 'io',
           name: 'IoMain',
           component: IoMain,
@@ -122,6 +128,12 @@ const router = new Router({
 
 if (localStorage.getItem('token')) {
   store.commit('setLoginToken', localStorage.getItem('token'))
+}
+if(localStorage.getItem('user')){
+  store.commit('setUser',localStorage.getItem('user'));
+}
+if(localStorage.getItem('configData')){
+  store.commit('setConfigData',JSON.parse(localStorage.getItem("configData")));
 }
 
 

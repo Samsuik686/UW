@@ -100,6 +100,8 @@
           {field: 'row', title: '行号', colStyle: {'width': '70px'}},
           {field: 'col', title: '列号', colStyle: {'width': '70px'}},
           {field: 'height', title: '高度', colStyle: {'width': '70px'}},
+          {field: 'isOnShelf', title: '是否在架',  visible: false},
+          {field: 'isOnShelfString', title: '是否在架', colStyle: {'width': '70px'}},
           {field: 'enabled', title: '可用性', visible: false},
           {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
           {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'} }

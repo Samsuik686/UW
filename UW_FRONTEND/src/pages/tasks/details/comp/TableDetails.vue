@@ -114,7 +114,8 @@
           {field: 'state', title: '状态', visible: false},
           {field: 'stateString', title: '状态', colStyle: {'width': '80px'}},
           {field: 'type', title: '类型', visible: false},
-          {field: 'typeString', title: '类型', colStyle: {'width': '100px'}},
+          {field: 'typeString', title: '类型', colStyle: {'width': '80px'}},
+          {field: 'priority', title: '优先级', colStyle: {'width': '60px'}},
           {field: 'fileName', title: '文件名', colStyle: {'width': '120px'}},
           {field: 'createTimeString', title: '创建时间', colStyle: {'width': '70px'}},
           {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}

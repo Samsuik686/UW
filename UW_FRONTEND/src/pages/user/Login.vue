@@ -64,7 +64,7 @@
         : '';
     },
     methods: {
-      ...mapActions(['setLoginToken']),
+      ...mapActions(['setLoginToken','setUser']),
       pageHeightCalc: function () {
         this.pageHeight = document.body.clientHeight - 200;
       },
@@ -82,6 +82,8 @@
             if (res.data.result === 200) {
               localStorage.setItem('token', res.data.data["#TOKEN#"]);
               this.setLoginToken(localStorage.getItem('token'));
+              localStorage.setItem('user',res.data.data["uid"]);
+              this.setUser(localStorage.getItem('user'));
               this.$router.replace('/');
             } else if (res.data.result === 412) {
               this.$alertWarning(res.data.data)

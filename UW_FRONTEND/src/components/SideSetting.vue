@@ -36,6 +36,13 @@
       <!--<div class="setting-icon"></div>-->
       <!--</div>-->
       <div class="mt-auto w-100">
+        <div class="icon-container " :class="activeItem === 'config' ? 'icon-active' : ''"
+             @click="initData('config')">
+          <div class="setting-icon">
+            <icon name="config" scale="1.8" style="color: #fff;"></icon>
+          </div>
+          <span>设置</span>
+        </div>
         <div class="icon-container " :class="activeItem === 'user' ? 'icon-active' : ''"
              @click="initData('user')">
           <div class="setting-icon">

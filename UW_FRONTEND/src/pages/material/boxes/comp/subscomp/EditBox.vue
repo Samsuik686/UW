@@ -31,6 +31,14 @@
                  @input="validate('height', '^[0-9]*[1-9][0-9]*$', '请输入正整数高度')" autocomplete="off">
           <span class="form-span col">{{warningMsg.heightMsg}}</span>
         </div>
+        <div class="form-row col-4 pl-2 pr-2">
+          <label for="material-isOnShelf" class="col-form-label">是否在架:</label>
+          <select id="material-isOnShelf" class="form-control"  v-model="thisData.isOnShelf">
+            <option value=1>是</option>
+            <option value=0>否</option>
+          </select>
+          <span class="form-span col"></span>
+        </div>
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -59,7 +67,8 @@
           row: '',
           col: '',
           height: '',
-          enabled: 1
+          enabled: 1,
+          isOnShelf:0
         },
         warningMsg: {
 
@@ -73,6 +82,7 @@
       this.thisData.row = this.editData.row;
       this.thisData.col = this.editData.col;
       this.thisData.height = this.editData.height;
+      this.thisData.isOnShelf = (this.editData.isOnShelf === true)?1:0;
     },
     methods: {
       closeEditPanel: function () {

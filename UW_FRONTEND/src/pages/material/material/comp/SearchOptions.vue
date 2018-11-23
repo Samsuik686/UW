@@ -42,10 +42,10 @@
     components: {
       'text-comp': {
         props: ['opt', 'callback'],
-        template: '<div class="form-group col pr-3"">\n' +
-        '           <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
-        '          </div>'
+        template: '<div class="form-group col pr-3">\n' +
+          '           <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
+          '        </div>\n'
       },
       AddMaterial
     },
@@ -103,9 +103,9 @@
           if (item.type === 'text') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
-                this.queryString += (item.id + "=" + _.trim(item.model))
+                this.queryString += (item.id + "like" + _.trim(item.model))
               } else {
-                this.queryString += ("&" + item.id + "=" + _.trim(item.model))
+                this.queryString += ("&" + item.id + "like" + _.trim(item.model))
               }
 
             } else {
