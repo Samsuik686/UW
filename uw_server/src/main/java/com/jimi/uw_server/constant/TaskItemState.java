@@ -1,18 +1,19 @@
 package com.jimi.uw_server.constant;
 
 /**
- * 任务条目状态枚举类
+ * 任务条目状态常量类
  * @author HardyYao
  * @createTime 2018年11月21日  下午4:12:31
  */
 
 public class TaskItemState {
 
+	public static final int FINISH_CUT = -2;		// 已完成截料
 	public static final int UNASSIGNABLED = -1;		// 暂不可分配
-	public static final int UNALLOCATED = 0;		// 未分配
-	public static final int ASSIGNED = 1;			// 已分配
-	public static final int ARRIVED = 2;			// 已到站
-	public static final int BACKSHELF = 3;			// 已回库
-	public static final int COMPLETED = 4;			// 已完成	
+	public static final int WAIT_ASSIGN = 0;		// 未分配拣料
+	public static final int ASSIGNED = 1;			// 已分配拣料
+	public static final int ARRIVED_WINDOW = 2;		// 已拣料到站
+	public static final int START_BACK = 3;			// 已分配回库
+	public static final int FINISH_BACK = 4;		// 已完成回库
 
 }

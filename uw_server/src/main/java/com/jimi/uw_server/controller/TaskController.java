@@ -45,11 +45,11 @@ public class TaskController extends Controller {
 
 		}
 		
-		else if (type == TaskType.INVENTORY) {	//如果是创建「盘点任务」
+		else if (type == TaskType.COUNT) {	//如果是创建「盘点任务」
 			renderJson(ResultUtil.failed("该功能尚在开发中！"));
 		}
 		
-		else if (type == TaskType.LOCATIONOPTIZATION) {	//如果是创建「位置优化任务」
+		else if (type == TaskType.POSITION_OPTIZATION) {	//如果是创建「位置优化任务」
 			renderJson(ResultUtil.failed("该功能尚在开发中！"));
 		}
 		
@@ -163,8 +163,8 @@ public class TaskController extends Controller {
 	// 料盘截料后重新入库
 	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId}")
 	public void backAfterCutting(Integer packingListItemId, String materialId) {
-		String resultString = taskService.backAfterCutting(packingListItemId, materialId);
-		if(resultString.equals("添加成功！")) {
+		String resultString = taskService.cut(packingListItemId, materialId);
+		if(resultString.equals("扫描成功，请将料盘放回料盒！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);

@@ -117,7 +117,7 @@ public class TaskService {
 				Task task = new Task();
 				task.setType(type);
 				task.setFileName(fileName);
-				task.setState(TaskState.UNREVIEWED);
+				task.setState(TaskState.WAIT_REVIEW);
 				task.setCreateTime(new Date());
 				task.save();
 				// 获取新任务id
@@ -188,7 +188,7 @@ public class TaskService {
 
 	public boolean pass(Integer id) {
 		Task task = Task.dao.findById(id);
-		task.setState(TaskState.TOBESTARTED);
+		task.setState(TaskState.WAIT_START);
 		return task.update();
 	}
 
@@ -212,7 +212,7 @@ public class TaskService {
 				}
 			} else if (task.getType() == 1) {		// 如果任务类型为入库，则将任务条目加载到redis中，将任务条目状态设置为未分配
 				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item, TaskItemState.UNALLOCATED, task.getPriority());
+					AGVIOTaskItem a = new AGVIOTaskItem(item, TaskItemState.WAIT_ASSIGN, task.getPriority());
 					taskItems.add(a);
 				}
 			}
@@ -283,11 +283,11 @@ public class TaskService {
 			return pagePaginate;
 		}
 
-		else if (type == TaskType.INVENTORY) {		//如果任务类型为盘点
+		else if (type == TaskType.COUNT) {		//如果任务类型为盘点
 			return null;
 		}
 
-		else if (type == TaskType.LOCATIONOPTIZATION) {		//如果任务类型为位置优化
+		else if (type == TaskType.POSITION_OPTIZATION) {		//如果任务类型为位置优化
 			return null;
 		}
 
@@ -413,7 +413,7 @@ public class TaskService {
 
 	public Object getWindowParkingItem(Integer id) {
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
-			if(redisTaskItem.getState().intValue() == TaskItemState.ARRIVED) {
+			if(redisTaskItem.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
 				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {
 					Integer packingListItemId = redisTaskItem.getId();
@@ -441,6 +441,7 @@ public class TaskService {
 	}
 
 
+	// 新增入库料盘记录并写入库任务日志记录
 	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, User user) {
 		// 根据套料单id，获取对应的任务记录
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
@@ -484,6 +485,7 @@ public class TaskService {
 	}
 
 
+	// 写出库任务日志
 	public boolean out(Integer packListItemId, String materialId, Integer quantity, User user) {
 		// 根据套料单id，获取对应的任务记录
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
@@ -525,6 +527,7 @@ public class TaskService {
 	}
 
 
+	// 更新出库数量以及料盘信息
 	public void updateOutputQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords) {
 		if (materialOutputRecords != null) {
 			PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
@@ -542,7 +545,7 @@ public class TaskService {
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
 				if (quantity != material.getRemainderQuantity()) {
-					TaskItemRedisDAO.updateTaskIsNeedCut(item, true);
+					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.FINISH_CUT);
 				}
 				// 修改物料实体表对应的料盘剩余数量
 				int remainderQuantity = material.getRemainderQuantity() - quantity;
@@ -564,14 +567,13 @@ public class TaskService {
 	}
 
 
-	public String backAfterCutting(Integer packingListItemId, String materialId) {
-		String resultString = "添加成功！";
+	// 将截料后重新入库的料盘置为在盒内
+	public String cut(Integer packingListItemId, String materialId) {
+		String resultString = "扫描成功，请将料盘放回料盒！";
 		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
-		AGVIOTaskItem specificTaskItem = null;
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 			if (redisTaskItem.getId().intValue() == packingListItemId) {
-				specificTaskItem = redisTaskItem;
-				if (!redisTaskItem.getIsNeedCut()) {
+				if (redisTaskItem.getState().intValue() != TaskItemState.ARRIVED_WINDOW) {
 					resultString = "暂时不可调用截料后回库接口!";
 					return resultString;
 				}
@@ -582,11 +584,12 @@ public class TaskService {
 		Material material = Material.dao.findById(materialId);
 		if (taskLog == null) {
 			resultString = "扫错料盘，该料盘不需要放回该料盒!";
-		} else if (material.getIsInBox()){
+		} else if (material.getIsInBox() && material.getRemainderQuantity() > 0){
 			resultString = "该料盘已设置为在盒内，请将料盘放入料盒内!";
+		} else if (!material.getIsInBox() && material.getRemainderQuantity() == 0){
+			resultString = "该料盘已全部出库!";
 		} else {
 			material.setIsInBox(true).update();
-			TaskItemRedisDAO.updateTaskIsNeedCut(specificTaskItem, false);
 		}
 		return resultString;
 	}

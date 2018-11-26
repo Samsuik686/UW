@@ -12,6 +12,7 @@ import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
@@ -96,13 +97,13 @@ public class LSSLHandler {
 			if(groupid.equals(item.getGroupId())) {
 				
 				//判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-				if(item.getState() == 1) {//LS执行完成时
+				if(item.getState() == TaskItemState.ASSIGNED) {//LS执行完成时
 					//更改taskitems里对应item状态为2（已拣料到站）***
-					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.ARRIVED);
+					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.ARRIVED_WINDOW);
 
-				}else if(item.getState() == 3) {//SL执行完成时：
+				}else if(item.getState() == TaskItemState.START_BACK) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
-					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.COMPLETED);
+					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.FINISH_BACK);
 
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
@@ -111,6 +112,10 @@ public class LSSLHandler {
 					nextRound(item);
 
 					clearTil(groupid);
+				}else if(item.getState() == TaskItemState.FINISH_CUT) {
+					// 设置料盒在架
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					setMaterialBoxIsOnShelf(materialBox, true);
 				}
 			}
 		}
@@ -118,10 +123,10 @@ public class LSSLHandler {
 
 
 	private static void nextRound(AGVIOTaskItem item) {
-		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到0
-		if (Task.dao.findById(item.getTaskId()).getType() == 1) {
+		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到未分配状态
+		if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
 			if (!item.getIsForceFinish()) {
-				TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.UNALLOCATED);
+				TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.WAIT_ASSIGN);
 				TaskItemRedisDAO.updateTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 			}
@@ -136,7 +141,7 @@ public class LSSLHandler {
 	private static void clearTil(String groupid) {
 		boolean isAllFinish = true;
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
-			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != TaskItemState.COMPLETED || item1.getIsNeedCut()) {
+			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != TaskItemState.FINISH_BACK) {
 				isAllFinish = false;
 			}
 		}

@@ -23,9 +23,9 @@ public class WindowParkingListItemVO extends TaskLog {
 			typeString = "入库";
 		} else if (type == TaskType.OUT) {
 			typeString = "出库";
-		} else if (type == TaskType.INVENTORY) {
+		} else if (type == TaskType.COUNT) {
 			typeString = "盘点";
-		}  else if (type == TaskType.LOCATIONOPTIZATION) {
+		}  else if (type == TaskType.POSITION_OPTIZATION) {
 			typeString = "位置优化";
 		}
 		return typeString;

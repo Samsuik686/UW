@@ -12,6 +12,7 @@ import com.jimi.uw_server.agv.handle.LSSLHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Task;
@@ -86,9 +87,9 @@ public class RobotService extends SelectService {
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(BACK_LOCK) {
-					if (item.getState().intValue() < TaskItemState.BACKSHELF) {
+					if (item.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
 						// 更新任务条目状态为已分配回库
-						TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.BACKSHELF);
+						TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.START_BACK);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getTaskId(), item.getMaterialTypeId());
 						if (actualQuantity >= item.getQuantity()) {
@@ -102,12 +103,12 @@ public class RobotService extends SelectService {
 						if (sameBoxItem == null) {
 							LSSLHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-							TaskItemRedisDAO.updateTaskItemState(sameBoxItem, TaskItemState.ARRIVED);
+							TaskItemRedisDAO.updateTaskItemState(sameBoxItem, TaskItemState.ARRIVED_WINDOW);
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
 						// 在对出库任务执行回库操作时，调用 updateOutputQuantity 方法，以便「修改出库数」
-						if (Task.dao.findById(item.getTaskId()).getType() == 1) {
+						if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
 							taskService.updateOutputQuantityAndMaterialInfo(item, materialOutputRecords);
 						}
 
@@ -144,7 +145,7 @@ public class RobotService extends SelectService {
 	 */
 	public AGVIOTaskItem getSameBoxItemId(AGVIOTaskItem item) {
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
-			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == TaskItemState.UNALLOCATED) {
+			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 				return item1;
 			}
 		}
@@ -162,21 +163,37 @@ public class RobotService extends SelectService {
 			PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no);
 			String resultString = "调用成功！";
 
+			// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 			if (item == null) {
-				resultString = "该物料暂时不需要入库！";
+				resultString = "该物料暂时不需要入库或截料！";
 				return resultString;
 			}
 
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {
-					// 若任务条目状态为 不可分配，则将其状态更新为 未分配
-					if (redisTaskItem.getState() == TaskItemState.UNASSIGNABLED || (redisTaskItem.getState() == TaskItemState.COMPLETED && redisTaskItem.getIsNeedCut())) {
-						TaskItemRedisDAO.updateTaskItemState(redisTaskItem, TaskItemState.UNALLOCATED);
+					// 若任务条目状态为 不可分配，则将其状态更新为未分配拣料
+					if (redisTaskItem.getState().intValue() == TaskItemState.UNASSIGNABLED) {
+						TaskItemRedisDAO.updateTaskItemState(redisTaskItem, TaskItemState.WAIT_ASSIGN);
 						TaskItemRedisDAO.updateTaskItemRobot(redisTaskItem, 0);
 						TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 						return resultString;
-					} else {
+					}
+					// 若任务条目状态为已完成截料，则将其状态更新为未分配拣料
+					else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
+						MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
+						if (materialBox.getIsOnShelf()) {
+							TaskItemRedisDAO.updateTaskItemState(redisTaskItem, TaskItemState.WAIT_ASSIGN);
+							TaskItemRedisDAO.updateTaskItemRobot(redisTaskItem, 0);
+							TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
+							return resultString;
+						} else {	// 为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令
+							resultString = "请等叉车将对应的料盒放回货架之后再进行调用！";
+							return resultString;
+						}
+					}
+					// 若该任务条目不是处于不可分配或已完成截料状态，则说明该任务条目正在执行当中或已完成，不能再调用该接口
+					else {
 						resultString = "该物料对应的任务条目正在执行中或已完成，请勿重复扫描！";
 						return resultString;
 					}

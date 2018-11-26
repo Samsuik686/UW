@@ -1,5 +1,7 @@
 package com.jimi.uw_server.agv.entity.bo;
 
+import java.io.Serializable;
+
 import com.jimi.uw_server.model.PackingListItem;
 
 /**
@@ -8,7 +10,8 @@ import com.jimi.uw_server.model.PackingListItem;
  * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
-public class AGVIOTaskItem {
+@SuppressWarnings("serial")
+public class AGVIOTaskItem implements Serializable {
 
 	private Integer id;
 
@@ -37,11 +40,6 @@ public class AGVIOTaskItem {
 	 */
 	private Integer priority;
 
-	/**
-	 * false：该任务条目对应的物料不需要截料	true：该任务条目对应的物料需要截料
-	 */
-	private Boolean isNeedCut;
-
 	public AGVIOTaskItem() {}
 
 	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
@@ -54,7 +52,6 @@ public class AGVIOTaskItem {
 		this.boxId = 0;
 		this.isForceFinish = false;
 		this.priority = priority;
-		this.isNeedCut = false;
 	}
 
 	public Integer getRobotId() {
@@ -131,14 +128,6 @@ public class AGVIOTaskItem {
 
 	public String getGroupId() {
 		return boxId + ":" + taskId;
-	}
-
-	public Boolean getIsNeedCut() {
-		return isNeedCut;
-	}
-
-	public void setIsNeedCut(Boolean isNeedCut) {
-		this.isNeedCut = isNeedCut;
 	}
 
 }

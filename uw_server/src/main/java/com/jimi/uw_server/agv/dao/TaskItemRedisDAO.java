@@ -2,11 +2,7 @@ package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
@@ -53,33 +49,12 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addTaskItem(List<AGVIOTaskItem> taskItems) {
 		appendTaskItems(taskItems);
-		Map<Integer, Queue<AGVIOTaskItem>> groupByTaskIdMap = new HashMap<>();
-		for (AGVIOTaskItem item : taskItems) {
-			
-			Queue<AGVIOTaskItem> queue = groupByTaskIdMap.get(item.getTaskId());
-			if(queue == null) {
-				queue = new LinkedBlockingQueue<>();
-				groupByTaskIdMap.put(item.getTaskId(), queue);
-			}
-			queue.offer(item);
-		}
+		taskItems.sort(new PriorityComparator());
 		List<byte[]> items = new ArrayList<>();
-		while(true) {
-			int emptyQueue = 0;
-			for (Queue<AGVIOTaskItem> queue : groupByTaskIdMap.values()) {
-				AGVIOTaskItem item = queue.poll();
-				if(item == null) {
-					emptyQueue++;
-				}else {
-					items.add(Json.getJson().toJson(item).getBytes());
-				}
-			}
-			if(emptyQueue == groupByTaskIdMap.size()) {
-				break;
-			}
-			taskItems.sort(new PriorityComparator());
+		for (AGVIOTaskItem item : taskItems) {
+			items.add(Json.getJson().toJson(item).getBytes());
 		}
-		Collections.reverse(items);
+		Collections.reverse(taskItems);
 		cache.del("til");
 		cache.lpush("til", items.toArray());
 	}
@@ -140,22 +115,6 @@ public class TaskItemRedisDAO {
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setIsForceFinish(isForceFinish);
-				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
-				break;
-			}
-		}
-	}
-
-
-	/**
-	 * 更新任务条目为需要截料，标识该任务条目对应的物料需要截料<br>
-	 */
-	public synchronized static void updateTaskIsNeedCut(AGVIOTaskItem taskItem, boolean isNeedCut) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
-				agvioTaskItem.setIsNeedCut(isNeedCut);
 				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}

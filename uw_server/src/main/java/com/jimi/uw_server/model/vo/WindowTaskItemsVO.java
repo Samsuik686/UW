@@ -27,9 +27,9 @@ public class WindowTaskItemsVO extends TaskLog {
 			typeString = "入库";
 		} else if (type == TaskType.OUT) {
 			typeString = "出库";
-		} else if (type == TaskType.INVENTORY) {
+		} else if (type == TaskType.COUNT) {
 			typeString = "盘点";
-		} else if (type == TaskType.LOCATIONOPTIZATION) {
+		} else if (type == TaskType.POSITION_OPTIZATION) {
 			typeString = "位置优化";
 		}
 		return typeString;
@@ -69,19 +69,19 @@ public class WindowTaskItemsVO extends TaskLog {
 		case TaskItemState.UNASSIGNABLED:
 			this.stateString = "不可分配";
 			break;
-		case TaskItemState.UNALLOCATED:
+		case TaskItemState.WAIT_ASSIGN:
 			this.stateString = "未分配";	
 			break;
 		case TaskItemState.ASSIGNED:
 			this.stateString = "已分配拣料";
 			break;
-		case TaskItemState.ARRIVED:
+		case TaskItemState.ARRIVED_WINDOW:
 			this.stateString = "已拣料到站";
 			break;
-		case TaskItemState.BACKSHELF:
+		case TaskItemState.START_BACK:
 			this.stateString = "已分配回库";
 			break;
-		case TaskItemState.COMPLETED:
+		case TaskItemState.FINISH_BACK:
 			this.stateString = "已回库完成";
 			break;
 		default:

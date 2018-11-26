@@ -74,7 +74,7 @@ public class TaskPool extends Thread{
 			AGVIOTaskItem item = taskItems.get(a);
 
 			// 0. 判断任务条目状态是否为0
-			if (item.getState() == TaskItemState.UNALLOCATED) {
+			if (item.getState() == TaskItemState.WAIT_ASSIGN) {
 				// 1. 根据item的任务id获取任务类型
 				Task task = Task.dao.findById(item.getTaskId());
 				Integer taskType = task.getType();

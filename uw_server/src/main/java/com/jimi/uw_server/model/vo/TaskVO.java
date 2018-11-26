@@ -41,9 +41,9 @@ public class TaskVO extends Task{
 			this.typeString = "入库";
 		} else if (type == TaskType.OUT) {
 			this.typeString = "出库";
-		} else if (type == TaskType.INVENTORY) {
+		} else if (type == TaskType.COUNT) {
 			this.typeString = "盘点";
-		}  else if (type == TaskType.LOCATIONOPTIZATION) {
+		}  else if (type == TaskType.POSITION_OPTIZATION) {
 			this.typeString = "位置优化";
 		}
 	}
@@ -57,9 +57,9 @@ public class TaskVO extends Task{
 	}
 
 	public void setStateString(Integer state) {
-		if (state == TaskState.UNREVIEWED) {
+		if (state == TaskState.WAIT_REVIEW) {
 			this.stateString = "未审核";
-		} else if (state == TaskState.TOBESTARTED) {
+		} else if (state == TaskState.WAIT_START) {
 			this.stateString = "未开始";
 		} else if (state == TaskState.PROCESSING) {
 			this.stateString = "进行中";
