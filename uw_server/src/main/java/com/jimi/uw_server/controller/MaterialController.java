@@ -103,10 +103,10 @@ public class MaterialController extends Controller {
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "物料报表";
+			String fileName = "MaterialReport.xlsx";
 			HttpServletResponse response = getResponse();
 			response.reset();
-			response.setHeader("Content-Disposition", "attachment; filename=" + new String((fileName).getBytes("utf-8"), "utf-8"));	// iso-8859-1
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String((fileName).getBytes("utf-8"), "utf-8"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
 			materialService.exportMaterialReport(fileName, output);

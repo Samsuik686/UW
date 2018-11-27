@@ -20,7 +20,7 @@ import com.jimi.uw_server.model.vo.MaterialBoxVO;
 import com.jimi.uw_server.model.vo.MaterialTypeVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
-import com.jimi.uw_server.util.ExcelHelper;
+import com.jimi.uw_server.util.ExcelWritter;
 
 /**
  * 物料业务层
@@ -55,7 +55,7 @@ public class MaterialService extends SelectService{
 
 	public static final String GET_TASK_LOGS_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? ORDER BY task_log.time";
 
-	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
+	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
 
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -216,13 +216,11 @@ public class MaterialService extends SelectService{
 		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
 		int startIndex = (pageNo-1) * pageSize;
 		int endIndex = (pageNo-1) * pageSize + pageSize;
-		int i = startIndex;
-		while (i < taskLogList.size()) {
-			recordItemSubList.add(recordItemList.get(i));
-			if (i == endIndex-1) {
-				break;
+		if (startIndex < recordItemList.size()) {
+			if (endIndex >= recordItemList.size()) {
+				endIndex = recordItemList.size();
 			}
-			i++;
+			recordItemSubList = recordItemList.subList(startIndex, endIndex);
 		}
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
@@ -239,9 +237,9 @@ public class MaterialService extends SelectService{
 		String[] head = null;
 		field = new String[] { "id", "no", "specification", "box", "row", "col", "height", "quantity"};
 		head =  new String[] { "物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};	
-		ExcelHelper helper = ExcelHelper.create(false);
-		helper.fill(materialRecord, fileName, field, head);
-		helper.write(output, true);
+		ExcelWritter writter = ExcelWritter.create(true);
+		writter.fill(materialRecord, fileName, field, head);
+		writter.write(output, true);
 	}
 
 
