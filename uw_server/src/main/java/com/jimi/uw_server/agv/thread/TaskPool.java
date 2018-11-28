@@ -26,7 +26,7 @@ public class TaskPool extends Thread{
 
 	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT DISTINCT(box) AS boxId FROM material WHERE type = ?";
 
-	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ?";
+	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity >0";
 
 	private static final String GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT box FROM material WHERE type = ?)";
 
@@ -96,7 +96,7 @@ public class TaskPool extends Thread{
 				// 3. 将盒号填入item并update到Redis
 				TaskItemRedisDAO.updateTaskItemBoxId(item, boxId);
 				// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
-				if (item.getBoxId().intValue() > 0 && materialBox.getIsOnShelf()) {
+				if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf()) {
 					// 在架
 					// 5. 发送LS指令
 					LSSLHandler.sendLS(item, materialBox);

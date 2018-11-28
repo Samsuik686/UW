@@ -106,10 +106,6 @@ public class MaterialService extends SelectService{
 
 	public String updateType(MaterialType materialType) {
 		String resultString = "更新成功！";
-		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, materialType.getNo()).size() != 0) {
-			resultString = "该物料已存在，请不要添加重复的料号！";
-			return resultString;
-		}
 		if (!materialType.getEnabled()) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, materialType.getId());
 			if (m.get("quantity") != null) {

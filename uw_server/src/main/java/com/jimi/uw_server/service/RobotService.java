@@ -84,7 +84,7 @@ public class RobotService extends SelectService {
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(BACK_LOCK) {
-					if (item.getState().intValue() < 3) {
+					if (item.getState().intValue() == 2) {
 						// 更新任务条目状态为已分配回库
 						TaskItemRedisDAO.updateTaskItemState(item, 3);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
@@ -104,6 +104,8 @@ public class RobotService extends SelectService {
 							AGVIOTaskItem itemInSameBox = new AGVIOTaskItem(packingListItem);
 							// 更新任务条目状态为已到达仓口
 							TaskItemRedisDAO.updateTaskItemState(itemInSameBox, 2);
+							// 更新任务条目绑定的叉车id
+							TaskItemRedisDAO.updateTaskItemRobot(itemInSameBox, item.getRobotId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
@@ -158,6 +160,11 @@ public class RobotService extends SelectService {
 			PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no);
 			String resultString = "调用成功！";
 
+			if (Task.dao.findById(taskId).getType() == 1) {
+				resultString = "出库任务不需要调用该接口！";
+				return resultString;
+			}
+
 			if (item == null) {
 				resultString = "该物料暂时不需要入库！";
 				return resultString;
@@ -165,12 +172,7 @@ public class RobotService extends SelectService {
 
 			// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
 			if (item.getFinishTime() != null) {
-				resultString = "该任务条目已完成，请勿重复扫描！";
-				return resultString;
-			}
-
-			if (Task.dao.findById(taskId).getType() == 1) {
-				resultString = "出库任务不需要调用该接口！";
+				resultString = "该任务条目已完成，请勿重复执行已完成的任务条目！";
 				return resultString;
 			}
 
@@ -182,10 +184,9 @@ public class RobotService extends SelectService {
 						AGVIOTaskItem taskItem = new AGVIOTaskItem(item);
 						TaskItemRedisDAO.updateTaskItemState(taskItem, 0);
 						TaskItemRedisDAO.updateTaskItemRobot(taskItem, 0);
-						TaskItemRedisDAO.updateTaskItemBoxId(taskItem, 0);
 						return resultString;
 					} else {	// 否则，提示重复扫描
-						resultString = "该物料已经扫描过，请勿重复扫描！";
+						resultString = "该物料已经扫描过或者叉车还未将其对应的料盒运回货架！";
 						return resultString;
 					}
 				}
