@@ -524,6 +524,10 @@
       },
       // 获取修改的数据
       getEditData: function (thisData) {
+        if(this.configData.printerIP === ""){
+          this.$alertWarning("请在设置界面填写打印机IP");
+          return;
+        }
         this.isEditing = false;
         let remainingQuantity  = thisData.initQuantity - thisData.quantity;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
@@ -580,10 +584,6 @@
       },
       // 请求打印
       printBarcode: function (materialId,remainingQuantity,productionTime) {
-        if(this.configData.printerIP === ""){
-          this.$alertWarning("请在设置界面填写打印机IP");
-          return;
-        }
         if (!this.isPending) {
           this.isPending = true;
           let options = {

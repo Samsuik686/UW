@@ -22,7 +22,7 @@
         <label for="type-supplier" class="col-form-label">供应商:</label>
         <input id="type-supplier" type="text" class="form-control" v-model="supplierName" autocomplete="off">
       </div>
-      <div class="form-row" v-if="taskType < 2">
+      <div class="form-row" v-if="taskType < 2 || taskType == 4">
         <div class="form-row pl-1 pr-1">
           <label for="upload-comp" class="col-form-label">选择文件:</label>
           <input id="upload-comp" type="text" class="form-control" v-model="fileName" onfocus="this.blur()"
@@ -76,7 +76,7 @@
           if (this.taskType !== "") {
             this.isPending = true;
             let formData = new FormData();
-            if (this.taskType < 2) {
+            if (this.taskType < 2 || this.taskType == 4) {
               if (this.thisFile !== "" && this.supplierName !== "") {
                 formData.append('file', this.thisFile);
                 formData.append('supplierName',this.supplierName);

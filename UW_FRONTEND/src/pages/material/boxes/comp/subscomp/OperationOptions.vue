@@ -146,13 +146,14 @@
 
   .delete-panel-container {
     background: #ffffff;
-    height: 220px;
+    min-height: 220px;
     width: 400px;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
+
 
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
