@@ -142,7 +142,7 @@
           //     filter: route.query.filter
           //   }
           // };
-          this.robotFilter = route.query.filter.split('&');
+          this.robotFilter = route.query.filter.split('#&#');
           let options = {
             url: robotSelectUrl,
           };
