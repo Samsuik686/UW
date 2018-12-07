@@ -247,9 +247,9 @@
                 }
               } else {
                 if (item.id === "file_name") {
-                  this.queryString += ("&" + item.id + "like" + _.trim(item.model))
+                  this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
                 } else {
-                  this.queryString += ("&" + item.id + "=" + _.trim(item.model))
+                  this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
                 }
               }
             } else {
@@ -261,9 +261,9 @@
               let tempTo = item.modelTo.replace('T', ' ').replace('Z', '');
               if (this.compareDate(tempFrom, tempTo) >= 0) {
                 if (index === 0) {
-                  this.queryString += (item.id + '>=' + tempFrom + '&' + item.id + '<=' + tempTo)
+                  this.queryString += (item.id + '>=' + tempFrom + '#&#' + item.id + '<=' + tempTo)
                 } else {
-                  this.queryString += ('&' + item.id + '>=' + tempFrom + '&' + item.id + '<=' + tempTo)
+                  this.queryString += ('#&#' + item.id + '>=' + tempFrom + '#&#' + item.id + '<=' + tempTo)
                 }
               } else {
                 this.$alertWarning('日期格式错误');

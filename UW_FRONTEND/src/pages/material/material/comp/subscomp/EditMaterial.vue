@@ -92,7 +92,7 @@
               this.$router.replace(tempUrl);
             } else {
               this.isPending = false;
-              errHandler(response.data.result);
+              errHandler(response.data);
               this.closeEditPanel()
             }
           }).catch(err => {

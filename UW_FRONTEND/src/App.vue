@@ -58,4 +58,7 @@
   .notification{
     background-color: #ffffff;
   }
+  .table td, .table th {
+    vertical-align: middle !important;
+  }
 </style>

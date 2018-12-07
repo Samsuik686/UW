@@ -89,7 +89,7 @@
               this.$alertWarning("请勿重复登录");
               this.$router.replace('/material')
             } else {
-              errHandler(res.data.result)
+              errHandler(res.data)
             }
           }).catch(err => {
             this.isPending = false;
