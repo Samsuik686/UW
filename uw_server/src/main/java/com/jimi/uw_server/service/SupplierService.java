@@ -66,7 +66,7 @@ public class SupplierService extends SelectService {
 	public Object getSuppliers(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
-			filter = filter.concat("&enabled=1");
+			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
 		}

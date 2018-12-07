@@ -37,9 +37,9 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplierName}")
-	public void addType(String no, String specification, String supplierName) {
-		String resultString = materialService.addType(no, specification, supplierName);
+	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}")
+	public void addType(String no, String specification, String supplier) {
+		String resultString = materialService.addType(no, specification, supplier);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -78,7 +78,7 @@ public class MaterialController extends Controller {
 
 
 	// 更新料盒信息#
-	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不不标记为删除)")
+	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
 	public void updateBox(@Para("") MaterialBox MaterialBox) {
 		String resultString = materialService.updateBox(MaterialBox);
 		if(resultString.equals("更新成功！")) {

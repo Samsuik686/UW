@@ -10,6 +10,7 @@ import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.LSSLHandler;
 import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
@@ -81,15 +82,15 @@ public class TaskPool extends Thread{
 				Integer taskType = task.getType();
 				Integer boxId = 0;
 
-				// 对于入库
+				// 对于入库和退料入库
 					// 2. 根据类型和挑盒子算法获取最佳盒号
-				if (taskType == 0) {
+				if (taskType == TaskType.IN || taskType == TaskType.SEND_BACK) {
 					boxId = getMaximumCapacityBox(item.getMaterialTypeId());
 				}
 
 				// 对于出库
 					// 2. 根据类型获取最旧物料实体的盒号
-				else if (taskType == 1) {
+				else if (taskType == TaskType.OUT) {
 					boxId = getOldestMaterialBox(item.getMaterialTypeId());
 				}
 

@@ -170,22 +170,6 @@ public class RobotService extends SelectService {
 				resultString = "该物料暂时不需要入库或截料！";
 			}
 
-			if (Task.dao.findById(taskId).getType() == 1) {
-				resultString = "出库任务不需要调用该接口！";
-				return resultString;
-			}
-
-			if (item == null) {
-				resultString = "该物料暂时不需要入库！";
-				return resultString;
-			}
-
-			// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
-			if (item.getFinishTime() != null) {
-				resultString = "该任务条目已完成，请勿重复执行已完成的任务条目！";
-				return resultString;
-			}
-
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
 				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {

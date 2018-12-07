@@ -44,6 +44,8 @@ public class WindowParkingListItemVO extends TaskLog {
 			typeString = "盘点";
 		}  else if (type == TaskType.POSITION_OPTIZATION) {
 			typeString = "位置优化";
+		} else if (type == TaskType.SEND_BACK) {
+			typeString = "退料入库";
 		}
 		return typeString;
 	}
