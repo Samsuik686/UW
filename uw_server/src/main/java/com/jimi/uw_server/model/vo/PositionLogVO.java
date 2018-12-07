@@ -8,9 +8,8 @@ import com.jimi.uw_server.model.PositionLog;
  * @author HardyYao
  * @createTime 2018年7月5日 下午10:39:41 
  */
+@SuppressWarnings("serial")
 public class PositionLogVO extends PositionLog {
-
-	private static final long serialVersionUID = 2088695242093093771L;
 
 	public PositionLogVO(Integer id, Integer taskId, String materialId, String materialNo, Integer oldArea, Integer oldRow, Integer oldCol, 
 			Integer oldHeight, Integer newArea, Integer newRow, Integer newCol, Integer newHeight, Date time) {

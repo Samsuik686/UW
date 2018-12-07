@@ -11,6 +11,8 @@ import com.jimi.uw_server.agv.entity.bo.AGVMissionGroup;
 import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
+import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
@@ -49,7 +51,7 @@ public class LSSLHandler {
 		setMaterialBoxIsOnShelf(materialBox, false);
 
 		//更新任务条目状态为已分配***
-		TaskItemRedisDAO.updateTaskItemState(item, 1);
+		TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.ASSIGNED);
 	}
 
 
@@ -95,13 +97,13 @@ public class LSSLHandler {
 			if(groupid.equals(item.getGroupId())) {
 				
 				//判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-				if(item.getState() == 1) {//LS执行完成时
+				if(item.getState() == TaskItemState.ASSIGNED) {//LS执行完成时
 					//更改taskitems里对应item状态为2（已拣料到站）***
-					TaskItemRedisDAO.updateTaskItemState(item, 2);
-
-				}else if(item.getState() == 3) {//SL执行完成时：
+					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.ARRIVED_WINDOW);
+					break;
+				}else if(item.getState() == TaskItemState.START_BACK) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
-					TaskItemRedisDAO.updateTaskItemState(item, 4);
+					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.FINISH_BACK);
 
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
@@ -110,6 +112,10 @@ public class LSSLHandler {
 					nextRound(item);
 
 					clearTil(groupid);
+				}else if(item.getState() == TaskItemState.FINISH_CUT) {
+					// 设置料盒在架
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					setMaterialBoxIsOnShelf(materialBox, true);
 				}
 			}
 		}
@@ -117,10 +123,10 @@ public class LSSLHandler {
 
 
 	private static void nextRound(AGVIOTaskItem item) {
-		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到0
-		if (Task.dao.findById(item.getTaskId()).getType() == 1) {
+		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到未分配状态
+		if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
 			if (!item.getIsForceFinish()) {
-				TaskItemRedisDAO.updateTaskItemState(item, 0);
+				TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.WAIT_ASSIGN);
 				TaskItemRedisDAO.updateTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 			}
@@ -129,13 +135,13 @@ public class LSSLHandler {
 
 
 	/**
-	 * 判断该groupid所在的任务是否全部条目状态为4（已回库完成），如果是，
+	 * 判断该groupid所在的任务是否全部条目状态为"已回库完成"并且没有需要截料返库的，如果是，
 	 * 则清除所有该任务id对应的条目，释放内存，并修改数据库任务状态***
 	*/
 	private static void clearTil(String groupid) {
 		boolean isAllFinish = true;
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
-			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != 4) {
+			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != TaskItemState.FINISH_BACK) {
 				isAllFinish = false;
 			}
 		}
@@ -193,7 +199,7 @@ public class LSSLHandler {
 		List<MaterialBox> specifiedPositionMaterialBoxes = materialService.listByXYZ(materialBox.getRow(), materialBox.getCol(), materialBox.getHeight());
 		for (MaterialBox mb: specifiedPositionMaterialBoxes) {
 			mb.setIsOnShelf(isOnShelf);
-			materialService.updateBox(mb);
+			mb.update();
 		}
 	}
 
