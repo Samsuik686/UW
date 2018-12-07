@@ -7,6 +7,7 @@ import com.jfinal.aop.Enhancer;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.bo.RecordItem;
 import com.jimi.uw_server.service.MaterialService;
@@ -31,15 +32,17 @@ public class WindowParkingListItemVO extends TaskLog {
 
 	private Integer superIssuedQuantity;
 
+	private String typeString;
+
+
 	public String getType(Integer type) {
-		String typeString = "入库";
-		if (type == 0) {
+		if (type == TaskType.IN) {
 			typeString = "入库";
-		} else if (type == 1) {
+		} else if (type == TaskType.OUT) {
 			typeString = "出库";
-		} else if (type == 2) {
+		} else if (type == TaskType.COUNT) {
 			typeString = "盘点";
-		}  else if (type == 3) {
+		}  else if (type == TaskType.POSITION_OPTIZATION) {
 			typeString = "位置优化";
 		}
 		return typeString;

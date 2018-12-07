@@ -9,9 +9,8 @@ import com.jimi.uw_server.model.User;
  * @author HardyYao
  * @createTime 2018年7月5日 上午11:22:18 
  */
+@SuppressWarnings("serial")
 public class TaskLogVO extends TaskLog {
-	
-	private static final long serialVersionUID = -3791534812200792529L;
 	
 	private String autoString;
 

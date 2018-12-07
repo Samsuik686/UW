@@ -71,7 +71,11 @@ public class UwConfig extends JFinalConfig {
 			dp = new DruidPlugin(PropKit.get("p_url"), PropKit.get("p_user"), PropKit.get("p_password"));
 			rp = new RedisPlugin("uw", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
 			System.out.println("System is in production envrionment");
-		}else {
+		} else if(isTestEnvironment()) {
+			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
+			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
+			System.out.println("System is in test envrionment");
+		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
 			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment");
@@ -103,7 +107,10 @@ public class UwConfig extends JFinalConfig {
 			if(isProductionEnvironment()) {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("p_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("p_robotInfoURI"));
-			}else {
+			} else if(isTestEnvironment()) {
+				AGVMainSocket.init(PropKit.use("properties.ini").get("t_agvServerURI"));
+				RobotInfoSocket.init(PropKit.use("properties.ini").get("t_robotInfoURI"));
+			} else {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("d_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("d_robotInfoURI"));
 			}
@@ -130,5 +137,16 @@ public class UwConfig extends JFinalConfig {
         }
         return false;
 	}
+
+	public static boolean isTestEnvironment() {
+		File[] roots = File.listRoots();
+        for (int i=0; i < roots.length; i++) {
+            if(new File(roots[i].toString() + "TEST_ENVIRONMENT_FLAG").exists()) {
+            	return true;
+            }
+        }
+        return false;
+	}
+
 
 }

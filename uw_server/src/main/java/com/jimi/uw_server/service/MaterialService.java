@@ -21,7 +21,7 @@ import com.jimi.uw_server.model.vo.MaterialBoxVO;
 import com.jimi.uw_server.model.vo.MaterialTypeVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
-import com.jimi.uw_server.util.ExcelHelper;
+import com.jimi.uw_server.util.ExcelWritter;
 
 /**
  * 物料业务层
@@ -56,7 +56,7 @@ public class MaterialService extends SelectService{
 
 	public static final String GET_TASK_LOGS_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? ORDER BY task_log.time";
 
-	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
+	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
 	public static final String GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 
@@ -64,7 +64,7 @@ public class MaterialService extends SelectService{
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
-			filter = filter.concat("&enabled=1");
+			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
 		}
@@ -102,7 +102,11 @@ public class MaterialService extends SelectService{
 	public String addType(String no, String specification, String supplierName) {
 		String resultString = "添加成功！";
 		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no).size() != 0) {
-			resultString = "该物料已存在，请不要添加重复的物料类型号！";
+			resultString = "该物料已存在，请不要添加重复的料号！";
+			return resultString;
+		}
+		if (no.contains("!") || no.contains("$")) {
+			resultString = "请勿往料号中添加非法字符，如“!”或“$”！";
 			return resultString;
 		}
 		Integer supplier;
@@ -159,14 +163,15 @@ public class MaterialService extends SelectService{
 	public Object getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
-			filter = filter.concat("&enabled=1");
+			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
 		}
 		Page<Record> result = selectService.select(new String[] {"material_box"}, null, pageNo, pageSize, ascBy, descBy, filter);
 		List<MaterialBoxVO> MaterialBoxVOs = new ArrayList<MaterialBoxVO>();
 		for (Record res : result.getList()) {
-			MaterialBoxVO m = new MaterialBoxVO(res.get("id"), res.get("area"), res.get("row"), res.get("col"), res.get("height"), res.get("enabled"));
+			MaterialBoxVO m = new MaterialBoxVO(res.get("id"), res.get("area"), res.get("row"), res.get("col"), res.get("height"), 
+					res.get("enabled"), res.get("is_on_shelf"));
 			MaterialBoxVOs.add(m);
 		}
 		PagePaginate pagePaginate = new PagePaginate();
@@ -199,6 +204,10 @@ public class MaterialService extends SelectService{
 
 	public String updateBox(MaterialBox materialBox) {
 		String resultString = "更新成功！";
+		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL, materialBox.getArea(), materialBox.getRow(), materialBox.getCol(), materialBox.getHeight()).size() != 0) {
+			resultString = "该位置已有料盒存在，请不要在该位置添加料盒！";
+			return resultString;
+		}
 		if (!materialBox.getEnabled()) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, materialBox.getId());
 			if (m.get("quantity") != null) {
@@ -220,13 +229,19 @@ public class MaterialService extends SelectService{
 		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
 		int startIndex = (pageNo-1) * pageSize;
 		int endIndex = (pageNo-1) * pageSize + pageSize;
-		int i = startIndex;
-		while (i < recordItemList.size()) {
-			recordItemSubList.add(recordItemList.get(i));
-			if (i == endIndex-1) {
-				break;
+//		int i = startIndex;
+//		while (i < recordItemList.size()) {
+//			recordItemSubList.add(recordItemList.get(i));
+//			if (i == endIndex-1) {
+//				break;
+//			}
+//			i++;
+//		}
+		if (startIndex < recordItemList.size()) {
+			if (endIndex >= recordItemList.size()) {
+				endIndex = recordItemList.size();
 			}
-			i++;
+			recordItemSubList = recordItemList.subList(startIndex, endIndex);
 		}
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
@@ -261,6 +276,21 @@ public class MaterialService extends SelectService{
 			recordItemList.add(ri);
 		}
 		return recordItemList;
+//		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
+//		int startIndex = (pageNo-1) * pageSize;
+//		int endIndex = (pageNo-1) * pageSize + pageSize;
+//		if (startIndex < recordItemList.size()) {
+//			if (endIndex >= recordItemList.size()) {
+//				endIndex = recordItemList.size();
+//			}
+//			recordItemSubList = recordItemList.subList(startIndex, endIndex);
+//		}
+//		PagePaginate pagePaginate = new PagePaginate();
+//		pagePaginate.setPageSize(pageSize);
+//		pagePaginate.setPageNumber(pageNo);
+//		pagePaginate.setTotalRow(recordItemList.size());
+//		pagePaginate.setList(recordItemSubList);
+//		return pagePaginate;
 	}
 
 
@@ -270,9 +300,9 @@ public class MaterialService extends SelectService{
 		String[] head = null;
 		field = new String[] { "id", "no", "specification", "box", "row", "col", "height", "quantity"};
 		head =  new String[] { "物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};	
-		ExcelHelper helper = ExcelHelper.create(false);
-		helper.fill(materialRecord, fileName, field, head);
-		helper.write(output, true);
+		ExcelWritter writter = ExcelWritter.create(true);
+		writter.fill(materialRecord, fileName, field, head);
+		writter.write(output, true);
 	}
 
 

@@ -2,17 +2,15 @@ package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.util.PriorityComparator;
+import com.jimi.uw_server.comparator.PriorityComparator;
+
+
 
 /**
  * AGV任务条目Redis数据访问对象
@@ -47,36 +45,16 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 添加任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务id轮流排序<br>
+	 * 添加任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务优先级轮流排序<br>
 	 */
 	public synchronized static void addTaskItem(List<AGVIOTaskItem> taskItems) {
-		appendSortedTaskItems(taskItems);
-		Map<Integer, Queue<AGVIOTaskItem>> groupByTaskIdMap = new HashMap<>();
-		for (AGVIOTaskItem item : taskItems) {
-			
-			Queue<AGVIOTaskItem> queue = groupByTaskIdMap.get(item.getTaskId());
-			if(queue == null) {
-				queue = new LinkedBlockingQueue<>();
-				groupByTaskIdMap.put(item.getTaskId(), queue);
-			}
-			queue.offer(item);
-		}
+		appendTaskItems(taskItems);
+		taskItems.sort(new PriorityComparator());
 		List<byte[]> items = new ArrayList<>();
-		while(true) {
-			int emptyQueue = 0;
-			for (Queue<AGVIOTaskItem> queue : groupByTaskIdMap.values()) {
-				AGVIOTaskItem item = queue.poll();
-				if(item == null) {
-					emptyQueue++;
-				}else {
-					items.add(Json.getJson().toJson(item).getBytes());
-				}
-			}
-			if(emptyQueue == groupByTaskIdMap.size()) {
-				break;
-			}
+		for (AGVIOTaskItem item : taskItems) {
+			items.add(Json.getJson().toJson(item).getBytes());
 		}
-		Collections.reverse(items);
+		Collections.reverse(taskItems);
 		cache.del("til");
 		cache.lpush("til", items.toArray());
 	}
@@ -181,19 +159,18 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static List<AGVIOTaskItem> getTaskItems() {
 		List<AGVIOTaskItem> taskItems = new ArrayList<>();
-		return appendSortedTaskItems(taskItems);
+		return appendTaskItems(taskItems);
 	}
 
 
 	/**
 	 * 把redis的til内容追加到参数里然后返回
 	 */
-	public synchronized static List<AGVIOTaskItem> appendSortedTaskItems(List<AGVIOTaskItem> taskItems) {
+	public synchronized static List<AGVIOTaskItem> appendTaskItems(List<AGVIOTaskItem> taskItems) {
 		List<byte[]> items = cache.lrange("til", 0, -1);
 		for (byte[] item : items) {
 			taskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
 		}
-		taskItems.sort(new PriorityComparator());
 		return taskItems;
 	} 
 
