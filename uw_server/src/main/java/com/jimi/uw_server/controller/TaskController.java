@@ -57,7 +57,7 @@ public class TaskController extends Controller {
 
 
 	// 令指定任务通过审核
-	@Log("审核通过任务编号为{id}的任务")
+	@Log("审核任务编号为{id}的任务")
 	public void pass(Integer id) {
 		if(taskService.pass(id)) {
 			renderJson(ResultUtil.succeed());
@@ -68,7 +68,7 @@ public class TaskController extends Controller {
 
 
 	// 令指定任务开始
-	@Log("开始任务编号为{id}的任务")
+	@Log("开始任务编号为{id}的任务，绑定的仓口为{window}")
 	public void start(Integer id, Integer window) {
 		if(taskService.start(id, window)) {
 			renderJson(ResultUtil.succeed());

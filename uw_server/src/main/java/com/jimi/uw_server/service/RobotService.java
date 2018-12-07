@@ -104,6 +104,8 @@ public class RobotService extends SelectService {
 							LSSLHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
 							TaskItemRedisDAO.updateTaskItemState(sameBoxItem, TaskItemState.ARRIVED_WINDOW);
+							// 更新任务条目绑定的叉车id
+							TaskItemRedisDAO.updateTaskItemRobot(sameBoxItem, item.getRobotId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
@@ -140,8 +142,8 @@ public class RobotService extends SelectService {
 
 
 	/**
-	 * 获取同组任务、同料盒中尚未被分配任务的任务条目id
-	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目id；否则返回null
+	 * 获取同组任务、同料盒中尚未被分配任务的任务条目
+	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目；否则返回null
 	 */
 	public AGVIOTaskItem getSameBoxItemId(AGVIOTaskItem item) {
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
@@ -166,6 +168,21 @@ public class RobotService extends SelectService {
 			// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 			if (item == null) {
 				resultString = "该物料暂时不需要入库或截料！";
+			}
+
+			if (Task.dao.findById(taskId).getType() == 1) {
+				resultString = "出库任务不需要调用该接口！";
+				return resultString;
+			}
+
+			if (item == null) {
+				resultString = "该物料暂时不需要入库！";
+				return resultString;
+			}
+
+			// 在某一个入库任务的所有任务条目未完成、仓口没有解绑的情况下，有可能会出现重复扫描已完成任务条目的状况，因此需要在这里增加这个判断
+			if (item.getFinishTime() != null) {
+				resultString = "该任务条目已完成，请勿重复执行已完成的任务条目！";
 				return resultString;
 			}
 
@@ -192,9 +209,8 @@ public class RobotService extends SelectService {
 							return resultString;
 						}
 					}
-					// 若该任务条目不是处于不可分配或已完成截料状态，则说明该任务条目正在执行当中或已完成，不能再调用该接口
-					else {
-						resultString = "该物料对应的任务条目正在执行中或已完成，请勿重复扫描！";
+					else {	// 若该任务条目不是处于不可分配或已完成截料状态，则说明该任务条目正在执行当中或已完成，不能再调用该接口
+						resultString = "该物料已经扫描过或者叉车还未将其对应的料盒运回货架！";
 						return resultString;
 					}
 				}

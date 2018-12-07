@@ -10,6 +10,7 @@ import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.LSSLHandler;
 import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
@@ -24,13 +25,13 @@ import com.jimi.uw_server.util.ErrorLogWritter;
  */
 public class TaskPool extends Thread{
 
-	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT DISTINCT(box) AS boxId FROM material WHERE type = ? AND remainder_quantity > 0";
+	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT DISTINCT(box) AS boxId FROM material WHERE type = ?";
 
-	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
+	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity >0";
 
-	private static final String GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT box FROM material WHERE type = ? AND remainder_quantity > 0)";
+	private static final String GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT box FROM material WHERE type = ?)";
 
-	private static final String GET_SURPLUS_MATERIAL_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0";
+	private static final String GET_SURPLUS_MATERIAL_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material WHERE type = ?";
 
 
 	@Override
@@ -96,7 +97,7 @@ public class TaskPool extends Thread{
 				// 3. 将盒号填入item并update到Redis
 				TaskItemRedisDAO.updateTaskItemBoxId(item, boxId);
 				// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
-				if (item.getBoxId().intValue() > 0 && materialBox.getIsOnShelf()) {
+				if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf()) {
 					// 在架
 					// 5. 发送LS指令
 					LSSLHandler.sendLS(item, materialBox);
@@ -152,17 +153,10 @@ public class TaskPool extends Thread{
 					boxId = differentTypeMaterialBox.getId();
 				}
 			}
-//			if (boxId == 0) {
-				/*
-				 * 如果这里pause了，因为我们暂时没有手动出库的接口，那么除非人为修改数据库，否则这里仓库会一直处于料盒已满状态，系统将永远无法在发送指令给叉车
-				所以这里建议不pause，直接记录错误日志，对应的任务条目不执行，等仓库工作人员发现了，再创建出库任务进行出库，腾出料盒位置即可 */
-				// TaskItemRedisDAO.setPauseAssign(1);
-
-				/*
-				 * 由于任务池遍历周期很短暂，如果记录错误日志，短短几分钟就会记录几百条重复的错误日志 */
-//				throw new OperationException("仓库的料盒全满了，请尽快处理！");
-//			}
-
+			if (boxId == 0) {
+				TaskItemRedisDAO.setPauseAssign(1);
+				throw new OperationException("仓库的料盒全满了，请尽快处理！");
+			}
 		}
 
 		return boxId;
@@ -174,7 +168,7 @@ public class TaskPool extends Thread{
 		int boxId = 0;
 		Date productionTime = new Date();
 
-		// 如果库存数量大于0
+		// 如果物料实体表中有该物料类型的记录
 		if (materialList.size() > 0) {
 			for (Material m : materialList) {
 				if (m.getProductionTime().before(productionTime)) {
@@ -183,17 +177,6 @@ public class TaskPool extends Thread{
 				}
 			}
 		}
-//		else {
-//			MaterialType materialType = MaterialType.dao.findById(materialTypeId);
-			/*
-			 * 与料盒已满的情况相类似，如果这里pause了，因为我们暂时没有手动入库的接口，那么除非人为修改数据库，否则对应的物料会一直处于缺料状态，系统将永远无法在发送指令给叉车
-			所以这里建议不pause，直接记录错误日志，对应的任务条目不执行，等仓库工作人员发现了，再创建入库任务进行补料即可 */
-			// TaskItemRedisDAO.setPauseAssign(1);
-
-			/*
-			 * 也不抛异常或记录错误日志，抛异常会导致任务池不断重复遍历缺料的任务条目；由于任务池遍历周期很短暂，如果记录错误日志，短短几分钟就会记录几百条重复的错误日志 */
-//			throw new OperationException("仓库缺料了，请尽快对料号为" + materialType.getNo() + "的物料进行补料！");
-//		}
 
 		return boxId;
 	}

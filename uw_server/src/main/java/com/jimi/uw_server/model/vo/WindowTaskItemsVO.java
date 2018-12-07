@@ -12,9 +12,8 @@ import com.jimi.uw_server.model.TaskLog;
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */
+@SuppressWarnings("serial")
 public class WindowTaskItemsVO extends TaskLog {
-
-	private static final long serialVersionUID = -2631121149118866618L;
 	
 	private List<?> details;
 
