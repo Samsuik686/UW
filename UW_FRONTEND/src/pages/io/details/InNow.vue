@@ -104,7 +104,7 @@
         <div class="dropdown-divider"></div>
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
-          <button class="btn btn-primary col ml-1 text-white" @click="delay"
+          <button class="btn btn-delay col ml-1 text-white" @click="delay"
                   v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见</button>
           <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
         </div>
@@ -534,7 +534,6 @@
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
   }
-
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }

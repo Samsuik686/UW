@@ -122,7 +122,7 @@
               });
               this.total = response.data.data.totalRow
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {

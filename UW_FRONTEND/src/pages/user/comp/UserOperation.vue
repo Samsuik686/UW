@@ -53,6 +53,7 @@
   import {mapGetters} from 'vuex'
   import {axiosPost} from "../../../utils/fetchData";
   import {errHandler} from "../../../utils/errorHandler";
+  import _ from 'lodash';
 
   export default {
     name: "UserOperation",
@@ -93,6 +94,10 @@
       updateSubmit: function () {
         if (!this.isPending) {
           this.isPending = true;
+          for (let i in this.userData) {
+            this.userData[i] = _.trim(this.userData[i])
+          }
+          this.tempPwd = _.trim(this.tempPwd);
           let options = {
             url: userUpdateUrl,
             data: this.userData
@@ -109,7 +114,7 @@
               this.$router.push('/_empty');
               this.$router.replace(tempUrl)
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           }).catch(err => {
             this.isPending = false;

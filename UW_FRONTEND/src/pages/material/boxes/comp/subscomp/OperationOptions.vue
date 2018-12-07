@@ -110,7 +110,7 @@
 
             } else {
               this.isPending = false;
-              errHandler(response.data.result);
+              errHandler(response.data);
               this.isDeleting = false;
             }
           }).catch(err => {

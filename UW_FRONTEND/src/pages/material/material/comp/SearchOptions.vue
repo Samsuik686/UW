@@ -99,7 +99,7 @@
               if (index === 0) {
                 this.queryString += (item.id + "like" + _.trim(item.model))
               } else {
-                this.queryString += ("&" + item.id + "like" + _.trim(item.model))
+                this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
               }
 
             } else {

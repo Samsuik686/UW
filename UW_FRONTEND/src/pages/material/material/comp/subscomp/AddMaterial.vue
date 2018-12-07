@@ -79,11 +79,9 @@
               let tempUrl = this.$route.path;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
-            } else if (response.data.result === 412) {
-              this.$alertWarning('请勿添加重复料号')
             } else {
               this.isPending = false;
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
         }

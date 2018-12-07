@@ -99,7 +99,7 @@
               }
               else {
                 this.isPending = false;
-                errHandler(res.data.result)
+                errHandler(res.data)
               }
             })
           } else {

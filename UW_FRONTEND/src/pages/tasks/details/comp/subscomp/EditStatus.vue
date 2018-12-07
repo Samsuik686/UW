@@ -135,7 +135,7 @@
                 this.$router.push('/_empty');
                 this.$router.replace(tempUrl)
               } else {
-                errHandler(res.data.result)
+                errHandler(res.data)
               }
             }).catch(err => {
               if (JSON.stringify(err) !== '{}'){
