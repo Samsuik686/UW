@@ -105,13 +105,12 @@ public class WindowParkingListItemVO extends TaskLog {
 	public void setSuperIssuedQuantity(Integer materialTypeId) {
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
 		recordItemList = materialService.getRecordItemList(materialTypeId);
-		RecordItem lastRecord = recordItemList.get(recordItemList.size()-1);
-		if (lastRecord == null) {
-			this.superIssuedQuantity = 0;
-		} else {
+		if (recordItemList.size() > 0) {
+			RecordItem lastRecord = recordItemList.get(recordItemList.size() - 1);
 			this.superIssuedQuantity = lastRecord.getSuperIssuedQuantity();
+		} else {
+			this.superIssuedQuantity = 0;
 		}
-		
 	}
 
 }
