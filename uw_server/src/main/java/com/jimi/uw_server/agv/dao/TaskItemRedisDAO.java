@@ -9,6 +9,7 @@ import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.comparator.PriorityComparator;
+import com.jimi.uw_server.constant.TaskItemState;
 
 
 
@@ -67,7 +68,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getTaskId().intValue() == taskId && agvioTaskItem.getState().intValue() == 0){
+			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.UNASSIGNABLED || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)){
 				cache.lrem("til", 1, item);
 				i--;
 			}
