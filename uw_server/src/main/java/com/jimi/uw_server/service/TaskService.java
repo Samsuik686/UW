@@ -561,9 +561,6 @@ public class TaskService {
 
 				// 修改任务日志的出库数量
 				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, item.getId(), materialId);
-				if (taskLog.getQuantity().intValue() == quantity) {
-					return ;
-				}
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
 				if (quantity != material.getRemainderQuantity()) {
