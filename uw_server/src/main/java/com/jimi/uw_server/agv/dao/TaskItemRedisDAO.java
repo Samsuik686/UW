@@ -7,6 +7,7 @@ import java.util.List;
 import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
+import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.comparator.PriorityComparator;
 import com.jimi.uw_server.constant.TaskItemState;
@@ -46,16 +47,16 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 添加任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务优先级轮流排序<br>
+	 * 添加出入库任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务优先级轮流排序<br>
 	 */
-	public synchronized static void addTaskItem(List<AGVIOTaskItem> taskItems) {
-		appendTaskItems(taskItems);
-		taskItems.sort(new PriorityComparator());
+	public synchronized static void addIOTaskItem(List<AGVIOTaskItem> ioTaskItems) {
+		appendIOTaskItems(ioTaskItems);
+		ioTaskItems.sort(new PriorityComparator());
 		List<byte[]> items = new ArrayList<>();
-		for (AGVIOTaskItem item : taskItems) {
+		for (AGVIOTaskItem item : ioTaskItems) {
 			items.add(Json.getJson().toJson(item).getBytes());
 		}
-		Collections.reverse(taskItems);
+		Collections.reverse(ioTaskItems);
 		cache.del("til");
 		cache.lpush("til", items.toArray());
 	}
@@ -92,9 +93,9 @@ public class TaskItemRedisDAO {
 
 
 	/**
-	 * 更新任务条目执行状态<br>
+	 * 更新出入库任务条目执行状态<br>
 	 */
-	public synchronized static void updateTaskItemState(AGVIOTaskItem taskItem, int state) {
+	public synchronized static void updateIOTaskItemState(AGVIOTaskItem taskItem, int state) {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
@@ -140,9 +141,9 @@ public class TaskItemRedisDAO {
 
 
 	/**
-	 *  填写指定条目的执行机器
+	 *  填写指定出入库任务条目的执行机器
 	 */
-	public synchronized static void updateTaskItemRobot(AGVIOTaskItem taskItem, int robotid) {
+	public synchronized static void updateIOTaskItemRobot(AGVIOTaskItem taskItem, int robotid) {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
@@ -156,23 +157,23 @@ public class TaskItemRedisDAO {
 
 
 	/**
-	 * 返回任务条目列表的副本
+	 * 返回出入库任务条目列表的副本
 	 */
-	public synchronized static List<AGVIOTaskItem> getTaskItems() {
-		List<AGVIOTaskItem> taskItems = new ArrayList<>();
-		return appendTaskItems(taskItems);
+	public synchronized static List<AGVIOTaskItem> getIOTaskItems() {
+		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
+		return appendIOTaskItems(ioTaskItems);
 	}
 
 
 	/**
 	 * 把redis的til内容追加到参数里然后返回
 	 */
-	public synchronized static List<AGVIOTaskItem> appendTaskItems(List<AGVIOTaskItem> taskItems) {
+	public synchronized static List<AGVIOTaskItem> appendIOTaskItems(List<AGVIOTaskItem> ioTaskItems) {
 		List<byte[]> items = cache.lrange("til", 0, -1);
 		for (byte[] item : items) {
-			taskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
+			ioTaskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
 		}
-		return taskItems;
+		return ioTaskItems;
 	} 
 
 	
@@ -190,4 +191,88 @@ public class TaskItemRedisDAO {
 		cache.set("cmdid", cmdid);
 		return cmdid;
 	}
+
+
+	/**
+	 * 添加建仓任务条目，该方法会把新的任务条目插入到现有的任务列表当中<br>
+	 */
+	public synchronized static void addBuildTaskItem(List<AGVBuildTaskItem> buildTaskItems) {
+		appendBuildTaskItems(buildTaskItems);
+		List<byte[]> items = new ArrayList<>();
+		for (AGVBuildTaskItem item : buildTaskItems) {
+			items.add(Json.getJson().toJson(item).getBytes());
+		}
+		Collections.reverse(buildTaskItems);
+		cache.del("tilOfBuild");
+		cache.lpush("tilOfBuild", items.toArray());
+	}
+
+
+	/**
+	 * 把redis的tilOfBuild内容追加到参数里然后返回
+	 */
+	public synchronized static List<AGVBuildTaskItem> appendBuildTaskItems(List<AGVBuildTaskItem> buildTaskItems) {
+		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
+		for (byte[] item : items) {
+			buildTaskItems.add(Json.getJson().parse(new String(item), AGVBuildTaskItem.class));
+		}
+		return buildTaskItems;
+	} 
+
+
+	/**
+	 * 返回建仓任务条目列表的副本
+	 */
+	public synchronized static List<AGVBuildTaskItem> getBuildTaskItems() {
+		List<AGVBuildTaskItem> buildTaskItems = new ArrayList<>();
+		return appendBuildTaskItems(buildTaskItems);
+	}
+
+
+	/**
+	 * 删除指定的建仓任务条目<br>
+	 */
+	public static void removeBuildTaskItemBySrcPosition(String srcPosition) {
+		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
+			byte[] item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			if(agvBuildTaskItem.getSrcPosition().equals(srcPosition)){
+				cache.lrem("tilOfBuild", 1, item);
+				i--;
+			}
+		}
+	}
+
+
+	/**
+	 *  填写指定建仓任务条目的执行机器
+	 */
+	public synchronized static void updateBuildTaskItemRobot(AGVBuildTaskItem buildTaskItem, int robotid) {
+		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
+			byte[] item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			if(agvBuildTaskItem.getBoxId().equals( buildTaskItem.getBoxId())){
+				agvBuildTaskItem.setRobotId(robotid);
+				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
+	 * 更新建仓任务条目执行状态<br>
+	 */
+	public synchronized static void updateBuildTaskItemState(AGVBuildTaskItem buildTaskItem, int state) {
+		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
+			byte[] item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			if(agvBuildTaskItem.getBoxId().equals(buildTaskItem.getBoxId())){
+				agvBuildTaskItem.setState(state);
+				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
 }

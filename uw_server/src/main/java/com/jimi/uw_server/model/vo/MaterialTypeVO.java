@@ -21,13 +21,15 @@ public class MaterialTypeVO extends MaterialType{
 	private String supplierName;
 
 
-	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Boolean enabled) {
+	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Boolean enabled, Integer thickness, Integer radius) {
 		this.setId(id);
 		this.setNo(no);
 		this.setSpecification(specification);
 		this.setSupplier(supplier);
 		this.setSupplierName(supplier);
 		this.set("supplierName", getSupplierName());
+		this.setThickness(thickness);
+		this.setRadius(radius);
 		this.setEnabled(enabled);
 		this.setEnabledString(enabled);
 		this.set("enabledString", getEnabledString());

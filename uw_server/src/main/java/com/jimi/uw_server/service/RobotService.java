@@ -8,7 +8,7 @@ import com.jfinal.aop.Enhancer;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.agv.handle.LSSLHandler;
+import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.TaskItemState;
@@ -84,12 +84,12 @@ public class RobotService extends SelectService {
 	 */
 	public String back(Integer id, String materialOutputRecords) throws Exception {
 		String resultString = "已成功发送SL指令！";
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(BACK_LOCK) {
 					if (item.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
 						// 更新任务条目状态为已分配回库
-						TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.START_BACK);
+						TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.START_BACK);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getId());
 						if (actualQuantity >= item.getQuantity()) {
@@ -101,11 +101,11 @@ public class RobotService extends SelectService {
 						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 						AGVIOTaskItem sameBoxItem = getSameBoxItemId(item);
 						if (sameBoxItem == null) {
-							LSSLHandler.sendSL(item, materialBox);
+							IOHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-							TaskItemRedisDAO.updateTaskItemState(sameBoxItem, TaskItemState.ARRIVED_WINDOW);
+							TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, TaskItemState.ARRIVED_WINDOW);
 							// 更新任务条目绑定的叉车id
-							TaskItemRedisDAO.updateTaskItemRobot(sameBoxItem, item.getRobotId());
+							TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, item.getRobotId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
@@ -146,7 +146,7 @@ public class RobotService extends SelectService {
 	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目；否则返回null
 	 */
 	public AGVIOTaskItem getSameBoxItemId(AGVIOTaskItem item) {
-		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 				return item1;
 			}
@@ -170,13 +170,13 @@ public class RobotService extends SelectService {
 				resultString = "该物料暂时不需要入库或截料！";
 			}
 
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {
 					// 若任务条目状态为 不可分配，则将其状态更新为未分配拣料
 					if (redisTaskItem.getState().intValue() == TaskItemState.UNASSIGNABLED) {
-						TaskItemRedisDAO.updateTaskItemState(redisTaskItem, TaskItemState.WAIT_ASSIGN);
-						TaskItemRedisDAO.updateTaskItemRobot(redisTaskItem, 0);
+						TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, TaskItemState.WAIT_ASSIGN);
+						TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
 						TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 						return resultString;
 					}
@@ -184,8 +184,8 @@ public class RobotService extends SelectService {
 					else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
 						MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
 						if (materialBox.getIsOnShelf()) {
-							TaskItemRedisDAO.updateTaskItemState(redisTaskItem, TaskItemState.WAIT_ASSIGN);
-							TaskItemRedisDAO.updateTaskItemRobot(redisTaskItem, 0);
+							TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, TaskItemState.WAIT_ASSIGN);
+							TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
 							TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 							return resultString;
 						} else {	// 为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令

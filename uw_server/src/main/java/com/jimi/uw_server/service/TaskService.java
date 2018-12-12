@@ -242,7 +242,7 @@ public class TaskService {
 				}
 			}
 			// 把任务条目均匀插入到队列til中
-			TaskItemRedisDAO.addTaskItem(taskItems);
+			TaskItemRedisDAO.addIOTaskItem(taskItems);
 			// 将任务状态设置为进行中
 			task.setState(TaskState.PROCESSING);
 			return task.update();
@@ -257,7 +257,7 @@ public class TaskService {
 		// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
 		if (state == TaskState.PROCESSING) {
 			TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 				// 这里加这条if语句是为了判断任务队列中是否还存在该任务对应的任务条目，因为有可能任务队列中还存在不同任务id的任务条目，因此不能根据任务队列中还有任务条目就直接break
 				if (redisTaskItem.getTaskId().intValue() == id) {
 					untiedWindowflag = false;
@@ -383,7 +383,7 @@ public class TaskService {
 
 	public boolean finishItem(Integer packListItemId, Boolean isForceFinish) {
 		if (isForceFinish) {
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 				if (redisTaskItem.getId().intValue() == packListItemId) {
 					TaskItemRedisDAO.updateTaskIsForceFinish(redisTaskItem, isForceFinish);
 					PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
@@ -403,7 +403,7 @@ public class TaskService {
 			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemVOs = new ArrayList<WindowTaskItemsVO>();
 			int totalRow = 0;
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 				if (redisTaskItem.getTaskId().intValue() == window.getBindTaskId().intValue()) {
 					totalRow += 1;
 					for (Record windowTaskItem : windowTaskItems.getList()) {
@@ -447,7 +447,7 @@ public class TaskService {
 
 
 	public Object getWindowParkingItem(Integer id) {
-		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 			if(redisTaskItem.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
 				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {
@@ -487,7 +487,7 @@ public class TaskService {
 
 		// 新增物料表记录
 		int boxId = 0;
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item.getId().intValue() == packListItemId) {
 				boxId = item.getBoxId().intValue();
 			}
@@ -564,7 +564,7 @@ public class TaskService {
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
 				if (quantity != material.getRemainderQuantity()) {
-					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.FINISH_CUT);
+					TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.FINISH_CUT);
 				}
 				// 修改物料实体表对应的料盘剩余数量
 				int remainderQuantity = material.getRemainderQuantity() - quantity;
@@ -589,7 +589,7 @@ public class TaskService {
 	// 将截料后重新入库的料盘置为在盒内
 	public String cut(Integer packingListItemId, String materialId) {
 		String resultString = "扫描成功，请将料盘放回料盒！";
-		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 			if (redisTaskItem.getId().intValue() == packingListItemId) {
 				if (redisTaskItem.getState().intValue() != TaskItemState.ARRIVED_WINDOW) {
 					resultString = "暂时不可调用截料后回库接口!";

@@ -21,7 +21,7 @@ public class ExceptionHandler {
 		
 		AGVLoadExceptionCmd loadExceptionCmd = Json.getJson().parse(message, AGVLoadExceptionCmd.class);
 		String groupid = loadExceptionCmd.getMissiongroupid();
-		for(AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+		for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if(item.getGroupId().equals(groupid)) {
 //				//把物料设置为在架
 //				MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());

@@ -7,8 +7,10 @@ import java.util.List;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.agv.handle.LSSLHandler;
+import com.jimi.uw_server.agv.handle.BuildHandle;
+import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
@@ -49,13 +51,21 @@ public class TaskPool extends Thread{
 
 				//判断til是否为空或者cn为0
 				int cn = countFreeRobot();
-				List<AGVIOTaskItem> taskItems = new ArrayList<>();
-				TaskItemRedisDAO.appendTaskItems(taskItems);
-				if (taskItems.isEmpty() || cn == 0) {
+				List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
+				TaskItemRedisDAO.appendIOTaskItems(ioTaskItems);
+				if (ioTaskItems.isEmpty() || cn == 0) {
 					continue;
 				}
+				sendIOCmds(cn, ioTaskItems);
 
-				sendLSs(cn, taskItems);
+				//判断tilOfBuild是否为空或者cn为0
+				cn = countFreeRobot();
+				List<AGVBuildTaskItem> buildTaskItems = new ArrayList<>();
+				TaskItemRedisDAO.appendBuildTaskItems(buildTaskItems);
+				if (buildTaskItems.isEmpty() || cn == 0) {
+					continue;
+				}
+				sendBuildCmds(cn, buildTaskItems);
 			} catch (Exception e) {
 				if(e instanceof InterruptedException) {
 					break;
@@ -68,12 +78,12 @@ public class TaskPool extends Thread{
 	}
 
 
-	public static void sendLSs(int cn, List<AGVIOTaskItem> taskItems) throws Exception {
+	public static void sendIOCmds(int cn, List<AGVIOTaskItem> ioTaskItems) throws Exception {
 		//获取第a个元素
 		int a = 0;
 		do {
 			//获取对应item
-			AGVIOTaskItem item = taskItems.get(a);
+			AGVIOTaskItem item = ioTaskItems.get(a);
 
 			// 0. 判断任务条目状态是否为0
 			if (item.getState() == TaskItemState.WAIT_ASSIGN) {
@@ -101,13 +111,34 @@ public class TaskPool extends Thread{
 				if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf()) {
 					// 在架
 					// 5. 发送LS指令
-					LSSLHandler.sendLS(item, materialBox);
+					IOHandler.sendLS(item, materialBox);
 					cn--;
 				}
 			}
 
 			a++;
-		} while(cn != 0 && a != taskItems.size());
+		} while(cn != 0 && a != ioTaskItems.size());
+	}
+
+
+	public static void sendBuildCmds(int cn, List<AGVBuildTaskItem> buildTaskItems) throws Exception {
+		//获取第a个元素
+		int a = 0;
+		do {
+			//获取对应item
+			AGVBuildTaskItem item = buildTaskItems.get(a);
+
+			// 判断任务条目状态是否为0
+			if (item.getState() == TaskItemState.WAIT_MOVE) {
+
+				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+				// 发送LS指令
+				BuildHandle.sendBuildCmd(item, materialBox);
+				cn--;
+			}
+
+		a++;
+		} while(cn != 0 && a != buildTaskItems.size());
 	}
 
 

@@ -1,5 +1,6 @@
 package com.jimi.uw_server.model.vo;
 
+import com.jimi.uw_server.model.BoxType;
 import com.jimi.uw_server.model.MaterialBox;
 
 /**
@@ -15,7 +16,9 @@ public class MaterialBoxVO extends MaterialBox {
 
 	private String isOnShelfString;
 
-	public MaterialBoxVO(Integer id, Integer area, Integer row, Integer col, Integer height, Boolean enabled, Boolean isOnShelf) {
+	private Integer cellWidth;
+
+	public MaterialBoxVO(Integer id, Integer area, Integer row, Integer col, Integer height, Boolean enabled, Boolean isOnShelf, Integer type) {
 		this.setId(id);
 		this.setArea(area);
 		this.setRow(row);
@@ -27,6 +30,8 @@ public class MaterialBoxVO extends MaterialBox {
 		this.set("isOnShelf", isOnShelf);
 		this.setIsOnShelfString(isOnShelf);
 		this.set("isOnShelfString", getIsOnShelfString());
+		this.setCellWidth(type);
+		this.set("cellWidth", getCellWidth());
 	}
 
 	public String getEnabledString() {
@@ -51,6 +56,15 @@ public class MaterialBoxVO extends MaterialBox {
 		} else {
 			this.isOnShelfString = "否";
 		}
+	}
+
+	public Integer getCellWidth() {
+		return cellWidth;
+	}
+
+	public void setCellWidth(Integer type) {
+		BoxType boxType = BoxType.dao.findById(type);
+		this.cellWidth = boxType.getCellWidth();
 	}
 
 }

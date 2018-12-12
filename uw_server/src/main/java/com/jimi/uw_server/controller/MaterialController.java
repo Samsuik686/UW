@@ -1,16 +1,17 @@
 package com.jimi.uw_server.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.jfinal.aop.Enhancer;
+import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
-import com.jfinal.core.paragetter.Para;
+import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -37,9 +38,9 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}")
-	public void addType(String no, String specification, String supplier) {
-		String resultString = materialService.addType(no, specification, supplier);
+	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}，厚度为{thickness}，半径为{radius}")
+	public void addType(String no, String specification, String supplier, Integer thickness, Integer radius) {
+		String resultString = materialService.addType(no, specification, supplier, thickness, radius);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -49,9 +50,9 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
-	public void updateType(Integer id, String specification, String supplierName, Boolean enabled) {
-		String resultString = materialService.updateType(id, specification, supplierName, enabled);
+	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，供应商名为{supplier}，厚度为{thickness}，半径为{radius}")
+	public void updateType(Integer id, String specification, String supplierName, Boolean enabled, Integer thickness, Integer radius) {
+		String resultString = materialService.updateType(id, specification, supplierName, enabled, thickness, radius);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -66,9 +67,9 @@ public class MaterialController extends Controller {
 	}
 
 	// 添加料盒#
-	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}")
-	public void addBox(Integer area, Integer row, Integer col, Integer height) {
-		String resultString = materialService.addBox(area, row, col, height);
+	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}，规格{cellWidth}")
+	public void addBox(Integer area, Integer row, Integer col, Integer height, Integer cellWidth) {
+		String resultString = materialService.addBox(area, row, col, height, cellWidth);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -78,9 +79,9 @@ public class MaterialController extends Controller {
 
 
 	// 更新料盒信息#
-	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
-	public void updateBox(@Para("") MaterialBox MaterialBox) {
-		String resultString = materialService.updateBox(MaterialBox);
+	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)， 传递的isOnShelf值为：{isOnShelf}(true表示标记为在架，false表示标记为不在架)")
+	public void updateBox(Integer id, Boolean enabled, Boolean isOnShelf) {
+		String resultString = materialService.updateBox(id, enabled, isOnShelf);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -117,6 +118,43 @@ public class MaterialController extends Controller {
 			}
 		}
 		renderNull();
+	}
+
+
+	// 添加料盒#
+	@Log("添加新的料盒类型，规格为{cellWidth}，总行数{cellRows}，总列数{cellCols}")
+	public void addBoxType(Integer cellWidth, Integer cellRows, Integer cellCols) {
+		String resultString = materialService.addBoxType(cellWidth, cellRows, cellCols);
+		if(resultString.equals("添加成功！")) {
+			renderJson(ResultUtil.succeed());
+		}else {
+			throw new OperationException(resultString);
+		}
+	}
+
+
+	// 更新料盒信息#
+	@Log("更新料盒类型号为{id}的料盒类型，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
+	public void updateBoxType(Integer id, Boolean enabled) {
+		String resultString = materialService.updateBoxType(id, enabled);
+		if(resultString.equals("更新成功！")) {
+			renderJson(ResultUtil.succeed());
+		}else {
+			throw new OperationException(resultString);
+		}
+	}
+
+
+	@ActionKey("/manage/material/import")
+	public void importFile(UploadFile file, String supplierName) throws Exception {
+		String fileName = file.getFileName();
+		String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
+		String resultString = materialService.importFile(fileName, fullFileName, supplierName);
+		if(resultString.equals("添加成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			throw new OperationException(resultString);
+		}
 	}
 
 

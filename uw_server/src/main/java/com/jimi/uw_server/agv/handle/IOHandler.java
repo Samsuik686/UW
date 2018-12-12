@@ -20,12 +20,12 @@ import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.service.TaskService;
 
 /**
- * LS、SL命令处理器
+ * 出入库LS、SL命令处理器
  * <br>
  * <b>2018年7月10日</b>
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
-public class LSSLHandler {
+public class IOHandler {
 
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
 
@@ -37,8 +37,6 @@ public class LSSLHandler {
 		AGVMoveCmd moveCmd = createSLCmd(materialBox, item);
 		//发送SL>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
-		//更新任务条目状态为已分配回库***
-//		TaskItemRedisDAO.updateTaskItemState(item, 3);
 	}
 
 
@@ -51,7 +49,7 @@ public class LSSLHandler {
 		setMaterialBoxIsOnShelf(materialBox, false);
 
 		//更新任务条目状态为已分配***
-		TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.ASSIGNED);
+		TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.ASSIGNED);
 	}
 
 
@@ -63,12 +61,12 @@ public class LSSLHandler {
 		AGVStatusCmd statusCmd = Json.getJson().parse(message, AGVStatusCmd.class);
 
 		//判断是否是开始执行任务
-		if(statusCmd.getStatus() == 0) {
+		if(statusCmd.getStatus() == TaskItemState.WAIT_MOVE) {
 			handleStatus0(statusCmd);
 		}
 
 		//判断是否是第二动作完成
-		if(statusCmd.getStatus() == 2) {
+		if(statusCmd.getStatus() == TaskItemState.FINISH_SECOND_ACTION) {
 			handleStatus2(statusCmd);
 		}
 	}
@@ -79,10 +77,10 @@ public class LSSLHandler {
 		String groupid = statusCmd.getMissiongroupid();
 		
 		//匹配groupid
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if(groupid.equals(item.getGroupId())) {
 				//更新tsakitems里对应item的robotid
-				TaskItemRedisDAO.updateTaskItemRobot(item, statusCmd.getRobotid());
+				TaskItemRedisDAO.updateIOTaskItemRobot(item, statusCmd.getRobotid());
 			}
 		}
 	}
@@ -93,17 +91,17 @@ public class LSSLHandler {
 		String groupid = statusCmd.getMissiongroupid();
 		
 		//匹配groupid
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if(groupid.equals(item.getGroupId())) {
 				
 				//判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
 				if(item.getState() == TaskItemState.ASSIGNED) {//LS执行完成时
 					//更改taskitems里对应item状态为2（已拣料到站）***
-					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.ARRIVED_WINDOW);
+					TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.ARRIVED_WINDOW);
 					break;
 				}else if(item.getState() == TaskItemState.START_BACK) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
-					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.FINISH_BACK);
+					TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.FINISH_BACK);
 
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
@@ -126,8 +124,8 @@ public class LSSLHandler {
 		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到未分配状态
 		if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
 			if (!item.getIsForceFinish()) {
-				TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.WAIT_ASSIGN);
-				TaskItemRedisDAO.updateTaskItemRobot(item, 0);
+				TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.WAIT_ASSIGN);
+				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 			}
 		}
@@ -140,7 +138,7 @@ public class LSSLHandler {
 	*/
 	private static void clearTil(String groupid) {
 		boolean isAllFinish = true;
-		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
+		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
 			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != TaskItemState.FINISH_BACK) {
 				isAllFinish = false;
 			}

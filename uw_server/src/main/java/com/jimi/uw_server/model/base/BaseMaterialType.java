@@ -45,6 +45,24 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getInt("supplier");
 	}
 
+	public M setThickness(java.lang.Integer thickness) {
+		set("thickness", thickness);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getThickness() {
+		return getInt("thickness");
+	}
+
+	public M setRadius(java.lang.Integer radius) {
+		set("radius", radius);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getRadius() {
+		return getInt("radius");
+	}
+
 	public M setEnabled(java.lang.Boolean enabled) {
 		set("enabled", enabled);
 		return (M)this;

@@ -17,6 +17,7 @@ public class MappingKit {
 	
 	public static void mapping(ActiveRecordPlugin arp) {
 		arp.addMapping("action_log", "id", ActionLog.class);
+		arp.addMapping("box_type", "id", BoxType.class);
 		arp.addMapping("error_log", "id", ErrorLog.class);
 		arp.addMapping("material", "id", Material.class);
 		arp.addMapping("material_box", "id", MaterialBox.class);

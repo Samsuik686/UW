@@ -63,6 +63,15 @@ public abstract class BaseMaterialBox<M extends BaseMaterialBox<M>> extends Mode
 		return get("is_on_shelf");
 	}
 
+	public M setType(java.lang.Integer type) {
+		set("type", type);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getType() {
+		return getInt("type");
+	}
+
 	public M setEnabled(java.lang.Boolean enabled) {
 		set("enabled", enabled);
 		return (M)this;
