@@ -11,7 +11,7 @@ import com.jimi.uw_server.agv.entity.bo.AGVMissionGroup;
 import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
-import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
@@ -49,7 +49,7 @@ public class IOHandler {
 		setMaterialBoxIsOnShelf(materialBox, false);
 
 		//更新任务条目状态为已分配***
-		TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.ASSIGNED);
+		TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.ASSIGNED);
 	}
 
 
@@ -60,14 +60,17 @@ public class IOHandler {
 		//转换成实体类
 		AGVStatusCmd statusCmd = Json.getJson().parse(message, AGVStatusCmd.class);
 
-		//判断是否是开始执行任务
-		if(statusCmd.getStatus() == TaskItemState.WAIT_MOVE) {
-			handleStatus0(statusCmd);
-		}
+		// missiongroupid 包含“:”表示为出入库任务
+		if (statusCmd.getMissiongroupid().contains(":")) {
+			//判断是否是开始执行任务
+			if(statusCmd.getStatus() == IOTaskItemState.WAIT_ASSIGN) {
+				handleStatus0(statusCmd);
+			}
 
-		//判断是否是第二动作完成
-		if(statusCmd.getStatus() == TaskItemState.FINISH_SECOND_ACTION) {
-			handleStatus2(statusCmd);
+			//判断叉车是否已到达仓口
+			if(statusCmd.getStatus() == IOTaskItemState.ARRIVED_WINDOW) {
+				handleStatus2(statusCmd);
+			}
 		}
 	}
 
@@ -95,13 +98,13 @@ public class IOHandler {
 			if(groupid.equals(item.getGroupId())) {
 				
 				//判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-				if(item.getState() == TaskItemState.ASSIGNED) {//LS执行完成时
+				if(item.getState() == IOTaskItemState.ASSIGNED) {//LS执行完成时
 					//更改taskitems里对应item状态为2（已拣料到站）***
-					TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.ARRIVED_WINDOW);
+					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.ARRIVED_WINDOW);
 					break;
-				}else if(item.getState() == TaskItemState.START_BACK) {//SL执行完成时：
+				}else if(item.getState() == IOTaskItemState.START_BACK) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
-					TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.FINISH_BACK);
+					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_BACK);
 
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
@@ -110,7 +113,7 @@ public class IOHandler {
 					nextRound(item);
 
 					clearTil(groupid);
-				}else if(item.getState() == TaskItemState.FINISH_CUT) {
+				}else if(item.getState() == IOTaskItemState.FINISH_CUT) {
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 					setMaterialBoxIsOnShelf(materialBox, true);
@@ -124,7 +127,7 @@ public class IOHandler {
 		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到未分配状态
 		if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
 			if (!item.getIsForceFinish()) {
-				TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.WAIT_ASSIGN);
+				TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_ASSIGN);
 				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 			}
@@ -139,7 +142,7 @@ public class IOHandler {
 	private static void clearTil(String groupid) {
 		boolean isAllFinish = true;
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
-			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != TaskItemState.FINISH_BACK) {
+			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != IOTaskItemState.FINISH_BACK) {
 				isAllFinish = false;
 			}
 		}

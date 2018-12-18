@@ -13,7 +13,7 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
@@ -232,12 +232,12 @@ public class TaskService {
 			// 如果任务类型为入库或退料入库，则将任务条目加载到redis中，将任务条目状态设置为不可分配
 			if (task.getType() == TaskType.IN  || task.getType() == TaskType.SEND_BACK) {
 				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item, TaskItemState.UNASSIGNABLED, task.getPriority());
+					AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.UNASSIGNABLED, task.getPriority());
 					taskItems.add(a);
 				}
 			} else if (task.getType() == TaskType.OUT) {		// 如果任务类型为出库，则将任务条目加载到redis中，将任务条目状态设置为未分配
 				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item, TaskItemState.WAIT_ASSIGN, task.getPriority());
+					AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_ASSIGN, task.getPriority());
 					taskItems.add(a);
 				}
 			}
@@ -448,7 +448,7 @@ public class TaskService {
 
 	public Object getWindowParkingItem(Integer id) {
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-			if(redisTaskItem.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
+			if(redisTaskItem.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
 				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {
 					Integer packingListItemId = redisTaskItem.getId();
@@ -564,7 +564,7 @@ public class TaskService {
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
 				if (quantity != material.getRemainderQuantity()) {
-					TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.FINISH_CUT);
+					TaskItemRedisDAO.updateIOTaskItemRobot(item, IOTaskItemState.FINISH_CUT);
 				}
 				// 修改物料实体表对应的料盘剩余数量
 				int remainderQuantity = material.getRemainderQuantity() - quantity;
@@ -591,7 +591,7 @@ public class TaskService {
 		String resultString = "扫描成功，请将料盘放回料盒！";
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 			if (redisTaskItem.getId().intValue() == packingListItemId) {
-				if (redisTaskItem.getState().intValue() != TaskItemState.ARRIVED_WINDOW) {
+				if (redisTaskItem.getState().intValue() != IOTaskItemState.ARRIVED_WINDOW) {
 					resultString = "暂时不可调用截料后回库接口!";
 					return resultString;
 				}

@@ -3,7 +3,7 @@ package com.jimi.uw_server.model.vo;
 import java.util.Date;
 import java.util.List;
 
-import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
 
@@ -68,22 +68,22 @@ public class WindowTaskItemsVO extends TaskLog {
 
 	public void setStateString(Integer state) {
 		switch (state) {
-		case TaskItemState.UNASSIGNABLED:
+		case IOTaskItemState.UNASSIGNABLED:
 			this.stateString = "不可分配";
 			break;
-		case TaskItemState.WAIT_ASSIGN:
+		case IOTaskItemState.WAIT_ASSIGN:
 			this.stateString = "未分配";	
 			break;
-		case TaskItemState.ASSIGNED:
+		case IOTaskItemState.ASSIGNED:
 			this.stateString = "已分配拣料";
 			break;
-		case TaskItemState.ARRIVED_WINDOW:
+		case IOTaskItemState.ARRIVED_WINDOW:
 			this.stateString = "已拣料到站";
 			break;
-		case TaskItemState.START_BACK:
+		case IOTaskItemState.START_BACK:
 			this.stateString = "已分配回库";
 			break;
-		case TaskItemState.FINISH_BACK:
+		case IOTaskItemState.FINISH_BACK:
 			this.stateString = "已回库完成";
 			break;
 		default:

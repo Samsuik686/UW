@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.model.BoxType;
 import com.jimi.uw_server.model.MaterialBox;
@@ -33,16 +34,21 @@ public class BuildService extends SelectService {
 				String dst = jsonObject.getString("dst");
 				JSONArray dstArray = JSONArray.parseArray(dst);
 				String srcPosition = srcX + ":" + srcY + ":" + srcZ;
-				BoxType boxTypeDao = BoxType.dao.findFirst(GET_BOX_TYPE_BY_CELL_WIDTH_SQL, boxType);
-				Integer boxTypeId = boxTypeDao.getId();
+				BoxType bType = new BoxType();
+				bType.setCellWidth(boxType);
+				bType.setCellRows(20);
+				bType.setCellCols(30);
+				bType.setEnabled(true);
+				bType.save();
 				for (int j=0; j<dstArray.size(); j++) {
-					Integer startX = Integer.parseInt(jsonObject.getString("startX"));
-					Integer startY = Integer.parseInt(jsonObject.getString("startY"));
-					Integer startZ = Integer.parseInt(jsonObject.getString("startZ"));
-					Integer endX = Integer.parseInt(jsonObject.getString("endX"));
-					Integer endY = Integer.parseInt(jsonObject.getString("endY"));
-					Integer endZ = Integer.parseInt(jsonObject.getString("endZ"));
-					createBuildTasks(boxTypeId, srcPosition, startX, startY, startZ, endX, endY, endZ);
+					JSONObject jsObj = dstArray.getJSONObject(j);
+					Integer startX = Integer.parseInt(jsObj.getString("startX"));
+					Integer startY = Integer.parseInt(jsObj.getString("startY"));
+					Integer startZ = Integer.parseInt(jsObj.getString("startZ"));
+					Integer endX = Integer.parseInt(jsObj.getString("endX"));
+					Integer endY = Integer.parseInt(jsObj.getString("endY"));
+					Integer endZ = Integer.parseInt(jsObj.getString("endZ"));
+					createBuildTasks(bType.getId(), srcPosition, startX, startY, startZ, endX, endY, endZ);
 				}
 			}
 
@@ -53,11 +59,11 @@ public class BuildService extends SelectService {
 	}
 
 
-	public void createBuildTasks(Integer boxTypeId, String srcPosition, Integer startX, Integer startY, Integer startZ, Integer endX, Integer endY, Integer endZ) {
+	private void createBuildTasks(Integer boxTypeId, String srcPosition, Integer startX, Integer startY, Integer startZ, Integer endX, Integer endY, Integer endZ) {
 		List<AGVBuildTaskItem> buildTaskItems = new ArrayList<AGVBuildTaskItem>();
-		for (int x=startX; x<endX; x++) {
-			for (int y=startY; y<endY; y++) {
-				for (int z=startZ; z<endZ; z++) {
+		for (int x=startX; x<=endX; x++) {
+			for (int y=startY; y<=endY; y++) {
+				for (int z=startZ; z<=endZ; z++) {
 					MaterialBox materialBox = new MaterialBox();
 					materialBox.setArea(1);
 					materialBox.setRow(x);
@@ -72,6 +78,7 @@ public class BuildService extends SelectService {
 				}
 			}
 		}
+		TaskItemRedisDAO.addBuildTaskItem(buildTaskItems);
 	}
 
 }

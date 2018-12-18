@@ -21,7 +21,7 @@ public class MaterialTypeVO extends MaterialType{
 	private String supplierName;
 
 
-	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Boolean enabled, Integer thickness, Integer radius) {
+	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Integer thickness, Integer radius, Boolean enabled) {
 		this.setId(id);
 		this.setNo(no);
 		this.setSpecification(specification);

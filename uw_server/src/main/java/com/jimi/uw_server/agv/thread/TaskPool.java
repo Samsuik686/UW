@@ -11,7 +11,8 @@ import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.BuildHandle;
 import com.jimi.uw_server.agv.handle.IOHandler;
-import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.BuildTaskItemState;
+import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
@@ -53,11 +54,10 @@ public class TaskPool extends Thread{
 				int cn = countFreeRobot();
 				List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
 				TaskItemRedisDAO.appendIOTaskItems(ioTaskItems);
-				if (ioTaskItems.isEmpty() || cn == 0) {
-					continue;
+				if (!ioTaskItems.isEmpty() && cn != 0) {
+					sendIOCmds(cn, ioTaskItems);
 				}
-				sendIOCmds(cn, ioTaskItems);
-
+				
 				//判断tilOfBuild是否为空或者cn为0
 				cn = countFreeRobot();
 				List<AGVBuildTaskItem> buildTaskItems = new ArrayList<>();
@@ -86,7 +86,7 @@ public class TaskPool extends Thread{
 			AGVIOTaskItem item = ioTaskItems.get(a);
 
 			// 0. 判断任务条目状态是否为0
-			if (item.getState() == TaskItemState.WAIT_ASSIGN) {
+			if (item.getState().intValue() == IOTaskItemState.WAIT_ASSIGN) {
 				// 1. 根据item的任务id获取任务类型
 				Task task = Task.dao.findById(item.getTaskId());
 				Integer taskType = task.getType();
@@ -129,15 +129,18 @@ public class TaskPool extends Thread{
 			AGVBuildTaskItem item = buildTaskItems.get(a);
 
 			// 判断任务条目状态是否为0
-			if (item.getState() == TaskItemState.WAIT_MOVE) {
+			if (item.getState().intValue() == BuildTaskItemState.WAIT_MOVE) {
 
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-				// 发送LS指令
-				BuildHandle.sendBuildCmd(item, materialBox);
-				cn--;
+				// 判断料盒是否不在架(即该料盒还未入仓)
+				if (!materialBox.getIsOnShelf()) {
+					// 发送建仓指令
+					BuildHandle.sendBuildCmd(item, materialBox);
+					cn--;
+				}
 			}
 
-		a++;
+			a++;
 		} while(cn != 0 && a != buildTaskItems.size());
 	}
 

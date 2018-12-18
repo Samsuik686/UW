@@ -1,12 +1,12 @@
 package com.jimi.uw_server.constant;
 
 /**
- * 任务条目状态常量类
+ * 出入库任务条目状态常量类
  * @author HardyYao
  * @createTime 2018年11月21日  下午4:12:31
  */
 
-public class TaskItemState {
+public class IOTaskItemState {
 
 	public static final int FINISH_CUT = -2;		// 已完成截料
 	
@@ -22,7 +22,4 @@ public class TaskItemState {
 	
 	public static final int FINISH_BACK = 4;		// 已完成回库
 
-	public static final int WAIT_MOVE = 0;			// 叉车接受任务
-
-	public static final int FINISH_SECOND_ACTION = 2;		// 叉车完成第二动作
 }

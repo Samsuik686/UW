@@ -1,6 +1,7 @@
 package com.jimi.uw_server.controller;
 
 import com.jfinal.aop.Enhancer;
+import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
@@ -18,6 +19,7 @@ public class BuildController extends Controller {
 	private static BuildService buildService = Enhancer.enhance(BuildService.class);
 
 
+	@ActionKey("/build")
 	@Log("开始建仓，传递的参数为{parameters}")
 	public void build(String parameters) {
 		String resultString = buildService.build(parameters);

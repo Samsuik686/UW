@@ -17,15 +17,18 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
+import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 import com.jimi.uw_server.agv.handle.ACKHandler;
+import com.jimi.uw_server.agv.handle.BuildHandle;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.agv.thread.TaskPool;
 import com.jimi.uw_server.model.SocketLog;
+import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;
 
 /**
@@ -36,6 +39,8 @@ import com.jimi.uw_server.util.ErrorLogWritter;
  */
 @ClientEndpoint
 public class AGVMainSocket {
+	
+	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 	
 	private static Session session;
 	
@@ -58,6 +63,11 @@ public class AGVMainSocket {
 		sendCmdidAckMap = new HashMap<>();
 		receiveNotAckCmdidSet = new HashSet<>();
 		TaskItemRedisDAO.setPauseAssign(0);
+		if (materialService.isMaterialBoxEmpty()) {
+			TaskItemRedisDAO.setBuildAssign(true);
+		} else {
+			TaskItemRedisDAO.setBuildAssign(false);
+		}
 		//连接AGV服务器
 		AGVMainSocket.uri = uri;
 		connect(AGVMainSocket.uri);
@@ -106,6 +116,7 @@ public class AGVMainSocket {
 					//判断是否是status指令
 					if(message.contains("\"cmdcode\":\"status\"")) {
 						IOHandler.handleStatus(message);
+						BuildHandle.handleStatus(message);
 					}
 					
 					//判断是否是loadexception指令

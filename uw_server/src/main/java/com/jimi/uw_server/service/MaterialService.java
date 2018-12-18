@@ -75,6 +75,8 @@ public class MaterialService extends SelectService{
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
+	private static final String JUDGE_MATERIAL_BOX_IS_EMPTY_SQL = "SELECT * FROM material_box WHERE enabled = 1";
+
 
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -210,6 +212,10 @@ public class MaterialService extends SelectService{
 			return resultString;
 		}
 		BoxType boxType = BoxType.dao.findFirst(GET_BOX_TYPE_BY_CELL_WIDTH_SQL, cellWidth);
+		if (boxType == null) {
+			resultString = "请填写正确的料盒规格！";
+			return resultString;
+		}
 		MaterialBox materialBox = new MaterialBox();
 		materialBox.setArea(area);
 		materialBox.setRow(row);
@@ -223,12 +229,8 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public String updateBox(Integer id, Boolean enabled, Boolean isOnShelf) {
+	public String updateBox(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
-//		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL, materialBox.getArea(), materialBox.getRow(), materialBox.getCol(), materialBox.getHeight()).size() != 0) {
-//			resultString = "该位置已有料盒存在，请不要在该位置添加料盒！";
-//			return resultString;
-//		}
 		if (!enabled) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, id);
 			if (m.get("quantity") != null) {
@@ -241,7 +243,6 @@ public class MaterialService extends SelectService{
 		}
 		MaterialBox materialBox = MaterialBox.dao.findById(id);
 		materialBox.setEnabled(enabled);
-		materialBox.setIsOnShelf(isOnShelf);
 		materialBox.update();
 		return resultString;
 	}
@@ -346,7 +347,7 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public String updateBoxType(Integer id, Boolean enabled) {
+	public String deleteBoxType(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		if (!enabled) {
 			MaterialBox mb = MaterialBox.dao.findFirst(GET_ENABLED_MATERIAL_BOX_BY_TYPE_SQL, id);
@@ -373,7 +374,7 @@ public class MaterialService extends SelectService{
 			return resultString;
 		}
 		ExcelHelper fileReader = ExcelHelper.from(file);
-		List<MaterialTypeItemBO> items = fileReader.unfill(MaterialTypeItemBO.class, 2);
+		List<MaterialTypeItemBO> items = fileReader.unfill(MaterialTypeItemBO.class, 0);
 		// 如果套料单表头不对，则提示检查套料单表头，同时检查套料单表格中是否有料号记录
 		if (items == null || items.size() == 0) {
 			deleteTempFile(file);
@@ -409,9 +410,9 @@ public class MaterialService extends SelectService{
 						}
 
 						// 根据料号和供应商找到对应的物料类型
-						MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo(), supplier);
+						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo(), supplier);
 						// 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用
-						if (noDao != null) {
+						if (mType != null) {
 							deleteTempFile(file);
 							resultString = "导入物料类型表失败，表格第" + i + "行，料号为 "+ item.getNo() + "的物料类型已存在数据库中！";
 							return resultString;
@@ -423,6 +424,7 @@ public class MaterialService extends SelectService{
 						materialType.setSpecification(item.getSpecification());
 						materialType.setThickness(item.getThickness());
 						materialType.setRadius(item.getRadius());
+						materialType.setEnabled(true);
 						materialType.save();
 						
 						i++;
@@ -455,6 +457,19 @@ public class MaterialService extends SelectService{
 	 */
 	public List<MaterialBox> listByXYZ(int x, int y, int z) {
 		return MaterialBox.dao.find(GET_SPECIFIED_POSITION_MATERIAL_BOX_SQL, x, y, z);
+	}
+
+
+	/**
+	 * 判断料盒表是否为空
+	 */
+	public Boolean isMaterialBoxEmpty() {
+		int materialSize = MaterialBox.dao.find(JUDGE_MATERIAL_BOX_IS_EMPTY_SQL).size();
+		if ( materialSize == 0) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

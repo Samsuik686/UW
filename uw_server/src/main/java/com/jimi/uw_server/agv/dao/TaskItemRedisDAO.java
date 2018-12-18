@@ -10,7 +10,7 @@ import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.comparator.PriorityComparator;
-import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.IOTaskItemState;
 
 
 
@@ -69,7 +69,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.UNASSIGNABLED || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)){
+			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.UNASSIGNABLED || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN)){
 				cache.lrem("til", 1, item);
 				i--;
 			}
@@ -251,7 +251,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
 			byte[] item = cache.lindex("tilOfBuild", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
-			if(agvBuildTaskItem.getBoxId().equals( buildTaskItem.getBoxId())){
+			if(agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()){
 				agvBuildTaskItem.setRobotId(robotid);
 				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
 				break;
@@ -267,12 +267,45 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
 			byte[] item = cache.lindex("tilOfBuild", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
-			if(agvBuildTaskItem.getBoxId().equals(buildTaskItem.getBoxId())){
+			if(agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()){
 				agvBuildTaskItem.setState(state);
 				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
 				break;
 			}
 		}
 	}
+
+
+	/**
+	 * 是否需要建仓
+	 */
+	public synchronized static boolean getIsBuildAssign() {
+		try {
+			return cache.get("build");
+		} catch (NullPointerException e) {
+			cache.set("build", false);
+			return getIsBuildAssign();
+		}
+	}
+	
+	
+	/**
+	 * 设置建仓任务标志位
+	 */
+	public synchronized static void setBuildAssign(boolean build) {
+		cache.set("build", build);
+	}
+
+
+	/**
+	 * 判断建仓任务是否已完成
+	 */
+	public synchronized static void isBuildFinish() {
+		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
+		if (items.size() == 0) {
+			setBuildAssign(false);
+		}
+	}
+
 
 }

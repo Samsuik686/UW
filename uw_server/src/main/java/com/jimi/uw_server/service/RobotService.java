@@ -11,7 +11,7 @@ import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
-import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.PackingListItem;
@@ -87,9 +87,9 @@ public class RobotService extends SelectService {
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(BACK_LOCK) {
-					if (item.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
+					if (item.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
 						// 更新任务条目状态为已分配回库
-						TaskItemRedisDAO.updateIOTaskItemRobot(item, TaskItemState.START_BACK);
+						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getId());
 						if (actualQuantity >= item.getQuantity()) {
@@ -103,7 +103,7 @@ public class RobotService extends SelectService {
 						if (sameBoxItem == null) {
 							IOHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-							TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, TaskItemState.ARRIVED_WINDOW);
+							TaskItemRedisDAO.updateIOTaskItemState(sameBoxItem, IOTaskItemState.ARRIVED_WINDOW);
 							// 更新任务条目绑定的叉车id
 							TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, item.getRobotId());
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
@@ -147,7 +147,7 @@ public class RobotService extends SelectService {
 	 */
 	public AGVIOTaskItem getSameBoxItemId(AGVIOTaskItem item) {
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
-			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == IOTaskItemState.WAIT_ASSIGN) {
 				return item1;
 			}
 		}
@@ -174,17 +174,17 @@ public class RobotService extends SelectService {
 				// 如果该料号对应的任务条目存在redis中
 				if (item.getId().equals(redisTaskItem.getId())) {
 					// 若任务条目状态为 不可分配，则将其状态更新为未分配拣料
-					if (redisTaskItem.getState().intValue() == TaskItemState.UNASSIGNABLED) {
-						TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, TaskItemState.WAIT_ASSIGN);
+					if (redisTaskItem.getState().intValue() == IOTaskItemState.UNASSIGNABLED) {
+						TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
 						TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
 						TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 						return resultString;
 					}
 					// 若任务条目状态为已完成截料，则将其状态更新为未分配拣料
-					else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
+					else if (redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_CUT) {
 						MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
 						if (materialBox.getIsOnShelf()) {
-							TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, TaskItemState.WAIT_ASSIGN);
+							TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
 							TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
 							TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 							return resultString;

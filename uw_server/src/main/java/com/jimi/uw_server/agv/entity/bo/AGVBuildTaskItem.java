@@ -54,10 +54,14 @@ public class AGVBuildTaskItem {
 	}
 
 
+	public AGVBuildTaskItem() {}
+
+
 	public AGVBuildTaskItem(Integer boxId, String srcPosition) {
 		this.boxId = boxId;
 		this.srcPosition = srcPosition;
 		this.state = 0;
+		this.robotId = 0;
 	}
 
 }

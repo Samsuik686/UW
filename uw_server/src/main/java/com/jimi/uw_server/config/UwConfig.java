@@ -18,6 +18,7 @@ import com.jfinal.plugin.redis.RedisPlugin;
 import com.jfinal.template.Engine;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
+import com.jimi.uw_server.controller.BuildController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.MaterialController;
 import com.jimi.uw_server.controller.RobotController;
@@ -92,6 +93,7 @@ public class UwConfig extends JFinalConfig {
 
 	@Override
 	public void configRoute(Routes me) {
+		me.add("/", BuildController.class);
 		me.add("/log", LogController.class);
 		me.add("/task", TaskController.class);
 		me.add("/manage/robot", RobotController.class);

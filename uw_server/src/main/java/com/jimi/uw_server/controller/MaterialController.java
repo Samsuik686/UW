@@ -50,7 +50,7 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，供应商名为{supplier}，厚度为{thickness}，半径为{radius}")
+	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，供应商名为{supplierName}，厚度为{thickness}，半径为{radius}")
 	public void updateType(Integer id, String specification, String supplierName, Boolean enabled, Integer thickness, Integer radius) {
 		String resultString = materialService.updateType(id, specification, supplierName, enabled, thickness, radius);
 		if(resultString.equals("更新成功！")) {
@@ -61,7 +61,7 @@ public class MaterialController extends Controller {
 	}
 
 
-	// 统计物料类型信息
+	// 获取料盒信息
 	public void getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(materialService.getBoxes(pageNo, pageSize, ascBy, descBy, filter)));
 	}
@@ -79,9 +79,9 @@ public class MaterialController extends Controller {
 
 
 	// 更新料盒信息#
-	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)， 传递的isOnShelf值为：{isOnShelf}(true表示标记为在架，false表示标记为不在架)")
-	public void updateBox(Integer id, Boolean enabled, Boolean isOnShelf) {
-		String resultString = materialService.updateBox(id, enabled, isOnShelf);
+	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
+	public void updateBox(Integer id, Boolean enabled) {
+		String resultString = materialService.updateBox(id, enabled);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -120,7 +120,12 @@ public class MaterialController extends Controller {
 		renderNull();
 	}
 
+	// 获取料盒类型信息
+	public void getBoxTypes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
+		renderJson(ResultUtil.succeed(materialService.getBoxTypes(pageNo, pageSize, ascBy, descBy, filter)));
+	}
 
+	
 	// 添加料盒#
 	@Log("添加新的料盒类型，规格为{cellWidth}，总行数{cellRows}，总列数{cellCols}")
 	public void addBoxType(Integer cellWidth, Integer cellRows, Integer cellCols) {
@@ -135,8 +140,8 @@ public class MaterialController extends Controller {
 
 	// 更新料盒信息#
 	@Log("更新料盒类型号为{id}的料盒类型，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
-	public void updateBoxType(Integer id, Boolean enabled) {
-		String resultString = materialService.updateBoxType(id, enabled);
+	public void deleteBoxType(Integer id, Boolean enabled) {
+		String resultString = materialService.deleteBoxType(id, enabled);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -145,12 +150,14 @@ public class MaterialController extends Controller {
 	}
 
 
+	// 导入物料类型表#
 	@ActionKey("/manage/material/import")
+	@Log("导入物料类型表，导入的物料对应的供应商为：{supplierName}")
 	public void importFile(UploadFile file, String supplierName) throws Exception {
 		String fileName = file.getFileName();
 		String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
 		String resultString = materialService.importFile(fileName, fullFileName, supplierName);
-		if(resultString.equals("添加成功！")) {
+		if(resultString.equals("导入成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);
