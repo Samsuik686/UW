@@ -99,6 +99,8 @@
           {field: 'no', title: '料号', colStyle: {'width': '120px'}},
           {field: 'supplierName', title: '供应商', colStyle: {'width': '100px'}},
           {field: 'specification', title: '规格', colStyle: {'width': '180px'}},
+          {field: 'thickness', title: '厚度', colStyle: {'width': '80px'}},
+          {field: 'radius', title: '半径', colStyle: {'width': '80px'}},
           {field: 'enabled', title: '可用性', visible: false},
           {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
           {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},

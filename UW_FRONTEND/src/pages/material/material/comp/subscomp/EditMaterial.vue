@@ -22,6 +22,18 @@
           <input type="text" id="material-supplier" class="form-control" v-model="thisData.supplierName" autocomplete="off">
           <span class="form-span col"></span>
         </div>
+        <div class="form-row col-4 pl-2 pr-2">
+          <label for="material-thickness" class="col-form-label">厚度:</label>
+          <input type="text" id="material-thickness" class="form-control" v-model="thisData.thickness"
+                 @input="validate('thickness', '^[0-9]*[1-9][0-9]*$', '请输入正整数厚度')" autocomplete="off">
+          <span class="form-span col">{{warningMsg.thicknessMsg}}</span>
+        </div>
+        <div class="form-row col-4 pl-2 pr-2">
+          <label for="material-radius" class="col-form-label">半径:</label>
+          <input type="text" id="material-radius" class="form-control" v-model="thisData.radius"
+                 @input="validate('radius', '^[0-9]*[1-9][0-9]*$', '请输入正整数半径')" autocomplete="off">
+          <span class="form-span col">{{warningMsg.radiusMsg}}</span>
+        </div>
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -47,7 +59,9 @@
           id: '',
           specification: '',
           no: '',
-          supplierName:''
+          supplierName:'',
+          thickness: '',
+          radius: ''
         },
         warningMsg: {
 
@@ -60,6 +74,8 @@
       this.thisData.no = this.editData.no;
       this.thisData.specification = this.editData.specification;
       this.thisData.supplierName = this.editData.supplierName;
+      this.thisData.thickness = this.editData.thickness;
+      this.thisData.radius = this.editData.radius;
     },
     methods: {
       closeEditPanel: function () {
@@ -86,7 +102,9 @@
               id: this.thisData.id,
               specification: this.thisData.specification,
               enabled: 1,
-              supplierName:this.thisData.supplierName
+              supplierName:this.thisData.supplierName,
+              thickness:this.thisData.thickness,
+              radius:this.thisData.radius
             }
           };
           axiosPost(options).then(response => {

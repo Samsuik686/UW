@@ -1,39 +1,31 @@
-<!--物料管理-->
+<!--料盒类型管理-->
 <template>
   <div class="main-details mt-1 mb-3">
     <datatable
       v-bind="$data"
     ></datatable>
-  <entity-details v-if="isDetailsActive"/>
   </div>
 </template>
 
 <script>
   import {axiosPost} from "../../../../utils/fetchData";
-  import {mapGetters, mapActions} from 'vuex'
-  import {getBoxesUrl} from "../../../../config/globalUrl";
   import {errHandler} from "../../../../utils/errorHandler";
+  import {getBoxTypesUrl} from "../../../../config/globalUrl";
+  import {mapActions} from 'vuex'
   import OperationOptions from "./subscomp/OperationOptions";
-  import EntityDetails from '../../comp/EntityDetails'
+
   export default {
-    name: "Details",
-    components: {
-      OperationOptions,
-      EntityDetails
-    },
+    name: "TableDetails",
     data() {
       return {
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed',
-          'white-space': 'pre-wrap'
-
+          'table-layout': 'fixed'
         },
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80, 100],
         data: [],
-        //srcData: [],
         columns: [],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -45,7 +37,7 @@
     created() {
       this.init();
       let options = {
-        url: getBoxesUrl,
+        url: getBoxTypesUrl,
         data: {
           pageNo: 1,
           pageSize: 20
@@ -53,18 +45,15 @@
       };
       this.fetchData(options)
     },
-    computed: {
-      ...mapGetters([
-        'isDetailsActive'
-      ]),
-
+    components: {
+      OperationOptions
     },
     watch: {
       $route: function (route) {
         this.init();
         this.setLoading(true);
         let options = {
-          url: getBoxesUrl,
+          url: getBoxTypesUrl,
           data: {
             pageNo: 1,
             pageSize: 20
@@ -77,7 +66,6 @@
           this.filter = "";
         }
         this.fetchData(options)
-
       },
       query: {
         handler(query) {
@@ -87,26 +75,19 @@
         deep: true
       }
     },
-    mounted: function () {
-    },
     methods: {
       ...mapActions(['setTableRouter', 'setLoading']),
       init: function () {
         this.data = [];
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
-          {field: 'id', title: '料盒号', colStyle: {'width': '70px'}},
-          {field: 'area', title: '所在区域', colStyle: {'width': '80px'}},
-          {field: 'row', title: '行号', colStyle: {'width': '70px'}},
-          {field: 'col', title: '列号', colStyle: {'width': '70px'}},
-          {field: 'height', title: '高度', colStyle: {'width': '70px'}},
+          {field: 'id', title: '规格号', visible: false},
           {field: 'cellWidth', title: '规格', colStyle: {'width': '70px'}},
-          {field: 'isOnShelf', title: '是否在架',  visible: false},
-          {field: 'isOnShelfString', title: '是否在架', colStyle: {'width': '70px'}},
+          {field: 'cellRows', title: '料盒总行数', colStyle: {'width': '70px'}},
+          {field: 'cellCols', title: '料盒总列数', colStyle: {'width': '70px'}},
           {field: 'enabled', title: '可用性', visible: false},
-          {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
-          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'} }
-
+          {field: 'enabledString', title: '是否可用', visible: false},
+          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
@@ -124,11 +105,11 @@
               });
               this.total = response.data.data.totalRow
             } else {
-              errHandler(response.data)
+              errHandler(response.data.result)
             }
           })
             .catch(err => {
-              if (JSON.stringify(err) !== '{}'){
+              if (JSON.stringify(err) !== '{}') {
                 this.isPending = false;
                 console.log(JSON.stringify(err));
                 this.$alertDanger('请求超时，请刷新重试');
@@ -139,9 +120,8 @@
       },
       dataFilter: function () {
         let options = {
-          url: getBoxesUrl,
-          data: {
-          }
+          url: getBoxTypesUrl,
+          data: {}
         };
         options.data.pageNo = this.query.offset / this.query.limit + 1;
         options.data.pageSize = this.query.limit;
@@ -162,5 +142,4 @@
     padding: 10px;
     min-height: 500px;
   }
-
 </style>

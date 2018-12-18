@@ -1,12 +1,8 @@
 <template>
   <div class="user-options form-row">
-    <div class="btn pl-1 pr-1" title="详细" @click="checkMaterialDetails(row)">
-      <icon name="list" scale="1.8"></icon>
-    </div>
     <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)">
       <icon name="cancel" scale="1.8"></icon>
     </div>
-
 
     <div v-if="isDeleting" id="delete-window">
       <div class="delete-panel">
@@ -18,7 +14,7 @@
           </div>
           <div class="form-row">
             <div class="form-row col pl-2 pr-2">
-              你正在删除料盒号为 "{{rowData.id}}" 的物料，请确认是否删除
+              你正在删除规格为 "{{rowData.cellWidth}}" 的物料类型，请确认是否删除
             </div>
           </div>
           <div class="dropdown-divider"></div>
@@ -33,9 +29,7 @@
 </template>
 
 <script>
-  import eventBus from '@/utils/eventBus'
-  import {mapActions, mapGetters} from 'vuex'
-  import {updateBoxUrl} from "../../../../../config/globalUrl";
+  import {deleteBoxTypeUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
@@ -44,24 +38,12 @@
     props: ['row'],
     data() {
       return {
-        isDeleting: false,
+        isDeleting:false,
         rowData: {},
         isPending: false
       }
     },
-    computed: {
-      //...mapGetters['isDetailsActive']
-    },
-    methods: {
-      ...mapActions(['setDetailsActiveState', 'setDetailsData', 'setLoading']),
-      checkMaterialDetails: function (val) {
-        this.setLoading(true);
-        this.setDetailsActiveState(true);
-        this.setDetailsData({});
-        this.setDetailsData({
-          box: val.id
-        })
-      },
+    methods:{
       showWarning: function (val) {
         this.rowData = val;
         this.isDeleting = true;
@@ -70,14 +52,12 @@
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url: updateBoxUrl,
-            data: {
+            url: deleteBoxTypeUrl,
+            data:{
               id: this.rowData.id,
               enabled: 0
             }
-
           };
-
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
@@ -89,16 +69,14 @@
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);
               this.isDeleting = false;
-
             } else {
               this.isPending = false;
-              errHandler(response.data);
+              errHandler(response.data.result);
               this.isDeleting = false;
             }
           }).catch(err => {
             if (JSON.stringify(err)) {
               this.isPending = false;
-              console.log(JSON.stringify(err));
               this.$alertDanger('请求超时，请刷新重试')
             }
           })
@@ -109,10 +87,6 @@
 </script>
 
 <style scoped>
-  #edit-window {
-    z-index: 100;
-  }
-
   .delete-panel {
     position: fixed;
     display: flex;
@@ -128,19 +102,11 @@
 
   .delete-panel-container {
     background: #ffffff;
-    min-height: 220px;
+    height: 220px;
     width: 400px;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
-  }
-
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity .5s;
-  }
-
-  .fade-enter, .fade-leave-to {
-    opacity: 0;
   }
 </style>

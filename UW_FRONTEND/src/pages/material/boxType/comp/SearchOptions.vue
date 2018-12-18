@@ -13,22 +13,21 @@
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="thisFetch">查询</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">手动添加料盒</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增料盒类型</a>
       </div>
     </div>
     <transition name="fade">
       <div v-if="isAdding" id="add-window">
-        <add-box/>
+        <add-box-type/>
       </div>
     </transition>
   </div>
 </template>
 
 <script>
-  import AddBox from './subscomp/AddBox'
   import eventBus from '@/utils/eventBus'
-  import {mapGetters, mapActions} from 'vuex';
-  import 'vue-datetime/dist/vue-datetime.css'
+  import AddBoxType from './subscomp/AddBoxType'
+  import {mapActions} from 'vuex';
   import _ from 'lodash'
 
   export default {
@@ -37,40 +36,33 @@
       'text-comp': {
         props: ['opt', 'callback'],
         template: '<div class="form-group col pr-3"">\n' +
-        '           <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
-        '          </div>'
+          '           <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
+          '          </div>'
       },
-      AddBox
+      AddBoxType
     },
     data() {
       return {
-        // pageSize: 2000,
         queryOptions: [
           {
-            id: 'area',
-            name: '区域',
+            id: 'cell_width',
+            name: '料盒规格',
             model: '',
             type: 'text'
           },
           {
-            id: 'row',
-            name: '行',
+            id: 'cell_rows',
+            name: '料盒总行数',
             model: '',
             type: 'text'
           },
           {
-            id: 'col',
-            name: '列',
+            id: 'cell_cols',
+            name: '料盒总列数',
             model: '',
             type: 'text'
           },
-          {
-            id: 'height',
-            name: '高度',
-            model: '',
-            type: 'text'
-          }
         ],
         copyQueryOptions: [],
         queryString: "",
@@ -83,12 +75,6 @@
         this.isAdding = false;
       })
     },
-    computed: {
-      ...mapGetters([
-        'tableRouterApi'
-      ]),
-    },
-    watch: {},
     methods: {
       ...mapActions(['setLoading']),
       initForm: function () {
@@ -121,8 +107,8 @@
         })
       },
       fetchData: function () {
-        let options = {
-          path: '/material/boxes',
+       let options = {
+          path: '/material/boxType',
           query: {}
         };
         if (this.queryString !== "") {
@@ -153,9 +139,6 @@
   }
   #add-window {
     z-index: 100;
-  }
-  #add-type-window{
-    z-index:100;
   }
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;

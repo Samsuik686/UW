@@ -18,10 +18,18 @@
       <div class="form-group row align-items-end">
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="exportReport">导出物料列表</a>
       </div>
+      <div class="form-group row align-items-end">
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isUploading = !isUploading">导入物料类型表</a>
+      </div>
     </div>
     <transition name="fade">
       <div v-if="isAdding" id="add-window">
         <add-material/>
+      </div>
+    </transition>
+    <transition name="fade">
+      <div v-if="isUploading" id="upload-window">
+        <upload-material/>
       </div>
     </transition>
   </div>
@@ -29,6 +37,7 @@
 
 <script>
   import AddMaterial from './subscomp/AddMaterial'
+  import UploadMaterial from './subscomp/UploadMaterial'
   import eventBus from '@/utils/eventBus'
   import {mapGetters, mapActions} from 'vuex';
   import {materialCountUrl, exportReportUrl} from "../../../../config/globalUrl";
@@ -47,7 +56,8 @@
           '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
           '        </div>\n'
       },
-      AddMaterial
+      AddMaterial,
+      UploadMaterial
     },
     data() {
       return {
@@ -69,13 +79,17 @@
         copyQueryOptions: [],
         queryString: "",
         isAdding: false,
-        isPending: false
+        isPending: false,
+        isUploading:false
       }
     },
     mounted: function () {
       this.initForm();
       eventBus.$on('closeAddPanel', () => {
         this.isAdding = false;
+      })
+      eventBus.$on('closeUploadPanel', () => {
+        this.isUploading = false;
       })
     },
     computed: {
@@ -105,7 +119,7 @@
               if (index === 0) {
                 this.queryString += (item.id + "like" + _.trim(item.model))
               } else {
-                this.queryString += ("&" + item.id + "like" + _.trim(item.model))
+                this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
               }
 
             } else {
@@ -168,7 +182,7 @@
     padding: 10px;
   }
 
-  #add-window {
+  #add-window ,#upload-window{
     z-index: 100;
   }
 

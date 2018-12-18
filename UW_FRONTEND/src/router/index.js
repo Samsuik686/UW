@@ -4,8 +4,10 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import store from '../store'
 import Main from '../pages/Main'
+import BuildMain from '../pages/build/BuildMain'
 import MaterialMain from '../pages/material/MaterialMain'
 import BoxesModule from '../pages/material/boxes/BoxesModule'
+import BoxTypeModule from '../pages/material/boxType/BoxTypeModule'
 import MaterialModule from '../pages/material/material/MaterialModule'
 import SupplierModule from '../pages/material/supplier/SupplierModule'
 import LogsMain from '../pages/logs/LogsMain'
@@ -54,6 +56,10 @@ const router = new Router({
             {
               path: 'supplier',
               component: SupplierModule
+            },
+            {
+              path:'boxType',
+              component:BoxTypeModule
             }
           ]
         },
@@ -118,11 +124,16 @@ const router = new Router({
             }
           ]
         }
-
-
       ]
     },
-
+    {
+      path: '/build',
+      name: 'BuildMain',
+      component: BuildMain,
+      meta: {
+        requireAuth: true
+      }
+    },
     {
       path: '/login',
       name: 'Login',

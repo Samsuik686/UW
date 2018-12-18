@@ -84,7 +84,11 @@
               this.setLoginToken(localStorage.getItem('token'));
               localStorage.setItem('user',res.data.data["uid"]);
               this.setUser(localStorage.getItem('user'));
-              this.$router.replace('/');
+              if(res.data.data["isBuild"] === true){
+                this.$router.replace('/build');
+              }else{
+                this.$router.replace('/');
+              }
             } else if (res.data.result === 412) {
               this.$alertWarning(res.data.data)
             } else if (res.data.result === 400) {

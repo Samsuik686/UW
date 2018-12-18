@@ -241,7 +241,7 @@
           materialId: "",
           quantity: 0,
           initQuantity: 0,
-          productionTime:'',
+          productionTime: '',
         },
         materialOutRecords: [],
         actualQuantity: 0
@@ -260,7 +260,7 @@
         this.setFocus();
       });
 
-      if(this.editMaterialOutRecords !== []){
+      if (this.editMaterialOutRecords !== []) {
         this.materialOutRecords = this.editMaterialOutRecords;
         this.countActualQuantity();
       }
@@ -279,11 +279,11 @@
     watch: {},
     computed: {
       ...mapGetters([
-        'currentWindowId', 'user', 'configData','editMaterialOutRecords'
+        'currentWindowId', 'user', 'configData', 'editMaterialOutRecords'
       ]),
     },
     methods: {
-      ...mapActions(['setCurrentOprType','setEditMaterialOutRecords']),
+      ...mapActions(['setCurrentOprType', 'setEditMaterialOutRecords']),
 
       initData: function () {
         this.taskNowItems = {};
@@ -525,7 +525,7 @@
       // 获取修改的数据
       getEditData: function (thisData) {
         this.isEditing = false;
-        let remainingQuantity  = thisData.initQuantity - thisData.quantity;
+        let remainingQuantity = thisData.initQuantity - thisData.quantity;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
           let item = this.materialOutRecords[i];
           if (item.materialId === thisData.materialId) {
@@ -536,7 +536,7 @@
         this.setEditMaterialOutRecords(this.materialOutRecords);
         this.countActualQuantity();
         this.setFocus();
-        this.printBarcode(thisData.materialId,remainingQuantity,thisData.productionTime);
+        this.printBarcode(thisData.materialId, remainingQuantity, thisData.productionTime);
       },
       // 计算实际数量和统计超发数量
       countActualQuantity: function () {
@@ -579,41 +579,36 @@
         }
       },
       // 请求打印
-      printBarcode: function (materialId,remainingQuantity,productionTime) {
-        if(this.configData.printerIP === ""){
+      printBarcode: function (materialId, remainingQuantity, productionTime) {
+        if (this.configData.printerIP === "") {
           this.$alertWarning("请在设置界面填写打印机IP");
           return;
         }
-        if (!this.isPending) {
-          this.isPending = true;
-          let options = {
-            url: window.g.PRINTER_URL,
-            data: {
-              printerIP:this.configData.printerIP,
-              materialId:materialId,
-              materialNo:this.taskNowItems.materialNo,
-              remainingQuantity: remainingQuantity,
-              productDate:productionTime,
-              user: this.user,
-              supplier:this.taskNowItems.supplierName
-            }
-          };
-          axiosPost(options).then(response => {
-            this.isPending = false;
-            if (response.data.code === 200) {
-              this.$alertSuccess(response.data.msg);
-            } else if (response.data.code === 400) {
-              this.$alertWarning(response.data.msg);
-            } else {
-              this.$alertDanger(response.data.msg);
-            }
-          }).catch(err => {
-            if (JSON.stringify(err) !== '{}') {
-              this.isPending = false;
-              this.$alertDanger(JSON.stringify(err))
-            }
-          })
-        }
+        let options = {
+          url: window.g.PRINTER_URL,
+          data: {
+            printerIP: this.configData.printerIP,
+            materialId: materialId,
+            materialNo: this.taskNowItems.materialNo,
+            remainingQuantity: remainingQuantity,
+            productDate: productionTime,
+            user: this.user,
+            supplier: this.taskNowItems.supplierName
+          }
+        };
+        axiosPost(options).then(response => {
+          if (response.data.code === 200) {
+            this.$alertSuccess(response.data.msg);
+          } else if (response.data.code === 400) {
+            this.$alertWarning(response.data.msg);
+          } else {
+            this.$alertDanger(response.data.msg);
+          }
+        }).catch(err => {
+          if (JSON.stringify(err) !== '{}') {
+            this.$alertDanger(JSON.stringify(err))
+          }
+        })
       }
     }
   }

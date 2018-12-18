@@ -31,6 +31,12 @@
                  @input="validate('height', '^[0-9]*[1-9][0-9]*$', '请输入正整数高度')"  autocomplete="off">
           <span class="form-span col">{{warningMsg.heightMsg}}</span>
         </div>
+        <div class="form-row col-4 pl-2 pr-2">
+          <label for="material-cellWidth" class="col-form-label">规格:</label>
+          <input type="text" id="material-cellWidth" class="form-control" v-model="thisData.cellWidth"
+                 @input="validate('cellWidth', '^[0-9]*[1-9][0-9]*$', '请输入正整数规格')"  autocomplete="off">
+          <span class="form-span col">{{warningMsg.cellWidthMsg}}</span>
+        </div>
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -55,7 +61,8 @@
           area: '',
           row: '',
           col: '',
-          height: ''
+          height: '',
+          cellWidth:''
         },
         warningMsg: {
 

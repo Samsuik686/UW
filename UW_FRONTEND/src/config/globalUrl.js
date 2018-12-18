@@ -5,6 +5,9 @@ if (process.env.NODE_ENV === 'production') {
   url = window.g.LOCAL_URL
 }
 
+//build
+export const buildUrl = url + '/build';
+
 //material manage
 export const materialCountUrl = url + '/manage/material/count';
 export const materialEntityUrl = url + '/manage/material/getEntities';
@@ -15,6 +18,10 @@ export const addBoxUrl = url + '/manage/material/addBox';
 export const updateBoxUrl = url + '/manage/material/updateBox';
 export const exportReportUrl = url + '/manage/material/exportMaterialReport';
 export const getMaterialRecordsUrl = url + '/manage/material/getMaterialRecords';
+export const importReportUrl = url + '/manage/material/import';
+export const addBoxTypeUrl = url + '/manage/material/addBoxType';
+export const deleteBoxTypeUrl = url + '/manage/material/deleteBoxType';
+export const getBoxTypesUrl = url + '/manage/material/getBoxTypes';
 
 //logs
 export const logsUrl = url + '/log/select';
