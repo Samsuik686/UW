@@ -45,7 +45,7 @@
           <div class="card-body row">
             <div class="col pl-0">
               <span class="col-form-label">库存: </span>
-              <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+              <p class="card-text form-control">{{remainderQuantity}}</p>
             </div>
             <div class="col pr-0">
               <span class="col-form-label">历史已超发: </span>
@@ -241,10 +241,11 @@
           materialId: "",
           quantity: 0,
           initQuantity: 0,
-          productionTime:'',
+          productionTime: '',
         },
         materialOutRecords: [],
-        actualQuantity: 0
+        actualQuantity: 0,
+        remainderQuantity: 0
       }
     },
     mounted() {
@@ -259,13 +260,12 @@
         this.isCutting = false;
         this.setFocus();
       });
-
+      this.initData();
+      this.setFocus();
       if(this.editMaterialOutRecords !== []){
         this.materialOutRecords = this.editMaterialOutRecords;
         this.countActualQuantity();
       }
-      this.initData();
-      this.setFocus();
       this.fetchData(this.currentWindowId);
       this.setCurrentOprType('2');
       window.g.PARKING_ITEMS_INTERVAL_OUT.push(setInterval(() => {
@@ -279,11 +279,11 @@
     watch: {},
     computed: {
       ...mapGetters([
-        'currentWindowId', 'user', 'configData','editMaterialOutRecords'
+        'currentWindowId', 'user', 'configData', 'editMaterialOutRecords'
       ]),
     },
     methods: {
-      ...mapActions(['setCurrentOprType','setEditMaterialOutRecords']),
+      ...mapActions(['setCurrentOprType', 'setEditMaterialOutRecords']),
 
       initData: function () {
         this.taskNowItems = {};
@@ -309,7 +309,11 @@
                 if (this.compareArr(this.materialOutRecords, this.taskNowItems.details) === false) {
                   this.materialOutRecords = this.taskNowItems.details;
                   this.actualQuantity = this.taskNowItems.actualQuantity;
+                  this.remainderQuantity = this.taskNowItems.remainderQuantity;
                   this.setEditMaterialOutRecords(this.materialOutRecords);
+                } else {
+                  this.materialOutRecords = this.editMaterialOutRecords;
+                  this.countActualQuantity();
                 }
                 this.tipsMessage = "";
               } else {
@@ -529,7 +533,7 @@
           return;
         }
         this.isEditing = false;
-        let remainingQuantity  = thisData.initQuantity - thisData.quantity;
+        let remainingQuantity = thisData.initQuantity - thisData.quantity;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
           let item = this.materialOutRecords[i];
           if (item.materialId === thisData.materialId) {
@@ -542,7 +546,7 @@
         this.setFocus();
         this.printBarcode(thisData.materialId,remainingQuantity,thisData.productionTime);
       },
-      // 计算实际数量和统计超发数量
+      // 计算实际数量\统计超发数量\库存
       countActualQuantity: function () {
         let sum = 0;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
@@ -550,16 +554,16 @@
           sum = sum + item.quantity;
         }
         this.actualQuantity = sum;
+        this.remainderQuantity = this.taskNowItems.remainderQuantity - this.actualQuantity;
       },
       // 比较两个数组
       compareArr: function (materialOutRecords, details) {
         if (materialOutRecords.length !== details.length) {
           return false;
-        } else {
-          for (let i = 0; i < materialOutRecords.length; i++) {
-            if (materialOutRecords[i].materialId !== details[i].materialId) {
-              return false;
-            }
+        }
+        for (let i = 0; i < materialOutRecords.length; i++) {
+          if (materialOutRecords[i].materialId !== details[i].materialId) {
+            return false;
           }
         }
         return true;
@@ -583,19 +587,19 @@
         }
       },
       // 请求打印
-      printBarcode: function (materialId,remainingQuantity,productionTime) {
+      printBarcode: function (materialId, remainingQuantity, productionTime) {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
             url: window.g.PRINTER_URL,
             data: {
-              printerIP:this.configData.printerIP,
-              materialId:materialId,
-              materialNo:this.taskNowItems.materialNo,
+              printerIP: this.configData.printerIP,
+              materialId: materialId,
+              materialNo: this.taskNowItems.materialNo,
               remainingQuantity: remainingQuantity,
-              productDate:productionTime,
+              productDate: productionTime,
               user: this.user,
-              supplier:this.taskNowItems.supplierName
+              supplier: this.taskNowItems.supplierName
             }
           };
           axiosPost(options).then(response => {

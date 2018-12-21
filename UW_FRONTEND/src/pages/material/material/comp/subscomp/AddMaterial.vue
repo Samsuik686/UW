@@ -9,17 +9,20 @@
       <div class="form-row">
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-no" class="col-form-label">料号:</label>
-          <input type="text" id="material-no" class="form-control" v-model="thisData.no"  autocomplete="off">
+          <input type="text" id="material-no" class="form-control" v-model="thisData.no" autocomplete="off">
           <span class="form-span col"></span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-specification" class="col-form-label">规格:</label>
-          <input type="text" id="material-specification" class="form-control" v-model="thisData.specification"  autocomplete="off">
+          <input type="text" id="material-specification" class="form-control" v-model="thisData.specification"
+                 autocomplete="off">
           <span class="form-span col"></span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-supplier" class="col-form-label">供应商:</label>
-          <input type="text" id="material-supplier" class="form-control" v-model="thisData.supplier"  autocomplete="off">
+          <select id="material-supplier" v-model="thisData.supplier" class="custom-select">
+            <option  v-for="item in suppliers">{{item.name}}</option>
+          </select>
           <span class="form-span col"></span>
         </div>
       </div>
@@ -35,7 +38,7 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {materialAddUrl} from "../../../../../config/globalUrl";
+  import {materialAddUrl, supplierSelectUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
@@ -46,13 +49,15 @@
         thisData: {
           no: '',
           specification: '',
-          supplier:''
+          supplier: ''
         },
-        warningMsg: {
-
-        },
+        suppliers: [],
+        warningMsg: {},
         isPending: false
       }
+    },
+    created() {
+      this.selectSupplier();
     },
     methods: {
       closeAddPanel: function () {
@@ -92,6 +97,35 @@
           })
         }
       },
+      selectSupplier: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: supplierSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              let data = response.data.data.list;
+              data.map((item,index) => {
+                if(item.enabled === true){
+                  this.suppliers.push(item);
+                }
+              })
+            } else {
+              errHandler(response.data.result)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
+      },
       validate: function (type, regx, msg) {
         let reg = new RegExp(regx);
         if (!reg.test(this.thisData[type])) {
@@ -127,6 +161,7 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
+
   .form-span {
     display: block;
     height: 20px;
