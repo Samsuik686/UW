@@ -50,7 +50,6 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addTaskItem(List<AGVIOTaskItem> taskItems) {
 		appendTaskItems(taskItems);
-		taskItems.sort(new PriorityComparator());
 		List<byte[]> items = new ArrayList<>();
 		for (AGVIOTaskItem item : taskItems) {
 			items.add(Json.getJson().toJson(item).getBytes());
@@ -68,7 +67,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.UNASSIGNABLED || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)){
+			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)){
 				cache.lrem("til", 1, item);
 				i--;
 			}
@@ -172,6 +171,7 @@ public class TaskItemRedisDAO {
 		for (byte[] item : items) {
 			taskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
 		}
+		taskItems.sort(new PriorityComparator());
 		return taskItems;
 	} 
 

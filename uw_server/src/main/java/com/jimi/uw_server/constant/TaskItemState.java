@@ -9,7 +9,7 @@ package com.jimi.uw_server.constant;
 public class TaskItemState {
 
 	public static final int FINISH_CUT = -2;		// 已完成截料
-	public static final int UNASSIGNABLED = -1;		// 暂不可分配
+	public static final int WAIT_SCAN = -1;			// 等待扫码(呼叫叉车)
 	public static final int WAIT_ASSIGN = 0;		// 未分配拣料
 	public static final int ASSIGNED = 1;			// 已分配拣料
 	public static final int ARRIVED_WINDOW = 2;		// 已拣料到站

@@ -141,7 +141,7 @@ public class LSSLHandler {
 	private static void clearTil(String groupid) {
 		boolean isAllFinish = true;
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getTaskItems()) {
-			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != TaskItemState.FINISH_BACK) {
+			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && (item1.getState() != TaskItemState.FINISH_BACK || !item1.getIsForceFinish())) {
 				isAllFinish = false;
 			}
 		}

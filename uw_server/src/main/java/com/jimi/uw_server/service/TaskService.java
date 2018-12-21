@@ -149,17 +149,17 @@ public class TaskService {
 							return resultString;
 						}
 
-						// 根据料号找到对应的物料类型id
-						MaterialType noDao = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), supplierId);
+						// 根据料号找到对应的物料类型
+						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), supplierId);
 						// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
-						if (noDao == null) {
+						if (mType == null) {
 							deleteTempFileAndTaskRecords(file, newTaskId);
 							resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是供应商与料号对应不上！";
 							return resultString;
 						}
 
 						// 判断套料单中是否存在相同的料号
-						if (MaterialType.dao.find(GET_MATERIAL_TYPE_ID_SQL, noDao.getId(), newTaskId).size() > 0) {
+						if (MaterialType.dao.find(GET_MATERIAL_TYPE_ID_SQL, mType.getId(), newTaskId).size() > 0) {
 							deleteTempFileAndTaskRecords(file, newTaskId);
 							resultString = "创建任务失败，套料单表格第" + i + "行，料号为“" + item.getNo() + "”的物料在套料单中重复出现！";
 							return resultString;
@@ -168,7 +168,7 @@ public class TaskService {
 						PackingListItem packingListItem = new PackingListItem();
 
 						// 将任务条目插入套料单
-						Integer materialTypeId = noDao.getId();
+						Integer materialTypeId = mType.getId();
 						// 添加物料类型id
 						packingListItem.setMaterialTypeId(materialTypeId);
 						// 获取计划出库数量
@@ -232,7 +232,7 @@ public class TaskService {
 			// 如果任务类型为入库或退料入库，则将任务条目加载到redis中，将任务条目状态设置为不可分配
 			if (task.getType() == TaskType.IN  || task.getType() == TaskType.SEND_BACK) {
 				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item, TaskItemState.UNASSIGNABLED, task.getPriority());
+					AGVIOTaskItem a = new AGVIOTaskItem(item, TaskItemState.WAIT_SCAN, task.getPriority());
 					taskItems.add(a);
 				}
 			} else if (task.getType() == TaskType.OUT) {		// 如果任务类型为出库，则将任务条目加载到redis中，将任务条目状态设置为未分配
@@ -399,6 +399,10 @@ public class TaskService {
 	public Object getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
 		if (id != null) {
 			Window window = Window.dao.findById(id);
+			// 若任务执行完毕，仓口被解绑，如果操作员还未手动刷新页面，则前端会继续传递仓口id调用该接口，此时会报500，加上这个判断，可避免这个错误
+			if (window.getBindTaskId() == null) {
+				return null;
+			}
 			// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
 			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemVOs = new ArrayList<WindowTaskItemsVO>();
@@ -563,7 +567,7 @@ public class TaskService {
 				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, item.getId(), materialId);
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
-				if (quantity != material.getRemainderQuantity()) {
+				if (quantity < material.getRemainderQuantity()) {
 					TaskItemRedisDAO.updateTaskItemState(item, TaskItemState.FINISH_CUT);
 				}
 				// 修改物料实体表对应的料盘剩余数量

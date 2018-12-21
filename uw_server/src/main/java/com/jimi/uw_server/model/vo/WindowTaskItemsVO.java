@@ -68,8 +68,11 @@ public class WindowTaskItemsVO extends TaskLog {
 
 	public void setStateString(Integer state) {
 		switch (state) {
-		case TaskItemState.UNASSIGNABLED:
-			this.stateString = "不可分配";
+		case TaskItemState.FINISH_CUT:
+			this.stateString = "等待截料返库";
+			break;
+		case TaskItemState.WAIT_SCAN:
+			this.stateString = "等待扫码";
 			break;
 		case TaskItemState.WAIT_ASSIGN:
 			this.stateString = "未分配";	
