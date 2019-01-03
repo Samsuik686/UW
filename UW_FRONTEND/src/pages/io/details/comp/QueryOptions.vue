@@ -45,7 +45,8 @@
         windowsList: [],
         thisWindow: '',
         windowType: '',
-        isShow:false
+        isShow:false,
+        isForceFinish:'',
       }
     },
     created() {
@@ -77,7 +78,9 @@
 
     },
     mounted: function () {
-
+      eventBus.$on('getIsForceFinish',(isForceFinish) => {
+        this.isForceFinish = isForceFinish
+      })
       /**/
 
     },
@@ -163,7 +166,13 @@
         this.$router.push(tempPath)
       },
       initCutPanel:function(){
-        eventBus.$emit('initCutPanel',true);
+        if(this.isForceFinish === true){
+          eventBus.$emit('initCutPanel',true);
+        }else if(this.isForceFinish === false){
+          this.$alertWarning("叉车第一次将托盘运到仓口，不是截料后重新入库，不能进入截料后返库界面");
+        }else{
+          this.$alertWarning("叉车未到站，当前无拣料数据");
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 <template>
   <div>
     <options/>
-    <input type="text" title="scanner" id="call-check" v-model="scanText"
+    <input type="text" title="scanner" id="call-check" v-model.trim="scanText"
            @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
 
     <preview-details/>
@@ -43,7 +43,6 @@
         }
       },
       scannerHandler: function () {
-
         if (this.isPending === false) {
           this.isPending = true;
           if (this.scanText === '###JUMPTOIO###') {
@@ -58,7 +57,6 @@
                 id: this.currentWindowId,
                 no: tempArray[0]
               }
-
             };
             axiosPost(options).then(res => {
               if (res.data.result === 200) {
@@ -66,12 +64,12 @@
               } else {
                 this.$alertWarning(res.data.data)
               }
-              this.isPending = false;
               this.scanText = "";
+              this.isPending = false;
             }).catch(err => {
               if (JSON.stringify(err) !== '{}') {
+                this.$alertDanger(JSON.stringify(err));
                 this.isPending = false;
-                this.$alertDanger(JSON.stringify(err))
               }
             })
           }

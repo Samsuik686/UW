@@ -210,12 +210,12 @@
             } else {
               this.$alertWarning(res.data.data)
             }
-            this.isPending = false;
             this.scanText = "";
+            this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
-              this.isPending = false;
               this.scanText = "";
+              this.isPending = false;
               this.$alertDanger(JSON.stringify(err))
             }
           })
@@ -249,13 +249,13 @@
                 this.isTipsShow = false;
               }, 3000)
             }
-            this.isPending = false;
             this.scanText = "";
+            this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
-              this.isPending = false;
               this.scanText = "";
               this.$alertDanger(JSON.stringify(err))
+              this.isPending = false;
             }
           })
         }
@@ -275,13 +275,13 @@
             } else {
               this.$alertWarning(res.data.data)
             }
-            this.isPending = false;
             this.scanText = "";
+            this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
-              this.isPending = false;
               this.scanText = "";
               this.$alertDanger(JSON.stringify(err))
+              this.isPending = false;
             }
           })
         }

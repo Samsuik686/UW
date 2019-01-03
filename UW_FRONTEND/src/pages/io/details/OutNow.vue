@@ -306,6 +306,8 @@
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
+                let isForceFinish = this.taskNowItems.isForceFinish;
+                eventBus.$emit('getIsForceFinish',isForceFinish);
                 if (this.compareArr(this.materialOutRecords, this.taskNowItems.details) === false) {
                   this.materialOutRecords = this.taskNowItems.details;
                   this.actualQuantity = this.taskNowItems.actualQuantity;
