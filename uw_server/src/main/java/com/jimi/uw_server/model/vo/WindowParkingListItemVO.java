@@ -35,25 +35,11 @@ public class WindowParkingListItemVO extends TaskLog {
 	private String typeString;
 
 
-	public String getType(Integer type) {
-		if (type == TaskType.IN) {
-			typeString = "入库";
-		} else if (type == TaskType.OUT) {
-			typeString = "出库";
-		} else if (type == TaskType.COUNT) {
-			typeString = "盘点";
-		}  else if (type == TaskType.POSITION_OPTIZATION) {
-			typeString = "位置优化";
-		} else if (type == TaskType.SEND_BACK) {
-			typeString = "退料入库";
-		}
-		return typeString;
-	}
-
-	public WindowParkingListItemVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Integer materialTypeId) {
+	public WindowParkingListItemVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Integer materialTypeId, Boolean isForceFinish) {
 		this.set("id", packingListItemId);
 		this.set("fileName", fileName);
-		this.set("type", getType(type));
+		this.setTypeString(type);
+		this.set("type", getTypeString());
 		this.set("materialNo", materialNo);
 		this.set("planQuantity", planQuantity);
 		this.set("actualQuantity", actualQuantity);
@@ -63,6 +49,7 @@ public class WindowParkingListItemVO extends TaskLog {
 		this.set("remainderQuantity", getRemainderQuantity());
 		this.setSuperIssuedQuantity(materialTypeId);
 		this.set("superIssuedQuantity", getSuperIssuedQuantity());
+		this.set("isForceFinish", isForceFinish);
 	}
 
 	public List<?> getDetails() {
@@ -112,5 +99,35 @@ public class WindowParkingListItemVO extends TaskLog {
 			this.superIssuedQuantity = 0;
 		}
 	}
+
+
+	public String getTypeString() {
+		return typeString;
+	}
+
+
+	public void setTypeString(Integer type) {
+		switch (type) {
+		case TaskType.IN:
+			this.typeString = "入库";
+			break;
+		case TaskType.OUT:
+			this.typeString = "出库";
+			break;
+		case TaskType.COUNT:
+			this.typeString = "盘点";
+			break;
+		case TaskType.POSITION_OPTIZATION:
+			this.typeString = "位置优化";
+			break;
+		case TaskType.SEND_BACK:
+			this.typeString = "退料入库";
+			break;
+		default:
+			this.typeString = "错误类型";
+			break;
+		}
+	}
+
 
 }
