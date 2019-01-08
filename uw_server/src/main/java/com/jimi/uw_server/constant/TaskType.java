@@ -9,9 +9,13 @@ package com.jimi.uw_server.constant;
 public class TaskType {
 
 	public static final int IN = 0;						// 入库
+
 	public static final int OUT = 1;					// 出库
+
 	public static final int COUNT = 2;					// 盘点
+
 	public static final int POSITION_OPTIZATION = 3;	// 位置优化
+
 	public static final int SEND_BACK = 4;				// 退料入库
 
 }

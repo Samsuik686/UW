@@ -12,6 +12,7 @@ import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -78,10 +79,21 @@ public class MaterialController extends Controller {
 	}
 
 
-	// 更新料盒信息#
-	@Log("更新料盒号为{id}的料盒信息，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
-	public void updateBox(Integer id, Boolean enabled) {
-		String resultString = materialService.updateBox(id, enabled);
+	// 更新料盒在架情况#
+	@Log("更新料盒号为{id}的料盒在架情况，传递的isOnShelf值为：{isOnShelf}(0表示标记为不在架，1表示标记为在架)")
+	public void updateBox(Integer id, Boolean isOnShelf) {
+		if(materialService.updateBox(id, isOnShelf)) {
+			renderJson(ResultUtil.succeed());
+		}else {
+			renderJson(ResultUtil.failed());
+		}
+	}
+
+
+	// 更新料盒的启/禁用状态#
+	@Log("更新料盒号为{id}的料盒的启/禁用状态，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
+	public void deleteBox(Integer id, Boolean enabled) {
+		String resultString = materialService.deleteBox(id, enabled);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -95,17 +107,19 @@ public class MaterialController extends Controller {
 	}
 
 
-	public void exportMaterialReport() {
+	public void exportMaterialReport(Integer supplier) {
 		OutputStream output = null;
+		Supplier s = Supplier.dao.findById(supplier);
+		String supplierName = s.getName();
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "MaterialReport.xlsx";
+			String fileName = supplierName + "Reports.xlsx";
 			HttpServletResponse response = getResponse();
 			response.reset();
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String((fileName).getBytes("utf-8"), "utf-8"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			materialService.exportMaterialReport(fileName, output);
+			materialService.exportMaterialReport(supplier, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {

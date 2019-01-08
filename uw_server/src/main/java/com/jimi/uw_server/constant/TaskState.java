@@ -9,9 +9,13 @@ package com.jimi.uw_server.constant;
 public class TaskState {
 
 	public static final int WAIT_REVIEW = 0;		// 未审核
+
 	public static final int WAIT_START = 1;			// 未开始
+
 	public static final int PROCESSING = 2;			// 进行中
+
 	public static final int FINISHED = 3;			// 已完成
+
 	public static final int CANCELED = 4;			// 已作废
 
 }

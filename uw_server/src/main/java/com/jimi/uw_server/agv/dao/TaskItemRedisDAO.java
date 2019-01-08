@@ -69,7 +69,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.UNASSIGNABLED || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN)){
+			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN)){
 				cache.lrem("til", 1, item);
 				i--;
 			}
@@ -173,6 +173,7 @@ public class TaskItemRedisDAO {
 		for (byte[] item : items) {
 			ioTaskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
 		}
+		ioTaskItems.sort(new PriorityComparator());
 		return ioTaskItems;
 	} 
 

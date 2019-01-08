@@ -102,7 +102,7 @@ public class IOHandler {
 					//更改taskitems里对应item状态为2（已拣料到站）***
 					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.ARRIVED_WINDOW);
 					break;
-				}else if(item.getState() == IOTaskItemState.START_BACK) {//SL执行完成时：
+				} else if(item.getState() == IOTaskItemState.START_BACK) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
 					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_BACK);
 
@@ -113,7 +113,7 @@ public class IOHandler {
 					nextRound(item);
 
 					clearTil(groupid);
-				}else if(item.getState() == IOTaskItemState.FINISH_CUT) {
+				} else if(item.getState() == IOTaskItemState.FINISH_CUT) {
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 					setMaterialBoxIsOnShelf(materialBox, true);
@@ -124,14 +124,21 @@ public class IOHandler {
 
 
 	private static void nextRound(AGVIOTaskItem item) {
-		// 如果是出库任务，若计划出库数量小于实际出库数量，则将任务条目状态回滚到未分配状态
-		if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
-			if (!item.getIsForceFinish()) {
+		// 获取任务类型
+		Integer taskType = Task.dao.findById(item.getTaskId()).getType();
+		// 判断实际出入库数量是否不满足计划数
+		if (!item.getIsForceFinish()) {
+			// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
+			if (taskType == TaskType.OUT) {
 				TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_ASSIGN);
 				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
+			} else {	// 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
+				TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_SCAN);
+				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
+				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 			}
-		}
+		}	
 	}
 
 
@@ -142,7 +149,7 @@ public class IOHandler {
 	private static void clearTil(String groupid) {
 		boolean isAllFinish = true;
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
-			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && item1.getState() != IOTaskItemState.FINISH_BACK) {
+			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && (item1.getState() != IOTaskItemState.FINISH_BACK || !item1.getIsForceFinish())) {
 				isAllFinish = false;
 			}
 		}

@@ -55,15 +55,13 @@ public class MaterialService extends SelectService{
 
 	private	static final String GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL = "FROM material WHERE type = ? and box = ?";
 
-	private static final String GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND enabled = 1";
+	private static final String GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
-	private static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE area = ? AND row = ? AND col = ? AND height = ? AND enabled = 1";
+	private static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE area = ? AND row = ? AND col = ? AND height = ? AND is_on_shelf = ? AND enabled = 1";
 
 	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE material_id IN (SELECT id FROM material WHERE material.type = ?) GROUP BY packing_list_item_id ORDER BY task_log.time";
 
-	public static final String GET_TASK_LOGS_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? ORDER BY task_log.time";
-
-	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
+	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
 	public static final String GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 
@@ -118,20 +116,20 @@ public class MaterialService extends SelectService{
 
 	public String addType(String no, String specification, String supplierName, Integer thickness, Integer radius) {
 		String resultString = "添加成功！";
-		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no).size() != 0) {
-			resultString = "该物料已存在，请不要添加重复的料号！";
-			return resultString;
-		}
-		if (no.contains("!") || no.contains("$")) {
-			resultString = "请勿往料号中添加非法字符，如“!”或“$”！";
-			return resultString;
-		}
 		Integer supplier;
 		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
 		if (s != null) {
 			supplier = s.getId();
 		} else {
 			resultString = "新增物料失败，请填写正确的供应商名或将新增对应的供应商！";
+			return resultString;
+		}
+		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no, supplier).size() != 0) {
+			resultString = "该物料类型已存在，请勿重复添加！";
+			return resultString;
+		}
+		if (no.contains("!") || no.contains("$")) {
+			resultString = "请勿往料号中添加非法字符，如“!”或“$”！";
 			return resultString;
 		}
 		MaterialType materialType = new MaterialType();
@@ -229,7 +227,14 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public String updateBox(Integer id, Boolean enabled) {
+	public Boolean updateBox(Integer id, Boolean isOnShelf) {
+		MaterialBox materialBox = MaterialBox.dao.findById(id);
+		materialBox.setIsOnShelf(isOnShelf);
+		return materialBox.update();
+	}
+
+
+	public String deleteBox(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		if (!enabled) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_BOX_SQL, id);
@@ -296,8 +301,8 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public void exportMaterialReport(String fileName, OutputStream output) throws IOException {
-		List<Record> materialRecord = Db.find(GET_MATERIAL_REPORT_SQL);
+	public void exportMaterialReport(Integer supplier, String fileName, OutputStream output) throws IOException {
+		List<Record> materialRecord = Db.find(GET_MATERIAL_REPORT_SQL, supplier);
 		String[] field = null;
 		String[] head = null;
 		field = new String[] { "id", "no", "specification", "box", "row", "col", "height", "quantity"};

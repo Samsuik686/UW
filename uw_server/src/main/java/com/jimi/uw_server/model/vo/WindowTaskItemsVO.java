@@ -22,25 +22,11 @@ public class WindowTaskItemsVO extends TaskLog {
 	private String stateString;
 
 
-	public String getType(Integer type) {
-		if (type == TaskType.IN) {
-			typeString = "入库";
-		} else if (type == TaskType.OUT) {
-			typeString = "出库";
-		} else if (type == TaskType.COUNT) {
-			typeString = "盘点";
-		} else if (type == TaskType.POSITION_OPTIZATION) {
-			typeString = "位置优化";
-		} else if (type == TaskType.SEND_BACK) {
-			typeString = "退料入库";
-		}
-		return typeString;
-	}
-
 	public WindowTaskItemsVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime, Integer state) {
 		this.set("id", packingListItemId);
 		this.set("fileName", fileName);
-		this.set("type", getType(type));
+		this.setTypeString(type);
+		this.set("type", getTypeString());
 		this.set("materialNo", materialNo);
 		this.set("planQuantity", planQuantity);
 		this.set("actualQuantity", actualQuantity);
@@ -54,25 +40,32 @@ public class WindowTaskItemsVO extends TaskLog {
 		this.set("stateString", getStateString());
 	}
 
+
 	public List<?> getDetails() {
 		return details;
 	}
+
 
 	public void setDetails(List<?> details) {
 		this.set("details", details);
 	}
 
+
 	public String getStateString() {
 		return stateString;
 	}
 
+
 	public void setStateString(Integer state) {
 		switch (state) {
-		case IOTaskItemState.UNASSIGNABLED:
-			this.stateString = "不可分配";
+		case IOTaskItemState.FINISH_CUT:
+			this.stateString = "等待截料返库";
+			break;
+		case IOTaskItemState.WAIT_SCAN:
+			this.stateString = "等待扫码";
 			break;
 		case IOTaskItemState.WAIT_ASSIGN:
-			this.stateString = "未分配";	
+			this.stateString = "未分配给叉车";	
 			break;
 		case IOTaskItemState.ASSIGNED:
 			this.stateString = "已分配拣料";
@@ -91,5 +84,35 @@ public class WindowTaskItemsVO extends TaskLog {
 			break;
 		}
 	}
+
+
+	public String getTypeString() {
+		return typeString;
+	}
+
+
+	public void setTypeString(Integer type) {
+		switch (type) {
+		case TaskType.IN:
+			this.typeString = "入库";
+			break;
+		case TaskType.OUT:
+			this.typeString = "出库";
+			break;
+		case TaskType.COUNT:
+			this.typeString = "盘点";
+			break;
+		case TaskType.POSITION_OPTIZATION:
+			this.typeString = "位置优化";
+			break;
+		case TaskType.SEND_BACK:
+			this.typeString = "退料入库";
+			break;
+		default:
+			this.typeString = "错误类型";
+			break;
+		}
+	}
+
 
 }
