@@ -214,7 +214,7 @@
               if (index === 0) {
                 this.queryString += (item.id + "=" + _.trim(item.model))
               } else {
-                this.queryString += ("&" + item.id + "=" + _.trim(item.model))
+                this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
               }
 
             } else {

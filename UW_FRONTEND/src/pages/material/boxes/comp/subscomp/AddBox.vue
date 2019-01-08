@@ -65,7 +65,6 @@
           cellWidth:''
         },
         warningMsg: {
-
         },
         isPending: false
       }
@@ -138,7 +137,6 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 1001;
   }
-
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;

@@ -45,7 +45,7 @@
           <div class="card-body row">
             <div class="col pl-0">
               <span class="col-form-label">库存: </span>
-              <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+              <p class="card-text form-control">{{remainderQuantity}}</p>
             </div>
             <div class="col pr-0">
               <span class="col-form-label">历史已超发: </span>
@@ -244,7 +244,8 @@
           productionTime: '',
         },
         materialOutRecords: [],
-        actualQuantity: 0
+        actualQuantity: 0,
+        remainderQuantity: 0
       }
     },
     mounted() {
@@ -259,13 +260,12 @@
         this.isCutting = false;
         this.setFocus();
       });
-
-      if (this.editMaterialOutRecords !== []) {
+      this.initData();
+      this.setFocus();
+      if(this.editMaterialOutRecords !== []){
         this.materialOutRecords = this.editMaterialOutRecords;
         this.countActualQuantity();
       }
-      this.initData();
-      this.setFocus();
       this.fetchData(this.currentWindowId);
       this.setCurrentOprType('2');
       window.g.PARKING_ITEMS_INTERVAL_OUT.push(setInterval(() => {
@@ -306,10 +306,16 @@
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
+                let isForceFinish = this.taskNowItems.isForceFinish;
+                eventBus.$emit('getIsForceFinish',isForceFinish);
                 if (this.compareArr(this.materialOutRecords, this.taskNowItems.details) === false) {
                   this.materialOutRecords = this.taskNowItems.details;
                   this.actualQuantity = this.taskNowItems.actualQuantity;
+                  this.remainderQuantity = this.taskNowItems.remainderQuantity;
                   this.setEditMaterialOutRecords(this.materialOutRecords);
+                } else {
+                  this.materialOutRecords = this.editMaterialOutRecords;
+                  this.countActualQuantity();
                 }
                 this.tipsMessage = "";
               } else {
@@ -524,6 +530,10 @@
       },
       // 获取修改的数据
       getEditData: function (thisData) {
+        if(this.configData.printerIP === ""){
+          this.$alertWarning("请在设置界面填写打印机IP");
+          return;
+        }
         this.isEditing = false;
         let remainingQuantity = thisData.initQuantity - thisData.quantity;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
@@ -538,7 +548,7 @@
         this.setFocus();
         this.printBarcode(thisData.materialId, remainingQuantity, thisData.productionTime);
       },
-      // 计算实际数量和统计超发数量
+      // 计算实际数量\统计超发数量\库存
       countActualQuantity: function () {
         let sum = 0;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
@@ -546,16 +556,16 @@
           sum = sum + item.quantity;
         }
         this.actualQuantity = sum;
+        this.remainderQuantity = this.taskNowItems.remainderQuantity - this.actualQuantity;
       },
       // 比较两个数组
       compareArr: function (materialOutRecords, details) {
         if (materialOutRecords.length !== details.length) {
           return false;
-        } else {
-          for (let i = 0; i < materialOutRecords.length; i++) {
-            if (materialOutRecords[i].materialId !== details[i].materialId) {
-              return false;
-            }
+        }
+        for (let i = 0; i < materialOutRecords.length; i++) {
+          if (materialOutRecords[i].materialId !== details[i].materialId) {
+            return false;
           }
         }
         return true;

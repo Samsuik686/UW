@@ -16,7 +16,7 @@
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增物料</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="exportReport">导出物料列表</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isExporting = !isExporting">导出物料列表</a>
       </div>
       <div class="form-group row align-items-end">
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="isUploading = !isUploading">导入物料类型表</a>
@@ -32,6 +32,31 @@
         <upload-material/>
       </div>
     </transition>
+    <transition name="fade">
+      <div v-if="isExporting">
+        <div class="add-panel">
+          <div class="add-panel-container form-row flex-column justify-content-between">
+            <div class="form-row">
+              <div class="form-group mb-0">
+                <h4>导出物料报表：</h4>
+              </div>
+            </div>
+            <div class="form-row">
+                <label for="material-supplier" class="col-form-label">供应商:</label>
+                <select id="material-supplier" v-model="supplier" class="custom-select">
+                  <option  v-for="item in suppliers" :value="item.id" :key="item.id">{{item.name}}</option>
+                </select>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="form-row justify-content-around">
+              <button class="btn btn-secondary col mr-1 text-white" @click="isExporting = false">取消</button>
+              <button class="btn btn-primary col ml-1 text-white" @click="exportReport">提交</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -40,10 +65,10 @@
   import UploadMaterial from './subscomp/UploadMaterial'
   import eventBus from '@/utils/eventBus'
   import {mapGetters, mapActions} from 'vuex';
-  import {materialCountUrl, exportReportUrl} from "../../../../config/globalUrl";
+  import {materialCountUrl, exportReportUrl, supplierSelectUrl} from "../../../../config/globalUrl";
   import 'vue-datetime/dist/vue-datetime.css'
   import _ from 'lodash'
-  import {downloadFile} from "../../../../utils/fetchData";
+  import {axiosPost, downloadFile} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
 
   export default {
@@ -78,9 +103,12 @@
         ],
         copyQueryOptions: [],
         queryString: "",
+        supplier:'',
+        suppliers:[],
         isAdding: false,
         isPending: false,
-        isUploading:false
+        isUploading:false,
+        isExporting:false
       }
     },
     mounted: function () {
@@ -91,6 +119,7 @@
       eventBus.$on('closeUploadPanel', () => {
         this.isUploading = false;
       })
+      this.selectSupplier();
     },
     computed: {
       ...mapGetters([
@@ -153,6 +182,7 @@
         if (!this.isPending) {
           this.isPending = true;
           let data = {
+            supplier:this.supplier,
             '#TOKEN#': this.$store.state.token
           };
           downloadFile(exportReportUrl, data);
@@ -166,10 +196,40 @@
             }
           }, 1000);
           this.$alertSuccess('请求成功，请等待下载');
+          this.isExporting = false;
         } else {
           this.$alertInfo('请稍后再试')
         }
-      }
+      },
+      selectSupplier: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: supplierSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              let data = response.data.data.list;
+              data.map((item,index) => {
+                if(item.enabled === true){
+                  this.suppliers.push(item);
+                }
+              })
+            } else {
+              errHandler(response.data.result)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
+      },
     }
   }
 </script>
@@ -192,5 +252,27 @@
 
   .fade-enter, .fade-leave-to {
     opacity: 0;
+  }
+  .add-panel {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+  }
+
+  .add-panel-container {
+    background: #ffffff;
+    min-height: 220px;
+    max-width: 600px;
+    z-index: 1002;
+    border-radius: 10px;
+    box-shadow: 3px 3px 20px 1px #bbb;
+    padding: 30px 60px 10px 60px;
   }
 </style>

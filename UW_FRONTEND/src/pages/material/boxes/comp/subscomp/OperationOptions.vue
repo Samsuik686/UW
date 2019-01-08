@@ -3,10 +3,16 @@
     <div class="btn pl-1 pr-1" title="详细" @click="checkMaterialDetails(row)">
       <icon name="list" scale="1.8"></icon>
     </div>
+    <div class="btn pl-1 pr-1" title="更新料盒在架情况" @click="isEditing = true">
+      <icon name="edit" scale="1.8"></icon>
+    </div>
     <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)">
       <icon name="cancel" scale="1.8"></icon>
     </div>
 
+    <div v-if="isEditing" id="edit-window">
+      <edit-box :editData="row"/>
+    </div>
 
     <div v-if="isDeleting" id="delete-window">
       <div class="delete-panel">
@@ -33,21 +39,31 @@
 </template>
 
 <script>
+  import EditBox from './EditBox'
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
-  import {updateBoxUrl} from "../../../../../config/globalUrl";
+  import {deleteBoxUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
   export default {
     name: "OperationOptions",
     props: ['row'],
+    components: {
+      EditBox
+    },
     data() {
       return {
+        isEditing:false,
         isDeleting: false,
         rowData: {},
         isPending: false
       }
+    },
+    mounted() {
+      eventBus.$on('closeEditPanel', () => {
+        this.isEditing = false;
+      })
     },
     computed: {
       //...mapGetters['isDetailsActive']
@@ -70,7 +86,7 @@
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url: updateBoxUrl,
+            url: deleteBoxUrl,
             data: {
               id: this.rowData.id,
               enabled: 0
@@ -135,6 +151,7 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
+
 
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
