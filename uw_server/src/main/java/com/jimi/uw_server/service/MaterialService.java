@@ -430,6 +430,7 @@ public class MaterialService extends SelectService{
 						materialType.setThickness(item.getThickness());
 						materialType.setRadius(item.getRadius());
 						materialType.setEnabled(true);
+						materialType.setSupplier(supplier);
 						materialType.save();
 						
 						i++;

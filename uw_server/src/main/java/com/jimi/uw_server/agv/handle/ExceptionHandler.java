@@ -3,6 +3,7 @@ package com.jimi.uw_server.agv.handle;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.cmd.AGVLoadExceptionCmd;
 
@@ -13,31 +14,32 @@ import com.jimi.uw_server.agv.entity.cmd.AGVLoadExceptionCmd;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class ExceptionHandler {
-
-//	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-	
 	
 	public static void handleLoadException(String message) {
-		
+
 		AGVLoadExceptionCmd loadExceptionCmd = Json.getJson().parse(message, AGVLoadExceptionCmd.class);
 		String groupid = loadExceptionCmd.getMissiongroupid();
-		for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
-			if(item.getGroupId().equals(groupid)) {
-//				//把物料设置为在架
-//				MaterialType materialType = MaterialType.dao.findById(item.getMaterialTypeId());
-//				materialType.setIsOnShelf(true);
-//				materialService.update(materialType);
-//				
-//				//把负载异常的条目回滚到状态0
-//				TaskItemRedisDAO.updateTaskItemState(item, 0);
-				
-				//把指定叉车的取空异常置为真
-				 RobotInfoRedisDAO.setloadException(item.getRobotId());
-				
-				break;
+		// missiongroupid 包含“:”表示为出入库任务
+		if (groupid.contains(":")) {
+			for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
+				if(item.getGroupId().equals(groupid)) {
+					//把指定叉车的取空异常置为真
+					RobotInfoRedisDAO.setloadException(item.getRobotId());
+
+					break;
+				}
+			}
+		} else {	// missiongroupid 不包含“:”表示为建仓任务
+			for(AGVBuildTaskItem item1 : TaskItemRedisDAO.getBuildTaskItems()) {
+				if(item1.getGroupId().equals(groupid)) {
+					//把指定叉车的取空异常置为真
+					RobotInfoRedisDAO.setloadException(item1.getRobotId());
+
+					break;
+				}
 			}
 		}
-		
+
 	}
 	
 }
