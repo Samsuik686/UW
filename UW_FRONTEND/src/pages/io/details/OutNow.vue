@@ -346,15 +346,17 @@
       },
       /*扫码集中处理*/
       scannerHandler: function () {
+        let scanText = this.scanText;
+        this.scanText = '';
         /*若扫描结果为叉车返回的页面二维码，则调用叉车回库*/
-        if (this.scanText === "###finished###") {
+        if (scanText === "###finished###") {
           this.checkOverQuantity()
-        } else if (this.scanText === "###JUMPTOCALL###") {
+        } else if (scanText === "###JUMPTOCALL###") {
           this.$router.push('/io/preview')
         } else {
           /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
           /*对比料号是否一致*/
-          let tempArray = this.scanText.split("@");
+          let tempArray = scanText.split("@");
           if (tempArray[0] !== this.taskNowItems.materialNo) {
             this.failAudioPlay();
             this.isTipsShow = true;
@@ -362,7 +364,6 @@
             setTimeout(() => {
               this.isTipsShow = false;
             }, 3000);
-            this.scanText = "";
             return;
           } else {
             let options = {
@@ -393,7 +394,6 @@
           }
 
         }
-        this.scanText = "";
       },
       setBack: function () {
         if (!this.isPending) {

@@ -43,14 +43,15 @@
         }
       },
       scannerHandler: function () {
+        let scanText = this.scanText;
+        this.scanText = "";
         if (this.isPending === false) {
           this.isPending = true;
-          if (this.scanText === '###JUMPTOIO###') {
-            this.scanText = "";
+          if (scanText === '###JUMPTOIO###') {
             this.isPending = false;
             this.$router.push('/io/innow')
           } else {
-            let tempArray = this.scanText.split("@");
+            let tempArray = scanText.split("@");
             let options = {
               url: robotCallUrl,
               data: {
@@ -64,7 +65,6 @@
               } else {
                 this.$alertWarning(res.data.data)
               }
-              this.scanText = "";
               this.isPending = false;
             }).catch(err => {
               if (JSON.stringify(err) !== '{}') {
