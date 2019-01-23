@@ -16,18 +16,12 @@
         <global-tips :message="tipsComponentMsg" v-if="isTipsShow"/>
         <input type="text" title="scanner" id="cut-check" v-model="scanText"
                @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
+        <h4>
+          截料入库：请扫描料盘二维码，并将剩余的物料放回料盒
+        </h4>
 
-        <div class="btn-step">
-          <button class="btn" :class="{'btn-primary':!option}" @click="option = false">呼叫叉车</button>
-          <div id="vertical-divider" class="ml-3 mr-3"></div>
-          <button class="btn" :class="{'btn-primary':option}" @click="option = true">物料返库</button>
-        </div>
-        <div class="dropdown-divider"></div>
         <div class="option-step">
-          <div class="mt-1 mb-3" v-if="!option">
-            <p class="d-block text-center mt-5">{{tipsMessage}}</p>
-          </div>
-          <div class="mt-1 mb-3" v-else-if="option === true && messageTip !== ''">
+          <div class="mt-1 mb-3" v-if="messageTip !== ''">
             <p class="d-block text-center mt-5">{{messageTip}}</p>
           </div>
           <div v-else>
@@ -53,7 +47,7 @@
                     <p class="card-text form-control">{{taskNowItems.actualQuantity}}</p>
                   </div>
                 </div>
-                <div class="card-body row">
+                <!--<div class="card-body row">
                   <div class="col pl-0">
                     <span class="col-form-label">库存: </span>
                     <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
@@ -62,8 +56,12 @@
                     <span class="col-form-label">历史已超发: </span>
                     <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
                   </div>
-                </div>
+                </div>-->
                 <div class="card-body row">
+                  <div class="col pl-0">
+                    <span class="col-form-label">库存: </span>
+                    <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+                  </div>
                   <div class="col pr-0 pl-0">
                     <span class="col-form-label">本次缺发数量/超发数量:</span>
                     <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
@@ -86,10 +84,16 @@
                     <span class="text-center col-form-label">料盘: </span>
                   </div>
                   <div class="col">
-                    <span class="card-text text-center">数量: </span>
+                    <span class="card-text text-center">出库数量: </span>
+                  </div>
+                  <div class="col">
+                    <span class="card-text text-center">剩余数量: </span>
                   </div>
                   <div class="col">
                     <span class="card-text text-center">生产日期: </span>
+                  </div>
+                  <div class="col">
+                    <span class="card-text text-center">是否在盒内: </span>
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
@@ -101,7 +105,13 @@
                     <p class="card-text">{{item.quantity}}</p>
                   </div>
                   <div class="col pl-4">
+                    <p class="card-text">{{item.remainderQuantity}}</p>
+                  </div>
+                  <div class="col pl-4">
                     <p class="card-text">{{item.productionTime}}</p>
+                  </div>
+                  <div class="col pl-4">
+                    <p class="card-text">{{item.isInBoxString}}</p>
                   </div>
                 </div>
               </div>
@@ -120,19 +130,22 @@
   import eventBus from "../../../../utils/eventBus";
   import GlobalTips from "./GlobalTips";
   import Options from "../../../logs/details/comp/QueryOptions";
-  import {robotBackUrl, robotCallUrl, taskBackAfterCuttingUrl} from "../../../../config/globalUrl";
+  import {robotBackUrl,taskBackAfterCuttingUrl} from "../../../../config/globalUrl";
   import {axiosPost} from "../../../../utils/fetchData";
 
   export default {
     name: "CutNow",
-    props: ['item', 'currentWindowId', "messageTip"],
+    props: {
+      item: Object,
+      currentWindowId: Number,
+      messageTip: String
+    },
     data() {
       return {
         isPending: false,
         tipsComponentMsg: '',
         isTipsShow: false,
         scanText: '',
-        tipsMessage: '请扫描料盘呼叫叉车',
         isSetFocus: false,
         option: false,
       }
@@ -162,79 +175,49 @@
       },
       scannerHandler: function () {
         /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
-        let tempArray = this.scanText.split("@");
-        if (!this.option) {
-          this.robotCall(tempArray[0]);
-        } else {
-          if (this.scanText === "###finished###") {
-            this.robotBack();
-          } else {
-            if (tempArray[0] !== this.taskNowItems.materialNo) {
-              this.failAudioPlay();
-              this.isTipsShow = true;
-              this.tipsComponentMsg = false;
-              setTimeout(() => {
-                this.isTipsShow = false;
-              }, 3000);
-              this.scanText = "";
-              return;
-            } else {
-              this.backAfterCutting(tempArray[2]);
-            }
-          }
+        let scanText = this.scanText;
+        this.scanText = "";
+        let tempArray = scanText.split("@");
+        if (scanText === "###finished###") {
+          this.robotBack();
+          return;
         }
+        if(tempArray[0] !== this.taskNowItems.materialNo){
+          this.failAudioPlay();
+          this.isTipsShow = true;
+          this.tipsComponentMsg = false;
+          setTimeout(() => {
+            this.isTipsShow = false;
+          }, 3000);
+          return;
+        }
+        this.backAfterCutting(tempArray[2],tempArray[1]);
       },
       overQuantity: function (plan, actual) {
         let overQty = plan - actual;
         if (plan > actual) {
-          return ("欠入库数量: " + Math.abs(overQty)).toString();
+          return ("缺发数量: " + Math.abs(overQty)).toString();
         } else if (plan < actual) {
-          return ("超入库数量: " + Math.abs(overQty)).toString();
+          return ("超发数量: " + Math.abs(overQty)).toString();
         } else {
           return "--"
         }
       },
-      robotCall: function (materialNo) {
-        if (!this.isPending) {
-          this.isPending = true;
-          let options = {
-            url: robotCallUrl,
-            data: {
-              id: this.currentWindowId,
-              no: materialNo
-            }
-          };
-          axiosPost(options).then(res => {
-            if (res.data.result === 200) {
-              this.$alertSuccess("调用成功");
-            } else {
-              this.$alertWarning(res.data.data)
-            }
-            this.scanText = "";
-            this.isPending = false;
-          }).catch(err => {
-            if (JSON.stringify(err) !== '{}') {
-              this.scanText = "";
-              this.isPending = false;
-              this.$alertDanger(JSON.stringify(err))
-            }
-          })
-        }
-      },
-      backAfterCutting: function (materialId) {
+      backAfterCutting: function (materialId, quantity) {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
             url: taskBackAfterCuttingUrl,
             data: {
               packingListItemId: this.taskNowItems.id,
-              materialId: materialId
+              materialId: materialId,
+              quantity: quantity
             }
           };
           axiosPost(options).then(res => {
             if (res.data.result === 200) {
               this.successAudioPlay();
-              this.$alertSuccess("操作成功");
+              this.$alertSuccess("操作成功，请将料盒放回料盒");
               this.isTipsShow = true;
               this.tipsComponentMsg = true;
               setTimeout(() => {
@@ -249,12 +232,10 @@
                 this.isTipsShow = false;
               }, 3000)
             }
-            this.scanText = "";
             this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
-              this.scanText = "";
-              this.$alertDanger(JSON.stringify(err))
+              this.$alertDanger(JSON.stringify(err));
               this.isPending = false;
             }
           })
@@ -275,12 +256,10 @@
             } else {
               this.$alertWarning(res.data.data)
             }
-            this.scanText = "";
             this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
-              this.scanText = "";
-              this.$alertDanger(JSON.stringify(err))
+              this.$alertDanger(JSON.stringify(err));
               this.isPending = false;
             }
           })
@@ -304,13 +283,14 @@
           }
         }
       },
-    },
+    }
+    ,
   }
 </script>
 
 <style scoped>
   .cut-panel {
-    position: fixed;
+    position:fixed;
     width: 100%;
     height: 100%;
     display: flex;
@@ -354,7 +334,7 @@
     border-left: 1px solid #e9ecef;
   }
 
- #cut-check {
+  #cut-check {
     position: fixed;
     opacity: 0;
     height: 0;

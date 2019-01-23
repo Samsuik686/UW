@@ -19,92 +19,101 @@
     <div class="io-now mt-1 mb-3" v-if="tipsMessage !==''">
       <p class="d-block text-center mt-5">{{tipsMessage}}</p>
     </div>
-    <div class="io-now mt-1 mb-3" v-else>
-      <div class="row m-3 align-content-start">
-        <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2">
-          <div class="card-body row">
-            <span class="col-form-label">任务: </span>
-            <p class="card-text form-control">{{taskNowItems.fileName}}</p>
-            <span class="col-form-label">料号: </span>
-            <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
-            <span class="col-form-label">类型: </span>
-            <p class="card-text form-control">{{taskNowItems.type}}</p>
-            <span class="col-form-label">供应商: </span>
-            <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
+    <div v-else>
+      <div class="io-now mt-1 mb-3" v-if="!taskNowItems.isForceFinish">
+        <div class="row m-3 align-content-start">
+          <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2">
+            <div class="card-body row">
+              <span class="col-form-label">任务: </span>
+              <p class="card-text form-control">{{taskNowItems.fileName}}</p>
+              <span class="col-form-label">料号: </span>
+              <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
+              <span class="col-form-label">类型: </span>
+              <p class="card-text form-control">{{taskNowItems.type}}</p>
+              <span class="col-form-label">供应商: </span>
+              <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
+            </div>
+            <div class="card-body row">
+              <div class="col pl-0">
+                <span class="col-form-label">计划: </span>
+                <p class="card-text form-control">{{taskNowItems.planQuantity}}</p>
+              </div>
+              <div class="col pr-0">
+                <span class="col-form-label">实际: </span>
+                <p class="card-text form-control">{{actualQuantity}}</p>
+              </div>
+            </div>
+            <!--<div class="card-body row">
+              <div class="col pl-0">
+                <span class="col-form-label">库存: </span>
+                <p class="card-text form-control">{{remainderQuantity}}</p>
+              </div>
+              <div class="col pr-0">
+                <span class="col-form-label">历史已超发: </span>
+                <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
+              </div>
+            </div>-->
+            <div class="card-body row">
+              <div class="col pl-0">
+                <span class="col-form-label">库存: </span>
+                <p class="card-text form-control">{{remainderQuantity}}</p>
+              </div>
+              <div class="col pr-0 pl-0">
+                <span class="col-form-label">本次缺发数量/超发数量: </span>
+                <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
+                  actualQuantity)}}</p>
+              </div>
+            </div>
           </div>
-          <div class="card-body row">
-            <div class="col pl-0">
-              <span class="col-form-label">计划: </span>
-              <p class="card-text form-control">{{taskNowItems.planQuantity}}</p>
+          <div class="card bg-light col-12 col-lg-5 col-xl-3 m-2">
+            <div class="border-light row ml-auto mr-auto mt-4">
+              <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
             </div>
-            <div class="col pr-0">
-              <span class="col-form-label">实际: </span>
-              <p class="card-text form-control">{{actualQuantity}}</p>
-            </div>
-          </div>
-          <div class="card-body row">
-            <div class="col pl-0">
-              <span class="col-form-label">库存: </span>
-              <p class="card-text form-control">{{remainderQuantity}}</p>
-            </div>
-            <div class="col pr-0">
-              <span class="col-form-label">历史已超发: </span>
-              <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
-            </div>
-          </div>
-          <div class="card-body row">
-            <div class="col pr-0 pl-0">
-              <span class="col-form-label">本次缺发数量/超发数量: </span>
-              <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,
-                actualQuantity)}}</p>
-            </div>
+            <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
+            <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
           </div>
         </div>
-        <div class="card bg-light col-12 col-lg-5 col-xl-3 m-2">
-          <div class="border-light row ml-auto mr-auto mt-4">
-            <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
+        <div class="row m-3">
+          <div class="card bg-light col-12 col-xl-9 ml-2">
+            <div class="row card-body mb-0 pb-1">
+              <div class="col">
+                <span class="text-center col-form-label">料盘: </span>
+              </div>
+              <div class="col">
+                <span class="card-text text-center">数量: </span>
+              </div>
+              <div class="col">
+                <span class="card-text text-center">生产日期: </span>
+              </div>
+              <div class="col">
+                <span class="card-text text-center">操作: </span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="row card-body" v-for="item in materialOutRecords">
+              <div class="col pl-4">
+                <p class="card-text">{{item.materialId}}</p>
+              </div>
+              <div class="col pl-4">
+                <p class="card-text">{{item.quantity}}</p>
+              </div>
+              <div class="col pl-4">
+                <p class="card-text">{{item.productionTime}}</p>
+              </div>
+              <div class="col pl-4">
+                <div class="btn pl-1 pr-1" title="修改出库数" @click="confirmEdit(item)">
+                  <icon name="edit" scale="1.8"></icon>
+                </div>
+                <div class="btn pl-1 pr-1" title="删除" @click="confirmDelete(item)">
+                  <icon name="cancel" scale="1.8"></icon>
+                </div>
+              </div>
+            </div>
           </div>
-          <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
-          <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
         </div>
       </div>
-      <div class="row m-3">
-        <div class="card bg-light col-12 col-xl-9 ml-2">
-          <div class="row card-body mb-0 pb-1">
-            <div class="col">
-              <span class="text-center col-form-label">料盘: </span>
-            </div>
-            <div class="col">
-              <span class="card-text text-center">数量: </span>
-            </div>
-            <div class="col">
-              <span class="card-text text-center">生产日期: </span>
-            </div>
-            <div class="col">
-              <span class="card-text text-center">操作: </span>
-            </div>
-          </div>
-          <div class="dropdown-divider"></div>
-          <div class="row card-body" v-for="item in materialOutRecords">
-            <div class="col pl-4">
-              <p class="card-text">{{item.materialId}}</p>
-            </div>
-            <div class="col pl-4">
-              <p class="card-text">{{item.quantity}}</p>
-            </div>
-            <div class="col pl-4">
-              <p class="card-text">{{item.productionTime}}</p>
-            </div>
-            <div class="col pl-4">
-              <div class="btn pl-1 pr-1" title="修改出库数" @click="confirmEdit(item)">
-                <icon name="edit" scale="1.8"></icon>
-              </div>
-              <div class="btn pl-1 pr-1" title="删除" @click="confirmDelete(item)">
-                <icon name="cancel" scale="1.8"></icon>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="io-now mt-1 mb-3" v-else>
+        <div class="d-block text-center mt-5"><h3>当前需截料返库</h3></div>
       </div>
     </div>
     <div class="mention-box" v-if="isMentions">
@@ -178,7 +187,6 @@
   import {errHandler} from "../../../utils/errorHandler";
   import eventBus from '@/utils/eventBus';
   import CutNow from "./comp/CutNow";
-  import {outMaterialOutRecords} from "../../../store/getters";
 
   export default {
     name: "OutNow",
