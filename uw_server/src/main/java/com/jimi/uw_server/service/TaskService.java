@@ -27,6 +27,7 @@ import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.PackingListItemBO;
 import com.jimi.uw_server.model.vo.IOTaskDetailVO;
+import com.jimi.uw_server.model.vo.PackingListItemDetailsVO;
 import com.jimi.uw_server.model.vo.TaskVO;
 import com.jimi.uw_server.model.vo.WindowParkingListItemVO;
 import com.jimi.uw_server.model.vo.WindowTaskItemsVO;
@@ -58,6 +59,8 @@ public class TaskService {
 	private static final String GET_TASK_ITEMS_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
+
+	private static final String GET_PACKING_LIST_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity AS remainderQuantity FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
 
@@ -453,14 +456,20 @@ public class TaskService {
 
 					for (Record windowParkingListItem : windowParkingListItems.getList()) {
 						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
+						List<TaskLog> taskLogs = TaskLog.dao.find(GET_PACKING_LIST_ITEM_DETAILS_SQL, redisTaskItem.getId());
 						Integer actualQuantity = 0;
-						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
+						
+						List<PackingListItemDetailsVO> packingListItemDetailsVOs = new ArrayList<PackingListItemDetailsVO>();
 						for (TaskLog tl : taskLogs) {
+							// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 							actualQuantity += tl.getQuantity();
+							// 封装任务条目详情数据
+							PackingListItemDetailsVO pl = new PackingListItemDetailsVO(tl.get("materialId"), tl.getQuantity(), tl.get("remainderQuantity"), tl.get("productionTime"), tl.get("isInBox"));
+							packingListItemDetailsVOs.add(pl);
 						}
+						
 						WindowParkingListItemVO wp = new WindowParkingListItemVO(windowParkingListItem.get("PackingListItem_Id"), task.getFileName(),  task.getType(), windowParkingListItem.get("MaterialType_No"), windowParkingListItem.get("PackingListItem_Quantity"), actualQuantity, redisTaskItem.getMaterialTypeId(), redisTaskItem.getIsForceFinish());
-						wp.setDetails(taskLogs);
+						wp.setDetails(packingListItemDetailsVOs);
 						return wp;
 					}
 				}
@@ -581,25 +590,19 @@ public class TaskService {
 	}
 
 
-	// 将截料后重新入库的料盘置为在盒内
-	public String cut(Integer packingListItemId, String materialId) {
+	// 将截料后剩余的物料置为在盒内
+	public String cut(Integer packingListItemId, String materialId, Integer quantity) {
 		String resultString = "扫描成功，请将料盘放回料盒！";
-		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-			if (redisTaskItem.getId().intValue() == packingListItemId) {
-				if (redisTaskItem.getState().intValue() != IOTaskItemState.ARRIVED_WINDOW) {
-					resultString = "暂时不可调用截料后回库接口!";
-					return resultString;
-				}
-			}
-		}
 		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, packingListItemId, materialId);
 		Material material = Material.dao.findById(materialId);
 		if (taskLog == null) {
 			resultString = "扫错料盘，该料盘不需要放回该料盒!";
-		} else if (material.getIsInBox() && material.getRemainderQuantity() > 0){
-			resultString = "该料盘已设置为在盒内，请将料盘放入料盒内!";
-		} else if (!material.getIsInBox() && material.getRemainderQuantity() == 0){
+		} else if (material.getRemainderQuantity().intValue() != quantity) {
+			resultString = "请扫描修改出库数时所打印出的新料盘二维码!";
+		} else if (material.getRemainderQuantity() == 0){
 			resultString = "该料盘已全部出库!";
+		} else if (material.getIsInBox()){
+			resultString = "该料盘已设置为在盒内，请将料盘放入料盒内!";
 		} else {
 			material.setIsInBox(true).update();
 		}

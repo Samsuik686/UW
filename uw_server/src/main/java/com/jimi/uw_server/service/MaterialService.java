@@ -387,14 +387,11 @@ public class MaterialService extends SelectService{
 			return resultString;
 		} else {
 			synchronized(IMPORT_FILE_LOCK) {
-				Integer supplier;
+				// 根据供应商名获取供应商id
 				Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
-				if (s != null) {
-					supplier = s.getId();
-				} else {
-					resultString = "导入物料类型表失败，请填写正确的供应商名或将新增对应的供应商！";
-					return resultString;
-				}
+				Integer supplier;
+				supplier = s.getId();
+
 				// 从电子表格第2行开始有物料记录
 				int i = 2;
 				for (MaterialTypeItemBO item : items) {

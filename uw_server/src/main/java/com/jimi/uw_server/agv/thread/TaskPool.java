@@ -9,7 +9,7 @@ import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.agv.handle.BuildHandle;
+import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.constant.BuildTaskItemState;
 import com.jimi.uw_server.constant.IOTaskItemState;
@@ -135,7 +135,7 @@ public class TaskPool extends Thread{
 				// 判断料盒是否不在架(即该料盒还未入仓)
 				if (!materialBox.getIsOnShelf()) {
 					// 发送建仓指令
-					BuildHandle.sendBuildCmd(item, materialBox);
+					BuildHandler.sendBuildCmd(item, materialBox);
 					cn--;
 				}
 			}

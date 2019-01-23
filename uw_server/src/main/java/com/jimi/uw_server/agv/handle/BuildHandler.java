@@ -22,7 +22,7 @@ import com.jimi.uw_server.service.MaterialService;
  * @createTime 2018年12月12日  下午5:52:16
  */
 
-public class BuildHandle {
+public class BuildHandler {
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
@@ -118,10 +118,10 @@ public class BuildHandle {
 
 
 	/**
-	 * 判断该groupid所在的任务是否全部条目状态为"已完成"
-	 * 如果是，则清除所有该任务id对应的条目，释放内存，并修改数据库任务状态***
+	 * 判断该srcPosition所在的任务是否全部条目状态为"已完成"
+	 * 如果是，则清除所有该任务id对应的条目，释放内存***
 	*/
-	private static void clearTil(String srcPosition) {
+	public static void clearTil(String srcPosition) {
 		boolean isAllFinish = true;
 		for (AGVBuildTaskItem item1 : TaskItemRedisDAO.getBuildTaskItems()) {
 			if(srcPosition.equals(item1.getSrcPosition()) && item1.getState() != BuildTaskItemState.FINISH_ONE_BUILD_TASK) {

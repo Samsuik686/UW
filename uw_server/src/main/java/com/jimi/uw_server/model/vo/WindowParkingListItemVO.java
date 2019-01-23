@@ -13,7 +13,7 @@ import com.jimi.uw_server.model.bo.RecordItem;
 import com.jimi.uw_server.service.MaterialService;
 
 /**
- * 
+ * 仓口停泊条目表示层
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */

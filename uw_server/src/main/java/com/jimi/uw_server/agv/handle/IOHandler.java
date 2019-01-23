@@ -146,7 +146,7 @@ public class IOHandler {
 	 * 判断该groupid所在的任务是否全部条目状态为"已回库完成"并且没有需要截料返库的，如果是，
 	 * 则清除所有该任务id对应的条目，释放内存，并修改数据库任务状态***
 	*/
-	private static void clearTil(String groupid) {
+	public static void clearTil(String groupid) {
 		boolean isAllFinish = true;
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
 			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && (item1.getState() != IOTaskItemState.FINISH_BACK || !item1.getIsForceFinish())) {

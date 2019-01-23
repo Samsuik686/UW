@@ -23,7 +23,7 @@ import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 import com.jimi.uw_server.agv.handle.ACKHandler;
-import com.jimi.uw_server.agv.handle.BuildHandle;
+import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.agv.thread.TaskPool;
@@ -116,12 +116,17 @@ public class AGVMainSocket {
 					//判断是否是status指令
 					if(message.contains("\"cmdcode\":\"status\"")) {
 						IOHandler.handleStatus(message);
-						BuildHandle.handleStatus(message);
+						BuildHandler.handleStatus(message);
 					}
-					
+
 					//判断是否是loadexception指令
 					if(message.contains("\"cmdcode\":\"loadexception\"")) {
 						ExceptionHandler.handleLoadException(message);
+					}
+
+					//判断是否是agv_del_mission指令
+					if(message.contains("\"cmdcode\":\"agv_del_mission\"")) {
+						ExceptionHandler.handleDelMissionException(message);
 					}
 				}
 			}

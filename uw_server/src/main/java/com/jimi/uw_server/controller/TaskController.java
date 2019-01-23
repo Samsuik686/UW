@@ -161,9 +161,9 @@ public class TaskController extends Controller {
 
 
 	// 料盘截料后重新入库
-	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId}")
-	public void backAfterCutting(Integer packingListItemId, String materialId) {
-		String resultString = taskService.cut(packingListItemId, materialId);
+	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId},料盘剩余数量为{quantity}")
+	public void backAfterCutting(Integer packingListItemId, String materialId, Integer quantity) {
+		String resultString = taskService.cut(packingListItemId, materialId, quantity);
 		if(resultString.equals("扫描成功，请将料盘放回料盒！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

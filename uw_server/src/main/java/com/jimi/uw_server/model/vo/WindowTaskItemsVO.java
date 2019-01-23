@@ -8,7 +8,7 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
 
 /**
- * 
+ * 仓口任务条目表示层
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */

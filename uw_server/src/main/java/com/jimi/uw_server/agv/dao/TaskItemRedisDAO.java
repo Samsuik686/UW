@@ -93,6 +93,21 @@ public class TaskItemRedisDAO {
 
 
 	/**
+	 * 删除指定的出入库任务条目<br>
+	 */
+	public static void removeTaskItemByPackingListId(int packingListId) {
+		for (int i = 0; i < cache.llen("til"); i++) {
+			byte[] item = cache.lindex("til", i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			if(agvioTaskItem.getId().intValue() == packingListId){
+				cache.lrem("til", 1, item);
+				i--;
+			}
+		}
+	}
+
+
+	/**
 	 * 更新出入库任务条目执行状态<br>
 	 */
 	public synchronized static void updateIOTaskItemState(AGVIOTaskItem taskItem, int state) {
@@ -231,13 +246,28 @@ public class TaskItemRedisDAO {
 
 
 	/**
-	 * 删除指定的建仓任务条目<br>
+	 * 批量删除指定的建仓任务条目<br>
 	 */
 	public static void removeBuildTaskItemBySrcPosition(String srcPosition) {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
 			byte[] item = cache.lindex("tilOfBuild", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
 			if(agvBuildTaskItem.getSrcPosition().equals(srcPosition)){
+				cache.lrem("tilOfBuild", 1, item);
+				i--;
+			}
+		}
+	}
+
+
+	/**
+	 * 删除某条指定的建仓任务条目<br>
+	 */
+	public static void removeBuildTaskItemByBoxId(int boxId) {
+		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
+			byte[] item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			if(agvBuildTaskItem.getBoxId().intValue() == boxId){
 				cache.lrem("tilOfBuild", 1, item);
 				i--;
 			}
