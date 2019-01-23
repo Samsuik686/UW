@@ -42,7 +42,7 @@
               <p class="card-text form-control">{{taskNowItems.actualQuantity}}</p>
             </div>
           </div>
-          <div class="card-body row">
+          <!--<div class="card-body row">
             <div class="col pl-0">
               <span class="col-form-label">库存: </span>
               <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
@@ -51,8 +51,12 @@
               <span class="col-form-label">历史已超发: </span>
               <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
             </div>
-          </div>
+          </div>-->
           <div class="card-body row">
+            <div class="col pl-0">
+              <span class="col-form-label">库存: </span>
+              <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
+            </div>
             <div class="col pr-0 pl-0">
               <span class="col-form-label">本次欠入数量/超入数量:</span>
               <p class="card-text form-control">{{overQuantity(taskNowItems.planQuantity,

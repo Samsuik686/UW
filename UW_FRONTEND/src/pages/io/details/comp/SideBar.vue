@@ -10,15 +10,19 @@
         <div>
           <div @click="toggleState('preview')">
             <div class="sidebar-link" @click="linkTo('preview')"
-               :class="activeItem === 'preview' ? 'active' : ''">仓口任务预览</div>
+               :class="activeItem === 'preview' ? 'active' : ''">查看仓口任务</div>
+          </div>
+          <div @click="toggleState('call')">
+            <div class="sidebar-link" @click="linkTo('call')"
+                 :class="activeItem === 'call' ? 'active' : ''">扫码呼叫叉车</div>
           </div>
           <div @click="toggleState('innow')">
             <div class="sidebar-link" @click="linkTo('innow')"
-               :class="activeItem === 'innow' ? 'active' : ''">即时入库任务操作</div>
+               :class="activeItem === 'innow' ? 'active' : ''">入库任务操作</div>
           </div>
           <div @click="toggleState('outnow')">
             <div class="sidebar-link" @click="linkTo('outnow')"
-                 :class="activeItem === 'outnow' ? 'active' : ''">即时出库任务操作</div>
+                 :class="activeItem === 'outnow' ? 'active' : ''">出库任务操作</div>
           </div>
           <div @click="toggleState('return')">
             <div class="sidebar-link" @click="linkTo('return')"
@@ -27,7 +31,7 @@
         </div>
       </div>
     </nav>
-    <div class="m-2 mt-auto" v-if="$route.path === '/io/preview'">
+   <!-- <div class="m-2 mt-auto" v-if="$route.path === '/io/preview'">
       <div class="row ml-auto mr-auto mt-4">
         <img src="static/img/toIOQRcode.png" class="img-style">
       </div>
@@ -38,7 +42,7 @@
         <img src="static/img/toCallQRCode.png" class="img-style">
       </div>
       <span class=" mt-auto">* 扫描此二维码或点击侧边栏以跳转到任务预览页面</span>
-    </div>
+    </div>-->
   </div>
 </template>
 
@@ -69,6 +73,9 @@
         case '/io/return':
           this.toggleState('return');
           break;
+        case 'io/call':
+          this.toggleState('call');
+          break;
       }
     },
     watch: {
@@ -85,6 +92,9 @@
             break;
           case '/io/return':
             this.toggleState('return');
+            break;
+          case '/io/call':
+            this.toggleState('call');
             break;
         }
       }

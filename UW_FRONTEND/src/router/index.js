@@ -21,6 +21,7 @@ import IoMain from '../pages/io/IoMain'
 import OutNow from '../pages/io/details/OutNow'
 import InNow from '../pages/io/details/InNow'
 import IoPreview from '../pages/io/details/IoPreview'
+import CallRobot from '../pages/io/details/CallRobot'
 
 
 Vue.use(Router);
@@ -121,6 +122,10 @@ const router = new Router({
             {
               path: 'return',
               component: InNow
+            },
+            {
+              path:'call',
+              component:CallRobot
             }
           ]
         }

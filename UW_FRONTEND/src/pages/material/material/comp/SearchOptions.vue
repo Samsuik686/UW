@@ -29,7 +29,7 @@
     </transition>
     <transition name="fade">
       <div v-if="isUploading" id="upload-window">
-        <upload-material/>
+        <upload-material  :suppliers="suppliers"/>
       </div>
     </transition>
     <transition name="fade">
@@ -81,6 +81,18 @@
           '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
           '        </div>\n'
       },
+      'select-comp': {
+        props: ['opt'],
+        template: '<div class="row">\n' +
+          '      <div class="form-group col pr-3">\n' +
+          '        <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '        <select :id="opt.id" v-model="opt.model" class="custom-select">\n' +
+          '          <option value="" disabled>请选择</option>\n' +
+          '          <option :value="item.id"  v-for="item in opt.list">{{item.name}}</option>\n' +
+          '        </select>\n' +
+          '      </div>\n' +
+          '    </div>'
+      },
       AddMaterial,
       UploadMaterial
     },
@@ -99,7 +111,14 @@
             name: '规格',
             model: '',
             type: 'text'
-          }
+          },
+          {
+            id: 'supplier',
+            name: '供应商',
+            model: '',
+            type: 'select',
+            list:[]
+          },
         ],
         copyQueryOptions: [],
         queryString: "",
@@ -115,10 +134,10 @@
       this.initForm();
       eventBus.$on('closeAddPanel', () => {
         this.isAdding = false;
-      })
+      });
       eventBus.$on('closeUploadPanel', () => {
         this.isUploading = false;
-      })
+      });
       this.selectSupplier();
     },
     computed: {
@@ -143,6 +162,7 @@
         });
 
         this.copyQueryOptions.map((item, index) => {
+          console.log(item);
           if (item.type === 'text') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
@@ -150,12 +170,21 @@
               } else {
                 this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
               }
-
             } else {
               this.setLoading(false)
             }
           }
-
+          if (item.type === 'select') {
+            if (_.trim(item.model) !== "") {
+              if (index === 0) {
+                this.queryString += (item.id + "=" + _.trim(item.model))
+              } else {
+                this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
+              }
+            } else {
+              this.setLoading(false)
+            }
+          }
         })
       },
       fetchData: function () {
@@ -216,7 +245,8 @@
                 if(item.enabled === true){
                   this.suppliers.push(item);
                 }
-              })
+              });
+              this.queryOptions[2].list = this.suppliers;
             } else {
               errHandler(response.data.result)
             }

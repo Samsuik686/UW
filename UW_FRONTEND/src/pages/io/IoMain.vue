@@ -6,7 +6,7 @@
         <div class="side-bar">
           <side-bar/>
         </div>
-        <div class="col router-style mt-3 mb-3" style="margin-left: 255px">
+        <div class="col router-style mt-3 mb-3" style="margin-left: 255px;">
           <router-view/>
         </div>
       </div>

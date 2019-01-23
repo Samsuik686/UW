@@ -8,7 +8,9 @@
       </div>
       <div class="form-row">
         <label for="type-supplier" class="col-form-label">供应商:</label>
-        <input id="type-supplier" type="text" class="form-control" v-model="supplierName" autocomplete="off">
+        <select id="type-supplier" v-model="supplierName" class="custom-select">
+          <option  v-for="item in suppliers" :value="item.name" :key="item.id">{{item.name}}</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-row pl-1 pr-1">
@@ -37,6 +39,9 @@
 
   export default {
     name: "UploadMaterial",
+    props:{
+      suppliers:Array
+    },
     data() {
       return {
         fileName: '',
