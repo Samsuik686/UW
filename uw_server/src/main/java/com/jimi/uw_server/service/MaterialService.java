@@ -383,7 +383,7 @@ public class MaterialService extends SelectService{
 		// 如果套料单表头不对，则提示检查套料单表头，同时检查套料单表格中是否有料号记录
 		if (items == null || items.size() == 0) {
 			deleteTempFile(file);
-			resultString = "导入物料类型表失败，请检查表头是否正确以及表格中是否有物料记录！";
+			resultString = "导入物料类型表失败，请检查表头是否正确！";
 			return resultString;
 		} else {
 			synchronized(IMPORT_FILE_LOCK) {
@@ -413,22 +413,24 @@ public class MaterialService extends SelectService{
 
 						// 根据料号和供应商找到对应的物料类型
 						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo(), supplier);
-						// 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用
+						/*						
+						 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用；
+						 若存在，则跳过这些记录
+						*/
 						if (mType != null) {
-							deleteTempFile(file);
-							resultString = "导入物料类型表失败，表格第" + i + "行，料号为 "+ item.getNo() + "的物料类型已存在数据库中！";
-							return resultString;
+							i++;
+							continue;
+						} else {
+							// 若不存在异常数据，则新增一条物料类型表记录
+							MaterialType materialType = new MaterialType();
+							materialType.setNo(item.getNo());
+							materialType.setSpecification(item.getSpecification());
+							materialType.setThickness(item.getThickness());
+							materialType.setRadius(item.getRadius());
+							materialType.setEnabled(true);
+							materialType.setSupplier(supplier);
+							materialType.save();
 						}
-
-						// 若不存在异常数据，则新增一条物料类型表记录
-						MaterialType materialType = new MaterialType();
-						materialType.setNo(item.getNo());
-						materialType.setSpecification(item.getSpecification());
-						materialType.setThickness(item.getThickness());
-						materialType.setRadius(item.getRadius());
-						materialType.setEnabled(true);
-						materialType.setSupplier(supplier);
-						materialType.save();
 						
 						i++;
 					} else if (i == 2) {	// 若第二行就没有序号，则说明表格一条物料记录也没有
