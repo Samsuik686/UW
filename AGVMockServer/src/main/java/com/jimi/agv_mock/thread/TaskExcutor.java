@@ -50,19 +50,26 @@ public class TaskExcutor extends Thread{
 			//创建干扰者
 			TaskDisturber disturber = new TaskDisturber(this);
 			
-			//LS
-			exe(statusCmd, disturber);
-			
-			//请求SL命令，等待命令到达
-			while(!MockMainSocket.getTaskPool().requestSLTask(this)) {
-				sleep(1000);
+			if (moveCmd.getCmdcode().equals("LS")) {
+				//LS
+				exe(statusCmd, disturber);
+				
+				//请求SL命令，等待命令到达
+				while(!MockMainSocket.getTaskPool().requestSLTask(this)) {
+					sleep(1000);
+				}
+				
+				//转换命令类型
+				moveCmd.setCmdcode("SL");
+				
+				//SL
+				exe(statusCmd, disturber);
+				
+			} else if(moveCmd.getCmdcode().equals("LL")) {
+				//LL
+				exe(statusCmd, disturber);
 			}
 			
-			//转换命令类型
-			moveCmd.setCmdcode("SL");
-			
-			//SL
-			exe(statusCmd, disturber);
 			
 			//设置叉车空闲
 			robot.setStatus(0);

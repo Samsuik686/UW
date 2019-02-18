@@ -20,6 +20,7 @@ import com.jimi.agv_mock.constant.Constant;
 import com.jimi.agv_mock.dao.TaskDAO;
 import com.jimi.agv_mock.entity.cmd.base.AGVBaseCmd;
 import com.jimi.agv_mock.handle.ACKHandler;
+import com.jimi.agv_mock.handle.LLHandler;
 import com.jimi.agv_mock.handle.LSSLHandler;
 import com.jimi.agv_mock.handle.SwitchHandler;
 import com.jimi.agv_mock.thread.TaskPool;
@@ -95,6 +96,11 @@ public class MockMainSocket implements UncaughtExceptionHandler{
 				//判断是否是ls，sl指令
 				if(message.contains("\"cmdcode\":\"LS\"") || message.contains("\"cmdcode\":\"SL\"")) {
 					LSSLHandler.handleLSSL(message);
+				}
+				
+				//判断是否是ll指令
+				if(message.contains("\"cmdcode\":\"LL\"")) {
+					LLHandler.handleLL(message);
 				}
 				
 				//判断是启用禁用指令

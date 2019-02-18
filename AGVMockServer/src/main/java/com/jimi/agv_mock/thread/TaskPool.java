@@ -23,10 +23,12 @@ public class TaskPool extends Thread{
 	
 	private List<AGVMoveCmd> SLTasks;
 	
+	private Queue<AGVMoveCmd> LLTasks;
 	
 	public TaskPool() {
 		LSTasks = new LinkedBlockingQueue<>();
 		SLTasks = new ArrayList<>();
+		LLTasks = new LinkedBlockingQueue<>();
 	}
 	
 	
@@ -39,6 +41,10 @@ public class TaskPool extends Thread{
 		SLTasks.add(cmd);
 	}
 	
+	public synchronized void addLLTask(AGVMoveCmd cmd) {
+		LLTasks.offer(cmd);
+	}
+	
 	
 	@Override
 	public void run() {
@@ -47,6 +53,7 @@ public class TaskPool extends Thread{
 			try {
 				sleep(Constant.TASK_POOL_CYCLE);
 				assignLSTask();
+				assignLLTask();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -92,6 +99,31 @@ public class TaskPool extends Thread{
 		//如果取得Robot则出列
 		if(robot != null) {
 			LSTasks.poll();
+			TaskExcutor excutor = new TaskExcutor(getAFreeRobot(), task);
+			excutor.start();
+		}
+	}
+	
+	
+	/**
+	 * 创建一个任务执行者并分配给它一个LL任务
+	 */
+	private synchronized void assignLLTask() {
+		AGVMoveCmd task = LLTasks.peek();
+		if(task == null) {
+			return; 
+		}
+		AGVRobot robot = null;
+		//判断被绑定的robotid
+		int robotid = task.getMissiongroups().get(0).getRobotid();
+		if(robotid == 0) {
+			robot = getAFreeRobot();
+		}else {
+			robot = getRobotById(robotid);
+		}
+		//如果取得Robot则出列
+		if(robot != null) {
+			LLTasks.poll();
 			TaskExcutor excutor = new TaskExcutor(getAFreeRobot(), task);
 			excutor.start();
 		}
