@@ -57,7 +57,7 @@ public class MaterialService extends SelectService{
 
 	private static final String GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
-	private static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE area = ? AND row = ? AND col = ? AND height = ? AND is_on_shelf = ? AND enabled = 1";
+	private static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE area = ? AND row = ? AND col = ? AND height = ? AND enabled = 1";
 
 	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE material_id IN (SELECT id FROM material WHERE material.type = ?) GROUP BY packing_list_item_id ORDER BY task_log.time";
 
@@ -118,12 +118,7 @@ public class MaterialService extends SelectService{
 		String resultString = "添加成功！";
 		Integer supplier;
 		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
-		if (s != null) {
-			supplier = s.getId();
-		} else {
-			resultString = "新增物料失败，请填写正确的供应商名或将新增对应的供应商！";
-			return resultString;
-		}
+		supplier = s.getId();
 		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no, supplier).size() != 0) {
 			resultString = "该物料类型已存在，请勿重复添加！";
 			return resultString;
@@ -162,12 +157,7 @@ public class MaterialService extends SelectService{
 		}
 		Integer supplier;
 		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
-		if (s != null) {
-			supplier = s.getId();
-		} else {
-			resultString = "更新物料失败，请填写正确的供应商名或将新增对应的供应商！";
-			return resultString;
-		}
+		supplier = s.getId();
 		MaterialType materialType = MaterialType.dao.findById(id);
 		materialType.setSpecification(specification);
 		materialType.setSupplier(supplier);
