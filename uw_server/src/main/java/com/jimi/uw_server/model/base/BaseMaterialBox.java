@@ -18,13 +18,13 @@ public abstract class BaseMaterialBox<M extends BaseMaterialBox<M>> extends Mode
 		return getInt("id");
 	}
 
-	public M setArea(java.lang.Integer area) {
+	public M setArea(java.lang.String area) {
 		set("area", area);
 		return (M)this;
 	}
 	
-	public java.lang.Integer getArea() {
-		return getInt("area");
+	public java.lang.String getArea() {
+		return getStr("area");
 	}
 
 	public M setRow(java.lang.Integer row) {
@@ -63,15 +63,6 @@ public abstract class BaseMaterialBox<M extends BaseMaterialBox<M>> extends Mode
 		return get("is_on_shelf");
 	}
 
-	public M setType(java.lang.Integer type) {
-		set("type", type);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getType() {
-		return getInt("type");
-	}
-
 	public M setEnabled(java.lang.Boolean enabled) {
 		set("enabled", enabled);
 		return (M)this;
@@ -79,6 +70,15 @@ public abstract class BaseMaterialBox<M extends BaseMaterialBox<M>> extends Mode
 	
 	public java.lang.Boolean getEnabled() {
 		return get("enabled");
+	}
+
+	public M setType(java.lang.Integer type) {
+		set("type", type);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getType() {
+		return getInt("type");
 	}
 
 }

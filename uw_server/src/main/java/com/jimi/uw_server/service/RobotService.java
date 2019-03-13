@@ -95,7 +95,7 @@ public class RobotService extends SelectService {
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getId());
 						if (actualQuantity >= item.getQuantity()) {
-							taskService.finishItem(id, true);
+							taskService.finishItem(id, true, null);
 						}
 
 						// 查询对应料盒

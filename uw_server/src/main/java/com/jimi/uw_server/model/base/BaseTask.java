@@ -72,4 +72,22 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 		return get("create_time");
 	}
 
+	public M setSupplier(java.lang.Integer supplier) {
+		set("supplier", supplier);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSupplier() {
+		return getInt("supplier");
+	}
+
+	public M setDestination(java.lang.Integer destination) {
+		set("destination", destination);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getDestination() {
+		return getInt("destination");
+	}
+
 }

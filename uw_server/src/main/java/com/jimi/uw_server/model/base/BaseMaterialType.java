@@ -36,6 +36,15 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getStr("specification");
 	}
 
+	public M setEnabled(java.lang.Boolean enabled) {
+		set("enabled", enabled);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getEnabled() {
+		return get("enabled");
+	}
+
 	public M setSupplier(java.lang.Integer supplier) {
 		set("supplier", supplier);
 		return (M)this;
@@ -61,15 +70,6 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 	
 	public java.lang.Integer getRadius() {
 		return getInt("radius");
-	}
-
-	public M setEnabled(java.lang.Boolean enabled) {
-		set("enabled", enabled);
-		return (M)this;
-	}
-	
-	public java.lang.Boolean getEnabled() {
-		return get("enabled");
 	}
 
 }

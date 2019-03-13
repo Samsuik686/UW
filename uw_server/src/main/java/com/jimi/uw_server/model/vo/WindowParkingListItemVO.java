@@ -1,16 +1,11 @@
 package com.jimi.uw_server.model.vo;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import com.jfinal.aop.Enhancer;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.model.bo.RecordItem;
-import com.jimi.uw_server.service.MaterialService;
 
 /**
  * 仓口停泊条目表示层
@@ -20,8 +15,6 @@ import com.jimi.uw_server.service.MaterialService;
 @SuppressWarnings("serial")
 public class WindowParkingListItemVO extends TaskLog {
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 
 	private List<?> details;
@@ -30,9 +23,9 @@ public class WindowParkingListItemVO extends TaskLog {
 
 	private Integer remainderQuantity;
 
-	private Integer superIssuedQuantity;
-
 	private String typeString;
+
+	private String specification;
 
 
 	public WindowParkingListItemVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Integer materialTypeId, Boolean isForceFinish) {
@@ -47,9 +40,9 @@ public class WindowParkingListItemVO extends TaskLog {
 		this.set("supplierName", getSupplierName());
 		this.setRemainderQuantity(materialTypeId);
 		this.set("remainderQuantity", getRemainderQuantity());
-		this.setSuperIssuedQuantity(materialTypeId);
-		this.set("superIssuedQuantity", getSuperIssuedQuantity());
 		this.set("isForceFinish", isForceFinish);
+		this.setSpecification(materialTypeId);
+		this.set("specification", getSpecification());
 	}
 
 	public List<?> getDetails() {
@@ -85,21 +78,6 @@ public class WindowParkingListItemVO extends TaskLog {
 		}
 	}
 
-	public Integer getSuperIssuedQuantity() {
-		return superIssuedQuantity;
-	}
-
-	public void setSuperIssuedQuantity(Integer materialTypeId) {
-		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
-		recordItemList = materialService.getRecordItemList(materialTypeId);
-		if (recordItemList.size() > 0) {
-			RecordItem lastRecord = recordItemList.get(recordItemList.size() - 1);
-			this.superIssuedQuantity = lastRecord.getSuperIssuedQuantity();
-		} else {
-			this.superIssuedQuantity = 0;
-		}
-	}
-
 
 	public String getTypeString() {
 		return typeString;
@@ -127,6 +105,17 @@ public class WindowParkingListItemVO extends TaskLog {
 			this.typeString = "错误类型";
 			break;
 		}
+	}
+
+
+	public String getSpecification() {
+		return specification;
+	}
+
+
+	public void setSpecification(Integer materialTypeId) {
+		MaterialType m = MaterialType.dao.findById(materialTypeId);
+		this.specification = m.getSpecification();
 	}
 
 

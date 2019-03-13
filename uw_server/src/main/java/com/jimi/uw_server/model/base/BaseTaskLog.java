@@ -72,4 +72,13 @@ public abstract class BaseTaskLog<M extends BaseTaskLog<M>> extends Model<M> imp
 		return get("time");
 	}
 
+	public M setDestination(java.lang.Integer destination) {
+		set("destination", destination);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getDestination() {
+		return getInt("destination");
+	}
+
 }

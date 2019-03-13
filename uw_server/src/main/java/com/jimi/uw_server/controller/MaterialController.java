@@ -52,8 +52,8 @@ public class MaterialController extends Controller {
 
 	// 更新物料类型#
 	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，供应商名为{supplierName}，厚度为{thickness}，半径为{radius}")
-	public void updateType(Integer id, String specification, String supplierName, Boolean enabled, Integer thickness, Integer radius) {
-		String resultString = materialService.updateType(id, specification, supplierName, enabled, thickness, radius);
+	public void updateType(Integer id, String supplierName, Boolean enabled, Integer thickness, Integer radius) {
+		String resultString = materialService.updateType(id, supplierName, enabled, thickness, radius);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -69,7 +69,7 @@ public class MaterialController extends Controller {
 
 	// 添加料盒#
 	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}，规格{cellWidth}")
-	public void addBox(Integer area, Integer row, Integer col, Integer height, Integer cellWidth) {
+	public void addBox(String area, Integer row, Integer col, Integer height, Integer cellWidth) {
 		String resultString = materialService.addBox(area, row, col, height, cellWidth);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
@@ -102,8 +102,8 @@ public class MaterialController extends Controller {
 	}
 
 
-	public void getMaterialRecords(Integer type, Integer pageNo, Integer pageSize) {
-		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, pageNo, pageSize)));
+	public void getMaterialRecords(Integer type, Integer destination, Integer pageNo, Integer pageSize) {
+		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, destination, pageNo, pageSize)));
 	}
 
 

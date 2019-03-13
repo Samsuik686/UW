@@ -20,31 +20,23 @@ public class RecordItem {
 
 	private Integer actualQuantity;
 
-	private Integer remainderQuantity;
-
 	/**
 	 * 累计超发数
 	 */
 	private Integer superIssuedQuantity;
 
-	/**
-	 * 累计破损数
-	 */
-	private Integer lossQuantity;
-
 	private String operator;
 
 	private Date ioTime;
 
-	public RecordItem(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, Integer remainderQuantity, Integer superIssuedQuantity, Integer lossQuantity, String operator, Date ioTime) {
+
+	public RecordItem(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, Integer superIssuedQuantity, String operator, Date ioTime) {
 		this.materialTypeId = materialTypeId;
 		this.fileName = fileName;
 		this.setTaskType(type);
 		this.planQuantity = planQuantity;
 		this.actualQuantity = actualQuantity;
-		this.remainderQuantity = remainderQuantity;
 		this.superIssuedQuantity = superIssuedQuantity;
-		this.lossQuantity = lossQuantity;
 		this.operator = operator;
 		this.ioTime = ioTime;
 	}
@@ -95,28 +87,12 @@ public class RecordItem {
 		this.actualQuantity = actualQuantity;
 	}
 
-	public Integer getRemainderQuantity() {
-		return remainderQuantity;
-	}
-
-	public void setRemainderQuantity(Integer remainderQuantity) {
-		this.remainderQuantity = remainderQuantity;
-	}
-
 	public Integer getSuperIssuedQuantity() {
 		return superIssuedQuantity;
 	}
 
 	public void setSuperIssuedQuantity(Integer superIssuedQuantity) {
 		this.superIssuedQuantity = superIssuedQuantity;
-	}
-
-	public Integer getLossQuantity() {
-		return lossQuantity;
-	}
-
-	public void setLossQuantity(Integer lossQuantity) {
-		this.lossQuantity = lossQuantity;
 	}
 
 	public String getOperator() {
@@ -134,5 +110,6 @@ public class RecordItem {
 	public void setIoTime(Date ioTime) {
 		this.ioTime = ioTime;
 	}
+
 
 }

@@ -37,7 +37,7 @@ public class BuildService extends SelectService {
 				BoxType bType = new BoxType();
 				bType.setCellWidth(boxType);
 				bType.setCellRows(20);
-				bType.setCellCols(30);
+				bType.setCellCols(2);
 				bType.setEnabled(true);
 				bType.save();
 				for (int j=0; j<dstArray.size(); j++) {
@@ -65,7 +65,7 @@ public class BuildService extends SelectService {
 			for (int y=startY; y<=endY; y++) {
 				for (int z=startZ; z<=endZ; z++) {
 					MaterialBox materialBox = new MaterialBox();
-					materialBox.setArea(1);
+					materialBox.setArea("A");
 					materialBox.setRow(x);
 					materialBox.setCol(y);
 					materialBox.setHeight(z);

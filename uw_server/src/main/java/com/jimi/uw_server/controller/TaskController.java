@@ -28,13 +28,13 @@ public class TaskController extends Controller {
 
 	// 创建任务
 	@Log("创建任务类型为{type}的任务")
-	public void create(UploadFile file, Integer type, String supplierName) throws Exception {
+	public void create(UploadFile file, Integer type, Integer supplier, Integer destination) throws Exception {
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4
 		if (type == TaskType.IN || type == TaskType.OUT || type  == TaskType.SEND_BACK) {
 			file = getFile();
 			String fileName = file.getFileName();
 			String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
-			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplierName);
+			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplier, destination);
 
 			if(resultString.equals("添加成功！")) {
 				renderJson(ResultUtil.succeed());
@@ -70,7 +70,10 @@ public class TaskController extends Controller {
 	// 令指定任务开始
 	@Log("开始任务编号为{id}的任务，绑定的仓口为{window}")
 	public void start(Integer id, Integer window) {
-		if(taskService.start(id, window)) {
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		if(taskService.start(id, window, user)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -156,7 +159,10 @@ public class TaskController extends Controller {
 	// 完成任务条目
 	@Log("id号为{packListItemId}的任务条目出入库数量与计划数量不相符，叉车回库后，该任务条目的完成状态为{isFinish}(true表示已完成，false表示未完成)")
 	public void finishItem(Integer packListItemId, Boolean isFinish) {
-		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish)));
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish, user)));
 	}
 
 

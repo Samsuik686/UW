@@ -58,6 +58,9 @@ public class WindowTaskItemsVO extends TaskLog {
 
 	public void setStateString(Integer state) {
 		switch (state) {
+		case IOTaskItemState.LACK:
+			this.stateString = "缺料";
+			break;
 		case IOTaskItemState.FINISH_CUT:
 			this.stateString = "等待截料返库";
 			break;

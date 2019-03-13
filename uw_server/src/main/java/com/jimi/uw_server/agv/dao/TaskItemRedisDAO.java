@@ -69,7 +69,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("til"); i++) {
 			byte[] item = cache.lindex("til", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN)){
+			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN || agvioTaskItem.getState().intValue() == IOTaskItemState.LACK)){
 				cache.lrem("til", 1, item);
 				i--;
 			}

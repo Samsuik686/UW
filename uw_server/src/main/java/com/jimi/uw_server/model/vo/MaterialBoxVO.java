@@ -18,7 +18,7 @@ public class MaterialBoxVO extends MaterialBox {
 
 	private Integer cellWidth;
 
-	public MaterialBoxVO(Integer id, Integer area, Integer row, Integer col, Integer height, Boolean enabled, Boolean isOnShelf, Integer type) {
+	public MaterialBoxVO(Integer id, String area, Integer row, Integer col, Integer height, Boolean enabled, Boolean isOnShelf, Integer type) {
 		this.setId(id);
 		this.setArea(area);
 		this.setRow(row);

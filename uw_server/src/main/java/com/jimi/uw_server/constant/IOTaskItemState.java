@@ -8,6 +8,8 @@ package com.jimi.uw_server.constant;
 
 public class IOTaskItemState {
 
+	public static final int LACK = -3;				// 缺料
+
 	public static final int FINISH_CUT = -2;		// 已完成截料
 	
 	public static final int WAIT_SCAN = -1;			// 等待扫码(呼叫叉车)

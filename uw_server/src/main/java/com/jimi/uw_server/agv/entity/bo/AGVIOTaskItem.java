@@ -40,6 +40,7 @@ public class AGVIOTaskItem implements Serializable {
 	 */
 	private Integer priority;
 
+
 	public AGVIOTaskItem() {}
 
 	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
@@ -48,7 +49,7 @@ public class AGVIOTaskItem implements Serializable {
 		this.materialTypeId = packingListItem.getMaterialTypeId();
 		this.quantity = packingListItem.getQuantity();
 		this.robotId = 0;
-		this.setState(state);
+		this.state = state;
 		this.boxId = 0;
 		this.isForceFinish = false;
 		this.priority = priority;
@@ -129,5 +130,6 @@ public class AGVIOTaskItem implements Serializable {
 	public String getGroupId() {
 		return boxId + ":" + taskId;
 	}
+
 
 }
