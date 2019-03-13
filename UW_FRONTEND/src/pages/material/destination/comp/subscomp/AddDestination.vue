@@ -1,21 +1,21 @@
 <template>
-  <div class="edit-panel">
-    <div class="edit-panel-container form-row flex-column justify-content-between">
+  <div class="add-panel">
+    <div class="add-panel-container form-row flex-column justify-content-between">
       <div class="form-row">
         <div class="form-group mb-0">
-          <h3>更新供应商信息：</h3>
+          <h3>添加发料目的地：</h3>
         </div>
       </div>
       <div class="form-row">
-        <div class="form-row col pl-2 pr-2">
-          <label for="supplier-name" class="col-form-label">供应商名:</label>
+        <div class="form-row col">
+          <label for="supplier-name" class="col-form-label">发料目的地:</label>
           <input type="text" id="supplier-name" class="form-control" v-model="thisData.name" autocomplete="off">
         </div>
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
-        <button class="btn btn-secondary col mr-1 text-white" @click="closeEditPanel">取消</button>
-        <button class="btn btn-primary col ml-1 text-white" @click="submitUpdate">提交</button>
+        <button class="btn btn-secondary col mr-1 text-white" @click="closeAddPanel">取消</button>
+        <button class="btn btn-primary col ml-1 text-white" @click="submitAdding">提交</button>
       </div>
     </div>
   </div>
@@ -23,33 +23,25 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {supplierUpdateUrl} from "../../../../../config/globalUrl";
+  import {destinationAddUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
   export default {
-    name: "EditSupplier",
-    props: ['editData'],
+    name: "AddDestination",
     data() {
       return {
         thisData: {
-          id: '',
-          name:'',
-          enabled: 1,
+          name: ''
         },
         isPending: false
       }
     },
-    mounted() {
-      this.thisData.id = this.editData.id;
-      this.thisData.name = this.editData.name;
-      this.thisData.enabled = (this.editData.enabled === true)?1:0;
-    },
     methods: {
-      closeEditPanel: function () {
-        eventBus.$emit('closeEditPanel');
+      closeAddPanel: function () {
+        eventBus.$emit('closeAddPanel');
       },
-      submitUpdate: function () {
+      submitAdding: function () {
         if (!this.isPending) {
           for (let item in this.thisData) {
             if (this.thisData[item] === '') {
@@ -59,40 +51,32 @@
           }
           this.isPending = true;
           let options = {
-            url: supplierUpdateUrl,
+            url: destinationAddUrl,
             data: this.thisData
           };
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              this.$alertSuccess('更新成功');
-              this.closeEditPanel();
+              this.$alertSuccess('添加成功');
+              this.closeAddPanel();
               let tempUrl = this.$route.path;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
-            }else if(response.data.result === 412){
-              this.$alertWarning(response.data.data);
-              this.closeEditPanel();
+            } else if (response.data.result === 412) {
+              this.$alertWarning('请勿添加重复发料目的地')
             } else {
               this.isPending = false;
-              errHandler(response.data.result);
-              this.closeEditPanel()
-            }
-          }).catch(err => {
-            if (JSON.stringify(err)) {
-              this.isPending = false;
-              console.log(JSON.stringify(err));
-              this.$alertDanger('请求超时，请刷新重试')
+              errHandler(response.data.result)
             }
           })
         }
-      }
+      },
     }
   }
 </script>
 
 <style scoped>
-  .edit-panel {
+  .add-panel {
     position: fixed;
     display: flex;
     align-items: center;
@@ -102,14 +86,14 @@
     left: 0;
     top: 0;
     background: rgba(0, 0, 0, 0.1);
-    z-index: 101;
+    z-index: 1001;
   }
 
-  .edit-panel-container {
+  .add-panel-container {
     background: #ffffff;
     min-height: 220px;
     max-width: 600px;
-    z-index: 102;
+    z-index: 1002;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;

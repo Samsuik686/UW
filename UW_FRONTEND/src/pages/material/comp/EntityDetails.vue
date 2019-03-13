@@ -40,6 +40,7 @@
           {title: '料盘唯一码', field: 'id', colStyle: {width: '140px'}},
           {title: '类型', field: 'type', colStyle: {width: '60px'}},
           {title: '所在料盒', field: 'box', colStyle: {width: '90px'}},
+          {title: '料盒所在区域', field: 'boxArea', colStyle: {width: '120px'}},
           {title: '盒内行号', field: 'row', colStyle: {width: '90px'}},
           {title: '盒内列号', field: 'col', colStyle: {width: '90px'}},
           {title: '剩余数量', field: 'remainderQuantity', colStyle: {width: '90px'}},
@@ -102,8 +103,7 @@
             .catch(err => {
               if (JSON.stringify(err) !== '{}'){
                 this.isPending = false;
-                console.log(JSON.stringify(err));
-                this.$alertDanger('请求超时，请刷新重试')
+                this.$alertDanger('请求超时，请刷新重试');
                 this.setLoading(false)
               }
             })
@@ -150,7 +150,7 @@
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;
-    max-width: 800px;
+    max-width: 1000px;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;

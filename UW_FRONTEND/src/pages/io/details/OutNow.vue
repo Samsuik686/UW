@@ -24,14 +24,28 @@
         <div class="row m-3 align-content-start">
           <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2">
             <div class="card-body row">
-              <span class="col-form-label">任务: </span>
-              <p class="card-text form-control">{{taskNowItems.fileName}}</p>
-              <span class="col-form-label">料号: </span>
-              <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
-              <span class="col-form-label">类型: </span>
-              <p class="card-text form-control">{{taskNowItems.type}}</p>
-              <span class="col-form-label">供应商: </span>
-              <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
+              <div class="col pl-0">
+                <span class="col-form-label">任务: </span>
+                <p class="card-text form-control">{{taskNowItems.fileName}}</p>
+              </div>
+              <div class="col pr-0 pl-0">
+                <span class="col-form-label">料号: </span>
+                <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
+              </div>
+            </div>
+            <div class="card-body row">
+              <span class="col-form-label">规格: </span>
+              <p class="card-text form-control">{{taskNowItems.specification}}</p>
+            </div>
+            <div class="card-body row">
+              <div class="col pl-0">
+                <span class="col-form-label">类型: </span>
+                <p class="card-text form-control">{{taskNowItems.type}}</p>
+              </div>
+              <div class="col pr-0 pl-0">
+                <span class="col-form-label">供应商: </span>
+                <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
+              </div>
             </div>
             <div class="card-body row">
               <div class="col pl-0">
@@ -43,16 +57,6 @@
                 <p class="card-text form-control">{{actualQuantity}}</p>
               </div>
             </div>
-            <!--<div class="card-body row">
-              <div class="col pl-0">
-                <span class="col-form-label">库存: </span>
-                <p class="card-text form-control">{{remainderQuantity}}</p>
-              </div>
-              <div class="col pr-0">
-                <span class="col-form-label">历史已超发: </span>
-                <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
-              </div>
-            </div>-->
             <div class="card-body row">
               <div class="col pl-0">
                 <span class="col-form-label">库存: </span>
@@ -206,6 +210,7 @@
             "id": 1,
             "fileName": "套料单1",
             "type": "出库",
+            "specification": "AAAAAA",
             "materialNo": "KBG132123",
             "supplierName": "智锐得",
             "remainderQuantity": 20000,
@@ -741,5 +746,10 @@
 
   .fade-enter, .fade-leave-to {
     opacity: 0;
+  }
+
+  .card-text{
+    height:auto;
+    line-height:normal;
   }
 </style>

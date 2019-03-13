@@ -1,39 +1,30 @@
-<!--物料管理-->
+<!--发料目的地管理-->
 <template>
   <div class="main-details mt-1 mb-3">
     <datatable
       v-bind="$data"
     ></datatable>
-    <entity-details v-if="isDetailsActive"/>
   </div>
 </template>
 
 <script>
   import {axiosPost} from "../../../../utils/fetchData";
-  import {mapGetters, mapActions} from 'vuex'
-  import {materialCountUrl} from "../../../../config/globalUrl";
   import {errHandler} from "../../../../utils/errorHandler";
+  import {destinationSelectUrl} from "../../../../config/globalUrl";
+  import {mapActions} from 'vuex'
   import OperationOptions from "./subscomp/OperationOptions";
-  import EntityDetails from '../../comp/EntityDetails'
   export default {
-    name: "Details",
-    components: {
-      OperationOptions,
-      EntityDetails
-    },
-    data() {
-      return {
+    name: "TableDetails",
+    data(){
+      return{
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed',
-          'white-space': 'pre-wrap'
-
+          'table-layout': 'fixed'
         },
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80, 100],
         data: [],
-        //srcData: [],
         columns: [],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -42,10 +33,10 @@
         filter: '',
       }
     },
-    created() {
+    created(){
       this.init();
       let options = {
-        url: materialCountUrl,
+        url:destinationSelectUrl,
         data: {
           pageNo: 1,
           pageSize: 20
@@ -53,18 +44,15 @@
       };
       this.fetchData(options)
     },
-    computed: {
-      ...mapGetters([
-        'isDetailsActive'
-      ]),
-
+    components:{
+      OperationOptions
     },
     watch: {
       $route: function (route) {
         this.init();
         this.setLoading(true);
         let options = {
-          url: materialCountUrl,
+          url: destinationSelectUrl,
           data: {
             pageNo: 1,
             pageSize: 20
@@ -77,7 +65,6 @@
           this.filter = "";
         }
         this.fetchData(options)
-
       },
       query: {
         handler(query) {
@@ -87,25 +74,15 @@
         deep: true
       }
     },
-    mounted: function () {
-    },
-    methods: {
+    methods:{
       ...mapActions(['setTableRouter', 'setLoading']),
       init: function () {
         this.data = [];
         this.columns = [
-          {field: 'showId', title: '序号', colStyle: {'width': '50px'}},
-          {field: 'supplier', title: '客户专用码', colStyle: {'width': '70px'}},
-          {field: 'id', title: '物料类型号', colStyle: {'width': '70px'}},
-          {field: 'no', title: '料号', colStyle: {'width': '120px'}},
-          {field: 'supplierName', title: '供应商', colStyle: {'width': '100px'}},
-          {field: 'specification', title: '规格', colStyle: {'width': '180px'}},
-          {field: 'thickness', title: '厚度', colStyle: {'width': '80px'}},
-          {field: 'radius', title: '半径', colStyle: {'width': '80px'}},
-          {field: 'enabled', title: '可用性', visible: false},
-          {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
-          {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},
-          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}
+          {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
+          {field: 'id', title: '发料目的地ID', colStyle: {'width': '70px'}},
+          {field: 'name', title: '发料目的地', colStyle: {'width': '150px'}},
+          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'} }
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
@@ -122,14 +99,12 @@
                 item.showId = index + 1 + this.query.offset;
               });
               this.total = response.data.data.totalRow
-            } else if (response.data.result === 412) {
-              this.$alertWarning(response.data.data);
             } else {
-              errHandler(response.data)
+              errHandler(response.data.result)
             }
           })
             .catch(err => {
-              if (JSON.stringify(err) !== '{}') {
+              if (JSON.stringify(err) !== '{}'){
                 this.isPending = false;
                 console.log(JSON.stringify(err));
                 this.$alertDanger('请求超时，请刷新重试');
@@ -140,8 +115,9 @@
       },
       dataFilter: function () {
         let options = {
-          url: materialCountUrl,
-          data: {}
+          url: destinationSelectUrl,
+          data: {
+          }
         };
         options.data.pageNo = this.query.offset / this.query.limit + 1;
         options.data.pageSize = this.query.limit;
@@ -162,5 +138,4 @@
     padding: 10px;
     min-height: 500px;
   }
-
 </style>

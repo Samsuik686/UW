@@ -10,6 +10,7 @@ import BoxesModule from '../pages/material/boxes/BoxesModule'
 import BoxTypeModule from '../pages/material/boxType/BoxTypeModule'
 import MaterialModule from '../pages/material/material/MaterialModule'
 import SupplierModule from '../pages/material/supplier/SupplierModule'
+import DestinationModule from '../pages/material/destination/DestinationModule'
 import LogsMain from '../pages/logs/LogsMain'
 import LogsModule from '../pages/logs/details/TableModule'
 import TasksMain from '../pages/tasks/TaskMain'
@@ -57,6 +58,10 @@ const router = new Router({
             {
               path: 'supplier',
               component: SupplierModule
+            },
+            {
+              path:'destination',
+              component:DestinationModule
             },
             {
               path:'boxType',

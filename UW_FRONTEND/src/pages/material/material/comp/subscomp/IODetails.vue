@@ -1,10 +1,17 @@
 <template>
   <div class="iologs-panel">
-    <div class="form-row justify-content-center">
+    <div class="form-row justify-content-center ">
       <div class="iologs-panel-container">
         <div class="form-row">
-          <div class="form-group mb-0">
+          <div class="form-group mb-0 mr-5">
             <h3>出入库记录：</h3>
+          </div>
+          <div class="form-group destination">
+            <label for="destination" class="mb-0 destination-label">发料目的地：</label>
+            <select id="destination" v-model="destination" class="custom-select">
+              <option value="" disabled>请选择</option>
+              <option :value="item.id" v-for="item in destinations">{{item.name}}</option>
+            </select>
           </div>
           <datatable v-bind="$data"/>
         </div>
@@ -21,14 +28,15 @@
   import {mapActions, mapGetters} from 'vuex'
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
-  import {getMaterialRecordsUrl} from "../../../../../config/globalUrl";
+  import {destinationSelectUrl, getMaterialRecordsUrl} from "../../../../../config/globalUrl";
 
   export default {
     name: "IODetails",
     props: ['detailsID'],
     data() {
       return {
-
+        destination:'',
+        destinations:[],
         fixHeaderAndSetBodyMaxHeight: 450,
         tblStyle: {
           'word-break': 'break-all',
@@ -43,12 +51,9 @@
           {field: 'taskType', title: '类型', colStyle: {'width': '70px'}},
           {field: 'planQuantity', title: '计划数量', colStyle: {'width': '90px'}},
           {field: 'actualQuantity', title: '实际数量', colStyle: {'width': '90px'}},
-          {field: 'remainderQuantity', title: '剩余数量', colStyle: {'width': '90px'}},
           {field: 'superIssuedQuantity', title: '超发数量', colStyle: {'width': '90px'}},
-          {field: 'lossQuantity', title: '损耗数量', colStyle: {'width': '90px'}},
           {field: 'operator', title: '操作员', colStyle: {'width': '90px'}},
           {field: 'ioTime', title: '出入库时间', colStyle: {'width': '130px'}},
-
         ],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -63,11 +68,19 @@
           this.dataFilter(val);
         },
         deep: true
+      },
+      destination:{
+        handler(val){
+          this.query.limit = 20;
+          this.query.offset = 0;
+          this.getMaterialRecords();
+        },
+        deep:true
       }
     },
     mounted() {
       this.thisDetailsID = this.detailsID;
-      this.getMaterialRecords();
+      this.selectDestination();
     },
     methods: {
       ...mapActions(['setLoading']),
@@ -78,6 +91,7 @@
           url: getMaterialRecordsUrl,
           data: {
             type: this.thisDetailsID,
+            destination:this.destination,
             pageNo: 1,
             pageSize: 20
           }
@@ -121,7 +135,8 @@
         let options = {
           url: getMaterialRecordsUrl,
           data: {
-            type: val
+            type: val,
+            destination:this.destination
           }
         };
         options.data.pageNo = this.query.offset / this.query.limit + 1;
@@ -132,7 +147,33 @@
         this.init();
         this.thisDetailsID = '';
         eventBus.$emit('closeIODetailsPanel');
-      }
+      },
+      selectDestination: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: destinationSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              this.destinations = response.data.data.list;
+              this.destination = this.destinations[0].id + '';
+              this.getMaterialRecords();
+            } else {
+              errHandler(response.data.result)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
+      },
     }
   }
 </script>
@@ -161,7 +202,15 @@
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
-  #cancel-btn{
+  .destination{
+    display:flex;
+    width:250px
+  }
+  .destination-label{
+    width:180px;
+    line-height:38px
+  }
+  #cancel-btn {
     height: 100%;
     cursor: pointer;
   }

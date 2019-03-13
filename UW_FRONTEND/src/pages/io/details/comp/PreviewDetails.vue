@@ -10,11 +10,13 @@
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
   import {taskWindowTaskItems} from "../../../../config/globalUrl";
+  import HightLight from "./HightLight"
 
   export default {
     name: "PreviewDetails",
     components: {
-      OperationOptions
+      OperationOptions,
+      HightLight
     },
     data() {
       return {
@@ -95,7 +97,7 @@
           {field: 'id', title: 'ID', colStyle: {'width': '60px'}},
           {field: 'fileName', title: '套料单名称', colStyle: {'width': '140px'}},
           {field: 'type', title: '操作类型', colStyle: {'width': '80px'}},
-          {field: 'stateString', title: '任务条目状态', colStyle: {'width': '80px'}},
+          {field: 'stateString', title: '任务条目状态', tdComp: 'HightLight',colStyle: {'width': '80px'}},
           {field: 'materialNo', title: '料号', colStyle: {'width': '120px'}},
           {field: 'planQuantity', title: '计划数量', colStyle: {'width': '70px'}},
           {field: 'actualQuantity', title: '实际数量', colStyle: {'width': '70px'}},

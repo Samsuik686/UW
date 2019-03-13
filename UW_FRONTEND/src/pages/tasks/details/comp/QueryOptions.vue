@@ -26,10 +26,12 @@
   import UploadTask from './subscomp/UploadTask'
   import eventBus from '@/utils/eventBus'
   import {mapGetters, mapActions} from 'vuex';
-  import {taskSelectUrl} from "../../../../config/globalUrl";
+  import {supplierSelectUrl, taskSelectUrl} from "../../../../config/globalUrl";
   //import {Datetime} from '@/utils/vue-datetime/vue-datetime'
   import Datetime from '@/components/vue-datetime/Datetime'
   import _ from 'lodash'
+  import {errHandler} from "../../../../utils/errorHandler";
+  import {axiosPost} from "../../../../utils/fetchData";
 
   export default {
     name: "Options",
@@ -65,7 +67,7 @@
           '        <label :for="opt.id">{{opt.name}}：</label>\n' +
           '        <select :id="opt.id" v-model="opt.model" class="custom-select">\n' +
           '          <option value="" disabled>请选择</option>\n' +
-          '          <option :value="item.value"  v-for="item in opt.list">{{item.string}}</option>\n' +
+          '          <option :value="item.id"  v-for="item in opt.list">{{item.name}}</option>\n' +
           '        </select>\n' +
           '      </div>\n' +
           '    </div>'
@@ -74,6 +76,7 @@
     },
     data() {
       return {
+        suppliers:[],
         // pageSize: 2000,
         queryOptions: [
           {
@@ -152,6 +155,7 @@
       }
     },
     mounted: function () {
+      this.selectSupplier();
       this.initForm();
       eventBus.$on('closeUploadPanel', () => {
         this.isUploading = false;
@@ -170,24 +174,24 @@
             type: 'select',
             list: [
               {
-                value: '0',
-                string: '未审核'
+                id: '0',
+                name: '未审核'
               },
               {
-                value: '1',
-                string: '未开始'
+                id: '1',
+                name: '未开始'
               },
               {
-                value: '2',
-                string: '进行中'
+                id: '2',
+                name: '进行中'
               },
               {
-                value: '3',
-                string: '已完成'
+                id: '3',
+                name: '已完成'
               },
               {
-                value: '4',
-                string: '已作废'
+                id: '4',
+                name: '已作废'
               }
             ]
           },
@@ -198,12 +202,12 @@
             type: 'select',
             list: [
               {
-                value: '0',
-                string: '入库'
+                id: '0',
+                name: '入库'
               },
               {
-                value: '1',
-                string: '出库'
+                id: '1',
+                name: '出库'
               },
               // {
               //   value: '2',
@@ -214,8 +218,8 @@
               //   string: '位置优化'
               // },
               {
-                value: '4',
-                string: '退料'
+                id: '4',
+                name: '退料'
               }
             ]
           },
@@ -231,7 +235,14 @@
             modelFrom: '',
             modelTo: '',
             type: 'date'
-          }
+          },
+          {
+            id: 'supplier',
+            name: '供应商',
+            model: '',
+            type: 'select',
+            list:this.suppliers
+          },
         ]
       },
       createQueryString: function () {
@@ -307,7 +318,38 @@
         let compFrom = new Date(dateFrom);
         let compTo = new Date(dateTo);
         return (compTo - compFrom);
-      }
+      },
+      selectSupplier: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: supplierSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              let data = response.data.data.list;
+              data.map((item,index) => {
+                if(item.enabled === true){
+                  this.suppliers.push(item);
+                }
+              });
+              console.log(this.suppliers,this.queryOptions);
+              this.queryOptions[4].list = this.suppliers;
+            } else {
+              errHandler(response.data.result)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
+      },
     }
   }
 </script>

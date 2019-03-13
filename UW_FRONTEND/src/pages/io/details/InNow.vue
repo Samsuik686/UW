@@ -23,14 +23,28 @@
       <div class="row m-3 align-content-start">
         <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2">
           <div class="card-body row">
-            <span class="col-form-label">任务: </span>
-            <p class="card-text form-control">{{taskNowItems.fileName}}</p>
-            <span class="col-form-label">料号: </span>
-            <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
-            <span class="col-form-label">类型: </span>
-            <p class="card-text form-control">{{taskNowItems.type}}</p>
-            <span class="col-form-label">供应商: </span>
-            <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
+            <div class="col pl-0">
+              <span class="col-form-label">任务: </span>
+              <p class="card-text form-control">{{taskNowItems.fileName}}</p>
+            </div>
+            <div class="col pr-0 pl-0">
+              <span class="col-form-label">料号: </span>
+              <p class="card-text form-control">{{taskNowItems.materialNo}}</p>
+            </div>
+          </div>
+          <div class="card-body row">
+            <span class="col-form-label">规格: </span>
+            <p class="card-text form-control">{{taskNowItems.specification}}</p>
+          </div>
+          <div class="card-body row">
+            <div class="col pl-0">
+              <span class="col-form-label">类型: </span>
+              <p class="card-text form-control">{{taskNowItems.type}}</p>
+            </div>
+            <div class="col pr-0 pl-0">
+              <span class="col-form-label">供应商: </span>
+              <p class="card-text form-control">{{taskNowItems.supplierName}}</p>
+            </div>
           </div>
           <div class="card-body row">
             <div class="col pl-0">
@@ -42,16 +56,6 @@
               <p class="card-text form-control">{{taskNowItems.actualQuantity}}</p>
             </div>
           </div>
-          <!--<div class="card-body row">
-            <div class="col pl-0">
-              <span class="col-form-label">库存: </span>
-              <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
-            </div>
-            <div class="col pr-0">
-              <span class="col-form-label">历史已超发: </span>
-              <p class="card-text form-control">{{taskNowItems.superIssuedQuantity}}</p>
-            </div>
-          </div>-->
           <div class="card-body row">
             <div class="col pl-0">
               <span class="col-form-label">库存: </span>
@@ -120,16 +124,18 @@
           <p>实际入库数量: {{taskNowItems.actualQuantity}}</p>
           <p>{{overQuantity(taskNowItems.planQuantity, taskNowItems.actualQuantity)}}</p>
           <div class="dropdown-divider"></div>
-          <p v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">
-            当前实际入库数少于计划数，如果要将该任务条目置为已完成，请点击“确认完成”按钮</p>
+          <p v-if="taskNowItems.planQuantity !== taskNowItems.actualQuantity">
+            当前实际入库数与计划数不符</p>
           <p v-else>请确定是否入库</p>
         </div>
         <div class="dropdown-divider"></div>
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
-          <button class="btn btn-delay col ml-1 text-white" @click="delay"
+          <button class="btn btn-delay col ml-1 mr-1 text-white" @click="delay"
                   v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见</button>
-          <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
+          <button class="btn col ml-1 text-white" @click="submit"
+                  :disabled="taskNowItems.planQuantity !== taskNowItems.actualQuantity"
+                  :class="taskNowItems.planQuantity !== taskNowItems.actualQuantity?'btn-default':'btn-primary'">确认完成</button>
         </div>
       </div>
     </div>
@@ -589,5 +595,10 @@
   }
   .fade-enter, .fade-leave-to {
     opacity: 0;
+  }
+
+  .card-text{
+    height:auto;
+    line-height:normal;
   }
 </style>

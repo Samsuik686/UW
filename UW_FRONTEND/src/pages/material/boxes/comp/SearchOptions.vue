@@ -41,6 +41,18 @@
         '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
         '          </div>'
       },
+      'select-comp': {
+        props: ['opt'],
+        template: '<div class="row">\n' +
+          '      <div class="form-group col pr-3">\n' +
+          '        <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '        <select :id="opt.id" v-model="opt.model" class="custom-select">\n' +
+          '          <option value="" disabled>请选择</option>\n' +
+          '          <option :value="item.id"  v-for="item in opt.list">{{item.name}}</option>\n' +
+          '        </select>\n' +
+          '      </div>\n' +
+          '    </div>'
+      },
       AddBox
     },
     data() {
@@ -70,7 +82,22 @@
             name: '高度',
             model: '',
             type: 'text'
-          }
+          },
+          {
+            id: 'is_on_shelf',
+            name: '是否在架',
+            model: '',
+            type: 'select',
+            list:[
+              {
+                id:1,
+                name:'是'
+              },{
+                id:0,
+                name:'否'
+              }
+            ]
+          },
         ],
         copyQueryOptions: [],
         queryString: "",
@@ -105,7 +132,7 @@
         });
 
         this.copyQueryOptions.map((item, index) => {
-          if (item.type === 'text') {
+          if (item.type === 'text' || item.type === 'select') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
                 this.queryString += (item.id + "=" + _.trim(item.model))

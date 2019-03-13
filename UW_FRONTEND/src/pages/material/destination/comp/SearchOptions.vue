@@ -13,12 +13,12 @@
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="thisFetch">查询</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增供应商</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增发料目的地</a>
       </div>
     </div>
     <transition name="fade">
       <div v-if="isAdding" id="add-window">
-        <add-supplier/>
+        <add-destination></add-destination>
       </div>
     </transition>
   </div>
@@ -26,14 +26,14 @@
 
 <script>
   import eventBus from '@/utils/eventBus'
-  import AddSupplier from './subscomp/AddSupplier'
   import {mapActions} from 'vuex';
-  import {materialCountUrl} from "../../../../config/globalUrl";
   import _ from 'lodash'
+  import AddDestination from "./subscomp/AddDestination";
 
   export default {
     name: "Options",
     components: {
+      AddDestination,
       'text-comp': {
         props: ['opt', 'callback'],
         template: '<div class="form-group col pr-3"">\n' +
@@ -41,7 +41,6 @@
           '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
           '          </div>'
       },
-      AddSupplier
     },
     data() {
       return {
@@ -49,7 +48,7 @@
         queryOptions: [
           {
             id: 'name',
-            name: '供应商名',
+            name: '发源目的地',
             model: '',
             type: 'text'
           },
@@ -99,7 +98,7 @@
       },
       fetchData: function () {
         let options = {
-          path: '/material/supplier',
+          path: '/material/destination',
           query: {}
         };
         if (this.queryString !== "") {
@@ -139,3 +138,4 @@
     opacity: 0;
   }
 </style>
+

@@ -14,7 +14,7 @@
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-specification" class="col-form-label">规格:</label>
-          <input type="text" id="material-specification" class="form-control" v-model="thisData.specification" autocomplete="off">
+          <input type="text" id="material-specification" class="form-control" v-model="thisData.specification" autocomplete="off" disabled>
           <span class="form-span col"></span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
@@ -106,7 +106,7 @@
             url: materialUpdateUrl,
             data: {
               id: this.thisData.id,
-              specification: this.thisData.specification,
+              //specification: this.thisData.specification,
               enabled: 1,
               supplierName:this.thisData.supplierName,
               thickness:this.thisData.thickness,

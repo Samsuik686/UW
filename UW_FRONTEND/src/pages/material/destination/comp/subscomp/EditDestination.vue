@@ -3,12 +3,12 @@
     <div class="edit-panel-container form-row flex-column justify-content-between">
       <div class="form-row">
         <div class="form-group mb-0">
-          <h3>更新供应商信息：</h3>
+          <h3>更新发料目的地信息：</h3>
         </div>
       </div>
       <div class="form-row">
         <div class="form-row col pl-2 pr-2">
-          <label for="supplier-name" class="col-form-label">供应商名:</label>
+          <label for="supplier-name" class="col-form-label">发料目的地:</label>
           <input type="text" id="supplier-name" class="form-control" v-model="thisData.name" autocomplete="off">
         </div>
       </div>
@@ -23,12 +23,12 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {supplierUpdateUrl} from "../../../../../config/globalUrl";
+  import {destinationUpdateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
   export default {
-    name: "EditSupplier",
+    name: "EditDestination",
     props: ['editData'],
     data() {
       return {
@@ -59,7 +59,7 @@
           }
           this.isPending = true;
           let options = {
-            url: supplierUpdateUrl,
+            url: destinationUpdateUrl,
             data: this.thisData
           };
           axiosPost(options).then(response => {
@@ -115,4 +115,5 @@
     padding: 30px 60px 10px 60px;
   }
 </style>
+
 

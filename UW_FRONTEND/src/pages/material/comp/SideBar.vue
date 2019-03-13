@@ -24,8 +24,13 @@
             </div>
           </div>
           <div @click="toggleState('boxType')">
-            <div class="sidebar-link" @click="linkTo('boxType')"
-                 :class="activeItem === 'boxType' ? 'active' : ''">料盒类型管理
+          <div class="sidebar-link" @click="linkTo('boxType')"
+               :class="activeItem === 'boxType' ? 'active' : ''">料盒类型管理
+          </div>
+        </div>
+          <div @click="toggleState('destination')">
+            <div class="sidebar-link" @click="linkTo('destination')"
+                 :class="activeItem === 'destination' ? 'active' : ''">发料目的地管理
             </div>
           </div>
         </div>

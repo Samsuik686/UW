@@ -20,19 +20,23 @@
       </div>
       <div class="form-row">
         <label for="type-supplier" class="col-form-label">供应商:</label>
-        <select id="type-supplier" v-model="supplierName" class="custom-select">
-          <option  v-for="item in suppliers">{{item.name}}</option>
+        <select id="type-supplier" v-model="supplier" class="custom-select">
+          <option v-for="item in suppliers" :value="item.id">{{item.name}}</option>
+        </select>
+      </div>
+      <div class="form-row" v-if="isShow">
+        <label for="type-destination" class="col-form-label">发料目的地 / 退料仓位:</label>
+        <select id="type-destination" v-model="destination" class="custom-select">
+          <option v-for="item in destinations" :value="item.id">{{item.name}}</option>
         </select>
       </div>
       <div class="form-row" v-if="taskType < 2 || taskType == 4">
-        <div class="form-row pl-1 pr-1">
-          <label for="upload-comp" class="col-form-label">选择文件:</label>
-          <input id="upload-comp" type="text" class="form-control" v-model="fileName" onfocus="this.blur()"
-                 @click="setUpload"  autocomplete="off">
-          <input type="file" id="upload-file-comp"
-                 accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                 class="d-none" ref="taskUpload" @change="uploadFile">
-        </div>
+        <label for="upload-comp" class="col-form-label">选择文件:</label>
+        <input id="upload-comp" type="text" class="form-control" v-model="fileName" onfocus="this.blur()"
+               @click="setUpload" autocomplete="off">
+        <input type="file" id="upload-file-comp"
+               accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+               class="d-none" ref="taskUpload" @change="uploadFile">
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -45,7 +49,7 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {supplierSelectUrl, taskCreateUrl} from "../../../../../config/globalUrl";
+  import {destinationSelectUrl, supplierSelectUrl, taskCreateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
   import store from '../../../../../store'
@@ -58,12 +62,20 @@
         taskType: '',
         isPending: false,
         thisFile: '',
-        supplierName:'',
-        suppliers:[]
+        supplier: '',
+        suppliers: [],
+        destination: '',
+        destinations: [],
+        isShow: false
       }
     },
     created() {
       this.selectSupplier();
+    },
+    watch: {
+      taskType: function (val) {
+        this.isShow = val === "1" || val === "4";
+      }
     },
     methods: {
       closeUploadPanel: function () {
@@ -73,10 +85,10 @@
         this.$refs.taskUpload.click()
       },
       uploadFile: function (e) {
-        if(e.target.files[0]){
+        if (e.target.files[0]) {
           this.thisFile = e.target.files[0];
           this.fileName = e.target.files[0].name + " 加载成功";
-        }else{
+        } else {
           this.thisFile = '';
           this.fileName = '';
         }
@@ -87,9 +99,10 @@
             this.isPending = true;
             let formData = new FormData();
             if (this.taskType < 2 || this.taskType == 4) {
-              if (this.thisFile !== "" && this.supplierName !== "") {
+              if (this.thisFile !== "" && this.supplier !== "") {
                 formData.append('file', this.thisFile);
-                formData.append('supplierName',this.supplierName);
+                formData.append('supplier', this.supplier);
+                formData.append('destination', this.destination);
               } else {
                 this.$alertWarning("内容不可为空");
                 this.isPending = false;
@@ -135,12 +148,37 @@
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
+              this.selectDestination();
               let data = response.data.data.list;
-              data.map((item,index) => {
-                if(item.enabled === true){
+              data.map((item, index) => {
+                if (item.enabled === true) {
                   this.suppliers.push(item);
                 }
               })
+            } else {
+              errHandler(response.data.result)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
+      },
+      selectDestination: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: destinationSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              this.destinations = response.data.data.list;
             } else {
               errHandler(response.data.result)
             }
