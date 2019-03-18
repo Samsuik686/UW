@@ -16,7 +16,7 @@
         <global-tips :message="tipsComponentMsg" v-if="isTipsShow"/>
         <input type="text" title="scanner" id="cut-check" v-model="scanText"
                @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
-        <h4>
+        <h4 style="min-width:700px">
           截料入库：请扫描料盘二维码，并将剩余的物料放回料盒
         </h4>
 
@@ -102,19 +102,19 @@
                 </div>
                 <div class="dropdown-divider"></div>
                 <div class="row card-body" v-for="item in taskNowItems.details">
-                  <div class="col pl-4">
+                  <div class="col">
                     <p class="card-text">{{item.materialId}}</p>
                   </div>
-                  <div class="col pl-4">
+                  <div class="col">
                     <p class="card-text">{{item.quantity}}</p>
                   </div>
-                  <div class="col pl-4">
+                  <div class="col">
                     <p class="card-text">{{item.remainderQuantity}}</p>
                   </div>
-                  <div class="col pl-4">
+                  <div class="col">
                     <p class="card-text">{{item.productionTime}}</p>
                   </div>
-                  <div class="col pl-4">
+                  <div class="col">
                     <p class="card-text">{{item.isInBoxString}}</p>
                   </div>
                 </div>
@@ -353,6 +353,7 @@
     border-radius: 8px;
     padding: 10px;
     min-height: 300px;
+    min-width:700px;
   }
 
   .img-style {
@@ -363,5 +364,8 @@
   .card-text{
     height:auto;
     line-height:normal;
+  }
+  .col{
+    align-self:center;
   }
 </style>

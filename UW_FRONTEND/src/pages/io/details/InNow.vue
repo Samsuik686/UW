@@ -3,7 +3,7 @@
 -->
 
 <template>
-  <div>
+  <div class="box">
     <video controls="controls" id="sAudio" hidden>
       <source src="./../../../assets/005-System05.ogg" type="video/ogg">
     </video>
@@ -21,7 +21,7 @@
     </div>
     <div class="io-now mt-1 mb-3" v-else>
       <div class="row m-3 align-content-start">
-        <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2">
+        <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2 ">
           <div class="card-body row">
             <div class="col pl-0">
               <span class="col-form-label">任务: </span>
@@ -94,18 +94,20 @@
           </div>
           <div class="dropdown-divider"></div>
           <div class="row card-body" v-for="item in taskNowItems.details">
-            <div class="col pl-4">
+            <div class="col">
               <p class="card-text">{{item.materialId}}</p>
             </div>
-            <div class="col pl-4">
+            <div class="col">
               <p class="card-text">{{item.quantity}}</p>
             </div>
-            <div class="col pl-4">
+            <div class="col">
               <p class="card-text">{{item.productionTime}}</p>
             </div>
-            <div class="col pl-4">
-              <div class="btn" title="删除" @click="confirmDelete(item.materialId)">
-                <icon name="cancel" scale="2"></icon>
+            <div class="col">
+              <div class="card-text">
+                <div class="btn" title="删除" @click="confirmDelete(item.materialId)">
+                  <icon name="cancel" scale="2"></icon>
+                </div>
               </div>
             </div>
           </div>
@@ -132,10 +134,12 @@
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
           <button class="btn btn-delay col ml-1 mr-1 text-white" @click="delay"
-                  v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见</button>
+                  v-if="taskNowItems.planQuantity - taskNowItems.actualQuantity > 0">稍候再见
+          </button>
           <button class="btn col ml-1 text-white" @click="submit"
                   :disabled="taskNowItems.planQuantity !== taskNowItems.actualQuantity"
-                  :class="taskNowItems.planQuantity !== taskNowItems.actualQuantity?'btn-default':'btn-primary'">确认完成</button>
+                  :class="taskNowItems.planQuantity !== taskNowItems.actualQuantity?'btn-default':'btn-primary'">确认完成
+          </button>
         </div>
       </div>
     </div>
@@ -593,12 +597,19 @@
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s;
   }
+
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }
 
-  .card-text{
-    height:auto;
-    line-height:normal;
+  .card-text {
+    height: auto;
+    line-height: normal;
+  }
+  .col{
+    align-self:center;
+  }
+  .box{
+    min-width:900px;
   }
 </style>

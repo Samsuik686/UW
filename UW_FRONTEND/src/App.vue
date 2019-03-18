@@ -2,7 +2,6 @@
   <div id="app">
     <router-view/>
     <copyright/>
-    <help-page/>
     <notify-me
       :event-bus="eventBus">
       <template slot="content" slot-scope="{data}">
@@ -18,14 +17,12 @@
 
 <script>
   import Notify from './components/Notify'
-  import HelpPage from './components/HelpPage'
   import eventBus from './utils/eventBus'
   import Copyright from "./components/Copyright";
   export default {
     name: 'App',
     components: {
       Copyright,
-      HelpPage,
       'notify-me': Notify
     },
     data() {

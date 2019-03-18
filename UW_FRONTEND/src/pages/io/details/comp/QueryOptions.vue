@@ -2,19 +2,12 @@
   <div class="options-area">
     <div class="form-row">
       <div class="row no-gutters pl-3 pr-3">
-        <div class="form-group col pr-3 pl-1">
-          <label for="window-list">选择仓口:</label>
-          <select v-model="thisWindow" id="window-list" class="custom-select"
-                  @change="setWindow" :disabled="windowsList.length === 0">
-            <option value="">{{windowsList.length === 0 ? '无非空闲仓口' : '请选择'}}</option>
-            <option v-for="item in windowsList" :value="item.id">{{item.id}}</option>
-          </select>
-        </div>
         <div class="form-group col pr-3 pl-1" v-if="$route.path === '/io/preview' || $route.path === '/io/call'">
           <label for="type-list">出入库类型:</label>
           <select id="type-list" v-model="windowType" class="custom-select" @change="setPreset">
             <option value="1">入库</option>
-            <option value="2">出库</option>
+            <option value="2" v-if="$route.path === '/io/preview'">出库</option>
+            <option value="2" v-if="$route.path === '/io/call'">截料入库</option>
             <option value="3">退料</option>
           </select>
         </div>
@@ -29,6 +22,14 @@
         <div class="form-group col pr-3 pl-1" v-if="$route.path === '/io/return'">
           <label for="return">出入库类型:</label>
           <input type="text" class="form-control" id="return" disabled  placeholder="退料">
+        </div>
+        <div class="form-group col pr-3 pl-1">
+          <label for="window-list">选择仓口:</label>
+          <select v-model="thisWindow" id="window-list" class="custom-select"
+                  @change="setWindow" :disabled="windowsList.length === 0">
+            <option value="">{{windowsList.length === 0 ? '无非空闲仓口' : '请选择'}}</option>
+            <option v-for="item in windowsList" :value="item.id">{{item.id}}</option>
+          </select>
         </div>
         <div class="form-group row align-items-end" v-if="isShow">
           <div class="btn btn-primary ml-3 mr-4" @click="initCutPanel">截料后重新入库</div>

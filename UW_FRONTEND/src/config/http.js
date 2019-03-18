@@ -42,8 +42,9 @@ axios.interceptors.response.use(
         query: {redirect: router.currentRoute.fullPath}
       });
       alertWarning('权限不足');
+      return;
     }
-    return res
+    return res;
   },
   error => {
     if (error.response) {

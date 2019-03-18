@@ -19,11 +19,16 @@
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-supplier" class="col-form-label">供应商:</label>
+          <input type="text" id="material-supplier" class="form-control" v-model="thisData.supplierName" autocomplete="off" disabled>
+          <span class="form-span col"></span>
+        </div>
+        <!--<div class="form-row col-4 pl-2 pr-2">
+          <label for="material-supplier" class="col-form-label">供应商:</label>
           <select id="material-supplier" v-model="thisData.supplierName" class="custom-select">
             <option  v-for="item in suppliers">{{item.name}}</option>
           </select>
           <span class="form-span col"></span>
-        </div>
+        </div>-->
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-thickness" class="col-form-label">厚度:</label>
           <input type="text" id="material-thickness" class="form-control" v-model="thisData.thickness"
@@ -48,7 +53,7 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {materialUpdateUrl, supplierSelectUrl} from "../../../../../config/globalUrl";
+  import {materialUpdateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
 
@@ -65,15 +70,11 @@
           thickness: '',
           radius: ''
         },
-        suppliers:[],
         warningMsg: {
 
         },
         isPending: false
       }
-    },
-    created(){
-      this.selectSupplier();
     },
     mounted() {
       this.thisData.id = this.editData.id;
@@ -106,9 +107,7 @@
             url: materialUpdateUrl,
             data: {
               id: this.thisData.id,
-              //specification: this.thisData.specification,
               enabled: 1,
-              supplierName:this.thisData.supplierName,
               thickness:this.thisData.thickness,
               radius:this.thisData.radius
             }
@@ -133,35 +132,6 @@
               this.$alertDanger('请求超时，请刷新重试')
             }
           })
-        }
-      },
-      selectSupplier: function () {
-        if (!this.isPending) {
-          this.isPending = true;
-          let options = {
-            url: supplierSelectUrl,
-            data: {}
-          };
-          axiosPost(options).then(response => {
-            this.isPending = false;
-            if (response.data.result === 200) {
-              let data = response.data.data.list;
-              data.map((item,index) => {
-                if(item.enabled === true){
-                  this.suppliers.push(item);
-                }
-              })
-            } else {
-              errHandler(response.data.result)
-            }
-          })
-            .catch(err => {
-              if (JSON.stringify(err) !== '{}') {
-                this.isPending = false;
-                console.log(JSON.stringify(err));
-                this.$alertDanger('请求超时，请刷新重试');
-              }
-            })
         }
       },
       //根据传入的条目、正则表达式以及错误信息进行信息验证

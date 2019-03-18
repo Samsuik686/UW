@@ -3,7 +3,7 @@
 -->
 
 <template>
-  <div>
+  <div class="box">
     <video controls="controls" id="sAudio" hidden>
       <source src="./../../../assets/005-System05.ogg" type="video/ogg">
     </video>
@@ -95,21 +95,23 @@
             </div>
             <div class="dropdown-divider"></div>
             <div class="row card-body" v-for="item in materialOutRecords">
-              <div class="col pl-4">
+              <div class="col">
                 <p class="card-text">{{item.materialId}}</p>
               </div>
-              <div class="col pl-4">
+              <div class="col">
                 <p class="card-text">{{item.quantity}}</p>
               </div>
-              <div class="col pl-4">
+              <div class="col">
                 <p class="card-text">{{item.productionTime}}</p>
               </div>
-              <div class="col pl-4">
-                <div class="btn pl-1 pr-1" title="修改出库数" @click="confirmEdit(item)">
-                  <icon name="edit" scale="1.8"></icon>
-                </div>
-                <div class="btn pl-1 pr-1" title="删除" @click="confirmDelete(item)">
-                  <icon name="cancel" scale="1.8"></icon>
+              <div class="col">
+                <div class="card-text">
+                  <div class="btn pl-1 pr-1" title="修改出库数" @click="confirmEdit(item)">
+                    <icon name="edit" scale="1.8"></icon>
+                  </div>
+                  <div class="btn pl-1 pr-1" title="删除" @click="confirmDelete(item)">
+                    <icon name="cancel" scale="1.8"></icon>
+                  </div>
                 </div>
               </div>
             </div>
@@ -275,7 +277,7 @@
       });
       this.initData();
       this.setFocus();
-      if(this.editMaterialOutRecords !== []){
+      if (this.editMaterialOutRecords !== []) {
         this.materialOutRecords = this.editMaterialOutRecords;
         this.countActualQuantity();
       }
@@ -320,7 +322,7 @@
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
                 let isForceFinish = this.taskNowItems.isForceFinish;
-                eventBus.$emit('getIsForceFinish',isForceFinish);
+                eventBus.$emit('getIsForceFinish', isForceFinish);
                 if (this.compareArr(this.materialOutRecords, this.taskNowItems.details) === false) {
                   this.materialOutRecords = this.taskNowItems.details;
                   this.actualQuantity = this.taskNowItems.actualQuantity;
@@ -543,7 +545,7 @@
       },
       // 获取修改的数据
       getEditData: function (thisData) {
-        if(this.configData.printerIP === ""){
+        if (this.configData.printerIP === "") {
           this.$alertWarning("请在设置界面填写打印机IP");
           return;
         }
@@ -644,6 +646,7 @@
     border-radius: 8px;
     padding: 10px;
     min-height: 500px;
+    min-width:900px;
   }
 
   .img-style {
@@ -748,8 +751,14 @@
     opacity: 0;
   }
 
-  .card-text{
-    height:auto;
-    line-height:normal;
+  .card-text {
+    height: auto;
+    line-height: normal;
+  }
+  .col{
+    align-self:center;
+  }
+  .box{
+    min-width:900px;
   }
 </style>
