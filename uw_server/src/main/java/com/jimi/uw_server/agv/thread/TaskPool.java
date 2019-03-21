@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.jfinal.aop.Enhancer;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -18,7 +19,9 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
+import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.bo.RobotBO;
+import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;
 
 /**
@@ -28,6 +31,8 @@ import com.jimi.uw_server.util.ErrorLogWritter;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class TaskPool extends Thread{
+
+	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
 	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT DISTINCT(box) AS boxId FROM material WHERE type = ?";
 
@@ -85,7 +90,7 @@ public class TaskPool extends Thread{
 			//获取对应item
 			AGVIOTaskItem item = ioTaskItems.get(a);
 
-			// 0. 判断任务条目状态是否为0
+			// 0. 判断任务条目状态是否为未分配
 			if (item.getState().intValue() == IOTaskItemState.WAIT_ASSIGN) {
 				// 1. 根据item的任务id获取任务类型
 				Task task = Task.dao.findById(item.getTaskId());
@@ -101,7 +106,30 @@ public class TaskPool extends Thread{
 				// 对于出库
 					// 2. 根据类型获取最旧物料实体的盒号
 				else if (taskType == TaskType.OUT) {
-					boxId = getOldestMaterialBox(item.getMaterialTypeId());
+					// 对于出库任务，需要判断库存是否为0
+					
+					// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
+					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+					if (remainderQuantity == 0) {
+						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
+
+						// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
+						TaskLog taskLog = new TaskLog();
+						taskLog.setPackingListItemId(item.getId());
+						taskLog.setMaterialId(null);
+						taskLog.setQuantity(0);
+						taskLog.setOperator(null);
+						// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
+						taskLog.setAuto(true);
+						taskLog.setTime(new Date());
+						taskLog.setDestination(task.getDestination());
+						taskLog.save();
+
+						break;
+					} else {
+						boxId = getOldestMaterialBox(item.getMaterialTypeId());
+					}
+
 				}
 
 				MaterialBox materialBox = MaterialBox.dao.findById(boxId);

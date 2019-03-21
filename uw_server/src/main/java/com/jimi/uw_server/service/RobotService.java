@@ -95,7 +95,7 @@ public class RobotService extends SelectService {
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
 						Integer actualQuantity = getActualIOQuantity(item.getId());
 						if (actualQuantity >= item.getQuantity()) {
-							taskService.finishItem(id, true, null);
+							taskService.finishItem(id, true);
 						}
 
 						// 查询对应料盒
@@ -158,71 +158,90 @@ public class RobotService extends SelectService {
 
 
 	/**
-	 * 物料入库/截料后重新入库扫料盘，将任务条目状态设置为0
+	 * 物料入库/截料后重新入库扫料盘，用于呼叫叉车
 	 */
 	public String call(Integer id, String no) throws Exception {
 		synchronized(CALL_LOCK) {
-			Window window = Window.dao.findById(id);
-			Integer taskId = window.getBindTaskId();
-			// 通过任务条目id获取物料类型id，从而获取对应的供应商id
-			PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKING_LIST_ITEM_SQL, taskId);
-			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-			Integer supplier = materialType.getSupplier();
-			PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplier);
 			String resultString = "调用成功！";
 
-			// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
-			if (item == null) {
-				resultString = "该物料暂时不需要入库或截料！";
-				return resultString;
-			}
+			// 只在有选择仓口时才读取仓口和任务信息，避免出现NPE异常
+			if (id != null) {
+				Window window = Window.dao.findById(id);
+				Integer taskId = window.getBindTaskId();
+				// 通过任务条目id获取物料类型id，从而获取对应的供应商id
+				PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKING_LIST_ITEM_SQL, taskId);
+				MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
+				Integer supplier = materialType.getSupplier();
+				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplier);
 
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-				// 如果该料号对应的任务条目存在redis中
-				if (item.getId().intValue() == redisTaskItem.getId().intValue()) {
+				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
+				if (item == null) {
+					resultString = "该物料暂时不需要入库或截料！";
+					return resultString;
+				}
 
-					// 若任务条目已完成，则提示不要重复执行已完成任务条目
-					if (redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_BACK) {
-						resultString = "该任务条目已完成，请不要重复执行已完成任务条目";
-						return resultString;
-					}
+				// 若是扫描到属于当前仓口任务的料盘二维码，则逐条读取任务队列中的任务条目
+				else {
+					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+						// 若扫描的料号对应的任务条目与任务队列读取到的数据匹配
+						if (item.getId().intValue() == redisTaskItem.getId().intValue()) {
 
-					// 若该任务条目正在执行当中，则提示不能再调用该接口
-					else if ((redisTaskItem.getState().intValue() > IOTaskItemState.WAIT_SCAN) && (redisTaskItem.getState().intValue() < IOTaskItemState.FINISH_BACK)) {
-						resultString = "该物料对应的任务条目正在执行中，请勿重复调用叉车！";
-						return resultString;
-					}
+							// 若任务条目已完成，则提示不要重复执行已完成任务条目
+							if (redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_BACK) {
+								resultString = "该任务条目已完成，请不要重复执行已完成任务条目";
+								return resultString;
+							}
 
-					// 若任务条目状态为等待扫码，则将其状态更新为未分配拣料
-					else if (redisTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN) {
-						TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
-						TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
-						TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
-						return resultString;
-					}
+							// 若该任务条目正在执行当中，则提示不能再调用该接口
+							else if ((redisTaskItem.getState().intValue() > IOTaskItemState.WAIT_SCAN) && (redisTaskItem.getState().intValue() < IOTaskItemState.FINISH_BACK)) {
+								resultString = "该物料对应的任务条目正在执行中，请勿重复调用叉车！";
+								return resultString;
+							}
 
-					// 若任务条目状态为已完成截料，且对应的料盒在架，则将其状态更新为未分配拣料
-					else if (redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_CUT) {
-						MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
-						// 若料盒在架，则将其状态更新为未分配拣料
-						if (materialBox.getIsOnShelf()) {
-							TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
-							TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
-							TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
-							return resultString;
-						} else {	// 为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令
-							resultString = "请等叉车将对应的料盒放回货架之后再进行调用！";
-							return resultString;
+							// 若任务条目状态为等待扫码，则将其状态更新为未分配拣料
+							else if (redisTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN) {
+								TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
+								TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
+								TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
+								return resultString;
+							}
+
+							// 若任务条目状态为已完成截料，且判断其对应的料盒是否在架，根据料盒在架情况更新其状态
+							else if (redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_CUT) {
+								MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
+								// 若料盒在架，则将其状态更新为未分配拣料
+								if (materialBox.getIsOnShelf()) {
+									TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
+									TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
+									TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
+									return resultString;
+								} else {	// 若料盒不在架，为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令
+									resultString = "请等叉车将对应的料盒放回货架之后再进行调用！";
+									return resultString;
+								}
+							}
+
+							// 如果该料号对应的任务条目不存在于任务队列中，则提示“该物料暂时不需要入库或截料！”
+							else {
+								resultString = "该物料暂时不需要入库或截料！";
+								return resultString;
+							}
 						}
-					}
 
-					// 如果该料号对应的任务条目不存在redis中
-					else {
-						resultString = "该物料暂时不需要入库或截料！";
-						return resultString;
+						// 若扫描的料号对应的任务条目与任务队列读取到的数据不匹配，则继续读取下一条任务条目数据
+						else {
+							continue;
+						}
+
 					}
 				}
 			}
+
+			// 若在没有传递仓口id的情况下调用该接口，则返回警告信息
+			else {
+				resultString = "当前无任务，无需扫码呼叫叉车！";
+			}
+
 			return resultString;
 		}
 	}

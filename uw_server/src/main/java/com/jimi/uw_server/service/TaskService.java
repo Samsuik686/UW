@@ -43,8 +43,6 @@ public class TaskService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-
 	private static final Object CREATEIOTASK_LOCK = new Object();
 
 	private static final Object START_LOCK = new Object();
@@ -86,8 +84,6 @@ public class TaskService {
 	private static final String GET_TASK_LOG_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ?";
-
-	private static final String GET_MATERIAL_BY_MATERIAL_TYPE_ID_SQL = "SELECT * FROM material WHERE type = ?";
 
 
 	public String createIOTask(Integer type, String fileName, String fullFileName, Integer supplier, Integer destination) throws Exception {
@@ -236,30 +232,7 @@ public class TaskService {
 				}
 			} else if (task.getType() == TaskType.OUT) {		// 如果任务类型为出库，则将任务条目加载到redis中，将任务条目状态设置为未分配
 				for (PackingListItem item : items) {
-					// 根据物料类型号获取物料库存数量，若库存数大于0，则将任务条目状态设置为等待分配；若库存数为0，则将任务条目状态设置为缺料
-					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
-					AGVIOTaskItem a;
-					if (remainderQuantity > 0) {
-						a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_ASSIGN, task.getPriority());
-					} else {
-
-						a = new AGVIOTaskItem(item, IOTaskItemState.LACK, task.getPriority());
-
-						// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
-						Material m = Material.dao.findFirst(GET_MATERIAL_BY_MATERIAL_TYPE_ID_SQL, item.getMaterialTypeId());
-
-						// 为计算超发数，对于出库数为0的任务，也需要记录一条出库日志
-						TaskLog taskLog = new TaskLog();
-						taskLog.setPackingListItemId(item.getId());
-						taskLog.setMaterialId(m.getId());
-						taskLog.setQuantity(0);
-						taskLog.setOperator(user.getUid());
-						// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-						taskLog.setAuto(true);
-						taskLog.setTime(new Date());
-						taskLog.setDestination(task.getDestination());
-						taskLog.save();
-					}
+					AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_ASSIGN, task.getPriority());
 					taskItems.add(a);
 				}
 			}
@@ -396,7 +369,7 @@ public class TaskService {
 	}
 
 
-	public boolean finishItem(Integer packListItemId, Boolean isForceFinish, User user) {
+	public boolean finishItem(Integer packListItemId, Boolean isForceFinish) {
 		if (isForceFinish) {
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 				if (redisTaskItem.getId().intValue() == packListItemId) {
@@ -407,16 +380,14 @@ public class TaskService {
 
 					// 为计算超发数，对于出库数为0的任务，也需要记录一条日志
 					TaskLog tl = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL, packListItemId);
-					Task task = Task.dao.findById(packingListItem.getTaskId());
-					// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
-					Material m = Material.dao.findFirst(GET_MATERIAL_BY_MATERIAL_TYPE_ID_SQL, packingListItem.getMaterialTypeId());
 					if (tl == null) {
-						// 写入一条出库任务日志
+						Task task = Task.dao.findById(packingListItem.getTaskId());
+						// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
 						TaskLog taskLog = new TaskLog();
 						taskLog.setPackingListItemId(packListItemId);
-						taskLog.setMaterialId(m.getId());
+						taskLog.setMaterialId(null);
 						taskLog.setQuantity(0);
-						taskLog.setOperator(user.getUid());
+						taskLog.setOperator(null);
 						// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
 						taskLog.setAuto(true);
 						taskLog.setTime(new Date());
@@ -573,6 +544,12 @@ public class TaskService {
 			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
 		}
 
+		// 判断物料二维码中包含的料盘数量信息是否与数据库中的料盘剩余数相匹配
+		Integer remainderQuantity = Material.dao.findById(materialId).getRemainderQuantity();
+		if (remainderQuantity.intValue() != quantity) {
+			throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
+		}
+
 		synchronized(OUT_LOCK) {
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 			Task task = Task.dao.findById(packingListItem.getTaskId());
@@ -619,7 +596,7 @@ public class TaskService {
 				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, item.getId(), materialId);
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
-				if (quantity < material.getRemainderQuantity()) {
+				if (quantity < material.getRemainderQuantity() && quantity > 0) {
 					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_CUT);
 				}
 				// 修改物料实体表对应的料盘剩余数量

@@ -159,10 +159,7 @@ public class TaskController extends Controller {
 	// 完成任务条目
 	@Log("id号为{packListItemId}的任务条目出入库数量与计划数量不相符，叉车回库后，该任务条目的完成状态为{isFinish}(true表示已完成，false表示未完成)")
 	public void finishItem(Integer packListItemId, Boolean isFinish) {
-		// 获取当前使用系统的用户，以便获取操作员uid
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish, user)));
+		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish)));
 	}
 
 

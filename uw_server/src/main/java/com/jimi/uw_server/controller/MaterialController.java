@@ -51,9 +51,9 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，供应商名为{supplierName}，厚度为{thickness}，半径为{radius}")
-	public void updateType(Integer id, String supplierName, Boolean enabled, Integer thickness, Integer radius) {
-		String resultString = materialService.updateType(id, supplierName, enabled, thickness, radius);
+	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}")
+	public void updateType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
+		String resultString = materialService.updateType(id, enabled, thickness, radius);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

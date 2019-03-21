@@ -82,8 +82,12 @@ public class TaskLogVO extends TaskLog {
 
 	
 	public String setOperatorName(String operator) {
-		User user = User.dao.findById(operator);
-		operatorName = user.getName();
+		if (operator != null) {
+			User user = User.dao.findById(operator);
+			operatorName = user.getName();
+		} else {
+			operatorName = "缺料记录";
+		}
 		return operatorName;
 	}
 

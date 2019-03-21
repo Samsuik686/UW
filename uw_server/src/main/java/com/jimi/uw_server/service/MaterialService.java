@@ -59,7 +59,7 @@ public class MaterialService extends SelectService{
 
 	private static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE area = ? AND row = ? AND col = ? AND height = ? AND enabled = 1";
 
-	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE material_id IN (SELECT id FROM material WHERE material.type = ?) AND (destination = ? OR destination is NULL) GROUP BY packing_list_item_id ORDER BY task_log.time";
+	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE packing_list_item_id IN (SELECT id FROM packing_list_item WHERE material_type_id = ?) AND (destination = ? OR destination is NULL) GROUP BY packing_list_item_id ORDER BY task_log.time";
 
 	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
@@ -141,7 +141,7 @@ public class MaterialService extends SelectService{
 	}
 
 
-	public String updateType(Integer id, String supplierName, Boolean enabled, Integer thickness, Integer radius) {
+	public String updateType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
 		String resultString = "更新成功！";
 		if (!enabled) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL,id);
@@ -157,11 +157,7 @@ public class MaterialService extends SelectService{
 				return resultString;
 			}
 		}
-		Integer supplier;
-		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
-		supplier = s.getId();
 		MaterialType materialType = MaterialType.dao.findById(id);
-		materialType.setSupplier(supplier);
 		materialType.setThickness(thickness);
 		materialType.setRadius(radius);
 		materialType.setEnabled(enabled);
@@ -308,8 +304,8 @@ public class MaterialService extends SelectService{
 		List<Record> materialRecord = Db.find(GET_MATERIAL_REPORT_SQL, supplier);
 		String[] field = null;
 		String[] head = null;
-		field = new String[] { "id", "no", "specification", "box", "row", "col", "height", "quantity"};
-		head =  new String[] { "物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};	
+		field = new String[] {"id", "no", "specification", "box", "row", "col", "height", "quantity"};
+		head =  new String[] {"物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};	
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(materialRecord, fileName, field, head);
 		writter.write(output, true);
