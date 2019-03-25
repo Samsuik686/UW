@@ -47,6 +47,10 @@ public class TaskService {
 
 	private static final Object START_LOCK = new Object();
 
+	private static final Object PASS_LOCK = new Object();
+
+	private static final Object CANCEL_LOCK = new Object();
+
 	private static final Object IN_LOCK = new Object();
 
 	private static final Object OUT_LOCK = new Object();
@@ -86,13 +90,14 @@ public class TaskService {
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ?";
 
 
+	// 创建出入库任务
 	public String createIOTask(Integer type, String fileName, String fullFileName, Integer supplier, Integer destination) throws Exception {
 		String resultString = "添加成功！";
 		File file = new File(fullFileName);
 
 		// 如果文件格式不对，则提示检查文件格式
 		if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
-			//清空upload目录下的文件
+			// 清空upload目录下的文件
 			deleteTempFileAndTaskRecords(file, null);
 			resultString = "创建任务失败，请检查套料单的文件格式是否正确！";
 			return resultString;
@@ -100,10 +105,10 @@ public class TaskService {
 
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
-		// 如果套料单表头不对，则提示检查套料单表头，同时检查套料单表格中是否有料号记录
+		// 如果套料单表头不对或者表格中没有有效的任务记录
 		if (items == null || items.size() == 0) {
 			deleteTempFileAndTaskRecords(file, null);
-			resultString = "创建任务失败，请检查套料单的表头是否正确以及套料单表格中是否有料号记录！";
+			resultString = "创建任务失败，请检查套料单的表头是否正确以及套料单表格中是否有效的任务记录！";
 			return resultString;
 		} else {
 			synchronized(CREATEIOTASK_LOCK) {
@@ -194,6 +199,7 @@ public class TaskService {
 	}
 
 
+	// 删除tomcat上的临时文件并删除对应的任务记录
 	public void deleteTempFileAndTaskRecords(File file, Integer newTaskId) {
 		//清空upload目录下的文件
 		if (file.exists()) {
@@ -206,72 +212,108 @@ public class TaskService {
 	}
 
 
+	// 令指定任务通过审核
 	public boolean pass(Integer id) {
-		Task task = Task.dao.findById(id);
-		task.setState(TaskState.WAIT_START);
-		return task.update();
-	}
-
-	
-	public boolean start(Integer id, Integer window, User user) {
-		synchronized(START_LOCK) {
+		synchronized (PASS_LOCK) {
 			Task task = Task.dao.findById(id);
-			// 设置仓口，并在仓口表绑定该任务id
-			task.setWindow(window);
+			int state = task.getState();
+			// 若该任务的状态不是“待审核”，则禁止通过审核
+			if (state > TaskState.WAIT_REVIEW) {
+				throw new OperationException("该任务已审核过或已作废！");
+			} else {
+				task.setState(TaskState.WAIT_START);
+				return task.update();
+			}
+		}
+
+	}
+
+
+	// 令指定任务开始
+	public boolean start(Integer id, Integer window) {
+		synchronized(START_LOCK) {
+			// 根据仓口id查找对应的仓口记录
 			Window windowDao = Window.dao.findById(window);
-			windowDao.setBindTaskId(id);
-			windowDao.update();
-			// 根据套料单、物料类型表生成任务条目
-			List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
-			List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
-			// 如果任务类型为入库或退料入库，则将任务条目加载到redis中，将任务条目状态设置为不可分配
-			if (task.getType() == TaskType.IN  || task.getType() == TaskType.SEND_BACK) {
-				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_SCAN, task.getPriority());
-					taskItems.add(a);
+			// 判断仓口是否被占用
+			if (windowDao.getBindTaskId() != null) {
+				throw new OperationException("该仓口已被占用，请选择其它仓口！");
+			} else {
+				Task task = Task.dao.findById(id);
+				int state = task.getState();
+				// 判断任务状态是否为“未开始”
+				if (state != TaskState.WAIT_START) {
+					throw new OperationException("该任务已开始过或已作废！");
+				} else {
+					// 设置仓口，并在仓口表绑定该任务id
+					task.setWindow(window);
+					windowDao.setBindTaskId(id);
+					windowDao.update();
+					// 根据套料单、物料类型表生成任务条目
+					List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
+					List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
+					// 如果任务类型为入库或退料入库，则将任务条目加载到redis中，将任务条目状态设置为不可分配
+					if (task.getType() == TaskType.IN  || task.getType() == TaskType.SEND_BACK) {
+						for (PackingListItem item : items) {
+							AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_SCAN, task.getPriority());
+							taskItems.add(a);
+						}
+					} else if (task.getType() == TaskType.OUT) {		// 如果任务类型为出库，则将任务条目加载到redis中，将任务条目状态设置为未分配
+						for (PackingListItem item : items) {
+							AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_ASSIGN, task.getPriority());
+							taskItems.add(a);
+						}
+					}
+					// 把任务条目均匀插入到队列til中
+					TaskItemRedisDAO.addIOTaskItem(taskItems);
+					// 将任务状态设置为进行中
+					task.setState(TaskState.PROCESSING);
+					return task.update();
 				}
-			} else if (task.getType() == TaskType.OUT) {		// 如果任务类型为出库，则将任务条目加载到redis中，将任务条目状态设置为未分配
-				for (PackingListItem item : items) {
-					AGVIOTaskItem a = new AGVIOTaskItem(item, IOTaskItemState.WAIT_ASSIGN, task.getPriority());
-					taskItems.add(a);
-				}
+				
 			}
-			// 把任务条目均匀插入到队列til中
-			TaskItemRedisDAO.addIOTaskItem(taskItems);
-			// 将任务状态设置为进行中
-			task.setState(TaskState.PROCESSING);
-			return task.update();
 		}
 	}
 
 
+	// 作废指定任务
 	public boolean cancel(Integer id) {
-		Task task = Task.dao.findById(id);
-		int state = task.getState();
-		boolean untiedWindowflag = true;
-		// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
-		if (state == TaskState.PROCESSING) {
-			TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-				// 这里加这条if语句是为了判断任务队列中是否还存在该任务对应的任务条目，因为有可能任务队列中还存在不同任务id的任务条目，因此不能根据任务队列中还有任务条目就直接break
-				if (redisTaskItem.getTaskId().intValue() == id) {
-					untiedWindowflag = false;
-					break;
+		synchronized (CANCEL_LOCK) {
+			Task task = Task.dao.findById(id);
+			int state = task.getState();
+			// 对于已完成的任务，禁止作废
+			if (state == TaskState.FINISHED) {
+				throw new OperationException("该任务已完成，禁止作废！");
+			} else if (state == TaskState.CANCELED) {	// 对于已作废过的任务，禁止作废
+				throw new OperationException("该任务已作废！");
+			} else {
+				boolean untiedWindowflag = true;
+				// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
+				if (state == TaskState.PROCESSING) {
+					TaskItemRedisDAO.removeUnAssignedTaskItemByTaskId(id);
+					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+						// 这里加这条if语句是为了判断任务队列中是否还存在该任务对应的任务条目，因为有可能任务队列中还存在不同任务id的任务条目，因此不能根据任务队列中还有任务条目就直接break
+						if (redisTaskItem.getTaskId().intValue() == id) {
+							untiedWindowflag = false;
+							break;
+						}
+					}
 				}
+				// 如果任务状态为进行中且该组任务的全部任务条目都已从redis清空，则将任务绑定的仓口解绑
+				if (state == TaskState.PROCESSING && untiedWindowflag) {
+					Window window = Window.dao.findById(task.getWindow());
+					window.setBindTaskId(null);
+					window.update();
+				}
+				// 更新任务状态为作废
+				task.setState(TaskState.CANCELED);
+				return task.update();
 			}
 		}
-		// 如果任务状态为进行中且该组任务的全部任务条目都已从redis清空，则将任务绑定的仓口解绑
-		if (state == TaskState.PROCESSING && untiedWindowflag) {
-			Window window = Window.dao.findById(task.getWindow());
-			window.setBindTaskId(null);
-			window.update();
-		}
-		// 更新任务状态为作废
-		task.setState(TaskState.CANCELED);
-		return task.update();
+
 	}
 
 
+	// 查看任务详情
 	public Object check(Integer id, Integer type, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
 		// 如果任务类型为出入库
@@ -314,7 +356,8 @@ public class TaskService {
 		return null;
 	}
 
-	
+
+	// 查询指定类型的仓口
 	public List<Window> getWindows(int type) {
 		List<Window> windowIds = null;
 		switch (type) {
@@ -337,6 +380,7 @@ public class TaskService {
 	}
 
 
+	// 查询所有任务
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
@@ -356,6 +400,7 @@ public class TaskService {
 	}
 
 
+	// 完成任务
 	public void finish(Integer taskId) {
 		Task task = Task.dao.findById(taskId);
 		if (task.getState() == TaskState.PROCESSING) {
@@ -369,6 +414,7 @@ public class TaskService {
 	}
 
 
+	// 完成任务条目
 	public boolean finishItem(Integer packListItemId, Boolean isForceFinish) {
 		if (isForceFinish) {
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
@@ -401,6 +447,7 @@ public class TaskService {
 	}
 
 
+	// 获取指定仓口任务条目
 	public Object getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
 		if (id != null) {
 			Window window = Window.dao.findById(id);
@@ -414,10 +461,10 @@ public class TaskService {
 			int totalRow = 0;
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 				if (redisTaskItem.getTaskId().intValue() == window.getBindTaskId().intValue()) {
+					// 查询task_log中的material_id,quantity
+					List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
 					totalRow += 1;
 					for (Record windowTaskItem : windowTaskItems.getList()) {
-						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
 						Integer actualQuantity = 0;
 						// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
 						for (TaskLog tl : taskLogs) {
@@ -455,6 +502,7 @@ public class TaskService {
 	}
 
 
+	// 获取指定仓口停泊条目
 	public Object getWindowParkingItem(Integer id) {
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 			if(redisTaskItem.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
@@ -569,15 +617,32 @@ public class TaskService {
 	}
 
 
+	// 删除错误的料盘记录
 	public boolean deleteMaterialRecord(Integer packListItemId, String materialId) {
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 		int taskId = packingListItem.getTaskId();
 		Task task = Task.dao.findById(taskId);
+		Material material = Material.dao.findById(materialId);
+		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+			if (redisTaskItem.getId().intValue() == packListItemId.intValue()) {
+				if (redisTaskItem.getBoxId().intValue() != material.getBox().intValue()) {
+					throw new OperationException("时间戳为" + materialId + "的料盘不在该料盒中，禁止删除！");
+				}
+			}
+		}
 		if (task.getType() == TaskType.IN || task.getType() == TaskType.SEND_BACK) {	// 若是入库或退料入库任务，则删除掉入库记录，并删除掉物料实体表记录
 			Db.update(DELETE_TASK_LOG_SQL, packListItemId, materialId);
 			return Material.dao.deleteById(materialId);
-		} else {	// 若是出库任务，并删除掉出库记录
+		} else {	// 若是出库任务，删除掉出库记录；若已经执行过删除操作，则将物料实体表对应的料盘记录还原
 			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, packListItemId, materialId);
+			int remainderQuantity = material.getRemainderQuantity();
+			if (remainderQuantity == 0) {
+				material.setRow(0);
+				material.setCol(0);
+				material.setRemainderQuantity(taskLog.getQuantity());
+				material.setIsInBox(true);
+				material.update();
+			}
 			return TaskLog.dao.deleteById(taskLog.getId());
 		}
 	}

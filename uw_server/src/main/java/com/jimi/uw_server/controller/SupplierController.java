@@ -27,9 +27,9 @@ public class SupplierController extends Controller {
 		}
 	}
 
-	@Log("更新供应商号为{id}的供应商信息，传递的供应商名参数为{name}，传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
-	public void update(Integer id, String name, Boolean enabled) {
-		String resultString = supplierService.update(id, name, enabled);
+	@Log("删除供应商号为{id}的供应商")
+	public void update(Integer id, Boolean enabled) {
+		String resultString = supplierService.update(id, enabled);
 		if(resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

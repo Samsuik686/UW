@@ -59,19 +59,19 @@ public class DestinationService {
 	}
 
 
-	public String update(Integer id, String name) {
-		String resultString = "更新成功！";
-		Destination destination = Destination.dao.findById(id);
-		if(!destination.getName().equals(name)) {
-			if (Destination.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() != 0) {
-				resultString = "该供应商已存在，请勿重复添加！";
-				return resultString;
-			}
-		}
-		destination.setName(name);
-		destination.update();
-		return resultString;
-	}
+//	public String update(Integer id, String name) {
+//		String resultString = "更新成功！";
+//		Destination destination = Destination.dao.findById(id);
+//		if(!destination.getName().equals(name)) {
+//			if (Destination.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() != 0) {
+//				resultString = "该供应商已存在，请勿重复添加！";
+//				return resultString;
+//			}
+//		}
+//		destination.setName(name);
+//		destination.update();
+//		return resultString;
+//	}
 
 
 	public Object get(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {

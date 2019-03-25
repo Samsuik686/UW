@@ -138,9 +138,28 @@ public class TaskPool extends Thread{
 				// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
 				if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf()) {
 					// 在架
+
+					Boolean isBoxAvailabled = true;
+					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+						// 若该料盒被其它等待截料后返库的任务条目绑定，则不可用，不分配任务给叉车
+						if (redisTaskItem.getBoxId().intValue() == boxId.intValue() && redisTaskItem.getId().intValue() != item.getId().intValue() && redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_CUT) {
+							isBoxAvailabled = false;
+						}
+					}
+
+					// 若该料盒可用
 					// 5. 发送LS指令
-					IOHandler.sendLS(item, materialBox);
-					cn--;
+					if (isBoxAvailabled) {
+						IOHandler.sendLS(item, materialBox);
+						cn--;
+					}
+
+				}
+			} else if (item.getState().intValue() == IOTaskItemState.LACK) {	// 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
+				// 根据物料类型号获取物料库存数量
+				Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+				if (remainderQuantity > 0) {
+					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_ASSIGN);
 				}
 			}
 

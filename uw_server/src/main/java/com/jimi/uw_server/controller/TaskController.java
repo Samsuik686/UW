@@ -70,10 +70,7 @@ public class TaskController extends Controller {
 	// 令指定任务开始
 	@Log("开始任务编号为{id}的任务，绑定的仓口为{window}")
 	public void start(Integer id, Integer window) {
-		// 获取当前使用系统的用户，以便获取操作员uid
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if(taskService.start(id, window, user)) {
+		if(taskService.start(id, window)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());

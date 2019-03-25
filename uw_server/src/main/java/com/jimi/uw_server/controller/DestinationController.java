@@ -28,15 +28,15 @@ public class DestinationController extends Controller {
 	}
 
 
-	@Log("更新发料目的地号为{id}的信息，传递的发料目的地名参数为{name}")
-	public void update(Integer id, String name) {
-		String resultString = destinationService.update(id, name);
-		if(resultString.equals("更新成功！")) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			throw new OperationException(resultString);
-		}
-	}
+//	@Log("更新发料目的地号为{id}的信息，传递的发料目的地名参数为{name}")
+//	public void update(Integer id, String name) {
+//		String resultString = destinationService.update(id, name);
+//		if(resultString.equals("更新成功！")) {
+//			renderJson(ResultUtil.succeed());
+//		} else {
+//			throw new OperationException(resultString);
+//		}
+//	}
 
 
 	@Log("更新发料目的地号为{id}的启/禁用状态，传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")

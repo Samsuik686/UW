@@ -379,10 +379,10 @@ public class MaterialService extends SelectService{
 		}
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<MaterialTypeItemBO> items = fileReader.unfill(MaterialTypeItemBO.class, 0);
-		// 如果套料单表头不对，则提示检查套料单表头，同时检查套料单表格中是否有料号记录
+		// 如果物料类型表头不对或者表格中没有物料信息记录
 		if (items == null || items.size() == 0) {
 			deleteTempFile(file);
-			resultString = "导入物料类型表失败，请检查表头是否正确！";
+			resultString = "导入物料类型表失败，套料单表头错误或者表格中没有任何有效的物料信息记录！";
 			return resultString;
 		} else {
 			synchronized(IMPORT_FILE_LOCK) {

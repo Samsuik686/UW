@@ -41,15 +41,15 @@ public class SupplierService extends SelectService {
 		}
 	}
 
-	public String update(Integer id, String name, Boolean enabled) {
+	public String update(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		Supplier supplier = Supplier.dao.findById(id);
-		if(!supplier.getName().equals(name)) {
-			if (Supplier.dao.find(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name).size() != 0) {
-				resultString = "该供应商已存在，请勿重复添加！";
-				return resultString;
-			}
-		}
+//		if(!supplier.getName().equals(name)) {
+//			if (Supplier.dao.find(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name).size() != 0) {
+//				resultString = "该供应商已存在，请勿重复添加！";
+//				return resultString;
+//			}
+//		}
 		if (!enabled) {
 			MaterialType mt = MaterialType.dao.findFirst(GET_ENABLED_MATERIAL_TYPE_BY_SUPPLIER_ID_SQL, id);
 			if (mt != null) {
@@ -57,7 +57,6 @@ public class SupplierService extends SelectService {
 				return resultString;
 			}
 		}
-		supplier.setName(name);
 		supplier.setEnabled(enabled);
 		supplier.update();
 		return resultString;
