@@ -26,7 +26,7 @@ public class TaskController extends Controller {
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
-	// 创建任务
+	// 创建出入库/退料任务
 	@Log("创建任务类型为{type}的任务")
 	public void create(UploadFile file, Integer type, Integer supplier, Integer destination) throws Exception {
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4
@@ -163,7 +163,7 @@ public class TaskController extends Controller {
 	// 料盘截料后重新入库
 	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId},料盘剩余数量为{quantity}")
 	public void backAfterCutting(Integer packingListItemId, String materialId, Integer quantity) {
-		String resultString = taskService.cut(packingListItemId, materialId, quantity);
+		String resultString = taskService.backAfterCutting(packingListItemId, materialId, quantity);
 		if(resultString.equals("扫描成功，请将料盘放回料盒！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -172,7 +172,7 @@ public class TaskController extends Controller {
 	}
 
 
-	// 料盘截料后重新入库
+	// 设置优先级
 	@Log("将任务id为{id}的任务优先级设置为{priority}")
 	public void setPriority(Integer id, Integer priority) {
 		renderJson(ResultUtil.succeed(taskService.setPriority(id, priority)));

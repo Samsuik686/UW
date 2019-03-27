@@ -44,6 +44,7 @@ public class RobotService extends SelectService {
 	private static final Object CALL_LOCK = new Object();
 
 
+	// 查询叉车
 	public List<RobotVO> select() {
 		List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
 		List<RobotVO> robotVOs = new ArrayList<>();
@@ -56,7 +57,8 @@ public class RobotService extends SelectService {
 		return robotVOs;
 	}
 
-	
+
+	// 启用/禁用叉车
 	public void robotSwitch(String id, Integer enabled) throws Exception {
 		List<Integer> idList = new ArrayList<>();
 		String[] ids = id.split(",");
@@ -70,7 +72,8 @@ public class RobotService extends SelectService {
 		}
 	}
 
-	
+
+	// 运行/停止所有叉车
 	public void pause(Boolean pause) throws Exception {
         if (pause) {
             SwitchHandler.sendAllStart();
@@ -85,11 +88,19 @@ public class RobotService extends SelectService {
 	 * 叉车回库SL
 	 */
 	public String back(Integer id, String materialOutputRecords) throws Exception {
-		String resultString = "已成功发送SL指令！";
+		String resultString = "已成功发送回库指令！";
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(BACK_LOCK) {
 					if (item.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
+						// 若是出库任务且为截料后重新入库，则需要判断是否对已截过料的料盘重新扫码过
+						if (item.getIsForceFinish() && Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT && materialOutputRecords == null) {
+							resultString = taskService.isScanAgain(item.getId());
+							if (resultString.equals("请扫描修改出库数时所打印出的新料盘二维码!")) {
+								return resultString;
+							}
+						}
+
 						// 更新任务条目状态为已分配回库
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
 						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成
@@ -111,13 +122,13 @@ public class RobotService extends SelectService {
 							resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 						}
 
-						// 在对出库任务执行回库操作时，调用 updateOutputQuantity 方法，以便「修改出库数」
-						if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT) {
-							taskService.updateOutputQuantityAndMaterialInfo(item, materialOutputRecords);
+						// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
+						if (Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT && materialOutputRecords != null) {
+							taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords);
 						}
 
 					} else {
-						resultString = "该任务条目已发送过SL指令，请勿重复发送SL指令！";
+						resultString = "该任务条目已发送过回库指令，请勿重复发送回库指令！";
 						return resultString;
 					}
 				}
@@ -168,10 +179,13 @@ public class RobotService extends SelectService {
 			if (id != null) {
 				Window window = Window.dao.findById(id);
 				Integer taskId = window.getBindTaskId();
-				// 通过任务条目id获取物料类型id，从而获取对应的供应商id
+				// 通过任务条目id获取套料单记录
 				PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKING_LIST_ITEM_SQL, taskId);
+				// 通过套料单记录获取物料类型id
 				MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
+				// 通过物料类型获取对应的供应商id
 				Integer supplier = materialType.getSupplier();
+				// 通过任务id，料号和供应商获取套料单条目
 				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplier);
 
 				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常

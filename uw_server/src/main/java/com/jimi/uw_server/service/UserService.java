@@ -31,6 +31,7 @@ public class UserService extends SelectService{
 	private static final String GET_USER_TYPE_SQL = "SELECT id,name FROM user_type WHERE id > 0";
 
 
+	// 登录
 	public User login(String uid, String password) {
 		User user = User.dao.findFirst(LOGIN_SQL, uid, MD5Util.MD5(password));
 		if(user == null) {
@@ -43,6 +44,7 @@ public class UserService extends SelectService{
 	}
 
 
+	// 添加新用户
 	public boolean add(String uid, String name, String password, Integer type) {
 		if (uid == null || name == null || password == null || type == null) {
 			return false;
@@ -66,6 +68,7 @@ public class UserService extends SelectService{
 	}
 
 
+	// 更新用户信息
 	public boolean update(String uid, String name, String password, Boolean enabled, Integer type) {
 		User user = User.dao.findById(uid);
 		user.setUid(uid);
@@ -88,6 +91,7 @@ public class UserService extends SelectService{
 	}
 
 
+	// 查询用户信息
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select("user", pageNo, pageSize, ascBy, descBy, filter);
 		List<UserVO> userVOs = new ArrayList<UserVO>();
@@ -106,6 +110,7 @@ public class UserService extends SelectService{
 	}
 
 
+	// 获取用户类型
 	public List<UserType> getTypes() {
 		List<UserType> userTypes = new ArrayList<UserType>();
 		userTypes = UserType.dao.find(GET_USER_TYPE_SQL);

@@ -102,11 +102,13 @@ public class MaterialController extends Controller {
 	}
 
 
+	// 获取物料出入库记录
 	public void getMaterialRecords(Integer type, Integer destination, Integer pageNo, Integer pageSize) {
 		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, destination, pageNo, pageSize)));
 	}
 
 
+	// 导出物料报表
 	public void exportMaterialReport(Integer supplier) {
 		OutputStream output = null;
 		Supplier s = Supplier.dao.findById(supplier);

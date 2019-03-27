@@ -27,6 +27,7 @@ public class SupplierService extends SelectService {
 	private static final String GET_ENABLED_MATERIAL_TYPE_BY_SUPPLIER_ID_SQL = "SELECT * FROM material_type WHERE supplier = ? AND enabled = 1";
 
 
+	// 添加供应商
 	public String add(String name) {
 		String resultString = "添加成功！";
 		if (Supplier.dao.find(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name).size() != 0) {
@@ -41,6 +42,8 @@ public class SupplierService extends SelectService {
 		}
 	}
 
+
+	// 更新供应商的启用/禁用状态
 	public String update(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		Supplier supplier = Supplier.dao.findById(id);
@@ -62,6 +65,8 @@ public class SupplierService extends SelectService {
 		return resultString;
 	}
 
+
+	// 查询所有供应商
 	public Object getSuppliers(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {

@@ -15,6 +15,7 @@ public class LogController extends Controller {
 	private static LogService logService = Enhancer.enhance(LogService.class);
 
 
+	// 根据表名查询日志
 	public void select(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter){
 		if (table.equals("action_log")) {	// 查询「接口调用日志」
 			renderJson(ResultUtil.succeed(logService.selectActionLog(table, pageNo, pageSize, ascBy, descBy, filter)));

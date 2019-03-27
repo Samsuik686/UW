@@ -21,6 +21,7 @@ public class BuildService extends SelectService {
 
 	public static final String GET_BOX_TYPE_BY_CELL_WIDTH_SQL = "SELECT * FROM box_type WHERE cell_width = ?";
 
+	// 建仓
 	public String build(String parameters) {
 		String resultString = "开始建仓！";
 		if (parameters != null) {
@@ -59,6 +60,7 @@ public class BuildService extends SelectService {
 	}
 
 
+	// 根据起始坐标生成“建仓任务”
 	private void createBuildTasks(Integer boxTypeId, String srcPosition, Integer startX, Integer startY, Integer startZ, Integer endX, Integer endY, Integer endZ) {
 		List<AGVBuildTaskItem> buildTaskItems = new ArrayList<AGVBuildTaskItem>();
 		for (int x=startX; x<=endX; x++) {

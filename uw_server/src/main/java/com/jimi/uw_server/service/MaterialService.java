@@ -78,6 +78,7 @@ public class MaterialService extends SelectService{
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 
 
+	// 统计物料类型信息
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
@@ -102,6 +103,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 获取物料详情
 	public Page<Record> getEntities(Integer type, Integer box, Integer pageNo, Integer pageSize) {
 		Page<Record> materialEntities = new Page<Record>();
 		if (type != null && box == null) {
@@ -116,6 +118,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 新增物料类型
 	public String addType(String no, String specification, String supplierName, Integer thickness, Integer radius) {
 		String resultString = "添加成功！";
 		Integer supplier;
@@ -141,6 +144,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 更新物料类型
 	public String updateType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
 		String resultString = "更新成功！";
 		if (!enabled) {
@@ -166,6 +170,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 获取料盒信息
 	public Object getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
@@ -190,6 +195,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 手动添加料盒
 	public String addBox(String area, Integer row, Integer col, Integer height, Integer cellWidth) {
 		String resultString = "添加成功！";
 		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL, area, row, col, height).size() != 0) {
@@ -214,6 +220,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 更新料盒在架/不在架状态
 	public Boolean updateBox(Integer id, Boolean isOnShelf) {
 		MaterialBox materialBox = MaterialBox.dao.findById(id);
 		materialBox.setIsOnShelf(isOnShelf);
@@ -221,6 +228,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 删除料盒
 	public String deleteBox(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		if (!enabled) {
@@ -240,6 +248,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 获取物料出入库记录
 	public Object getMaterialRecords(Integer type, Integer destination, Integer pageNo, Integer pageSize) {
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
 		recordItemList = getRecordItemList(type, destination);
@@ -261,6 +270,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 获取物料出入库记录子方法
 	public List<RecordItem> getRecordItemList(int type, int destination) {
 		int superIssuedQuantity = 0;		// 累计超发数
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
@@ -300,6 +310,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 导出物料报表
 	public void exportMaterialReport(Integer supplier, String fileName, OutputStream output) throws IOException {
 		List<Record> materialRecord = Db.find(GET_MATERIAL_REPORT_SQL, supplier);
 		String[] field = null;
@@ -312,6 +323,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 获取料盒类型
 	public Object getBoxTypes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
@@ -335,6 +347,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 添加料盒类型
 	public String addBoxType(Integer cellWidth, Integer cellRows, Integer cellCols) {
 		String resultString = "添加成功！";
 		if(BoxType.dao.find(GET_ENABLED_BOX_TYPE_BY_CELL_WIDTH_SQL, cellWidth).size() != 0) {
@@ -351,6 +364,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 删除料盒类型
 	public String deleteBoxType(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		if (!enabled) {
@@ -367,6 +381,7 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 导入物料类型表
 	public String importFile(String fileName, String fullFileName, String supplierName) throws Exception {
 		String resultString = "导入成功！";
 		File file = new File(fullFileName);

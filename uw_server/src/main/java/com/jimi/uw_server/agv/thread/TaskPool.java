@@ -36,11 +36,15 @@ public class TaskPool extends Thread{
 
 	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT DISTINCT(box) AS boxId FROM material WHERE type = ?";
 
-	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity >0";
+	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 
 	private static final String GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT box FROM material WHERE type = ?)";
 
-	private static final String GET_SURPLUS_MATERIAL_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material WHERE type = ?";
+	private static final String GET_MATERIAL_BY_TYPE_SQL = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0";
+
+	private static final String GET_MATERIAL_BY_TYPE_AND_BOX_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND box = ?";
+
+	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE quantity > 0 AND material_id = ? AND packing_list_item_id = ?";
 
 
 	@Override
@@ -127,7 +131,7 @@ public class TaskPool extends Thread{
 
 						break;
 					} else {
-						boxId = getOldestMaterialBox(item.getMaterialTypeId());
+						boxId = getOldestMaterialBox(item.getMaterialTypeId(), item.getId());
 					}
 
 				}
@@ -138,22 +142,9 @@ public class TaskPool extends Thread{
 				// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
 				if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf()) {
 					// 在架
-
-					Boolean isBoxAvailabled = true;
-					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-						// 若该料盒被其它等待截料后返库的任务条目绑定，则不可用，不分配任务给叉车
-						if (redisTaskItem.getBoxId().intValue() == boxId.intValue() && redisTaskItem.getId().intValue() != item.getId().intValue() && redisTaskItem.getState().intValue() == IOTaskItemState.FINISH_CUT) {
-							isBoxAvailabled = false;
-						}
-					}
-
-					// 若该料盒可用
 					// 5. 发送LS指令
-					if (isBoxAvailabled) {
-						IOHandler.sendLS(item, materialBox);
-						cn--;
-					}
-
+					IOHandler.sendLS(item, materialBox);
+					cn--;
 				}
 			} else if (item.getState().intValue() == IOTaskItemState.LACK) {	// 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
 				// 根据物料类型号获取物料库存数量
@@ -245,18 +236,44 @@ public class TaskPool extends Thread{
 	}
 
 
-	private static int getOldestMaterialBox(Integer materialTypeId) {
-		List<Material> materialList = Material.dao.find(GET_SURPLUS_MATERIAL_TYPE_MATERIAL_BOX_SQL, materialTypeId);
+	private static int getOldestMaterialBox(Integer materialTypeId, Integer packingListItemId) {
+		List<Material> materialList = Material.dao.find(GET_MATERIAL_BY_TYPE_SQL, materialTypeId);
 		int boxId = 0;
 		Date productionTime = new Date();
 
-		// 如果物料实体表中有该物料类型的记录
-		if (materialList.size() > 0) {
+		// 如果物料实体表中有多条该物料类型的记录，且库存大于0
+		if (materialList.size() > 1) {
 			for (Material m : materialList) {
-				if (m.getProductionTime().before(productionTime)) {
+				if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
 					productionTime = m.getProductionTime();
 					boxId = m.getBox();
 				}
+			}
+		}
+		// 如果物料实体表只有一条该物料类型的记录，且库存大于0
+		else if (materialList.size() == 1) {
+			// 直接获取该料盘记录
+			Material m = materialList.get(0);
+			// 若料盒中只有一条料盘记录有库存，且料盘记录不在盒内，则判断该任务条目是否需要将截完料的物料放回该料盒
+			if (!m.getIsInBox()) {
+				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+					// 根据任务条目id匹配到redis中的任务条目
+					if (redisTaskItem.getId().intValue() == packingListItemId.intValue()) {
+						// 若该任务条目不需要截料，则直接跳出
+						int size = TaskLog.dao.find(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, m.getId(), packingListItemId).size();
+						if (size == 0) {
+							break;
+						}
+						// 若该任务条目需要截料，由于只剩下这条料盘记录有库存，因此说明该任务条目绑定了该料盘，则返回该料盒号
+						else {
+							boxId = m.getBox();
+						}
+					}
+				}
+			}
+			// 若料盒中只有一条料盘记录有库存，且料盘记录在盒内，则返回该料盒号
+			else {
+					boxId = m.getBox();
 			}
 		}
 

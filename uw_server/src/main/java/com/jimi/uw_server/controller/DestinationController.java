@@ -17,6 +17,7 @@ public class DestinationController extends Controller {
 
 	private static DestinationService destinationService = Enhancer.enhance(DestinationService.class);
 
+	// 添加发料目的地
 	@Log("添加名为{name}的发料目的地")
 	public void add(String name) {
 		String resultString = destinationService.add(name);
@@ -39,6 +40,7 @@ public class DestinationController extends Controller {
 //	}
 
 
+	// 删除发料目的地
 	@Log("更新发料目的地号为{id}的启/禁用状态，传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
 	public void delete(Integer id, Boolean enabled) {
 		String resultString = destinationService.delete(id, enabled);
@@ -50,6 +52,7 @@ public class DestinationController extends Controller {
 	}
 
 
+	// 查询发料目的地
 	public void get(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(destinationService.get(pageNo, pageSize, ascBy, descBy, filter)));
 	}

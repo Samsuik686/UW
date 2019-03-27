@@ -17,6 +17,7 @@ public class SupplierController extends Controller {
 
 	private static SupplierService supplierService = Enhancer.enhance(SupplierService.class);
 
+	// 添加供应商
 	@Log("添加名为{name}的供应商")
 	public void add(String name) {
 		String resultString = supplierService.add(name);
@@ -27,6 +28,8 @@ public class SupplierController extends Controller {
 		}
 	}
 
+
+	// 更新供应商的启用/禁用状态
 	@Log("删除供应商号为{id}的供应商")
 	public void update(Integer id, Boolean enabled) {
 		String resultString = supplierService.update(id, enabled);
@@ -37,6 +40,8 @@ public class SupplierController extends Controller {
 		}
 	}
 
+
+	// 查询所有供应商
 	public void getSuppliers(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(supplierService.getSuppliers(pageNo, pageSize, ascBy, descBy, filter)));
 	}

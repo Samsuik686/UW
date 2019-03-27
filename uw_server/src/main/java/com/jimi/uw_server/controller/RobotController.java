@@ -41,11 +41,11 @@ public class RobotController extends Controller {
 	}
 
 
-	// 令叉车回库
+	// 令叉车回库，并更新库存
 	@Log("发送SL(回库)指令给叉车，该叉车目前绑定的任务条目为{id}")
 	public void back(Integer id, String materialOutputRecords) throws Exception {
 		String resultString = robotService.back(id, materialOutputRecords);
-		if (resultString.equals("已成功发送SL指令！")) {
+		if (resultString.equals("已成功发送回库指令！")) {
 			renderJson(ResultUtil.succeed());
 		} else if (resultString.equals("料盒中还有其他需要出库的物料，叉车暂时不回库！")) {
 			renderJson(ResultUtil.succeed(resultString));

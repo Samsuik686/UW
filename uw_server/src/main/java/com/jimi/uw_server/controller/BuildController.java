@@ -19,6 +19,7 @@ public class BuildController extends Controller {
 	private static BuildService buildService = Enhancer.enhance(BuildService.class);
 
 
+	// 建仓接口
 	@ActionKey("/build")
 	@Log("开始建仓，传递的参数为{parameters}")
 	public void build(String parameters) {

@@ -24,7 +24,7 @@ public class LogService extends SelectService {
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
 
-
+	// 查询接口调用日志
 	public Object selectActionLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select(new String[] {table}, null, pageNo, pageSize, ascBy, descBy, filter);
 		List<ActionLogVO> actionLogVOs = new ArrayList<ActionLogVO>();
@@ -43,6 +43,7 @@ public class LogService extends SelectService {
 	}
 
 
+	// 查询任务日志
 	public Object selectTaskLog(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select(new String[] {"task_log", "packing_list_item", "material_type", "material", "user"}, new String[] {"task_log.packing_list_item_id = packing_list_item.id", "task_log.material_id = material.id", "material_type.id = material.type", "task_log.operator = user.uid"}, pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskLogVO> taskLogVOs = new ArrayList<TaskLogVO>();
@@ -61,6 +62,7 @@ public class LogService extends SelectService {
 	}
 
 
+	// 查询物料位置转移日志
 	public Object selectPositionLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		Page<Record> result = selectService.select(new String[] {table, "material_type", "material"}, new String[] {"position_log.material_id = material.id", "material.type = material_type.id"}, pageNo, pageSize, ascBy, descBy, filter);
 		List<PositionLogVO> positionLogVOs = new ArrayList<PositionLogVO>();

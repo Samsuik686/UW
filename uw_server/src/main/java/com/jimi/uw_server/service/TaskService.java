@@ -85,12 +85,12 @@ public class TaskService {
 
 	private static final String DELETE_TASK_LOG_SQL = "DELETE FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
-	private static final String GET_TASK_LOG_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
+	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ?";
 
 
-	// 创建出入库任务
+	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, String fullFileName, Integer supplier, Integer destination) throws Exception {
 		String resultString = "添加成功！";
 		File file = new File(fullFileName);
@@ -541,22 +541,22 @@ public class TaskService {
 
 	// 新增入库料盘记录并写入库任务日志记录
 	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, User user) {
-		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
-		}
-		if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
-		}
-
-		// 新增物料表记录
-		int boxId = 0;
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
-			if (item.getId().intValue() == packListItemId) {
-				boxId = item.getBoxId().intValue();
-			}
-		}
-
 		synchronized(IN_LOCK) {
+			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
+				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
+			}
+			if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
+				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
+			}
+	
+			// 新增物料表记录
+			int boxId = 0;
+			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
+				if (item.getId().intValue() == packListItemId) {
+					boxId = item.getBoxId().intValue();
+				}
+			}
+
 			Material material = new Material();
 			material.setId(materialId);
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
@@ -587,18 +587,18 @@ public class TaskService {
 
 	// 写出库任务日志
 	public boolean out(Integer packListItemId, String materialId, Integer quantity, User user) {
-		// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
-		if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
-		}
-
-		// 判断物料二维码中包含的料盘数量信息是否与数据库中的料盘剩余数相匹配
-		Integer remainderQuantity = Material.dao.findById(materialId).getRemainderQuantity();
-		if (remainderQuantity.intValue() != quantity) {
-			throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
-		}
-
 		synchronized(OUT_LOCK) {
+			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
+			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
+				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
+			}
+	
+			// 判断物料二维码中包含的料盘数量信息是否与数据库中的料盘剩余数相匹配
+			Integer remainderQuantity = Material.dao.findById(materialId).getRemainderQuantity();
+			if (remainderQuantity.intValue() != quantity) {
+				throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
+			}
+
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 			Task task = Task.dao.findById(packingListItem.getTaskId());
 
@@ -634,7 +634,7 @@ public class TaskService {
 			Db.update(DELETE_TASK_LOG_SQL, packListItemId, materialId);
 			return Material.dao.deleteById(materialId);
 		} else {	// 若是出库任务，删除掉出库记录；若已经执行过删除操作，则将物料实体表对应的料盘记录还原
-			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, packListItemId, materialId);
+			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packListItemId, materialId);
 			int remainderQuantity = material.getRemainderQuantity();
 			if (remainderQuantity == 0) {
 				material.setRow(0);
@@ -649,7 +649,7 @@ public class TaskService {
 
 
 	// 更新出库数量以及料盘信息
-	public void updateOutputQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords) {
+	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords) {
 		if (materialOutputRecords != null) {
 			JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
 			for (int i=0; i<jsonArray.size(); i++) {
@@ -658,7 +658,7 @@ public class TaskService {
 				Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
 
 				// 修改任务日志的出库数量
-				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, item.getId(), materialId);
+				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, item.getId(), materialId);
 				taskLog.setQuantity(quantity).update();
 				Material material = Material.dao.findById(materialId);
 				if (quantity < material.getRemainderQuantity() && quantity > 0) {
@@ -685,17 +685,17 @@ public class TaskService {
 
 
 	// 将截料后剩余的物料置为在盒内
-	public String cut(Integer packingListItemId, String materialId, Integer quantity) {
+	public String backAfterCutting(Integer packingListItemId, String materialId, Integer quantity) {
 		String resultString = "扫描成功，请将料盘放回料盒！";
-		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_SQL, packingListItemId, materialId);
+		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packingListItemId, materialId);
 		Material material = Material.dao.findById(materialId);
 		if (taskLog == null) {
 			resultString = "扫错料盘，该料盘不需要放回该料盒!";
 		} else if (material.getRemainderQuantity().intValue() != quantity) {
 			resultString = "请扫描修改出库数时所打印出的新料盘二维码!";
-		} else if (material.getRemainderQuantity() == 0){
+		} else if (material.getRemainderQuantity() == 0) {
 			resultString = "该料盘已全部出库!";
-		} else if (material.getIsInBox()){
+		} else if (material.getIsInBox()) {
 			resultString = "该料盘已设置为在盒内，请将料盘放入料盒内!";
 		} else {
 			material.setIsInBox(true).update();
@@ -704,6 +704,23 @@ public class TaskService {
 	}
 
 
+	// 判断是否对已截过料的料盘重新扫码过
+	public String isScanAgain(Integer packingListItemId) {
+		String resultString = "已成功发送回库指令！";
+		List<TaskLog> taskLogList = TaskLog.dao.find(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL, packingListItemId);
+		for (TaskLog taskLog : taskLogList) {
+			Material material = Material.dao.findById(taskLog.getMaterialId());
+			int remainderQuantity = material.getRemainderQuantity();
+			if (remainderQuantity > 0 && !material.getIsInBox()) {
+				resultString = "请扫描修改出库数时所打印出的新料盘二维码!";
+			}
+		}
+
+		return resultString;
+	}
+
+
+	// 设置优先级
 	public boolean setPriority(Integer id, Integer priority) {
 		Task task = Task.dao.findById(id);
 		task.setPriority(priority);

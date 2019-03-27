@@ -28,6 +28,7 @@ public class DestinationService {
 	private static final String GET_TASK_BY_DESTINATION_ID_SQL = "SELECT * FROM task WHERE destination = ?";
 
 
+	// 添加发料目的地
 	public String add(String name) {
 		String resultString = "添加成功！";
 		if (Supplier.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() != 0) {
@@ -43,6 +44,7 @@ public class DestinationService {
 	}
 
 
+	// 删除发料目的地
 	public String delete(Integer id, Boolean enabled) {
 		String resultString = "删除成功！";
 		Destination destination = Destination.dao.findById(id);
@@ -74,6 +76,7 @@ public class DestinationService {
 //	}
 
 
+	// 查询发料目的地
 	public Object get(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null ) {
