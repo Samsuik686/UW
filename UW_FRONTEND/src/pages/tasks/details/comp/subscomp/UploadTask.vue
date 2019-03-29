@@ -48,6 +48,7 @@
 </template>
 
 <script>
+  import {mapActions} from 'vuex'
   import eventBus from '@/utils/eventBus';
   import {destinationSelectUrl, supplierSelectUrl, taskCreateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
@@ -78,6 +79,7 @@
       }
     },
     methods: {
+      ...mapActions(['setLoading']),
       closeUploadPanel: function () {
         eventBus.$emit('closeUploadPanel');
       },
@@ -97,6 +99,7 @@
         if (!this.isPending) {
           if (this.taskType !== "") {
             this.isPending = true;
+            this.setLoading(true);
             let formData = new FormData();
             if (this.taskType < 2 || this.taskType == 4) {
               if (this.thisFile !== "" && this.supplier !== "") {
@@ -119,6 +122,7 @@
             this.$axios.post(taskCreateUrl, formData, config).then(res => {
               if (res.data.result === 200) {
                 this.isPending = false;
+                this.setLoading(false);
                 this.$alertSuccess('添加成功');
                 this.closeUploadPanel();
                 let tempUrl = this.$route.path;
@@ -126,10 +130,12 @@
                 this.$router.replace(tempUrl);
               } else if (res.data.result === 412) {
                 this.isPending = false;
+                this.setLoading(false);
                 this.$alertWarning(res.data.data);
               }
               else {
                 this.isPending = false;
+                this.setLoading(false);
                 errHandler(res.data)
               }
             })

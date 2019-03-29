@@ -162,7 +162,13 @@
       })
     },
     computed: {},
-    watch: {},
+    watch: {
+      $route: function (route) {
+        if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
+          this.initForm();
+        }
+      },
+    },
     methods: {
       ...mapActions(['setLoading']),
       initForm: function () {

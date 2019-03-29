@@ -60,6 +60,12 @@
         // pageSize: 2000,
         queryOptions: [
           {
+            id: 'id',
+            name: '料盒号',
+            model: '',
+            type: 'text'
+          },
+          {
             id: 'area',
             name: '区域',
             model: '',
@@ -115,7 +121,13 @@
         'tableRouterApi'
       ]),
     },
-    watch: {},
+    watch: {
+      $route: function (route) {
+        if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
+          this.initForm();
+        }
+      },
+    },
     methods: {
       ...mapActions(['setLoading']),
       initForm: function () {

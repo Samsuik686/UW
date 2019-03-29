@@ -131,11 +131,13 @@
 </template>
 
 <script>
+  import {mapGetters} from 'vuex'
   import eventBus from "../../../../utils/eventBus";
   import GlobalTips from "./GlobalTips";
   import Options from "../../../logs/details/comp/QueryOptions";
   import {robotBackUrl,taskBackAfterCuttingUrl} from "../../../../config/globalUrl";
   import {axiosPost} from "../../../../utils/fetchData";
+  import {errHandler} from "../../../../utils/errorHandler";
 
   export default {
     name: "CutNow",
@@ -152,6 +154,7 @@
         scanText: '',
         isSetFocus: false,
         option: false,
+        materialId:''
       }
     },
     components: {
@@ -165,7 +168,10 @@
     computed: {
       taskNowItems: function () {
         return this.item;
-      }
+      },
+      ...mapGetters([
+         'user', 'configData'
+      ]),
     },
     methods: {
       closePanel: function () {
@@ -186,7 +192,8 @@
           this.robotBack();
           return;
         }
-        if(tempArray[0] !== this.taskNowItems.materialNo){
+        let text = tempArray[0].replace('\ufeff','');
+        if(text !== this.taskNowItems.materialNo){
           this.failAudioPlay();
           this.isTipsShow = true;
           this.tipsComponentMsg = false;
@@ -195,6 +202,7 @@
           }, 3000);
           return;
         }
+        this.materialId = tempArray[2];
         this.backAfterCutting(tempArray[2],tempArray[1]);
       },
       overQuantity: function (plan, actual) {
@@ -222,6 +230,7 @@
             if (res.data.result === 200) {
               this.successAudioPlay();
               this.$alertSuccess("操作成功，请将料盒放回料盒");
+              this.printBarcode();
               this.isTipsShow = true;
               this.tipsComponentMsg = true;
               setTimeout(() => {
@@ -229,12 +238,12 @@
               }, 3000)
             } else {
               this.failAudioPlay();
-              this.$alertWarning(res.data.data);
-              this.isTipsShow = true;
+              errHandler(res.data);
+              /*this.isTipsShow = true;
               this.tipsComponentMsg = false;
               setTimeout(() => {
                 this.isTipsShow = false;
-              }, 3000)
+              }, 3000)*/
             }
             this.isPending = false;
           }).catch(err => {
@@ -287,8 +296,48 @@
           }
         }
       },
+      // 请求打印
+      printBarcode: function () {
+        if (this.configData.printerIP === "") {
+          this.$alertWarning("请在设置界面填写打印机IP");
+          return;
+        }
+        let remainingQuantity, productionTime;
+        for(let i =0;i<this.taskNowItems.details.length;i++){
+          let item = this.taskNowItems.details[i];
+          if(this.materialId === item.materialId){
+            remainingQuantity = item.remainingQuantity;
+            productionTime = item.productionTime;
+            break;
+          }
+        }
+        let options = {
+          url: window.g.PRINTER_URL,
+          data: {
+            printerIP: this.configData.printerIP,
+            materialId: this.materialId,
+            materialNo: this.taskNowItems.materialNo,
+            remainingQuantity: remainingQuantity,
+            productDate: productionTime,
+            user: this.user,
+            supplier: this.taskNowItems.supplierName
+          }
+        };
+        axiosPost(options).then(response => {
+          if (response.data.code === 200) {
+            this.$alertSuccess(response.data.msg);
+          } else if (response.data.code === 400) {
+            this.$alertWarning(response.data.msg);
+          } else {
+            this.$alertDanger(response.data.msg);
+          }
+        }).catch(err => {
+          if (JSON.stringify(err) !== '{}') {
+            this.$alertDanger(JSON.stringify(err))
+          }
+        })
+      },
     }
-    ,
   }
 </script>
 

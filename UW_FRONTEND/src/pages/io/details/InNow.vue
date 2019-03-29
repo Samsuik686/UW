@@ -138,7 +138,7 @@
           </button>
           <button class="btn col ml-1 text-white" @click="submit"
                   :disabled="taskNowItems.planQuantity !== taskNowItems.actualQuantity"
-                  :class="taskNowItems.planQuantity !== taskNowItems.actualQuantity?'btn-default':'btn-primary'">确认完成
+                  :class="taskNowItems.planQuantity !== taskNowItems.actualQuantity?'btn-secondary':'btn-primary'">确认完成
           </button>
         </div>
       </div>
@@ -178,7 +178,7 @@
     taskWindowParkingItems,
     taskInUrl,
     taskFinishUrl,
-    taskDeleteMaterialRecordUrl
+    taskDeleteMaterialRecordUrl, taskSeeYouLaterUrl
   } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
 
@@ -325,14 +325,14 @@
           /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
           /*对比料号是否一致*/
           let tempArray = scanText.split("@");
-          if (tempArray[0] !== this.taskNowItems.materialNo) {
+          let text = tempArray[0].replace('\ufeff', '');
+          if (text !== this.taskNowItems.materialNo) {
             this.failAudioPlay();
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {
               this.isTipsShow = false;
             }, 3000);
-            return;
           } else {
             let options = {
               url: taskInUrl,
@@ -353,11 +353,12 @@
                 }, 3000)
               } else {
                 this.failAudioPlay();
-                this.isTipsShow = true;
+                /*this.isTipsShow = true;
                 this.tipsComponentMsg = false;
                 setTimeout(() => {
                   this.isTipsShow = false;
-                }, 3000)
+                }, 3000)*/
+                errHandler(response.data);
               }
             })
           }
@@ -382,11 +383,12 @@
                 this.isTipsShow = false;
               }, 3000)
             } else {
-              this.isTipsShow = true;
+              /*this.isTipsShow = true;
               this.tipsComponentMsg = false;
               setTimeout(() => {
                 this.isTipsShow = false;
-              }, 3000)
+              }, 3000)*/
+              errHandler(response.data);
             }
             this.isPending = false;
           })
@@ -402,7 +404,6 @@
           return "--"
         }
       },
-
       submit: function () {
         this.isMentions = false;
         if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity > 0) {
@@ -411,13 +412,10 @@
           this.setBack();
         }
       },
-
-
       delay: function () {
         this.isMentions = false;
         this.setFinishItem(false, this.setBack)
       },
-
       //调用finishItem接口，用于需要出入库实际数与计划数不同的地方
       setFinishItem: function (boolean, callback) {
         if (!this.isPending) {
@@ -434,14 +432,13 @@
               this.isPending = false;
               callback();
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
             this.isPending = false;
           })
         }
 
       },
-
       //确认删除
       confirmDelete: function (materialId) {
         this.isDeleting = true;
@@ -463,7 +460,7 @@
             if (response.data.result === 200) {
               this.$alertSuccess("删除成功");
             } else {
-              errHandler(response.data.result);
+              errHandler(response.data);
             }
             this.isPending = false;
           })
@@ -486,6 +483,31 @@
             audio.play();
           }
         }
+      },
+      //稍后再见
+      seeYouLater: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: taskSeeYouLaterUrl,
+            data: {
+              id: this.taskNowItems.id
+            }
+          };
+          axiosPost(options).then(response => {
+            if (response.data.result === 200) {
+              this.isPending = false;
+              this.$alertSuccess('操作成功');
+            } else {
+              errHandler(response.data)
+            }
+            this.isPending = false;
+          }).catch((err) => {
+            this.isPending = false;
+            this.$alertDanger(err);
+          })
+        }
+
       },
     }
   }
@@ -606,10 +628,12 @@
     height: auto;
     line-height: normal;
   }
-  .col{
-    align-self:center;
+
+  .col {
+    align-self: center;
   }
-  .box{
-    min-width:900px;
+
+  .box {
+    min-width: 900px;
   }
 </style>

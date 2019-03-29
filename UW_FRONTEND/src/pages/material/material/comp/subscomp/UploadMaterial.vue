@@ -32,6 +32,7 @@
 </template>
 
 <script>
+  import {mapActions} from 'vuex'
   import eventBus from '@/utils/eventBus';
   import {importReportUrl} from "../../../../../config/globalUrl";
   import {errHandler} from "../../../../../utils/errorHandler";
@@ -51,6 +52,7 @@
       }
     },
     methods: {
+      ...mapActions(['setLoading']),
       closeUploadPanel: function () {
         eventBus.$emit('closeUploadPanel');
       },
@@ -69,6 +71,7 @@
       submitUploading: function () {
         if (!this.isPending) {
           this.isPending = true;
+          this.setLoading(true);
           let formData = new FormData();
           if (this.thisFile !== "" && this.supplierName !== "") {
             formData.append('file', this.thisFile);
@@ -87,6 +90,7 @@
           this.$axios.post(importReportUrl, formData, config).then(res => {
             if (res.data.result === 200) {
               this.isPending = false;
+              this.setLoading(false);
               this.$alertSuccess('导入成功');
               this.closeUploadPanel();
               let tempUrl = this.$route.path;
@@ -94,9 +98,11 @@
               this.$router.replace(tempUrl);
             } else if (res.data.result === 412) {
               this.isPending = false;
+              this.setLoading(false);
               this.$alertWarning(res.data.data);
             } else {
               this.isPending = false;
+              this.setLoading(false);
               errHandler(res.data)
             }
           })

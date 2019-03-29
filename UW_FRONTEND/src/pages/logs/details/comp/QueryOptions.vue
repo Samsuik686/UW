@@ -32,9 +32,9 @@
       'text-comp': {
         props: ['opt', 'callback'],
         template: '<div class="form-group col pr-3"">\n' +
-        '           <label :for="opt.id">{{opt.name}}：</label>\n' +
-        '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
-        '          </div>'
+          '           <label :for="opt.id">{{opt.name}}：</label>\n' +
+          '           <input type="text" class="form-control" :id="opt.id" v-model="opt.model" @keyup.enter="callback"  autocomplete="off">\n' +
+          '          </div>'
       },
       'date-comp': {
         props: ['opt'],
@@ -42,15 +42,15 @@
           Datetime
         },
         template: '<div class="row">\n' +
-        '    <div class="form-group col pr-3">\n' +
-        '      <label>时间  从：</label>\n' +
-        '      <datetime v-model="opt.modelFrom" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai" />\n' +
-        '    </div>\n' +
-        '    <div class="form-group col pr-3">\n' +
-        '      <label>至：</label>\n' +
-        '      <datetime v-model="opt.modelTo" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai" />\n' +
-        '    </div>\n' +
-        '  </div>'
+          '    <div class="form-group col pr-3">\n' +
+          '      <label>时间  从：</label>\n' +
+          '      <datetime v-model="opt.modelFrom" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai" />\n' +
+          '    </div>\n' +
+          '    <div class="form-group col pr-3">\n' +
+          '      <label>至：</label>\n' +
+          '      <datetime v-model="opt.modelTo" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai" />\n' +
+          '    </div>\n' +
+          '  </div>'
 
       }
     },
@@ -76,6 +76,11 @@
     watch: {
       logsRouterApi: function (val) {
         this.initForm(val);
+      },
+      $route: function (route) {
+        if (JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}") {
+          this.initForm();
+        }
       }
     },
     methods: {

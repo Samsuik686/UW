@@ -188,7 +188,7 @@
     taskWindowParkingItems,
     taskOutUrl,
     taskFinishUrl,
-    taskDeleteMaterialRecordUrl
+    taskDeleteMaterialRecordUrl, taskSeeYouLaterUrl
   } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
   import eventBus from '@/utils/eventBus';
@@ -372,14 +372,14 @@
           /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
           /*对比料号是否一致*/
           let tempArray = scanText.split("@");
-          if (tempArray[0] !== this.taskNowItems.materialNo) {
+          let text = tempArray[0].replace('\ufeff','');
+          if (text !== this.taskNowItems.materialNo) {
             this.failAudioPlay();
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {
               this.isTipsShow = false;
             }, 3000);
-            return;
           } else {
             let options = {
               url: taskOutUrl,
@@ -399,11 +399,12 @@
                 }, 3000)
               } else {
                 this.failAudioPlay();
-                this.isTipsShow = true;
+                errHandler(response.data);
+                /*this.isTipsShow = true;
                 this.tipsComponentMsg = false;
                 setTimeout(() => {
                   this.isTipsShow = false;
-                }, 3000)
+                }, 3000)*/
               }
             })
           }
@@ -428,11 +429,12 @@
                 this.isTipsShow = false;
               }, 3000)
             } else {
-              this.isTipsShow = true;
+              errHandler(response.data);
+              /*this.isTipsShow = true;
               this.tipsComponentMsg = false;
               setTimeout(() => {
                 this.isTipsShow = false;
-              }, 3000)
+              }, 3000)*/
             }
             this.isPending = false;
           })
@@ -476,7 +478,7 @@
               this.isPending = false;
               callback();
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
             this.isPending = false;
           })
@@ -531,7 +533,7 @@
               }
               this.countActualQuantity();
             } else {
-              errHandler(response.data.result);
+              errHandler(response.data);
             }
             this.isPending = false;
           })
@@ -545,12 +547,7 @@
       },
       // 获取修改的数据
       getEditData: function (thisData) {
-        if (this.configData.printerIP === "") {
-          this.$alertWarning("请在设置界面填写打印机IP");
-          return;
-        }
         this.isEditing = false;
-        let remainingQuantity = thisData.initQuantity - thisData.quantity;
         for (let i = 0; i < this.materialOutRecords.length; i++) {
           let item = this.materialOutRecords[i];
           if (item.materialId === thisData.materialId) {
@@ -561,7 +558,6 @@
         this.setEditMaterialOutRecords(this.materialOutRecords);
         this.countActualQuantity();
         this.setFocus();
-        this.printBarcode(thisData.materialId, remainingQuantity, thisData.productionTime);
       },
       // 计算实际数量\统计超发数量\库存
       countActualQuantity: function () {
@@ -603,38 +599,32 @@
           }
         }
       },
-      // 请求打印
-      printBarcode: function (materialId, remainingQuantity, productionTime) {
-        if (this.configData.printerIP === "") {
-          this.$alertWarning("请在设置界面填写打印机IP");
-          return;
+      //稍后再见
+      seeYouLater: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: taskSeeYouLaterUrl,
+            data: {
+              id: this.taskNowItems.id,
+              materialOutputRecords: JSON.stringify(this.materialOutRecords)
+            }
+          };
+          axiosPost(options).then(response => {
+            if (response.data.result === 200) {
+              this.isPending = false;
+              this.$alertSuccess('操作成功');
+            } else {
+              errHandler(response.data)
+            }
+            this.isPending = false;
+          }).catch((err) => {
+            this.isPending = false;
+            this.$alertDanger(err);
+          })
         }
-        let options = {
-          url: window.g.PRINTER_URL,
-          data: {
-            printerIP: this.configData.printerIP,
-            materialId: materialId,
-            materialNo: this.taskNowItems.materialNo,
-            remainingQuantity: remainingQuantity,
-            productDate: productionTime,
-            user: this.user,
-            supplier: this.taskNowItems.supplierName
-          }
-        };
-        axiosPost(options).then(response => {
-          if (response.data.code === 200) {
-            this.$alertSuccess(response.data.msg);
-          } else if (response.data.code === 400) {
-            this.$alertWarning(response.data.msg);
-          } else {
-            this.$alertDanger(response.data.msg);
-          }
-        }).catch(err => {
-          if (JSON.stringify(err) !== '{}') {
-            this.$alertDanger(JSON.stringify(err))
-          }
-        })
-      }
+
+      },
     }
   }
 </script>

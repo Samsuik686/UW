@@ -1,13 +1,7 @@
 <template>
   <div class="user-options form-row">
-    <div class="btn pl-1 pr-1" title="更新" @click="isEditing = true">
-      <icon name="edit" scale="1.8"></icon>
-    </div>
     <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)">
       <icon name="cancel" scale="1.8"></icon>
-    </div>
-    <div v-if="isEditing" id="edit-window">
-      <edit-supplier :editData="row"/>
     </div>
 
     <div v-if="isDeleting" id="delete-window">
@@ -35,8 +29,6 @@
 </template>
 
 <script>
-  import EditSupplier from './EditSupplier'
-  import eventBus from '@/utils/eventBus'
   import {supplierUpdateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
@@ -44,21 +36,12 @@
   export default {
     name: "OperationOptions",
     props: ['row'],
-    components: {
-      EditSupplier
-    },
     data() {
       return {
-        isEditing: false,
         isDeleting:false,
         rowData: {},
         isPending: false
       }
-    },
-    mounted() {
-      eventBus.$on('closeEditPanel', () => {
-        this.isEditing = false;
-      })
     },
     methods:{
       showWarning: function (val) {
@@ -104,9 +87,6 @@
 </script>
 
 <style scoped>
-  #edit-window {
-    z-index: 100;
-  }
   .delete-panel {
     position: fixed;
     display: flex;

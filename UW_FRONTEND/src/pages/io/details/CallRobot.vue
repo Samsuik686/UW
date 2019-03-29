@@ -11,6 +11,7 @@
   import {mapGetters} from 'vuex'
   import {axiosPost} from "../../../utils/fetchData";
   import {robotCallUrl} from "../../../config/globalUrl";
+  import {errHandler} from "../../../utils/errorHandler";
 
   export default {
     name: "CallRobot",
@@ -54,7 +55,7 @@
             if (res.data.result === 200) {
               this.$alertSuccess("调用成功")
             } else {
-              this.$alertWarning(res.data.data)
+              errHandler(res.data);
             }
             this.isPending = false;
           }).catch(err => {

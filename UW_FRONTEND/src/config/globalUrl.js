@@ -57,7 +57,8 @@ export const taskUpdateOutQuantityUrl = url + '/task/updateOutQuantity';
 
 export const taskFinishUrl = url + '/task/finishItem';
 export const taskSetPriorityUrl = url + '/task/setPriority';
-export const taskBackAfterCuttingUrl = url + '/task/backAfterCutting'
+export const taskBackAfterCuttingUrl = url + '/task/backAfterCutting';
+
 
 //robot
 export const robotSelectUrl = url + '/manage/robot/select';
@@ -65,6 +66,7 @@ export const robotSwitchUrl = url + '/manage/robot/switch';
 export const robotPauseUrl = url + '/manage/robot/pause';
 export const robotBackUrl = url + '/manage/robot/back';
 export const robotCallUrl = url + '/manage/robot/call';
+export const taskSeeYouLaterUrl = url + '/manage/robot/seeYouLater';
 
 //supplier
 export const supplierAddUrl = url + '/manage/supplier/add';
