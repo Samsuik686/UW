@@ -386,7 +386,8 @@
               data: {
                 packListItemId: this.taskNowItems.id,
                 materialId: tempArray[2],
-                quantity: tempArray[1]
+                quantity: tempArray[1],
+                supplierName:tempArray[4]
               }
             };
             axiosPost(options).then(response => {

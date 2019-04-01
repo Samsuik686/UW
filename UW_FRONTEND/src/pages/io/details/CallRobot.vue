@@ -48,7 +48,8 @@
             url: robotCallUrl,
             data: {
               id: this.currentWindowId,
-              no: tempArray[0]
+              no: tempArray[0],
+              supplierName:tempArray[4]
             }
           };
           axiosPost(options).then(res => {

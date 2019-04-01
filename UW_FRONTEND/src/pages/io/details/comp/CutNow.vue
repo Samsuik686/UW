@@ -93,11 +93,14 @@
                   <div class="col">
                     <span class="card-text text-center">剩余数量: </span>
                   </div>
-                  <div class="col">
+                  <div class="col" style="min-width:200px;">
                     <span class="card-text text-center">生产日期: </span>
                   </div>
                   <div class="col">
                     <span class="card-text text-center">是否在盒内: </span>
+                  </div>
+                  <div class="col">
+                    <span class="card-text text-center">操作</span>
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
@@ -111,11 +114,14 @@
                   <div class="col">
                     <p class="card-text">{{item.remainderQuantity}}</p>
                   </div>
-                  <div class="col">
+                  <div class="col" style="min-width:200px;">
                     <p class="card-text">{{item.productionTime}}</p>
                   </div>
                   <div class="col">
                     <p class="card-text">{{item.isInBoxString}}</p>
+                  </div>
+                  <div class="col">
+                    <p class="card-text"><button class="btn btn-primary" @click="printBarcode(item)">打印</button></p>
                   </div>
                 </div>
               </div>
@@ -153,8 +159,7 @@
         isTipsShow: false,
         scanText: '',
         isSetFocus: false,
-        option: false,
-        materialId:''
+        option: false
       }
     },
     components: {
@@ -202,8 +207,7 @@
           }, 3000);
           return;
         }
-        this.materialId = tempArray[2];
-        this.backAfterCutting(tempArray[2],tempArray[1]);
+        this.backAfterCutting(tempArray[2],tempArray[1],tempArray[4]);
       },
       overQuantity: function (plan, actual) {
         let overQty = plan - actual;
@@ -215,7 +219,7 @@
           return "--"
         }
       },
-      backAfterCutting: function (materialId, quantity) {
+      backAfterCutting: function (materialId, quantity,supplierName) {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
@@ -223,14 +227,14 @@
             data: {
               packingListItemId: this.taskNowItems.id,
               materialId: materialId,
-              quantity: quantity
+              quantity: quantity,
+              supplierName:supplierName
             }
           };
           axiosPost(options).then(res => {
             if (res.data.result === 200) {
               this.successAudioPlay();
               this.$alertSuccess("操作成功，请将料盒放回料盒");
-              this.printBarcode();
               this.isTipsShow = true;
               this.tipsComponentMsg = true;
               setTimeout(() => {
@@ -297,28 +301,20 @@
         }
       },
       // 请求打印
-      printBarcode: function () {
+      printBarcode: function (item) {
+        let arr = item.productionTime.split(' ');
         if (this.configData.printerIP === "") {
           this.$alertWarning("请在设置界面填写打印机IP");
           return;
-        }
-        let remainingQuantity, productionTime;
-        for(let i =0;i<this.taskNowItems.details.length;i++){
-          let item = this.taskNowItems.details[i];
-          if(this.materialId === item.materialId){
-            remainingQuantity = item.remainingQuantity;
-            productionTime = item.productionTime;
-            break;
-          }
         }
         let options = {
           url: window.g.PRINTER_URL,
           data: {
             printerIP: this.configData.printerIP,
-            materialId: this.materialId,
+            materialId: item.materialId,
             materialNo: this.taskNowItems.materialNo,
-            remainingQuantity: remainingQuantity,
-            productDate: productionTime,
+            remainingQuantity: item.remainderQuantity,
+            productDate:arr[0],
             user: this.user,
             supplier: this.taskNowItems.supplierName
           }
