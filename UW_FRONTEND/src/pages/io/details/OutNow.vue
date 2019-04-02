@@ -60,7 +60,7 @@
             <div class="card-body row">
               <div class="col pl-0">
                 <span class="col-form-label">库存: </span>
-                <p class="card-text form-control">{{remainderQuantity}}</p>
+                <p class="card-text form-control">{{taskNowItems.remainderQuantity}}</p>
               </div>
               <div class="col pr-0 pl-0">
                 <span class="col-form-label">本次缺发数量/超发数量: </span>
@@ -260,7 +260,7 @@
         },
         materialOutRecords: [],
         actualQuantity: 0,
-        remainderQuantity: 0
+        //remainderQuantity: 0
       }
     },
     mounted() {
@@ -306,7 +306,6 @@
         this.tipsMessage = '无数据';
         this.tipsComponentMsg = '';
         this.isTipsShow = false;
-
       },
       fetchData: function (id) {
         if (!this.isPending) {
@@ -323,15 +322,7 @@
                 this.taskNowItems = response.data.data;
                 let isForceFinish = this.taskNowItems.isForceFinish;
                 eventBus.$emit('getIsForceFinish', isForceFinish);
-                if (this.compareArr(this.materialOutRecords, this.taskNowItems.details) === false) {
-                  this.materialOutRecords = this.taskNowItems.details;
-                  this.actualQuantity = this.taskNowItems.actualQuantity;
-                  this.remainderQuantity = this.taskNowItems.remainderQuantity;
-                  this.setEditMaterialOutRecords(this.materialOutRecords);
-                } else {
-                  this.materialOutRecords = this.editMaterialOutRecords;
-                  this.countActualQuantity();
-                }
+                this.compareArr();
                 this.tipsMessage = "";
               } else {
                 this.taskNowItems = {};
@@ -568,19 +559,27 @@
           sum = sum + item.quantity;
         }
         this.actualQuantity = sum;
-        this.remainderQuantity = this.taskNowItems.remainderQuantity - this.actualQuantity;
+        //this.remainderQuantity = this.taskNowItems.remainderQuantity - this.actualQuantity;
       },
       // 比较两个数组
-      compareArr: function (materialOutRecords, details) {
-        if (materialOutRecords.length !== details.length) {
-          return false;
+      compareArr: function () {
+        if(this.materialOutRecords.length === 0){
+          this.materialOutRecords = this.taskNowItems.details;
+          return;
         }
-        for (let i = 0; i < materialOutRecords.length; i++) {
-          if (materialOutRecords[i].materialId !== details[i].materialId) {
-            return false;
+        this.taskNowItems.details.map((item) => {
+          let isExit = false;
+          for(let i = 0;i<this.materialOutRecords.length;i++){
+            if(item.materialId === this.materialOutRecords[i].materialId){
+              isExit = true;
+            }
           }
-        }
-        return true;
+          if(isExit === false){
+            this.materialOutRecords.push(item);
+          }
+        });
+        this.setEditMaterialOutRecords(this.materialOutRecords);
+        this.countActualQuantity();
       },
       // 扫描成功提示
       successAudioPlay: function () {
