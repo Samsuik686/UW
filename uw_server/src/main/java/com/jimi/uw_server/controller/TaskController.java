@@ -9,6 +9,7 @@ import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.TaskService;
 import com.jimi.uw_server.util.ResultUtil;
@@ -27,8 +28,11 @@ public class TaskController extends Controller {
 
 
 	// 创建出入库/退料任务
-	@Log("创建任务类型为{type}的任务")
+	@Log("创建任务类型为{type}的任务，供应商编号为{supplier}")
 	public void create(UploadFile file, Integer type, Integer supplier, Integer destination) throws Exception {
+		if (file ==null || type == null || supplier ==null) {
+			throw new ParameterException("参数不能为空！");
+		}
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4
 		if (type == TaskType.IN || type == TaskType.OUT || type  == TaskType.SEND_BACK) {
 			file = getFile();
@@ -38,10 +42,10 @@ public class TaskController extends Controller {
 
 			if(resultString.equals("添加成功！")) {
 				renderJson(ResultUtil.succeed());
-				} 
+			} 
 			else {
 				throw new OperationException(resultString);
-				}
+			}
 
 		}
 		
@@ -59,6 +63,9 @@ public class TaskController extends Controller {
 	// 令指定任务通过审核
 	@Log("审核任务编号为{id}的任务")
 	public void pass(Integer id) {
+		if (id ==null) {
+			throw new ParameterException("任务id不能为空！");
+		}
 		if(taskService.pass(id)) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -70,6 +77,9 @@ public class TaskController extends Controller {
 	// 令指定任务开始
 	@Log("开始任务编号为{id}的任务，绑定的仓口为{window}")
 	public void start(Integer id, Integer window) {
+		if (id ==null || window == null) {
+			throw new ParameterException("任务id或仓口id不能为空！");
+		}
 		if(taskService.start(id, window)) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -81,6 +91,9 @@ public class TaskController extends Controller {
 	// 作废指定任务
 	@Log("作废任务编号为{id}的任务")
 	public void cancel(Integer id) {
+		if (id ==null) {
+			throw new ParameterException("任务id参数不能为空！");
+		}
 		if(taskService.cancel(id)) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -91,6 +104,9 @@ public class TaskController extends Controller {
 
 	// 查看任务详情
 	public void check(Integer id, Integer type, Integer pageSize, Integer pageNo) {
+		if (id ==null || type == null) {
+			throw new ParameterException("任务id或任务类型不能为空！");
+		}
 		renderJson(ResultUtil.succeed(taskService.check(id, type, pageSize, pageNo)));
 	}
 	
@@ -119,12 +135,15 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}")
-	public void in(Integer packListItemId, String materialId, Integer quantity, Date productionTime) {
+	@Log("将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
+	public void in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName) {
+		if (packListItemId ==null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
+			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.in(packListItemId, materialId, quantity, productionTime, user)) {
+		if (taskService.in(packListItemId, materialId, quantity, productionTime, supplierName, user)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -133,12 +152,15 @@ public class TaskController extends Controller {
 
 
 	// 物料出库
-	@Log("将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}")
-	public void out(Integer packListItemId, String materialId, Integer quantity) {
+	@Log("将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}，供应商名为{supplierName}")
+	public void out(Integer packListItemId, String materialId, Integer quantity, String supplierName) {
+		if (packListItemId ==null || materialId == null || quantity == null || supplierName == null) {
+			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.out(packListItemId, materialId, quantity, user)) {
+		if (taskService.out(packListItemId, materialId, quantity, supplierName, user)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -149,6 +171,9 @@ public class TaskController extends Controller {
 	// 删除错误的料盘记录
 	@Log("删除掉料盘时间戳为{materialId}的出入库记录，该料盘绑定的任务条目id为{packListItemId}")
 	public void deleteMaterialRecord(Integer packListItemId, String materialId) {
+		if (packListItemId ==null || materialId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
 		renderJson(ResultUtil.succeed(taskService.deleteMaterialRecord(packListItemId, materialId)));
 	}
 
@@ -156,14 +181,20 @@ public class TaskController extends Controller {
 	// 完成任务条目
 	@Log("id号为{packListItemId}的任务条目出入库数量与计划数量不相符，叉车回库后，该任务条目的完成状态为{isFinish}(true表示已完成，false表示未完成)")
 	public void finishItem(Integer packListItemId, Boolean isFinish) {
+		if (packListItemId ==null || isFinish == null) {
+			throw new ParameterException("参数不能为空！");
+		}
 		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish)));
 	}
 
 
 	// 料盘截料后重新入库
-	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId},料盘剩余数量为{quantity}")
-	public void backAfterCutting(Integer packingListItemId, String materialId, Integer quantity) {
-		String resultString = taskService.backAfterCutting(packingListItemId, materialId, quantity);
+	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId}，料盘剩余数量为{quantity}，供应商名为{supplierName}")
+	public void backAfterCutting(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
+		if (packingListItemId ==null || materialId == null || quantity == null) {
+			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+		}
+		String resultString = taskService.backAfterCutting(packingListItemId, materialId, quantity, supplierName);
 		if(resultString.equals("扫描成功，请将料盘放回料盒！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -175,6 +206,9 @@ public class TaskController extends Controller {
 	// 设置优先级
 	@Log("将任务id为{id}的任务优先级设置为{priority}")
 	public void setPriority(Integer id, Integer priority) {
+		if (id ==null || priority == null) {
+			throw new ParameterException("参数不能为空！");
+		}
 		renderJson(ResultUtil.succeed(taskService.setPriority(id, priority)));
 	}
 

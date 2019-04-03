@@ -16,6 +16,7 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;
@@ -107,6 +108,7 @@ public class RobotService extends SelectService {
 						Integer actualQuantity = getActualIOQuantity(item.getId());
 						if (actualQuantity >= item.getQuantity()) {
 							taskService.finishItem(id, true);
+							item.setIsForceFinish(true);
 						}
 
 						// 查询对应料盒
@@ -171,7 +173,7 @@ public class RobotService extends SelectService {
 	/**
 	 * 物料入库/截料后重新入库扫料盘，用于呼叫叉车
 	 */
-	public String call(Integer id, String no) throws Exception {
+	public String call(Integer id, String no, String supplierName) throws Exception {
 		synchronized(CALL_LOCK) {
 			String resultString = "调用成功！";
 
@@ -184,9 +186,15 @@ public class RobotService extends SelectService {
 				// 通过套料单记录获取物料类型id
 				MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
 				// 通过物料类型获取对应的供应商id
-				Integer supplier = materialType.getSupplier();
+				Integer supplierId = materialType.getSupplier();
+				// 通过供应商id获取供应商名
+				String sName = Supplier.dao.findById(supplierId).getName();
+				if (!supplierName.equals(sName)) {
+					resultString = "扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" +  "本仓口已绑定 " + sName + " 的任务单！";
+					return resultString;
+				}
 				// 通过任务id，料号和供应商获取套料单条目
-				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplier);
+				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplierId);
 
 				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 				if (item == null) {
@@ -214,9 +222,9 @@ public class RobotService extends SelectService {
 
 							// 若任务条目状态为等待扫码，则将其状态更新为未分配拣料
 							else if (redisTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN) {
-								TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
 								TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
 								TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
+								TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);	
 								return resultString;
 							}
 
@@ -225,9 +233,9 @@ public class RobotService extends SelectService {
 								MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
 								// 若料盒在架，则将其状态更新为未分配拣料
 								if (materialBox.getIsOnShelf()) {
-									TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
 									TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
 									TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
+									TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
 									return resultString;
 								} else {	// 若料盒不在架，为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令
 									resultString = "请等叉车将对应的料盒放回货架之后再进行调用！";

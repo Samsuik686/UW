@@ -1,8 +1,9 @@
 package com.jimi.uw_server.model.vo;
 
-import com.jimi.uw_server.model.Material;
+import com.jfinal.aop.Enhancer;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
+import com.jimi.uw_server.service.MaterialService;
 
 /**
  * 物料类型表示层对象
@@ -12,7 +13,7 @@ import com.jimi.uw_server.model.Supplier;
 @SuppressWarnings("serial")
 public class MaterialTypeVO extends MaterialType{
 
-	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
+	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
 	private String enabledString;
 
@@ -54,12 +55,8 @@ public class MaterialTypeVO extends MaterialType{
 	}
 
 	public void setQuantity(Integer id) {
-		Material material = Material.dao.findFirst(COUNT_MATERIAL_SQL, id);
-		if (material.get("quantity") == null) {
-			this.quantity = 0;
-		} else {
-			this.quantity = Integer.parseInt(material.get("quantity").toString());
-		}
+		Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(id);
+		this.quantity = remainderQuantity;
 	}
 
 	public String getSupplierName() {

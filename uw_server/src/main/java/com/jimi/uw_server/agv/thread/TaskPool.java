@@ -42,7 +42,7 @@ public class TaskPool extends Thread{
 
 	private static final String GET_MATERIAL_BY_TYPE_SQL = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0";
 
-	private static final String GET_MATERIAL_BY_TYPE_AND_BOX_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND box = ?";
+	private static final String GET_MATERIAL_BY_TYPE_AND_BOX_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND box = ? AND is_in_box = b'1'";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE quantity > 0 AND material_id = ? AND packing_list_item_id = ?";
 
@@ -111,9 +111,9 @@ public class TaskPool extends Thread{
 					// 2. 根据类型获取最旧物料实体的盒号
 				else if (taskType == TaskType.OUT) {
 					// 对于出库任务，需要判断库存是否为0
-					
+
 					// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
-					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+					Integer remainderQuantity = materialService.countMaterialIncludeNotInBox(item.getMaterialTypeId());
 					if (remainderQuantity == 0) {
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
 
@@ -124,7 +124,7 @@ public class TaskPool extends Thread{
 						taskLog.setQuantity(0);
 						taskLog.setOperator(null);
 						// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-						taskLog.setAuto(true);
+						taskLog.setAuto(false);
 						taskLog.setTime(new Date());
 						taskLog.setDestination(task.getDestination());
 						taskLog.save();
@@ -242,38 +242,30 @@ public class TaskPool extends Thread{
 		Date productionTime = new Date();
 
 		// 如果物料实体表中有多条该物料类型的记录，且库存大于0
-		if (materialList.size() > 1) {
+		if (materialList.size() > 0) {
 			for (Material m : materialList) {
-				if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
-					productionTime = m.getProductionTime();
-					boxId = m.getBox();
-				}
-			}
-		}
-		// 如果物料实体表只有一条该物料类型的记录，且库存大于0
-		else if (materialList.size() == 1) {
-			// 直接获取该料盘记录
-			Material m = materialList.get(0);
-			// 若料盒中只有一条料盘记录有库存，且料盘记录不在盒内，则判断该任务条目是否需要将截完料的物料放回该料盒
-			if (!m.getIsInBox()) {
-				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-					// 根据任务条目id匹配到redis中的任务条目
-					if (redisTaskItem.getId().intValue() == packingListItemId.intValue()) {
-						// 若该任务条目不需要截料，则直接跳出
-						int size = TaskLog.dao.find(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, m.getId(), packingListItemId).size();
-						if (size == 0) {
-							break;
-						}
-						// 若该任务条目需要截料，由于只剩下这条料盘记录有库存，因此说明该任务条目绑定了该料盘，则返回该料盒号
-						else {
-							boxId = m.getBox();
+				// 先判断该料盘是否被等待截料返库的任务条目所绑定
+				if (m.getRemainderQuantity() > 0 && !m.getIsInBox()) {
+					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+						// 根据任务条目id匹配到redis中的任务条目
+						if (redisTaskItem.getId().intValue() == packingListItemId.intValue()) {
+							// 若该任务条目不需要截料，则直接跳出
+							int size = TaskLog.dao.find(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, m.getId(), packingListItemId).size();
+							if (size == 0) {
+								break;
+							}
+							// 若该任务条目需要截料，且对应的出库日志中这条料盘记录有库存，则说明该任务条目绑定了该料盘，则返回该料盒号
+							else {
+								boxId = m.getBox();
+							}
 						}
 					}
 				}
-			}
-			// 若料盒中只有一条料盘记录有库存，且料盘记录在盒内，则返回该料盒号
-			else {
+				else if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
+					productionTime = m.getProductionTime();
 					boxId = m.getBox();
+				}
+				
 			}
 		}
 

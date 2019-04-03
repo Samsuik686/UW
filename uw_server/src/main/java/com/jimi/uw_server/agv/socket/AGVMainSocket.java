@@ -90,10 +90,10 @@ public class AGVMainSocket {
 
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
-		ErrorLogWritter.save("AGVMainSocket was Stopped because :" + reason.getReasonPhrase());
+		ErrorLogWritter.save("AGVMainSocket was Stopped because :" + reason.getCloseCode());
 		taskPool.interrupt();
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(1800000);
 			//重新连接
 			connect(AGVMainSocket.uri);
 		} catch (Exception e) {

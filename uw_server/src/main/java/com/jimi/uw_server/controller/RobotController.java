@@ -56,9 +56,9 @@ public class RobotController extends Controller {
 
 
 	// 入库前扫料盘，发LS指令给叉车
-	@Log("料号为{no}的物料需要入库，发送LS指令让叉车取托盘到仓口{id}")
-	public void call(Integer id, String no) throws Exception {
-		String resultString = robotService.call(id, no);
+	@Log("料号为{no}的物料需要入库，该物料对应的供应商为{supplierName}，发送LS指令让叉车取托盘到仓口{id}")
+	public void call(Integer id, String no, String supplierName) throws Exception {
+		String resultString = robotService.call(id, no, supplierName);
 		if (resultString.equals("调用成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

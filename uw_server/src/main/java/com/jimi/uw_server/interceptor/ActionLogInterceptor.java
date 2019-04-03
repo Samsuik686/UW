@@ -47,6 +47,9 @@ public class ActionLogInterceptor implements Interceptor {
 				String a = matcher.group();
 				a = a.substring(1, a.length() - 1);
 				String value = controller.getPara(a);
+				if (value == null) {
+					value = "null";
+				}
 				//美元符转义
 				if(value.contains("$")) {
 					value = value.replaceAll("\\$", "\\\\\\$");

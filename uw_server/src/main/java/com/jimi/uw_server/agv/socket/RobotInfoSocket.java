@@ -57,9 +57,9 @@ public class RobotInfoSocket{
 
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
-		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getReasonPhrase());
+		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getCloseCode());	// CLOSED_ABNORMALLY
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(1800000);
 			//重新连接
 			connect(uri);
 		} catch (Exception e) {

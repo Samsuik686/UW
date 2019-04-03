@@ -1,11 +1,12 @@
 package com.jimi.uw_server.model.vo;
 
 import java.util.List;
-import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
+import com.jfinal.aop.Enhancer;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
+import com.jimi.uw_server.service.MaterialService;
 
 /**
  * 仓口停泊条目表示层
@@ -15,7 +16,7 @@ import com.jimi.uw_server.model.TaskLog;
 @SuppressWarnings("serial")
 public class WindowParkingListItemVO extends TaskLog {
 
-	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
+	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
 	private List<?> details;
 
@@ -70,12 +71,8 @@ public class WindowParkingListItemVO extends TaskLog {
 	}
 
 	public void setRemainderQuantity(Integer materialTypeId) {
-		Material material = Material.dao.findFirst(COUNT_MATERIAL_SQL, materialTypeId);
-		if (material.get("quantity") == null) {
-			this.remainderQuantity = 0;
-		} else {
-			this.remainderQuantity = Integer.parseInt(material.get("quantity").toString());
-		}
+		Integer quantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(materialTypeId);
+		this.remainderQuantity = quantity;
 	}
 
 

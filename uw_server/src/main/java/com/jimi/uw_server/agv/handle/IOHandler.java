@@ -130,13 +130,13 @@ public class IOHandler {
 		if (!item.getIsForceFinish()) {
 			// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
 			if (taskType == TaskType.OUT) {
+				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
+				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 				TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_ASSIGN);
-				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
-				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
 			} else {	// 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
-				TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_SCAN);
 				TaskItemRedisDAO.updateIOTaskItemRobot(item, 0);
 				TaskItemRedisDAO.updateTaskItemBoxId(item, 0);
+				TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_SCAN);
 			}
 		}	
 	}

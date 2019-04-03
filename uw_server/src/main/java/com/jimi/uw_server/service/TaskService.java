@@ -20,6 +20,7 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.User;
@@ -55,6 +56,8 @@ public class TaskService {
 
 	private static final Object OUT_LOCK = new Object();
 
+	private static final Object UPDATEOUTQUANTITYANDMATERIALINFO_LOCK = new Object();
+
 	private static final String GET_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
@@ -67,7 +70,7 @@ public class TaskService {
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
-	private static final String GET_PACKING_LIST_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity AS remainderQuantity FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
+	private static final String GET_PACKING_LIST_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity  AS remainderQuantity FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IS NULL";
 
@@ -81,13 +84,15 @@ public class TaskService {
 
 	private static final String GET_MATERIAL_ID_IN_SAME_TASK_SQL = "SELECT * FROM task_log WHERE material_id = ? AND packing_list_item_id = ?";
 
+	private static final String GET_MATERIAL_ID_BY_ID_SQL = "SELECT * FROM material WHERE id = ? AND is_in_box = 1";
+
 	private static final String GET_MATERIAL_BY_ID_SQL = "SELECT * FROM material WHERE id = ?";
 
 	private static final String DELETE_TASK_LOG_SQL = "DELETE FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
-	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ?";
+	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id IS NOT NULL";
 
 
 	// 创建出入库/退料任务
@@ -424,6 +429,7 @@ public class TaskService {
 					packingListItem.setFinishTime(new Date());
 					packingListItem.update();
 
+					// 这里有缺陷，在sql语句中，但是不影响正常使用；至于是什么缺陷，等你自己发现。
 					// 为计算超发数，对于出库数为0的任务，也需要记录一条日志
 					TaskLog tl = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL, packListItemId);
 					if (tl == null) {
@@ -435,7 +441,7 @@ public class TaskService {
 						taskLog.setQuantity(0);
 						taskLog.setOperator(null);
 						// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-						taskLog.setAuto(true);
+						taskLog.setAuto(false);
 						taskLog.setTime(new Date());
 						taskLog.setDestination(task.getDestination());
 						taskLog.save();
@@ -509,15 +515,13 @@ public class TaskService {
 				Task task = Task.dao.findFirst(GET_TASK_IN_REDIS_SQL, redisTaskItem.getTaskId());
 				if (task.getWindow() == id) {
 					Integer packingListItemId = redisTaskItem.getId();
-
+					// 查询task_log中的material_id,quantity
+					List<TaskLog> taskLogs = TaskLog.dao.find(GET_PACKING_LIST_ITEM_DETAILS_SQL, redisTaskItem.getId());
 					// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id,套料单文件名，物料类型表的料号no,套料单表的计划出入库数量quantity
 					Page<Record> windowParkingListItems = selectService.select(new String[] {"packing_list_item", "material_type", }, new String[] {"packing_list_item.id = " + packingListItemId, "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 
 					for (Record windowParkingListItem : windowParkingListItems.getList()) {
-						// 查询task_log中的material_id,quantity
-						List<TaskLog> taskLogs = TaskLog.dao.find(GET_PACKING_LIST_ITEM_DETAILS_SQL, redisTaskItem.getId());
 						Integer actualQuantity = 0;
-
 						List<PackingListItemDetailsVO> packingListItemDetailsVOs = new ArrayList<PackingListItemDetailsVO>();
 						for (TaskLog tl : taskLogs) {
 							// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
@@ -540,8 +544,19 @@ public class TaskService {
 
 
 	// 新增入库料盘记录并写入库任务日志记录
-	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, User user) {
+	public boolean in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, User user) {
 		synchronized(IN_LOCK) {
+			// 通过任务条目id获取套料单记录
+			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+			// 通过套料单记录获取物料类型id
+			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
+			// 通过物料类型获取对应的供应商id
+			Integer supplierId = materialType.getSupplier();
+			// 通过供应商id获取供应商名
+			String sName = Supplier.dao.findById(supplierId).getName();
+			if (!supplierName.equals(sName)) {
+				throw new OperationException("扫码错误，供应商 "  + supplierName + " 对应的任务目前没有在本仓口进行任务，" +  "本仓口已绑定 " + sName + " 的任务单！");
+			}
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
 			}
@@ -559,7 +574,6 @@ public class TaskService {
 
 			Material material = new Material();
 			material.setId(materialId);
-			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
 			material.setType(packingListItem.getMaterialTypeId());
 			material.setBox(boxId);
 			material.setRow(0);
@@ -576,8 +590,8 @@ public class TaskService {
 			taskLog.setMaterialId(materialId);
 			taskLog.setQuantity(quantity);
 			taskLog.setOperator(user.getUid());
-			// 区分入库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-			taskLog.setAuto(true);
+			// 区分入库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
+			taskLog.setAuto(false);
 			taskLog.setTime(new Date());
 			taskLog.setDestination(task.getDestination());
 			return taskLog.save();
@@ -586,8 +600,33 @@ public class TaskService {
 
 
 	// 写出库任务日志
-	public boolean out(Integer packListItemId, String materialId, Integer quantity, User user) {
+	public boolean out(Integer packListItemId, String materialId, Integer quantity, String supplierName, User user) {
 		synchronized(OUT_LOCK) {
+			// 通过任务条目id获取套料单记录
+			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+			// 通过套料单记录获取物料类型id
+			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
+			// 通过物料类型获取对应的供应商id
+			Integer supplierId = materialType.getSupplier();
+			// 通过供应商id获取供应商名
+			String sName = Supplier.dao.findById(supplierId).getName();
+			if (!supplierName.equals(sName)) {
+				throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" +  "本仓口已绑定 " + sName + " 的任务单！");
+			}
+			// 对于不在已到站料盒的物料，禁止对其进行操作
+			Material material = Material.dao.findById(materialId);
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+				if (redisTaskItem.getId().intValue() == packListItemId.intValue()) {
+					if (redisTaskItem.getBoxId().intValue() != material.getBox().intValue()) {
+						throw new OperationException("时间戳为" + materialId + "的料盘不在该料盒中，无法对其进行出库操作！");
+					}
+				}
+			}
+			// 若扫描的料盘记录不存在于数据库中或不在盒内，则抛出OperationException
+			if (Material.dao.find(GET_MATERIAL_ID_BY_ID_SQL, materialId).size() == 0) {
+				throw new OperationException("时间戳为" + materialId + "的料盘没有入过库或者不在盒内，不能对其进行出库操作！");
+			}
+
 			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
@@ -599,17 +638,19 @@ public class TaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
 			}
 
-			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
-			Task task = Task.dao.findById(packingListItem.getTaskId());
+			// 扫码出库后，将料盘设置为不在盒内
+			material.setIsInBox(false);
+			material.update();
 
+			Task task = Task.dao.findById(packingListItem.getTaskId());
 			// 写入一条出库任务日志
 			TaskLog taskLog = new TaskLog();
 			taskLog.setPackingListItemId(packListItemId);
 			taskLog.setMaterialId(materialId);
 			taskLog.setQuantity(quantity);
 			taskLog.setOperator(user.getUid());
-			// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-			taskLog.setAuto(true);
+			// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
+			taskLog.setAuto(false);
 			taskLog.setTime(new Date());
 			taskLog.setDestination(task.getDestination());
 			return taskLog.save();
@@ -623,6 +664,7 @@ public class TaskService {
 		int taskId = packingListItem.getTaskId();
 		Task task = Task.dao.findById(taskId);
 		Material material = Material.dao.findById(materialId);
+		// 对于不在已到站料盒的物料，禁止对其进行操作
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 			if (redisTaskItem.getId().intValue() == packListItemId.intValue()) {
 				if (redisTaskItem.getBoxId().intValue() != material.getBox().intValue()) {
@@ -642,6 +684,9 @@ public class TaskService {
 				material.setRemainderQuantity(taskLog.getQuantity());
 				material.setIsInBox(true);
 				material.update();
+			} else {
+				material.setIsInBox(true);
+				material.update();
 			}
 			return TaskLog.dao.deleteById(taskLog.getId());
 		}
@@ -650,33 +695,44 @@ public class TaskService {
 
 	// 更新出库数量以及料盘信息
 	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords) {
-		if (materialOutputRecords != null) {
-			JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
-			for (int i=0; i<jsonArray.size(); i++) {
-				JSONObject jsonObject = jsonArray.getJSONObject(i);
-				String materialId = jsonObject.getString("materialId");
-				Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
+		synchronized (UPDATEOUTQUANTITYANDMATERIALINFO_LOCK) {
+			if (materialOutputRecords != null) {
+				JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
+				for (int i=0; i<jsonArray.size(); i++) {
+					JSONObject jsonObject = jsonArray.getJSONObject(i);
+					String materialId = jsonObject.getString("materialId");
+					Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
 
-				// 修改任务日志的出库数量
-				TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, item.getId(), materialId);
-				taskLog.setQuantity(quantity).update();
-				Material material = Material.dao.findById(materialId);
-				if (quantity < material.getRemainderQuantity() && quantity > 0) {
-					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_CUT);
-				}
-				// 修改物料实体表对应的料盘剩余数量
-				int remainderQuantity = material.getRemainderQuantity() - quantity;
-				// 若该料盘没有库存了，则将物料实体表记录置为无效
-				if (remainderQuantity <= 0) {
-					material.setRow(-1);
-					material.setCol(-1);
-					material.setRemainderQuantity(0);
-					material.setIsInBox(false);
-					material.update();
-				} else {
-					material.setRemainderQuantity(remainderQuantity);
-					material.setIsInBox(false);
-					material.update();
+					// 修改任务日志的出库数量
+					TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, item.getId(), materialId);
+					taskLog.setQuantity(quantity).update();
+					Material material = Material.dao.findById(materialId);
+					if (quantity < material.getRemainderQuantity() && quantity > 0) {
+						TaskItemRedisDAO.updateTaskIsForceFinish(item, true);
+						item.setIsForceFinish(true);
+						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_CUT);
+					}
+					// 如果点击稍后再见后没有修改出库数量，则不更新库存，只将料盘设置为不在盒内
+					if (!item.getIsForceFinish()) {
+						material.setIsInBox(false);
+						material.update();
+					} else {
+						// 修改物料实体表对应的料盘剩余数量
+						int remainderQuantity = material.getRemainderQuantity() - quantity;
+						// 若该料盘没有库存了，则将物料实体表记录置为无效
+						if (remainderQuantity <= 0) {
+							material.setRow(-1);
+							material.setCol(-1);
+							material.setRemainderQuantity(0);
+							material.setIsInBox(false);
+							material.update();
+						} else {
+							material.setRemainderQuantity(remainderQuantity);
+							material.setIsInBox(false);
+							material.update();
+						}
+
+					}
 				}
 			}
 		}
@@ -685,11 +741,22 @@ public class TaskService {
 
 
 	// 将截料后剩余的物料置为在盒内
-	public String backAfterCutting(Integer packingListItemId, String materialId, Integer quantity) {
+	public String backAfterCutting(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
 		String resultString = "扫描成功，请将料盘放回料盒！";
+		// 通过任务条目id获取套料单记录
+		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
+		// 通过套料单记录获取物料类型id
+		MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
+		// 通过物料类型获取对应的供应商id
+		Integer supplierId = materialType.getSupplier();
+		// 通过供应商id获取供应商名
+		String sName = Supplier.dao.findById(supplierId).getName();
+		
 		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packingListItemId, materialId);
 		Material material = Material.dao.findById(materialId);
-		if (taskLog == null) {
+		if (!supplierName.equals(sName)) {
+			resultString = "扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" +  "本仓口已绑定 " + sName + " 的任务单！";
+		} else if (taskLog == null) {
 			resultString = "扫错料盘，该料盘不需要放回该料盒!";
 		} else if (material.getRemainderQuantity().intValue() != quantity) {
 			resultString = "请扫描修改出库数时所打印出的新料盘二维码!";
@@ -709,6 +776,11 @@ public class TaskService {
 		String resultString = "已成功发送回库指令！";
 		List<TaskLog> taskLogList = TaskLog.dao.find(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL, packingListItemId);
 		for (TaskLog taskLog : taskLogList) {
+			/*
+			这里之前有bug，因为出库时，库存是实时更新的，有可能本来这个任务条目是不缺料的，但是后来又缺料了。
+			对于缺料任务条目，会记录一条 material_id 为 null，quantity 为 null 的出库日志，这样就会报NPE。目前在查询是加了非常判断，也许能解决该问题。
+			若在截料后重新入库时出现bug，重点关注这里。
+			*/
 			Material material = Material.dao.findById(taskLog.getMaterialId());
 			int remainderQuantity = material.getRemainderQuantity();
 			if (remainderQuantity > 0 && !material.getIsInBox()) {

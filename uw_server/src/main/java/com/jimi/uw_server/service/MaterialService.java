@@ -75,7 +75,9 @@ public class MaterialService extends SelectService{
 
 	private static final String JUDGE_MATERIAL_BOX_IS_EMPTY_SQL = "SELECT * FROM material_box WHERE enabled = 1";
 
-	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
+	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ? AND is_in_box = 1";
+
+	private static final String COUNT_MATERIAL_INCLUDE_NOT_IN_BOX_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
 
 
 	// 统计物料类型信息
@@ -493,10 +495,25 @@ public class MaterialService extends SelectService{
 
 
 	/**
-	 * 根据物料类型号计算并物料库存数
+	 * 根据物料类型号计算物料库存数并返回，不计算不在料盒内的物料
 	 */
 	public Integer countAndReturnRemainderQuantityByMaterialTypeId(Integer materialTypeId) {
 		Material material = Material.dao.findFirst(COUNT_MATERIAL_SQL, materialTypeId);
+		Integer remainderQuantity;
+		if (material.get("quantity") == null) {
+			remainderQuantity =  0;
+		} else {
+			remainderQuantity = Integer.parseInt(material.get("quantity").toString());
+		}
+		return remainderQuantity;
+	}
+
+
+	/**
+	 * 根据物料类型号计算物料库存数并返回，有计算不在料盒内的物料，在 TaskPool类 的 sendIOCmds方法 中用得上 
+	 */
+	public Integer countMaterialIncludeNotInBox(Integer materialTypeId) {
+		Material material = Material.dao.findFirst(COUNT_MATERIAL_INCLUDE_NOT_IN_BOX_SQL, materialTypeId);
 		Integer remainderQuantity;
 		if (material.get("quantity") == null) {
 			remainderQuantity =  0;
