@@ -613,6 +613,12 @@ public class TaskService {
 			if (!supplierName.equals(sName)) {
 				throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" +  "本仓口已绑定 " + sName + " 的任务单！");
 			}
+			
+			// 若扫描的料盘记录不存在于数据库中或不在盒内，则抛出OperationException
+			if (Material.dao.find(GET_MATERIAL_ID_BY_ID_SQL, materialId).size() == 0) {
+					throw new OperationException("时间戳为" + materialId + "的料盘没有入过库或者不在盒内，不能对其进行出库操作！");
+			}
+			
 			// 对于不在已到站料盒的物料，禁止对其进行操作
 			Material material = Material.dao.findById(materialId);
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
@@ -622,11 +628,7 @@ public class TaskService {
 					}
 				}
 			}
-			// 若扫描的料盘记录不存在于数据库中或不在盒内，则抛出OperationException
-			if (Material.dao.find(GET_MATERIAL_ID_BY_ID_SQL, materialId).size() == 0) {
-				throw new OperationException("时间戳为" + materialId + "的料盘没有入过库或者不在盒内，不能对其进行出库操作！");
-			}
-
+			
 			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");

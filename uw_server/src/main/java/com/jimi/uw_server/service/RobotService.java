@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
+import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
@@ -13,6 +14,7 @@ import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
@@ -39,6 +41,8 @@ public class RobotService extends SelectService {
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	private static final String GET_PACKING_LIST_ITEM_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
+	
+	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 	
 	private static final Object BACK_LOCK = new Object();
 
@@ -115,7 +119,10 @@ public class RobotService extends SelectService {
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 						// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 						AGVIOTaskItem sameBoxItem = getSameBoxItem(item);
-						if (sameBoxItem == null) {
+						int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
+						int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, item.getBoxId()).size();
+						int unusedcapacity = materialBoxCapacity - usedcapacity;
+						if ((sameBoxItem == null) || (Task.dao.findById(item.getTaskId()).getType() == TaskType.IN && unusedcapacity <= 0)) {
 							IOHandler.sendSL(item, materialBox);
 						} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
 							TaskItemRedisDAO.updateIOTaskItemState(sameBoxItem, IOTaskItemState.ARRIVED_WINDOW);

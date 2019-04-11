@@ -15,7 +15,6 @@ import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.constant.BuildTaskItemState;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
@@ -104,7 +103,7 @@ public class TaskPool extends Thread{
 				// 对于入库和退料入库
 					// 2. 根据类型和挑盒子算法获取最佳盒号
 				if (taskType == TaskType.IN || taskType == TaskType.SEND_BACK) {
-					boxId = getMaximumCapacityBox(item.getMaterialTypeId());
+					boxId = getMaximumCapacityBox(item.getMaterialTypeId(),item.getTaskId());
 				}
 
 				// 对于出库
@@ -195,14 +194,14 @@ public class TaskPool extends Thread{
 	}
 
 
-	private static int getMaximumCapacityBox(Integer materialTypeId) {
+	private static int getMaximumCapacityBox(Integer materialTypeId, Integer taskId) {
 		List<Material> sameTypeMaterialBoxList = Material.dao.find(GET_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId);
 		int boxId = 0;
 		int boxRemainderCapacity = 0;
+		// 获取料盒容量
+		int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
 		// 如果存在同类型的料盒
 		if (sameTypeMaterialBoxList.size() > 0) {
-			// 获取料盒容量
-			int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
 			for (Material sameTypeMaterialBox : sameTypeMaterialBoxList) {
 				int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, sameTypeMaterialBox.get("boxId").toString()).size();
 				int unusedcapacity = materialBoxCapacity - usedcapacity;
@@ -215,21 +214,34 @@ public class TaskPool extends Thread{
 
 		// 如果不存在同类型的料盒或者同类型的料盒都已装满
 		if (sameTypeMaterialBoxList.size() == 0 || boxRemainderCapacity == 0) {
-			List<MaterialBox> differentTypeMaterialBoxList = MaterialBox.dao.find(GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL, materialTypeId);
-			// 获取料盒容量
-			int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
-			for (MaterialBox differentTypeMaterialBox : differentTypeMaterialBoxList) {
-				int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, differentTypeMaterialBox.getId()).size();
-				int unusedcapacity = materialBoxCapacity - usedcapacity;
-				if (unusedcapacity > boxRemainderCapacity) {
-					boxRemainderCapacity = unusedcapacity;
-					boxId = differentTypeMaterialBox.getId();
+			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+				if (redisTaskItem.getState() == IOTaskItemState.ARRIVED_WINDOW && redisTaskItem.getTaskId().equals(taskId)) {
+					int tempBoxId = redisTaskItem.getBoxId();
+					int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, tempBoxId).size();
+					int unusedcapacity = materialBoxCapacity - usedcapacity;
+					if (unusedcapacity > 0) {
+						boxId = tempBoxId;
+						break;
+					}
 				}
 			}
 			if (boxId == 0) {
+				List<MaterialBox> differentTypeMaterialBoxList = MaterialBox.dao.find(GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL, materialTypeId);
+				
+				for (MaterialBox differentTypeMaterialBox : differentTypeMaterialBoxList) {
+					int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, differentTypeMaterialBox.getId()).size();
+					int unusedcapacity = materialBoxCapacity - usedcapacity;
+					if (unusedcapacity > boxRemainderCapacity) {
+						boxRemainderCapacity = unusedcapacity;
+						boxId = differentTypeMaterialBox.getId();
+					}
+				}
+			}
+			
+/*			if (boxId == 0) {
 				TaskItemRedisDAO.setPauseAssign(1);
 				throw new OperationException("仓库的料盒全满了，请尽快处理！");
-			}
+			}*/
 		}
 
 		return boxId;
