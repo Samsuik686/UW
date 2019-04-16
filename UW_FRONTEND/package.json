@@ -1,6 +1,6 @@
 {
   "name": "uw_frontend",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "For UW front-end",
   "author": "DarkNin <darknin@outlook.com>",
   "private": true,
@@ -10,6 +10,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "lodash": "^4.17.10",
     "popper.js": "^1.14.3",
     "vue": "^2.5.2",

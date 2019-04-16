@@ -181,6 +181,7 @@
     taskDeleteMaterialRecordUrl, taskSeeYouLaterUrl
   } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
+  import {handleScanText} from "../../../utils/scan";
 
   export default {
     name: "InNow",
@@ -323,11 +324,18 @@
           this.$router.push('/io/preview')
         } else {
           /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
+          //判断扫描的条码格式
+          let result = handleScanText(scanText);
+          if(result !== ''){
+            this.$alertWarning(result);
+            return;
+          }
           /*对比料号是否一致*/
           let tempArray = scanText.split("@");
           let text = tempArray[0].replace('\ufeff', '');
           if (text !== this.taskNowItems.materialNo) {
             this.failAudioPlay();
+            this.$alertWarning('二维码格式错误，料号不对应');
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {

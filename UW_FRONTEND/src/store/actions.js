@@ -53,6 +53,6 @@ export const setCurrentOprType = ({commit}, currentOprType) => {
 export const setConfigData = ({commit},configData) => {
   commit('setConfigData',configData)
 };
-export const setEditMaterialOutRecords = ({commit},editMaterialOutRecords) => {
-  commit('setEditMaterialOutRecords',editMaterialOutRecords)
+export const setEditMaterialOutRecords = ({commit},obj) => {
+  commit('setEditMaterialOutRecords',obj)
 };

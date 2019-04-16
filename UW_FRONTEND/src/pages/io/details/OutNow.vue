@@ -141,7 +141,7 @@
         <div class="dropdown-divider"></div>
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
-          <button class="btn btn-delay col ml-1 text-white" @click="delay"
+          <button class="btn btn-delay col ml-1 text-white" @click="delay" :disabled="isHide"
                   v-if="taskNowItems.planQuantity - actualQuantity > 0">稍候再见
           </button>
           <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
@@ -188,11 +188,13 @@
     taskWindowParkingItems,
     taskOutUrl,
     taskFinishUrl,
-    taskDeleteMaterialRecordUrl, taskSeeYouLaterUrl
+    taskDeleteMaterialRecordUrl
   } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
   import eventBus from '@/utils/eventBus';
   import CutNow from "./comp/CutNow";
+  import {editMaterialOutRecords} from "../../../store/getters";
+  import {handleScanText} from "../../../utils/scan";
 
   export default {
     name: "OutNow",
@@ -258,9 +260,12 @@
           initQuantity: 0,
           productionTime: '',
         },
+        //界面显示的料盒详情
         materialOutRecords: [],
+        //实际数量
         actualQuantity: 0,
-        //remainderQuantity: 0
+        //是否显示稍后再见
+        isHide:false
       }
     },
     mounted() {
@@ -277,9 +282,11 @@
       });
       this.initData();
       this.setFocus();
-      if (this.editMaterialOutRecords !== []) {
-        this.materialOutRecords = this.editMaterialOutRecords;
+      if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== ''){
+        this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
         this.countActualQuantity();
+      }else{
+        this.materialOutRecords = [];
       }
       this.fetchData(this.currentWindowId);
       this.setCurrentOprType('2');
@@ -289,16 +296,25 @@
         } else {
           this.initData();
         }
-      }, 1000))
+      }, 1000));
     },
-    watch: {},
+    watch: {
+      currentWindowId:function () {
+        if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== ''){
+          this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
+          this.countActualQuantity();
+        }else{
+          this.materialOutRecords = [];
+        }
+      }
+    },
     computed: {
       ...mapGetters([
-        'currentWindowId', 'user', 'configData', 'editMaterialOutRecords'
+        'currentWindowId','editMaterialOutRecords'
       ]),
     },
     methods: {
-      ...mapActions(['setCurrentOprType', 'setEditMaterialOutRecords']),
+      ...mapActions(['setCurrentOprType','setEditMaterialOutRecords']),
 
       initData: function () {
         this.taskNowItems = {};
@@ -307,6 +323,7 @@
         this.tipsComponentMsg = '';
         this.isTipsShow = false;
       },
+      //获取任务详情
       fetchData: function (id) {
         if (!this.isPending) {
           this.isPending = true;
@@ -320,11 +337,13 @@
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
+                this.compareArr();
                 let isForceFinish = this.taskNowItems.isForceFinish;
                 eventBus.$emit('getIsForceFinish', isForceFinish);
-                this.compareArr();
                 this.tipsMessage = "";
               } else {
+                this.materialOutRecords = [];
+                this.setEditMaterials();
                 this.taskNowItems = {};
                 this.tipsMessage = "无数据"
               }
@@ -343,8 +362,21 @@
           document.getElementById('out-check').focus();
         }
       },
+      //操作完毕
       checkOverQuantity: function () {
-        if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity !== 0) {
+        this.isHide = false;
+        for(let i=0;i<this.materialOutRecords.length;i++){
+          if(this.materialOutRecords[i].materialId === this.taskNowItems.details[i].materialId){
+              if(this.materialOutRecords[i].quantity !== this.taskNowItems.details[i].quantity){
+                  this.isHide = true;
+                  break;
+              }
+          }else{
+            this.isHide = true;
+            break;
+          }
+        }
+        if (this.taskNowItems.planQuantity - this.actualQuantity !== 0) {
           this.isMentions = true
         } else {
           this.setBack()
@@ -361,11 +393,18 @@
           this.$router.push('/io/preview')
         } else {
           /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
+          //判断扫描的条码格式
+          let result = handleScanText(scanText);
+          if(result !== ''){
+            this.$alertWarning(result);
+            return;
+          }
           /*对比料号是否一致*/
           let tempArray = scanText.split("@");
           let text = tempArray[0].replace('\ufeff','');
           if (text !== this.taskNowItems.materialNo) {
             this.failAudioPlay();
+            this.$alertWarning('二维码格式错误，料号不对应');
             this.isTipsShow = true;
             this.tipsComponentMsg = false;
             setTimeout(() => {
@@ -403,6 +442,7 @@
 
         }
       },
+      //叉车回库
       setBack: function () {
         if (!this.isPending) {
           this.isPending = true;
@@ -415,6 +455,8 @@
           };
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
+              this.materialOutRecords = [];
+              this.setEditMaterials();
               this.isTipsShow = true;
               this.tipsComponentMsg = true;
               setTimeout(() => {
@@ -432,6 +474,7 @@
           })
         }
       },
+      //显示缺发/超发数量
       overQuantity: function (plan, actual) {
         let overQty = plan - actual;
         if (plan > actual) {
@@ -442,14 +485,16 @@
           return "--"
         }
       },
+      //确认完成
       submit: function () {
         this.isMentions = false;
-        if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity > 0) {
+        if (this.taskNowItems.planQuantity - this.actualQuantity > 0) {
           this.setFinishItem(true, this.setBack)
         } else {
           this.setBack();
         }
       },
+      //稍后再见
       delay: function () {
         this.isMentions = false;
         this.setFinishItem(false, this.setBack)
@@ -475,7 +520,6 @@
             this.isPending = false;
           })
         }
-
       },
       //确认编辑
       confirmEdit: function (item) {
@@ -523,7 +567,7 @@
                   break;
                 }
               }
-              this.countActualQuantity();
+              this.setEditMaterials();
             } else {
               errHandler(response.data);
             }
@@ -540,46 +584,48 @@
       // 获取修改的数据
       getEditData: function (thisData) {
         this.isEditing = false;
+        //修改
         for (let i = 0; i < this.materialOutRecords.length; i++) {
           let item = this.materialOutRecords[i];
           if (item.materialId === thisData.materialId) {
             item.quantity = thisData.quantity;
           }
         }
+        this.setEditMaterials();
         this.$alertSuccess("修改成功");
-        this.setEditMaterialOutRecords(this.materialOutRecords);
-        this.countActualQuantity();
         this.setFocus();
       },
-      // 计算实际数量\统计超发数量\库存
+      // 计算实际数量
       countActualQuantity: function () {
         let sum = 0;
-        for (let i = 0; i < this.materialOutRecords.length; i++) {
+        for (let i = 0; i < this.materialOutRecords.length;i++) {
           let item = this.materialOutRecords[i];
           sum = sum + item.quantity;
         }
         this.actualQuantity = sum;
-        //this.remainderQuantity = this.taskNowItems.remainderQuantity - this.actualQuantity;
       },
       // 比较两个数组
       compareArr: function () {
+        //为0
         if(this.materialOutRecords.length === 0){
           this.materialOutRecords = this.taskNowItems.details;
+          this.setEditMaterials();
           return;
         }
+        //扫描条码-新增操作
         this.taskNowItems.details.map((item) => {
           let isExit = false;
-          for(let i = 0;i<this.materialOutRecords.length;i++){
+          for(let i=0;i<this.materialOutRecords.length;i++){
             if(item.materialId === this.materialOutRecords[i].materialId){
               isExit = true;
+              break;
             }
           }
           if(isExit === false){
             this.materialOutRecords.push(item);
           }
         });
-        this.setEditMaterialOutRecords(this.materialOutRecords);
-        this.countActualQuantity();
+        this.setEditMaterials();
       },
       // 扫描成功提示
       successAudioPlay: function () {
@@ -599,32 +645,16 @@
           }
         }
       },
-      //稍后再见
-      seeYouLater: function () {
-        if (!this.isPending) {
-          this.isPending = true;
-          let options = {
-            url: taskSeeYouLaterUrl,
-            data: {
-              id: this.taskNowItems.id,
-              materialOutputRecords: JSON.stringify(this.materialOutRecords)
-            }
-          };
-          axiosPost(options).then(response => {
-            if (response.data.result === 200) {
-              this.isPending = false;
-              this.$alertSuccess('操作成功');
-            } else {
-              errHandler(response.data)
-            }
-            this.isPending = false;
-          }).catch((err) => {
-            this.isPending = false;
-            this.$alertDanger(err);
-          })
+      //保存出库数记录vuex
+      setEditMaterials:function(){
+        if(this.currentWindowId !== ''){
+          this.setEditMaterialOutRecords({
+            id:this.currentWindowId,
+            materialOutRecords:this.materialOutRecords
+          });
+          this.countActualQuantity();
         }
-
-      },
+      }
     }
   }
 </script>

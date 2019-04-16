@@ -254,7 +254,7 @@
               });
               this.queryOptions[2].list = this.suppliers;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {

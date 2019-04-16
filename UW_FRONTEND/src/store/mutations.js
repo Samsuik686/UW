@@ -54,6 +54,6 @@ export const setCurrentOprType = (state, currentOprType) => {
 export const setConfigData = (state,configData) => {
   state.configData.printerIP = configData.printerIP;
 };
-export const setEditMaterialOutRecords = (state,editMaterialOutRecords) => {
-  state.editMaterialOutRecords = editMaterialOutRecords;
+export const setEditMaterialOutRecords = (state,obj) => {
+  state.editMaterialOutRecords[obj.id] = obj.materialOutRecords;
 };

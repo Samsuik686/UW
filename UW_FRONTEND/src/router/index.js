@@ -108,6 +108,11 @@ const router = new Router({
           component: ConfigMain
         },
         {
+          path: '/build',
+          name: 'BuildMain',
+          component: BuildMain
+        },
+        {
           path: 'io',
           name: 'IoMain',
           component: IoMain,
@@ -135,14 +140,6 @@ const router = new Router({
           ]
         }
       ]
-    },
-    {
-      path: '/build',
-      name: 'BuildMain',
-      component: BuildMain,
-      meta: {
-        requireAuth: true
-      }
     },
     {
       path: '/login',

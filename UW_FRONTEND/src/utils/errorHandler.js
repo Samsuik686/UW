@@ -17,7 +17,7 @@ const resHandler = function (attr) {
       reject(error)
     }
   })
-}
+};
 
 export const errHandler = function (data) {
   switch (data.result) {
@@ -31,7 +31,7 @@ export const errHandler = function (data) {
       alertWarning(data.data);
       break;
     case 500:
-      alertDanger("服务器内部错误，请联系管理员");
+      alertDanger(data.data);
       break;
     case 501:
       alertDanger(data.data);

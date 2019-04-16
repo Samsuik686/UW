@@ -167,6 +167,10 @@
       },
       addUser: function () {
         this.isAdding = true;
+        this.userData.uid = '';
+        this.userData.name = '';
+        this.userData.password = '';
+        this.userData.type = '';
       },
       addSubmit: function () {
         if (!this.isPending) {

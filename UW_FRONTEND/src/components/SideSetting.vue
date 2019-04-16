@@ -43,6 +43,13 @@
           </div>
           <span>设置</span>
         </div>
+        <div class="icon-container " :class="activeItem === 'build' ? 'icon-active' : ''"
+             @click="initData('build')">
+          <div class="setting-icon">
+            <icon name="config" scale="1.8" style="color: #fff;"></icon>
+          </div>
+          <span>建仓</span>
+        </div>
         <div class="icon-container " :class="activeItem === 'user' ? 'icon-active' : ''"
              @click="initData('user')">
           <div class="setting-icon">

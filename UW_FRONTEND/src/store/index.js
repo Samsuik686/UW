@@ -48,7 +48,7 @@ const state = {
     printerIP:""
   },
   /*出库界面修改出库数*/
-  editMaterialOutRecords:[]
+  editMaterialOutRecords:{}
 
 };
 

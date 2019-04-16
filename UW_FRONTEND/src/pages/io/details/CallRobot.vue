@@ -12,6 +12,7 @@
   import {axiosPost} from "../../../utils/fetchData";
   import {robotCallUrl} from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
+  import {handleScanText} from "../../../utils/scan";
 
   export default {
     name: "CallRobot",
@@ -41,6 +42,14 @@
       scannerHandler: function () {
         let scanText = this.scanText;
         this.scanText = "";
+
+        //判断扫描的条码格式
+        let result = handleScanText(scanText);
+        if(result !== ''){
+          this.$alertWarning(result);
+          return;
+        }
+
         if (this.isPending === false) {
           this.isPending = true;
           let tempArray = scanText.split("@");
