@@ -50,7 +50,9 @@
           </div>
           <span>建仓</span>
         </div>
-        <div class="icon-container " :class="activeItem === 'user' ? 'icon-active' : ''"
+        <div class="icon-container "
+             v-if="user.type === 1"
+             :class="activeItem === 'user' ? 'icon-active' : ''"
              @click="initData('user')">
           <div class="setting-icon">
             <icon name="users" scale="1.8" style="color: #fff;"></icon>
@@ -99,7 +101,7 @@
       }
     },
     computed: {
-      ...mapGetters(['routerIn', 'token'])
+      ...mapGetters(['routerIn', 'token','user'])
     },
     methods: {
       ...mapActions(['setTableRouter', 'setLoading', 'setLoginToken']),

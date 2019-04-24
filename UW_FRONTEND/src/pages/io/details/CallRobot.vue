@@ -1,5 +1,11 @@
 <template>
   <div>
+    <video controls="controls" id="sAudio" hidden>
+      <source src="./../../../assets/005-System05.ogg" type="video/ogg">
+    </video>
+    <video controls="controls" id="fAudio" hidden>
+      <source src="./../../../assets/141-Burst01.ogg" type="video/ogg">
+    </video>
     <options/>
     <input type="text" title="scanner" id="call-check" v-model.trim="scanText"
            @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
@@ -47,6 +53,7 @@
         let result = handleScanText(scanText);
         if(result !== ''){
           this.$alertWarning(result);
+          this.failAudioPlay();
           return;
         }
 
@@ -63,17 +70,38 @@
           };
           axiosPost(options).then(res => {
             if (res.data.result === 200) {
+              this.successAudioPlay();
               this.$alertSuccess("调用成功")
             } else {
+              this.failAudioPlay();
               errHandler(res.data);
             }
             this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
+              this.failAudioPlay();
               this.$alertDanger(JSON.stringify(err));
               this.isPending = false;
             }
           })
+        }
+      },
+      // 扫描成功提示
+      successAudioPlay: function () {
+        let audio = document.getElementById('sAudio');
+        if (audio !== null) {
+          if (audio.paused) {
+            audio.play();
+          }
+        }
+      },
+      // 扫描失败提示
+      failAudioPlay: function () {
+        let audio = document.getElementById('fAudio');
+        if (audio !== null) {
+          if (audio.paused) {
+            audio.play();
+          }
         }
       }
     }

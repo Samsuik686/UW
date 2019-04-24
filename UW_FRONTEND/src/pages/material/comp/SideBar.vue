@@ -23,11 +23,11 @@
                  :class="activeItem === 'supplier' ? 'active' : ''">供应商管理
             </div>
           </div>
-          <div @click="toggleState('boxType')">
+          <!--<div @click="toggleState('boxType')">
           <div class="sidebar-link" @click="linkTo('boxType')"
                :class="activeItem === 'boxType' ? 'active' : ''">料盒类型管理
           </div>
-        </div>
+        </div>-->
           <div @click="toggleState('destination')">
             <div class="sidebar-link" @click="linkTo('destination')"
                  :class="activeItem === 'destination' ? 'active' : ''">发料目的地管理
@@ -46,8 +46,6 @@
   export default {
     data() {
       return {
-
-
         //控制列表active状态，当前已激活的项目
         activeItem: ""
 

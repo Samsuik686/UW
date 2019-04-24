@@ -12,6 +12,17 @@
             </select>
           </div>
         </div>
+        <div class="form-group ">
+          <label for="area" class="control-label">区域：</label>
+          <div>
+            <select id="area" v-model.trim.number="buildInfo.parameters.area" class="custom-select">
+              <option value="" disabled>请选择</option>
+              <option value="A" label="A"></option>
+              <option value="B" label="B"></option>
+              <option value="C" label="C"></option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="control-label">料盒类型：</label>
           <div>
@@ -87,6 +98,7 @@
       return {
         buildInfo: {
           parameters: {
+            area:'',
             srcX: '',
             srcY: '',
             srcZ: '',

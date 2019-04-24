@@ -113,6 +113,12 @@
             type: 'text'
           },
           {
+            id: 'id',
+            name: '物料类型号',
+            model: '',
+            type: 'text'
+          },
+          {
             id: 'supplier',
             name: '供应商',
             model: '',
@@ -172,9 +178,17 @@
           if (item.type === 'text') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
-                this.queryString += (item.id + "like" + _.trim(item.model))
+                if(item.id !== "id"){
+                  this.queryString += (item.id + "like" + _.trim(item.model))
+                }else{
+                  this.queryString += (item.id + "=" + _.trim(item.model))
+                }
               } else {
-                this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
+                if(item.id !== "id"){
+                  this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
+                }else{
+                  this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
+                }
               }
             } else {
               this.setLoading(false)
@@ -252,7 +266,7 @@
                   this.suppliers.push(item);
                 }
               });
-              this.queryOptions[2].list = this.suppliers;
+              this.queryOptions[3].list = this.suppliers;
             } else {
               errHandler(response.data)
             }

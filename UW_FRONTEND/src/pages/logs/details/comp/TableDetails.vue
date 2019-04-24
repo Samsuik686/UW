@@ -2,8 +2,20 @@
 <template>
   <div class="main-details mt-1 mb-3">
     <datatable
+      ref="myTable"
       v-bind="$data"
     ></datatable>
+    <div style="display:flex;align-items:center;justify-content:flex-end">
+      前往
+      <label>
+        <input type="text"
+               class="form-control"
+               style="width:100px;margin:5px 10px 0 10px;"
+               v-on:keyup.enter="jump"
+               v-model.trim="turnPage">
+      </label
+      >页
+    </div>
   </div>
 </template>
 
@@ -40,7 +52,8 @@
         query: {"limit": 20, "offset": 0},
         isPending: false,
         thisRouter: '',
-        filter: ''
+        filter: '',
+        turnPage:''
       }
     },
     created() {
@@ -126,6 +139,7 @@
                 item.showId = index + 1 + this.query.offset;
               });
               this.total = response.data.data.totalRow;
+              this.turnPage = this.query.offset / this.query.limit + 1;
               this.setLoading(false);
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);
@@ -161,6 +175,20 @@
         // this.data.map((item, index) => {
         //   item.showId = index + 1 + this.query.offset;
         // })
+      },
+      jump:function () {
+        if(this.turnPage === ''){
+          return;
+        }
+        let reg = /^[1-9]*[1-9][0-9]*$/;
+        if(!reg.test(this.turnPage)){
+          return;
+        }
+        let firstPage = 1;
+        let lastPage = this.$refs.myTable.$children[2].totalPage;
+        if(firstPage <= Number(this.turnPage) && Number(this.turnPage) <= lastPage ){
+          this.$refs.myTable.$children[2].handleClick(this.turnPage);
+        }
       }
     }
   }

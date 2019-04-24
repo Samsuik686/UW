@@ -153,7 +153,7 @@ if (localStorage.getItem('token')) {
   store.commit('setLoginToken', localStorage.getItem('token'))
 }
 if (localStorage.getItem('user')) {
-  store.commit('setUser', localStorage.getItem('user'));
+  store.commit('setUser', JSON.parse(localStorage.getItem('user')));
 }
 if (localStorage.getItem('configData')) {
   store.commit('setConfigData', JSON.parse(localStorage.getItem("configData")));

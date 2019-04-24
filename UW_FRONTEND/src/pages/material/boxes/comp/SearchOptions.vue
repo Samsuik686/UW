@@ -30,6 +30,9 @@
   import {mapGetters, mapActions} from 'vuex';
   import 'vue-datetime/dist/vue-datetime.css'
   import _ from 'lodash'
+  import {supplierSelectUrl} from "../../../../config/globalUrl";
+  import {axiosPost} from "../../../../utils/fetchData";
+  import {errHandler} from "../../../../utils/errorHandler";
 
   export default {
     name: "Options",
@@ -69,7 +72,19 @@
             id: 'area',
             name: '区域',
             model: '',
-            type: 'text'
+            type: 'select',
+            list:[
+              {
+                id:'A',
+                name:'A'
+              },{
+                id:'B',
+                name:'B'
+              },{
+                id:'C',
+                name:'C'
+              }
+            ]
           },
           {
             id: 'row',
@@ -104,14 +119,23 @@
               }
             ]
           },
+          {
+            id: 'supplier',
+            name: '供应商',
+            model: '',
+            type: 'select',
+            list:[]
+          },
         ],
         copyQueryOptions: [],
         queryString: "",
-        isAdding: false
+        isAdding: false,
+        suppliers:[]
       }
     },
     mounted: function () {
       this.initForm();
+      this.selectSupplier();
       eventBus.$on('closeAddPanel', () => {
         this.isAdding = false;
       })
@@ -178,6 +202,36 @@
       thisFetch: function () {
         this.createQueryString();
         this.fetchData()
+      },
+      selectSupplier: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: supplierSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              let data = response.data.data.list;
+              data.map((item,index) => {
+                if(item.enabled === true){
+                  this.suppliers.push(item);
+                }
+              });
+              this.queryOptions[6].list = this.suppliers;
+            } else {
+              errHandler(response.data)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
       }
     }
   }

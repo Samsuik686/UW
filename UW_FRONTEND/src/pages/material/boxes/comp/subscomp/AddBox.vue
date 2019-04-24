@@ -9,9 +9,15 @@
       <div class="form-row">
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-area" class="col-form-label">区域:</label>
-          <input type="text" id="material-area" class="form-control" v-model="thisData.area"
+          <!--<input type="text" id="material-area" class="form-control" v-model="thisData.area"
                  @input="validate('area', '^[0-9]*[1-9][0-9]*$', '请输入正整数区域号')"  autocomplete="off">
-          <span class="form-span col">{{warningMsg.areaMsg}}</span>
+          <span class="form-span col">{{warningMsg.areaMsg}}</span>-->
+          <select id="material-area" v-model="thisData.area" class="custom-select">
+            <option value="A" label="A"></option>
+            <option value="B" label="B"></option>
+            <option value="C" label="C"></option>
+          </select>
+          <span class="form-span col"></span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-row" class="col-form-label">行号:</label>
@@ -32,10 +38,22 @@
           <span class="form-span col">{{warningMsg.heightMsg}}</span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
-          <label for="material-cellWidth" class="col-form-label">规格:</label>
-          <input type="text" id="material-cellWidth" class="form-control" v-model="thisData.cellWidth"
+          <label for="material-isStandard" class="col-form-label">料盒类型:</label>
+          <!--<input type="text" id="material-cellWidth" class="form-control" v-model="thisData.cellWidth"
                  @input="validate('cellWidth', '^[0-9]*[1-9][0-9]*$', '请输入正整数规格')"  autocomplete="off">
-          <span class="form-span col">{{warningMsg.cellWidthMsg}}</span>
+          <span class="form-span col">{{warningMsg.cellWidthMsg}}</span>-->
+          <select id="material-isStandard" v-model="isStandard" class="custom-select">
+            <option value="1" label="标准"></option>
+            <option value="0" label="不标准"></option>
+          </select>
+          <span class="form-span col"></span>
+        </div>
+        <div class="form-row col-4 pl-2 pr-2">
+          <label for="material-supplier" class="col-form-label">供应商:</label>
+          <select id="material-supplier" v-model="thisData.supplierId" class="custom-select">
+            <option  v-for="item in suppliers">{{item.name}}</option>
+          </select>
+          <span class="form-span col"></span>
         </div>
       </div>
       <div class="dropdown-divider"></div>
@@ -49,7 +67,7 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {addBoxUrl} from "../../../../../config/globalUrl";
+  import {addBoxUrl, supplierSelectUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
   import _ from 'lodash'
@@ -62,12 +80,18 @@
           row: '',
           col: '',
           height: '',
-          cellWidth:''
+          supplierId:'',
+          isStandard:''
         },
+        isStandard:'',
         warningMsg: {
         },
-        isPending: false
+        isPending: false,
+        suppliers:[]
       }
+    },
+    mounted(){
+      this.selectSupplier();
     },
     methods: {
       closeAddPanel: function () {
@@ -82,15 +106,21 @@
             }
           }
           for (let item in this.thisData) {
-            if (this.thisData[item] === '') {
+            if (this.thisData[item] === '' && item !== 'isStandard') {
               this.$alertWarning('内容不能为空');
               return;
             }
           }
+          if(this.isStandard === ''){
+            this.$alertWarning('内容不能为空');
+            return;
+          }
+          this.thisData.isStandard = this.isStandard === '1';
           this.isPending = true;
           for (let index in this.thisData){
             this.thisData[index] = _.trim(this.thisData[index])
           }
+
           let options = {
             url: addBoxUrl,
             data: this.thisData
@@ -110,6 +140,35 @@
             }
             this.isPending = false;
           })
+        }
+      },
+      selectSupplier: function () {
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: supplierSelectUrl,
+            data: {}
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              let data = response.data.data.list;
+              data.map((item,index) => {
+                if(item.enabled === true){
+                  this.suppliers.push(item);
+                }
+              })
+            } else {
+              errHandler(response.data.result)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
         }
       },
       validate: function (type, regx, msg) {

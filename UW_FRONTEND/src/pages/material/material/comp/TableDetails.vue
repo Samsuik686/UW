@@ -2,8 +2,21 @@
 <template>
   <div class="main-details mt-1 mb-3">
     <datatable
+      ref="myTable"
       v-bind="$data"
-    ></datatable>
+    >
+    </datatable>
+    <div style="display:flex;align-items:center;justify-content:flex-end">
+      前往
+      <label>
+        <input type="text"
+               class="form-control"
+               style="width:100px;margin:5px 10px 0 10px;"
+               v-on:keyup.enter="jump"
+               v-model.trim="turnPage">
+      </label
+      >页
+    </div>
     <entity-details v-if="isDetailsActive"/>
   </div>
 </template>
@@ -40,6 +53,7 @@
         isPending: false,
         thisRouter: '',
         filter: '',
+        turnPage:''
       }
     },
     created() {
@@ -87,7 +101,8 @@
         deep: true
       }
     },
-    mounted: function () {
+    mounted() {
+      console.log(this.$refs.myTable);
     },
     methods: {
       ...mapActions(['setTableRouter', 'setLoading']),
@@ -101,7 +116,7 @@
           {field: 'supplierName', title: '供应商', colStyle: {'width': '100px'}},
           {field: 'specification', title: '规格', colStyle: {'width': '180px'}},
           {field: 'thickness', title: '厚度', colStyle: {'width': '80px'}},
-          {field: 'radius', title: '半径', colStyle: {'width': '80px'}},
+          {field: 'radius', title: '直径', colStyle: {'width': '80px'}},
           {field: 'enabled', title: '可用性', visible: false},
           {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
           {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},
@@ -121,7 +136,8 @@
               this.data.map((item, index) => {
                 item.showId = index + 1 + this.query.offset;
               });
-              this.total = response.data.data.totalRow
+              this.total = response.data.data.totalRow;
+              this.turnPage = this.query.offset / this.query.limit + 1;
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);
             } else {
@@ -149,6 +165,20 @@
           options.data.filter = this.filter
         }
         this.fetchData(options);
+      },
+      jump:function () {
+        if(this.turnPage === ''){
+          return;
+        }
+        let reg = /^[1-9]*[1-9][0-9]*$/;
+        if(!reg.test(this.turnPage)){
+          return;
+        }
+        let firstPage = 1;
+        let lastPage = this.$refs.myTable.$children[2].totalPage;
+        if(firstPage <= Number(this.turnPage) && Number(this.turnPage) <= lastPage ){
+          this.$refs.myTable.$children[2].handleClick(this.turnPage);
+        }
       }
     }
   }
@@ -162,5 +192,4 @@
     padding: 10px;
     min-height: 500px;
   }
-
 </style>

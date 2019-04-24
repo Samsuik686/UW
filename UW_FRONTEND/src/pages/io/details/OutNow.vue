@@ -74,7 +74,10 @@
               <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
             </div>
             <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
-            <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
+            <div class="mt-auto text-center" style="display:flex;flex-direction:column;">
+              <button class="btn  mt-auto mb-3" @click="changeState" :class="state === 0?'btn-secondary':'btn-primary'">{{stateText}}</button>
+              <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
+            </div>
           </div>
         </div>
         <div class="row m-3">
@@ -265,7 +268,10 @@
         //实际数量
         actualQuantity: 0,
         //是否显示稍后再见
-        isHide:false
+        isHide:false,
+        //料盒状态
+        state:1,
+        stateText:'料盒已空'
       }
     },
     mounted() {
@@ -282,7 +288,7 @@
       });
       this.initData();
       this.setFocus();
-      if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== ''){
+      if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== '' && this.taskNowItems.type === "出库"){
         this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
         this.countActualQuantity();
       }else{
@@ -300,11 +306,18 @@
     },
     watch: {
       currentWindowId:function () {
-        if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== ''){
+        if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== '' && this.taskNowItems.type === "出库"){
           this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
           this.countActualQuantity();
         }else{
           this.materialOutRecords = [];
+        }
+      },
+      state:function(val){
+        if(val === 0){
+          this.stateText = '料盒未空'
+        }else{
+          this.stateText = "料盒已空"
         }
       }
     },
@@ -364,6 +377,7 @@
       },
       //操作完毕
       checkOverQuantity: function () {
+        //console.log("OutCheckOverQuantity :",this.isPending,this.taskNowItems.planQuantity - this.actualQuantity !== 0);
         this.isHide = false;
         for(let i=0;i<this.materialOutRecords.length;i++){
           if(this.materialOutRecords[i].materialId === this.taskNowItems.details[i].materialId){
@@ -379,7 +393,7 @@
         if (this.taskNowItems.planQuantity - this.actualQuantity !== 0) {
           this.isMentions = true
         } else {
-          this.setBack()
+          this.setBack(false)
         }
       },
       /*扫码集中处理*/
@@ -396,6 +410,7 @@
           //判断扫描的条码格式
           let result = handleScanText(scanText);
           if(result !== ''){
+            this.failAudioPlay();
             this.$alertWarning(result);
             return;
           }
@@ -443,14 +458,16 @@
         }
       },
       //叉车回库
-      setBack: function () {
+      setBack: function (isLater) {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
             url: robotBackUrl,
             data: {
               id: this.taskNowItems.id,
-              materialOutputRecords: JSON.stringify(this.materialOutRecords)
+              materialOutputRecords: JSON.stringify(this.materialOutRecords),
+              isLater:isLater,
+              state:this.state
             }
           };
           axiosPost(options).then(response => {
@@ -471,6 +488,7 @@
               }, 3000)*/
             }
             this.isPending = false;
+            this.state = 1;
           })
         }
       },
@@ -489,15 +507,15 @@
       submit: function () {
         this.isMentions = false;
         if (this.taskNowItems.planQuantity - this.actualQuantity > 0) {
-          this.setFinishItem(true, this.setBack)
+          this.setFinishItem(true, this.setBack(false))
         } else {
-          this.setBack();
+          this.setBack(false);
         }
       },
       //稍后再见
       delay: function () {
         this.isMentions = false;
-        this.setFinishItem(false, this.setBack)
+        this.setFinishItem(false, this.setBack(true))
       },
       //调用finishItem接口，用于需要出入库实际数与计划数不同的地方
       setFinishItem: function (boolean, callback) {
@@ -606,6 +624,9 @@
       },
       // 比较两个数组
       compareArr: function () {
+        if(this.taskNowItems.type !== "出库"){
+          return;
+        }
         //为0
         if(this.materialOutRecords.length === 0){
           this.materialOutRecords = this.taskNowItems.details;
@@ -647,12 +668,19 @@
       },
       //保存出库数记录vuex
       setEditMaterials:function(){
-        if(this.currentWindowId !== ''){
+        if(this.currentWindowId !== '' && this.taskNowItems.type === "出库"){
           this.setEditMaterialOutRecords({
             id:this.currentWindowId,
             materialOutRecords:this.materialOutRecords
           });
           this.countActualQuantity();
+        }
+      },
+      changeState:function () {
+        if(this.state === 0){
+          this.state = 1;
+        }else{
+          this.state = 0;
         }
       }
     }

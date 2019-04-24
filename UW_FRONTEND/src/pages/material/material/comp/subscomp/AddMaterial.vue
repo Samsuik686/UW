@@ -32,9 +32,9 @@
           <span class="form-span col">{{warningMsg.thicknessMsg}}</span>
         </div>
         <div class="form-row col-4 pl-2 pr-2">
-          <label for="material-radius" class="col-form-label">半径:</label>
+          <label for="material-radius" class="col-form-label">直径:</label>
           <input type="text" id="material-radius" class="form-control" v-model="thisData.radius"
-                 @input="validate('radius', '^[0-9]*[1-9][0-9]*$', '请输入正整数半径')" autocomplete="off">
+                 @input="validate('radius', '^[0-9]*[1-9][0-9]*$', '请输入正整数直径')" autocomplete="off">
           <span class="form-span col">{{warningMsg.radiusMsg}}</span>
         </div>
       </div>

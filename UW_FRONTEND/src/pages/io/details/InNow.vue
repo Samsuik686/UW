@@ -73,7 +73,10 @@
             <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
           </div>
           <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
-          <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
+          <div class="mt-auto text-center" style="display:flex;flex-direction:column;">
+            <button class="btn mb-4 mt-auto" @click="changeState" :class="state === 2?'btn-secondary':'btn-primary'">{{stateText}}</button>
+            <button class="btn btn-primary mb-4 mt-auto" @click="checkOverQuantity">操作完毕</button>
+          </div>
         </div>
       </div>
       <div class="row m-3">
@@ -235,8 +238,9 @@
         isMentions: false,
         isDeleting: false,
         patchAutoFinishStack: 0,
-        deleteMaterialId: ""
-
+        deleteMaterialId: "",
+        state:1,
+        stateText:'料盒已满'
       }
     },
     mounted() {
@@ -256,7 +260,15 @@
         }
       }, 1000))
     },
-    watch: {},
+    watch: {
+      state:function(val){
+        if(val === 2){
+          this.stateText = '料盒未满'
+        }else{
+          this.stateText = "料盒已满"
+        }
+      }
+    },
     computed: {
       ...mapGetters([
         'currentWindowId'
@@ -307,10 +319,11 @@
 
 
       checkOverQuantity: function () {
+        //console.log("InCheckOverQuantity :",this.isPending,this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity !== 0);
         if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity !== 0) {
           this.isMentions = true
         } else {
-          this.setBack()
+          this.setBack(false)
         }
       },
       /*扫码集中处理*/
@@ -327,6 +340,7 @@
           //判断扫描的条码格式
           let result = handleScanText(scanText);
           if(result !== ''){
+            this.failAudioPlay();
             this.$alertWarning(result);
             return;
           }
@@ -375,13 +389,15 @@
         }
       },
 
-      setBack: function () {
+      setBack: function (isLater) {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
             url: robotBackUrl,
             data: {
-              id: this.taskNowItems.id
+              id: this.taskNowItems.id,
+              state:this.state,
+              isLater:isLater
             }
           };
           axiosPost(options).then(response => {
@@ -400,6 +416,7 @@
               errHandler(response.data);
             }
             this.isPending = false;
+            this.state = 1;
           })
         }
       },
@@ -416,14 +433,14 @@
       submit: function () {
         this.isMentions = false;
         if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity > 0) {
-          this.setFinishItem(true, this.setBack)
+          this.setFinishItem(true, this.setBack(false))
         } else {
-          this.setBack();
+          this.setBack(false);
         }
       },
       delay: function () {
         this.isMentions = false;
-        this.setFinishItem(false, this.setBack)
+        this.setFinishItem(false, this.setBack(true));
       },
       //调用finishItem接口，用于需要出入库实际数与计划数不同的地方
       setFinishItem: function (boolean, callback) {
@@ -493,31 +510,13 @@
           }
         }
       },
-      //稍后再见
-      seeYouLater: function () {
-        if (!this.isPending) {
-          this.isPending = true;
-          let options = {
-            url: taskSeeYouLaterUrl,
-            data: {
-              id: this.taskNowItems.id
-            }
-          };
-          axiosPost(options).then(response => {
-            if (response.data.result === 200) {
-              this.isPending = false;
-              this.$alertSuccess('操作成功');
-            } else {
-              errHandler(response.data)
-            }
-            this.isPending = false;
-          }).catch((err) => {
-            this.isPending = false;
-            this.$alertDanger(err);
-          })
+      changeState:function () {
+        if(this.state === 2){
+          this.state = 1;
+        }else{
+          this.state = 2;
         }
-
-      },
+      }
     }
   }
 </script>

@@ -82,8 +82,8 @@
             if (res.data.result === 200) {
               localStorage.setItem('token', res.data.data["#TOKEN#"]);
               this.setLoginToken(localStorage.getItem('token'));
-              localStorage.setItem('user',res.data.data["uid"]);
-              this.setUser(localStorage.getItem('user'));
+              localStorage.setItem('user',JSON.stringify(res.data.data));
+              this.setUser(res.data.data);
               this.$router.replace('/');
             } else if (res.data.result === 412) {
               this.$alertWarning(res.data.data)

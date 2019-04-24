@@ -78,7 +78,10 @@
                   <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
                 </div>
                 <span class="card-text text-center mt-auto">* 扫描此二维码或点击按钮以完成操作</span>
-                <button class="btn btn-primary mb-4 mt-auto" @click="robotBack(taskNowItems.id)">操作完毕</button>
+                <div class="mt-auto text-center" style="display:flex;flex-direction:column;">
+                  <button class="btn mb-4 mt-auto" @click="changeState" :class="state === 2?'btn-secondary':'btn-primary'">{{stateText}}</button>
+                  <button class="btn btn-primary mb-4 mt-auto" @click="robotBack(taskNowItems.id)">操作完毕</button>
+                </div>
               </div>
             </div>
             <div class="row m-3">
@@ -160,7 +163,18 @@
         isTipsShow: false,
         scanText: '',
         isSetFocus: false,
-        option: false
+        option: false,
+        state:1,
+        stateText:'料盒已满'
+      }
+    },
+    watch:{
+      state:function(val){
+        if(val === 2){
+          this.stateText = '料盒未满'
+        }else{
+          this.stateText = "料盒已满"
+        }
       }
     },
     components: {
@@ -202,6 +216,7 @@
         //判断扫描的条码格式
         let result = handleScanText(scanText);
         if(result !== ''){
+          this.failAudioPlay();
           this.$alertWarning(result);
           return;
         }
@@ -262,6 +277,7 @@
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
               this.$alertDanger(JSON.stringify(err));
+              this.failAudioPlay();
               this.isPending = false;
             }
           })
@@ -273,7 +289,9 @@
           let options = {
             url: robotBackUrl,
             data: {
-              id: this.taskNowItems.id
+              id: this.taskNowItems.id,
+              isLater:false,
+              state:this.state
             }
           };
           axiosPost(options).then(res => {
@@ -283,10 +301,12 @@
               this.$alertWarning(res.data.data)
             }
             this.isPending = false;
+            this.state = 1;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
               this.$alertDanger(JSON.stringify(err));
               this.isPending = false;
+              this.state = 1;
             }
           })
         }
@@ -324,7 +344,7 @@
             materialNo: this.taskNowItems.materialNo,
             remainingQuantity: item.remainderQuantity,
             productDate:arr[0],
-            user: this.user,
+            user: this.user.uid,
             supplier: this.taskNowItems.supplierName
           }
         };
@@ -342,6 +362,13 @@
           }
         })
       },
+      changeState:function () {
+        if(this.state === 2){
+          this.state = 1;
+        }else{
+          this.state = 2;
+        }
+      }
     }
   }
 </script>
