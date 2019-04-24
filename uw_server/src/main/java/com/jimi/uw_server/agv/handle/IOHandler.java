@@ -78,7 +78,7 @@ public class IOHandler {
 	private static void handleStatus0(AGVStatusCmd statusCmd) {
 		//获取groupid
 		String groupid = statusCmd.getMissiongroupid();
-		
+
 		//匹配groupid
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if(groupid.equals(item.getGroupId())) {
@@ -104,7 +104,21 @@ public class IOHandler {
 					break;
 				} else if(item.getState() == IOTaskItemState.START_BACK) {//SL执行完成时：
 					//更改taskitems里对应item状态为4（已回库完成）***
-					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_BACK);
+					Task task = Task.dao.findById(item.getTaskId());
+					if (item.getIsForceFinish().equals(false) && task.getType().equals(TaskType.OUT)) {
+						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+						if (remainderQuantity <= 0) {
+							item.setState(IOTaskItemState.LACK);
+							item.setIsForceFinish(true);
+							TaskItemRedisDAO.updateTaskIsForceFinish(item, true);
+							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
+						}else {
+							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_BACK);
+						}
+					}else {
+						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_BACK);
+					}
+					
 
 					// 设置料盒在架
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
@@ -121,7 +135,7 @@ public class IOHandler {
 			}
 		}
 	}
-
+	
 
 	private static void nextRound(AGVIOTaskItem item) {
 		// 获取任务类型
@@ -148,15 +162,26 @@ public class IOHandler {
 	*/
 	public static void clearTil(String groupid) {
 		boolean isAllFinish = true;
+		boolean isLack = false;
+		int taskId = Integer.valueOf(groupid.split(":")[1]);
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
-			if(groupid.split(":")[1].equals(item1.getGroupId().split(":")[1]) && (item1.getState() != IOTaskItemState.FINISH_BACK || !item1.getIsForceFinish())) {
-				isAllFinish = false;
+			if (groupid.split(":")[1].equals(item1.getGroupId().split(":")[1])) {
+				if (item1.getState() == IOTaskItemState.LACK) {
+					isLack = true;
+				}
+				if( (item1.getState() != IOTaskItemState.FINISH_BACK &&  item1.getState() != IOTaskItemState.LACK && !item1.getIsForceFinish())) {
+					isAllFinish = false;
+					
+				}
+				if (item1.getState() == IOTaskItemState.FINISH_CUT) {
+					isAllFinish = false;
+				}
 			}
 		}
 		if(isAllFinish) {
-			int taskId = Integer.valueOf(groupid.split(":")[1]);
+			
 			TaskItemRedisDAO.removeTaskItemByTaskId(taskId);
-			taskService.finish(taskId);
+			taskService.finish(taskId, isLack);
 		}
 	}
 

@@ -23,6 +23,9 @@ public class BuildController extends Controller {
 	@ActionKey("/build")
 	@Log("开始建仓，传递的参数为{parameters}")
 	public void build(String parameters) {
+		if (parameters == null) {
+			throw new OperationException("参数不能为空");
+		}
 		String resultString = buildService.build(parameters);
 		if (resultString.equals("开始建仓！")) {
 			renderJson(ResultUtil.succeed());

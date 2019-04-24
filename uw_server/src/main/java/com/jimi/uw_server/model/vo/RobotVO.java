@@ -135,6 +135,21 @@ public class RobotVO extends RobotBO {
 		case 25:
 			errorString = "命令错误";
 			break;
+		case 26:
+			errorString = "后退防撞";
+			break;
+		case 27:
+			errorString = "托盘检测出错";
+			break;
+		case 28:
+			errorString = "插货满入错误";
+			break;
+		case 29:
+			errorString = "放货满入错误";
+			break;
+		case 30:
+			errorString = "直行撞托盘错误";
+			break;
 		case 255:
 			errorString = "";
 			break;

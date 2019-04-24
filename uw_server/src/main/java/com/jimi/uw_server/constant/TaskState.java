@@ -17,5 +17,7 @@ public class TaskState {
 	public static final int FINISHED = 3;			// 已完成
 
 	public static final int CANCELED = 4;			// 已作废
+	
+	public static final int EXIST_LACK = 5;			//存在缺料条目
 
 }

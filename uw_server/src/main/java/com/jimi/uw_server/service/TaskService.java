@@ -13,11 +13,14 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
+import com.jimi.uw_server.agv.handle.IOHandler;
+import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
+import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
@@ -43,6 +46,8 @@ import com.jimi.uw_server.util.ExcelHelper;
 public class TaskService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+	
+	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
 	private static final Object CREATEIOTASK_LOCK = new Object();
 
@@ -94,7 +99,8 @@ public class TaskService {
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id IS NOT NULL";
 
-
+	private static final String GET_MATERIAL_BY_BOX_ID = "SELECT * FROM material where box = ? and is_in_box = ? and remainder_quantity > 0";
+	
 	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, String fullFileName, Integer supplier, Integer destination) throws Exception {
 		String resultString = "添加成功！";
@@ -309,9 +315,15 @@ public class TaskService {
 					window.setBindTaskId(null);
 					window.update();
 				}
+				
 				// 更新任务状态为作废
-				task.setState(TaskState.CANCELED);
-				return task.update();
+				task.setState(TaskState.CANCELED).update();
+				for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
+					if(task.getId().equals(item.getTaskId())) {
+						IOHandler.clearTil(item.getGroupId().toString());
+					}
+				}
+				return true;
 			}
 		}
 
@@ -406,10 +418,13 @@ public class TaskService {
 
 
 	// 完成任务
-	public void finish(Integer taskId) {
+	public void finish(Integer taskId, Boolean isLack) {
 		Task task = Task.dao.findById(taskId);
-		if (task.getState() == TaskState.PROCESSING) {
+		if (task.getState() == TaskState.PROCESSING && !isLack) {
 			task.setState(TaskState.FINISHED);
+			task.update();
+		}else if (task.getState() == TaskState.PROCESSING && isLack){
+			task.setState(TaskState.EXIST_LACK);
 			task.update();
 		}
 		// 将仓口解绑(作废任务时，如果还有任务条目没跑完就不会解绑仓口，因此不管任务状态是为进行中还是作废，这里都需要解绑仓口)
@@ -695,8 +710,8 @@ public class TaskService {
 	}
 
 
-	// 更新出库数量以及料盘信息
-	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords) {
+	// 更新标准料盘出库数量以及料盘信息
+	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, String materialOutputRecords, Boolean isLater) {
 		synchronized (UPDATEOUTQUANTITYANDMATERIALINFO_LOCK) {
 			if (materialOutputRecords != null) {
 				JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
@@ -714,6 +729,14 @@ public class TaskService {
 						item.setIsForceFinish(true);
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.FINISH_CUT);
 					}
+					/*if (isLater) {
+						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+						if (remainderQuantity <= 0) {
+							item.setState(IOTaskItemState.LACK);
+							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
+						}
+					}*/
+					
 					// 如果点击稍后再见后没有修改出库数量，则不更新库存，只将料盘设置为不在盒内
 					if (!item.getIsForceFinish()) {
 						material.setIsInBox(false);
@@ -734,6 +757,11 @@ public class TaskService {
 							material.update();
 						}
 
+					}
+					Material material2 = Material.dao.findFirst(GET_MATERIAL_BY_BOX_ID, item.getBoxId(), true);
+					if (material2 == null) {
+						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+						materialBox.setStatus(BoxState.EMPTY).update();
 					}
 				}
 			}

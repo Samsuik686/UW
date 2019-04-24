@@ -39,7 +39,7 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}，厚度为{thickness}，半径为{radius}")
+	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}，厚度为{thickness}，直径为{radius}")
 	public void addType(String no, String specification, String supplier, Integer thickness, Integer radius) {
 		String resultString = materialService.addType(no, specification, supplier, thickness, radius);
 		if(resultString.equals("添加成功！")) {
@@ -68,9 +68,9 @@ public class MaterialController extends Controller {
 	}
 
 	// 添加料盒#
-	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}，规格{cellWidth}")
-	public void addBox(String area, Integer row, Integer col, Integer height, Integer cellWidth) {
-		String resultString = materialService.addBox(area, row, col, height, cellWidth);
+	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}，供应商{supplierId}，是否标准料盒{isStandard}")
+	public void addBox(String area, Integer row, Integer col, Integer height,  Integer supplierId, Boolean isStandard) {
+		String resultString = materialService.addBox(area, row, col, height, supplierId, isStandard);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		}else {

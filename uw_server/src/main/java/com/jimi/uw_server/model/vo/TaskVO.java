@@ -75,6 +75,8 @@ public class TaskVO extends Task{
 			this.stateString = "已完成";
 		} else if (state == TaskState.CANCELED) {
 			this.stateString = "已作废";
+		} else if (state == TaskState.EXIST_LACK) {
+			this.stateString = "存在缺料";
 		}
 	}
 

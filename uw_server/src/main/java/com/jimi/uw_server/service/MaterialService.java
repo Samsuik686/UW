@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.model.BoxType;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
@@ -198,25 +200,32 @@ public class MaterialService extends SelectService{
 
 
 	// 手动添加料盒
-	public String addBox(String area, Integer row, Integer col, Integer height, Integer cellWidth) {
+	public String addBox(String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
 		String resultString = "添加成功！";
 		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL, area, row, col, height).size() != 0) {
 			resultString = "该位置已有料盒存在，请不要在该位置添加料盒！";
 			return resultString;
 		}
-		BoxType boxType = BoxType.dao.findFirst(GET_BOX_TYPE_BY_CELL_WIDTH_SQL, cellWidth);
-		if (boxType == null) {
-			resultString = "请填写正确的料盒规格！";
+		Supplier supplier = Supplier.dao.findById(supplierId);
+		if (supplier == null) {
+			resultString = "供应商不存在！";
 			return resultString;
 		}
 		MaterialBox materialBox = new MaterialBox();
+		if (isStandard) {
+			materialBox.setType(1);
+		}else {
+			materialBox.setType(2);
+		}
 		materialBox.setArea(area);
 		materialBox.setRow(row);
 		materialBox.setCol(col);
 		materialBox.setHeight(height);
-		materialBox.setType(boxType.getId());
 		materialBox.setIsOnShelf(true);
 		materialBox.setEnabled(true);
+		materialBox.setSupplier(supplierId);
+		materialBox.setStatus(BoxState.EMPTY);
+		materialBox.setUpdateTime(new Date());
 		materialBox.save();
 		return resultString;
 	}

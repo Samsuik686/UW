@@ -2,7 +2,9 @@ package com.jimi.uw_server.agv.thread;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.kit.PropKit;
@@ -12,11 +14,15 @@ import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
+import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.BuildTaskItemState;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
+import com.jimi.uw_server.model.MaterialType;
+import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.bo.RobotBO;
@@ -32,12 +38,18 @@ import com.jimi.uw_server.util.ErrorLogWritter;
 public class TaskPool extends Thread{
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-
-	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT DISTINCT(box) AS boxId FROM material WHERE type = ?";
+	
+	private static final String GET_STANDARD_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT material_box.id AS box FROM material_box INNER JOIN material ON material.box = material_box.id WHERE material.type = ? AND material_box.supplier = ? AND material_box.type = ?";
+	
+	private static final String GET_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT material_box.id AS box FROM material_box INNER JOIN material ON material.box = material_box.id WHERE material.type = ? AND material_box.supplier = ? AND material_box.type = ? AND material_box.status = ?";
 
 	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 
-	private static final String GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT box FROM material WHERE type = ?)";
+	private static final String GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT material_box.id AS boxId FROM material_box INNER JOIN material ON material.box = material_box.id WHERE material.type = ? AND material_box.supplier = ?) AND supplier = ? AND material_box.type = ?";
+	
+	private static final String GET_EMPTY_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT material_box.id AS boxId FROM material_box INNER JOIN material ON material.box = material_box.id WHERE material.type = ? AND material_box.supplier = ?) AND supplier = ? AND material_box.type = ? AND material_box.status = ?";
+
+	private static final String GET_UNFULL_DIFFERENT_TYPE_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND id NOT IN (SELECT material_box.id AS boxId FROM material_box INNER JOIN material ON material.box = material_box.id WHERE material.type = ? AND material_box.supplier = ?) AND supplier = ? AND material_box.type = ? AND material_box.status = ? ORDER BY update_time DESC ";
 
 	private static final String GET_MATERIAL_BY_TYPE_SQL = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0";
 
@@ -57,15 +69,15 @@ public class TaskPool extends Thread{
 				if(TaskItemRedisDAO.isPauseAssign() == 1){
 					continue;
 				}
-
-				//判断til是否为空或者cn为0
 				int cn = countFreeRobot();
-				List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
-				TaskItemRedisDAO.appendIOTaskItems(ioTaskItems);
-				if (!ioTaskItems.isEmpty() && cn != 0) {
-					sendIOCmds(cn, ioTaskItems);
+				//判断til是否为空或者cn为0
+				synchronized (Lock.REDIS_LOCK) {
+					List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
+					TaskItemRedisDAO.appendIOTaskItems(ioTaskItems);
+					if (!ioTaskItems.isEmpty() && cn != 0) {
+						sendIOCmds(cn, ioTaskItems);
+					}
 				}
-				
 				//判断tilOfBuild是否为空或者cn为0
 				cn = countFreeRobot();
 				List<AGVBuildTaskItem> buildTaskItems = new ArrayList<>();
@@ -101,7 +113,7 @@ public class TaskPool extends Thread{
 				Integer boxId = 0;
 
 				// 对于入库和退料入库
-					// 2. 根据类型和挑盒子算法获取最佳盒号
+				// 2. 根据类型和挑盒子算法获取最佳盒号
 				if (taskType == TaskType.IN || taskType == TaskType.SEND_BACK) {
 					boxId = getMaximumCapacityBox(item.getMaterialTypeId(),item.getTaskId());
 				}
@@ -115,7 +127,7 @@ public class TaskPool extends Thread{
 					Integer remainderQuantity = materialService.countMaterialIncludeNotInBox(item.getMaterialTypeId());
 					if (remainderQuantity == 0) {
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
-
+						TaskItemRedisDAO.updateTaskIsForceFinish(item, true);
 						// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
 						TaskLog taskLog = new TaskLog();
 						taskLog.setPackingListItemId(item.getId());
@@ -127,7 +139,7 @@ public class TaskPool extends Thread{
 						taskLog.setTime(new Date());
 						taskLog.setDestination(task.getDestination());
 						taskLog.save();
-
+						IOHandler.clearTil(item.getGroupId());
 						break;
 					} else {
 						boxId = getOldestMaterialBox(item.getMaterialTypeId(), item.getId());
@@ -149,6 +161,7 @@ public class TaskPool extends Thread{
 				// 根据物料类型号获取物料库存数量
 				Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 				if (remainderQuantity > 0) {
+					TaskItemRedisDAO.updateTaskIsForceFinish(item, false);
 					TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.WAIT_ASSIGN);
 				}
 			}
@@ -195,53 +208,126 @@ public class TaskPool extends Thread{
 
 
 	private static int getMaximumCapacityBox(Integer materialTypeId, Integer taskId) {
-		List<Material> sameTypeMaterialBoxList = Material.dao.find(GET_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId);
+		MaterialType materialType = MaterialType.dao.findById(materialTypeId);
+		
 		int boxId = 0;
 		int boxRemainderCapacity = 0;
-		// 获取料盒容量
-		int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
-		// 如果存在同类型的料盒
-		if (sameTypeMaterialBoxList.size() > 0) {
-			for (Material sameTypeMaterialBox : sameTypeMaterialBoxList) {
-				int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, sameTypeMaterialBox.get("boxId").toString()).size();
-				int unusedcapacity = materialBoxCapacity - usedcapacity;
-				if (unusedcapacity > boxRemainderCapacity) {
-					boxRemainderCapacity = unusedcapacity;
-					boxId = sameTypeMaterialBox.get("boxId");
-				}
+		Set<Integer> diffTaskBoxs = new HashSet<>();
+		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+			if (!redisTaskItem.getTaskId().equals(taskId) && redisTaskItem.getIsForceFinish().equals(false)) {
+				diffTaskBoxs.add(redisTaskItem.getBoxId().intValue());
+			}
+			if (redisTaskItem.getTaskId().equals(taskId) && redisTaskItem.getState() >= IOTaskItemState.ASSIGNED && redisTaskItem.getMaterialTypeId().equals(materialTypeId)) {
+				return redisTaskItem.getBoxId();
 			}
 		}
-
-		// 如果不存在同类型的料盒或者同类型的料盒都已装满
-		if (sameTypeMaterialBoxList.size() == 0 || boxRemainderCapacity == 0) {
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-				if (redisTaskItem.getState() == IOTaskItemState.ARRIVED_WINDOW && redisTaskItem.getTaskId().equals(taskId)) {
-					int tempBoxId = redisTaskItem.getBoxId();
-					int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, tempBoxId).size();
-					int unusedcapacity = materialBoxCapacity - usedcapacity;
-					if (unusedcapacity > 0) {
-						boxId = tempBoxId;
-						break;
+		if (materialType.getRadius().equals(7)) {
+			List<Material> sameTypeMaterialBoxList = Material.dao.find(GET_STANDARD_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), 1);
+			// 获取料盒容量
+			int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
+			// 如果存在同类型的料盒
+			if (sameTypeMaterialBoxList.size() > 0) {
+				for (Material sameTypeMaterialBox : sameTypeMaterialBoxList) {
+					if (diffTaskBoxs.contains(sameTypeMaterialBox.getBox().intValue())) {
+						continue;
 					}
-				}
-			}
-			if (boxId == 0) {
-				List<MaterialBox> differentTypeMaterialBoxList = MaterialBox.dao.find(GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL, materialTypeId);
-				
-				for (MaterialBox differentTypeMaterialBox : differentTypeMaterialBoxList) {
-					int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, differentTypeMaterialBox.getId()).size();
+					int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, sameTypeMaterialBox.get("box").toString()).size();
 					int unusedcapacity = materialBoxCapacity - usedcapacity;
 					if (unusedcapacity > boxRemainderCapacity) {
 						boxRemainderCapacity = unusedcapacity;
-						boxId = differentTypeMaterialBox.getId();
+						boxId = sameTypeMaterialBox.get("box");
 					}
 				}
 			}
 			
-/*			if (boxId == 0) {
-				TaskItemRedisDAO.setPauseAssign(1);
-				throw new OperationException("仓库的料盒全满了，请尽快处理！");
-			}*/
+			// 如果不存在同类型的料盒或者同类型的料盒都已装满
+			if (sameTypeMaterialBoxList.size() == 0 || boxRemainderCapacity == 0) {
+				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+					if (redisTaskItem.getState() == IOTaskItemState.ARRIVED_WINDOW && redisTaskItem.getTaskId().equals(taskId)) {
+						int tempBoxId = redisTaskItem.getBoxId();
+						int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, tempBoxId).size();
+						int unusedcapacity = materialBoxCapacity - usedcapacity;
+						if (unusedcapacity > 0) {
+							boxId = tempBoxId;
+							break;
+						}
+					}
+				}
+				if (boxId == 0) {
+					List<MaterialBox> differentTypeMaterialBoxList = MaterialBox.dao.find(GET_DIFFERENT_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), materialType.getSupplier(), 1);
+					
+					for (MaterialBox differentTypeMaterialBox : differentTypeMaterialBoxList) {
+						if (diffTaskBoxs.contains(differentTypeMaterialBox.getId().intValue())) {
+							continue;
+						}
+						int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, differentTypeMaterialBox.getId()).size();
+						int unusedcapacity = materialBoxCapacity - usedcapacity;
+						if (unusedcapacity > boxRemainderCapacity) {
+							boxRemainderCapacity = unusedcapacity;
+							boxId = differentTypeMaterialBox.getId();
+						}
+					}
+				}
+			}
+			
+		}else {
+			//非标准物料，即非7寸盘
+			List<Material> sameUnfullTypeMaterialBoxs = Material.dao.find(GET_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), 2, BoxState.UNFULL);
+			// 如果存在同类型不满的料盒
+			for (Material sameUnfullTypeMaterialBox : sameUnfullTypeMaterialBoxs) {
+				if (diffTaskBoxs.contains(sameUnfullTypeMaterialBox.getBox().intValue())) {
+					continue;
+				}
+				boxId = sameUnfullTypeMaterialBox.getBox();
+				
+			}
+			// 如果不存在同类型的料盒或者同类型的料盒都已装满
+			if (boxId == 0) {
+				//批量入库推送仓口
+				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+					if (redisTaskItem.getState() == IOTaskItemState.ARRIVED_WINDOW && redisTaskItem.getTaskId().equals(taskId)) {
+						int tempBoxId = redisTaskItem.getBoxId();
+						MaterialBox materialBox = MaterialBox.dao.findById(tempBoxId);
+						if (materialBox.getType().equals(2) && materialBox.getStatus() != BoxState.FULL) {
+							boxId = tempBoxId;
+						}
+					}
+				}
+				// 如果存在同类型空的料盒
+				if (boxId == 0) {
+					List<Material> sameEmptyTypeMaterialBoxs = Material.dao.find(GET_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), 2, BoxState.EMPTY);
+					for (Material sameEmptyTypeMaterialBox : sameEmptyTypeMaterialBoxs) {
+						if (diffTaskBoxs.contains(sameEmptyTypeMaterialBox.getBox().intValue())) {
+							continue;
+						}
+						boxId = sameEmptyTypeMaterialBox.getBox();
+					}
+				}
+				
+				if (boxId == 0) {
+					//推送不同类型空料盒
+					List<MaterialBox> differentTypeMaterialBoxList = MaterialBox.dao.find(GET_EMPTY_DIFFERENT_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), materialType.getSupplier(), 2, BoxState.EMPTY);
+					
+					for (MaterialBox differentTypeMaterialBox : differentTypeMaterialBoxList) {
+						if (diffTaskBoxs.contains(differentTypeMaterialBox.getId().intValue())) {
+							continue;
+						}
+						boxId = differentTypeMaterialBox.getId();
+						
+					}
+				}
+				if (boxId == 0) {
+					//推送不同类型非空料盒并按照出库时间排序
+					List<MaterialBox> differentTypeMaterialBoxList = MaterialBox.dao.find(GET_UNFULL_DIFFERENT_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), materialType.getSupplier(), 2, BoxState.UNFULL);
+					
+					for (MaterialBox differentTypeMaterialBox : differentTypeMaterialBoxList) {
+						if (diffTaskBoxs.contains(differentTypeMaterialBox.getId().intValue())) {
+							continue;
+						}
+						boxId = differentTypeMaterialBox.getId();
+					}
+				}
+			}
 		}
 
 		return boxId;
@@ -252,7 +338,14 @@ public class TaskPool extends Thread{
 		List<Material> materialList = Material.dao.find(GET_MATERIAL_BY_TYPE_SQL, materialTypeId);
 		int boxId = 0;
 		Date productionTime = new Date();
-
+		Set<Integer> boxs = new HashSet<>();
+		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
+		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+			// 根据任务条目id匹配到redis中的任务条目
+			if (!redisTaskItem.getTaskId().equals(packingListItem.getTaskId()) && redisTaskItem.getIsForceFinish().equals(false)) {
+				boxs.add(redisTaskItem.getBoxId().intValue());
+			}
+		}
 		// 如果物料实体表中有多条该物料类型的记录，且库存大于0
 		if (materialList.size() > 0) {
 			for (Material m : materialList) {
@@ -274,6 +367,10 @@ public class TaskPool extends Thread{
 					}
 				}
 				else if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
+
+					if (boxs.contains(m.getBox().intValue())) {
+						continue;
+					}
 					productionTime = m.getProductionTime();
 					boxId = m.getBox();
 				}
