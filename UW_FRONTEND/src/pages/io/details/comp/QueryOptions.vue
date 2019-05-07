@@ -31,8 +31,32 @@
             <option v-for="item in windowsList" :value="item.id">{{item.id}}</option>
           </select>
         </div>
-        <div class="form-group row align-items-end" v-if="isShow">
+        <div class="form-group row align-items-end" v-if="isCutShow">
           <div class="btn btn-primary ml-3 mr-4" @click="initCutPanel">截料后重新入库</div>
+        </div>
+        <div class="form-group row align-items-end" v-if="isClearShow">
+          <div class="btn btn-primary ml-3 mr-4" @click="setIsClear"  :class="isCleared?'btn-secondary':'btn-primary'" title="灰色表示已确认清除，蓝色表示未确认">完全清除超发数</div>
+        </div>
+      </div>
+    </div>
+    <div v-if="isClearTip" id="delete-window">
+      <div class="delete-panel">
+        <div class="delete-panel-container form-row flex-column justify-content-between">
+          <div class="form-row">
+            <div class="form-group mb-0">
+              <h3>确认清除：</h3>
+            </div>
+          </div>
+          <div class="form-row w-100">
+            <div class="text-center">
+              <p>你确定要清除当前物料的超发数吗?</p>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="form-row justify-content-around">
+            <a class="btn btn-secondary col mr-1 text-white" @click="isClearTip = false">取消</a>
+            <a class="btn btn-danger col ml-1 text-white" @click="allClear">确定</a>
+          </div>
         </div>
       </div>
     </div>
@@ -55,12 +79,18 @@
         thisWindow: '',
         windowType: '',
         isForceFinish: '',
-        isShow:false
+        isCutShow:false,
+        isClearShow:false,
+        isClearTip:false,
+        isCleared:false
       }
     },
     mounted: function () {
       eventBus.$on('getIsForceFinish',(isForceFinish) => {
         this.isForceFinish = isForceFinish
+      });
+      eventBus.$on('setClearFalse',() => {
+        this.isCleared = false;
       })
     },
     created() {
@@ -70,10 +100,11 @@
           this.windowType = 1;
           break;
         case '/io/outnow':
-          this.isShow = true;
+          this.isCutShow = true;
           this.windowType = 2;
           break;
         case '/io/return':
+          this.isClearShow = true;
           this.windowType = 3;
           break;
         case '/io/call':
@@ -106,11 +137,12 @@
             this.setPreset();
             break;
           case '/io/outnow':
-            this.isShow = true;
+            this.isCutShow = true;
             this.windowType = 2;
             this.setPreset();
             break;
           case '/io/return':
+            this.isClearShow = true;
             this.windowType = 3;
             this.setPreset();
             break;
@@ -183,6 +215,19 @@
         }else{
           this.$alertWarning("叉车未到站，当前无拣料数据");
         }
+      },
+      setIsClear:function(){
+        if(this.isCleared === true){
+          this.isCleared = false;
+          eventBus.$emit('setIsClear',this.isCleared);
+        }else{
+          this.isClearTip = true;
+        }
+      },
+      allClear:function(){
+        this.isClearTip = false;
+        this.isCleared = true;
+        eventBus.$emit('setIsClear',this.isCleared);
       }
     }
   }
@@ -194,5 +239,27 @@
     border: 1px solid #eeeeee;
     border-radius: 8px;
     padding: 10px;
+  }
+  .delete-panel {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 101;
+  }
+
+  .delete-panel-container {
+    background: #ffffff;
+    min-height: 220px;
+    width: 400px;
+    z-index: 102;
+    border-radius: 10px;
+    box-shadow: 3px 3px 20px 1px #bbb;
+    padding: 30px 60px 10px 60px;
   }
 </style>

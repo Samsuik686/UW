@@ -35,7 +35,7 @@
       },
       timeout: {
         type: Number,
-        default: 3000
+        default:10000
       }
 
     },
@@ -104,7 +104,7 @@
   }
 
   .notification.is-warning {
-    background-color: #ffdd57;
+    background-color: #FF9900;
     color: #fff;
   }
 

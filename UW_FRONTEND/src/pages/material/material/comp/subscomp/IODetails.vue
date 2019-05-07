@@ -6,9 +6,17 @@
           <div class="form-group mb-0 mr-5">
             <h3>出入库记录：</h3>
           </div>
+          <div class="form-group destination" style="margin-right:20px;">
+            <label for="type" class="mb-0 destination-label">出入库类型：</label>
+            <select id="type" v-model="type" class="custom-select">
+              <option value="" disabled>请选择</option>
+              <option label="出库" value="0"></option>
+              <option label="入库" value="1"></option>
+            </select>
+          </div>
           <div class="form-group destination">
             <label for="destination" class="mb-0 destination-label">发料目的地：</label>
-            <select id="destination" v-model="destination" class="custom-select">
+            <select id="destination" v-model="destination" class="custom-select" :disabled="type === '1'">
               <option value="" disabled>请选择</option>
               <option :value="item.id" v-for="item in destinations">{{item.name}}</option>
             </select>
@@ -36,6 +44,7 @@
     data() {
       return {
         destination:'',
+        type:'0',
         destinations:[],
         fixHeaderAndSetBodyMaxHeight: 450,
         tblStyle: {
@@ -76,6 +85,14 @@
           this.getMaterialRecords();
         },
         deep:true
+      },
+      type:{
+        handler(val){
+          this.query.limit = 20;
+          this.query.offset = 0;
+          this.getMaterialRecords();
+        },
+        deep:true
       }
     },
     mounted() {
@@ -90,7 +107,8 @@
         let options = {
           url: getMaterialRecordsUrl,
           data: {
-            type: this.thisDetailsID,
+            materialTypeId: this.thisDetailsID,
+            type:this.type,
             destination:this.destination,
             pageNo: 1,
             pageSize: 20

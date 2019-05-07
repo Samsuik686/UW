@@ -23,6 +23,7 @@ export const importReportUrl = url + '/manage/material/import';
 export const addBoxTypeUrl = url + '/manage/material/addBoxType';
 export const deleteBoxTypeUrl = url + '/manage/material/deleteBoxType';
 export const getBoxTypesUrl = url + '/manage/material/getBoxTypes';
+export const deleteByIdsUrl = url + '/manage/material/deleteByIds';
 
 //logs
 export const logsUrl = url + '/log/select';
@@ -59,6 +60,8 @@ export const taskFinishUrl = url + '/task/finishItem';
 export const taskSetPriorityUrl = url + '/task/setPriority';
 export const taskBackAfterCuttingUrl = url + '/task/backAfterCutting';
 
+export const taskImportInRecordsUrl = url + '/task/importInRecords';
+export const taskImportOutRecordsUrl = url + '/task/importOutRecords';
 
 //robot
 export const robotSelectUrl = url + '/manage/robot/select';

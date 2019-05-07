@@ -46,7 +46,7 @@
         <div class="icon-container " :class="activeItem === 'build' ? 'icon-active' : ''"
              @click="initData('build')">
           <div class="setting-icon">
-            <icon name="config" scale="1.8" style="color: #fff;"></icon>
+            <icon name="build" scale="1.8" style="color: #fff;"></icon>
           </div>
           <span>建仓</span>
         </div>
@@ -153,14 +153,13 @@
     position: fixed;
     height: 100%;
     z-index: 10;
-
+    overflow:auto;
   }
 
   .setting-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%;
   }
 
   .setting-icon {
@@ -172,7 +171,6 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-
   }
 
   .icon-container span {

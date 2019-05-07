@@ -21,6 +21,9 @@
       <div class="form-group row align-items-end">
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="isUploading = !isUploading">导入物料类型表</a>
       </div>
+      <div class="form-group row align-items-end">
+        <button class="btn btn-primary ml-4" @click="deleteByIds">批量删除</button>
+      </div>
     </div>
     <transition name="fade">
       <div v-if="isAdding" id="add-window">
@@ -174,7 +177,6 @@
         });
 
         this.copyQueryOptions.map((item, index) => {
-          console.log(item);
           if (item.type === 'text') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
@@ -280,6 +282,9 @@
             })
         }
       },
+      deleteByIds:function(){
+        this.$parent.$children[1].deleteByIds();
+      }
     }
   }
 </script>

@@ -57,6 +57,12 @@
           return;
         }
 
+        //仓口为空
+        if(this.currentWindowId === ''){
+          this.$alertWarning('未选择仓口');
+          return;
+        }
+
         if (this.isPending === false) {
           this.isPending = true;
           let tempArray = scanText.split("@");

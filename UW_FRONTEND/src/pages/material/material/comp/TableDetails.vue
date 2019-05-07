@@ -22,9 +22,10 @@
 </template>
 
 <script>
+  import eventBus from '@/utils/eventBus'
   import {axiosPost} from "../../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
-  import {materialCountUrl} from "../../../../config/globalUrl";
+  import {deleteByIdsUrl, materialCountUrl} from "../../../../config/globalUrl";
   import {errHandler} from "../../../../utils/errorHandler";
   import OperationOptions from "./subscomp/OperationOptions";
   import EntityDetails from '../../comp/EntityDetails'
@@ -49,6 +50,7 @@
         //srcData: [],
         columns: [],
         total: 0,
+        selection:[],
         query: {"limit": 20, "offset": 0},
         isPending: false,
         thisRouter: '',
@@ -100,9 +102,6 @@
         },
         deep: true
       }
-    },
-    mounted() {
-      console.log(this.$refs.myTable);
     },
     methods: {
       ...mapActions(['setTableRouter', 'setLoading']),
@@ -178,6 +177,44 @@
         let lastPage = this.$refs.myTable.$children[2].totalPage;
         if(firstPage <= Number(this.turnPage) && Number(this.turnPage) <= lastPage ){
           this.$refs.myTable.$children[2].handleClick(this.turnPage);
+        }
+      },
+      deleteByIds:function(){
+        if(this.selection.length === 0){
+          this.$alertWarning('请选择你要删除的物料');
+          return;
+        }
+        let filter = '';
+        this.selection.map((item,index) => {
+          if(index !== this.selection.length - 1){
+            filter = filter + item.id + ',';
+          }else{
+            filter = filter + item.id;
+          }
+        });
+        if(!this.isPending){
+          this.isPending = true;
+          let options = {
+            url:deleteByIdsUrl,
+            data:{
+              filter:filter
+            }
+          };
+          axiosPost(options).then(res => {
+            this.isPending = false;
+            if(res.data.result === 200){
+              this.$alertSuccess(res.data.data);
+              let tempUrl = this.$route.path;
+              this.$router.push('_empty');
+              this.$router.replace(tempUrl);
+            }else{
+              errHandler(res.data);
+            }
+          }).catch(err => {
+            console.log(err);
+            this.$alertDanger('连接超时，请刷新重试');
+            this.isPending = false;
+          })
         }
       }
     }

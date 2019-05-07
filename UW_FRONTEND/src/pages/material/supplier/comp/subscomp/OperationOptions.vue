@@ -67,7 +67,6 @@
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);
               this.isDeleting = false;
-
             } else {
               this.isPending = false;
               errHandler(response.data.result);

@@ -58,4 +58,17 @@
   .table td, .table th {
     vertical-align: middle !important;
   }
+
+  *::-webkit-scrollbar {
+    width:8px;
+    height:8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background:rgba(144,147,153,.3);
+  }
+  *::-webkit-scrollbar-track {
+    background:#fff;
+  }
 </style>

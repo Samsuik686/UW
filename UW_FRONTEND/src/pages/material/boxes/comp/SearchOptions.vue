@@ -126,6 +126,21 @@
             type: 'select',
             list:[]
           },
+          {
+            id: 'type',
+            name: '料盒类型',
+            model: '',
+            type: 'select',
+            list:[
+              {
+                id:1,
+                name:'标准'
+              },{
+                id:2,
+                name:'不标准'
+              }
+            ]
+          }
         ],
         copyQueryOptions: [],
         queryString: "",
@@ -171,9 +186,17 @@
           if (item.type === 'text' || item.type === 'select') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
-                this.queryString += (item.id + "=" + _.trim(item.model))
+                if(item.id === "id"){
+                  this.queryString += ("material_box.id" + "=" + _.trim(item.model))
+                }else{
+                  this.queryString += (item.id + "=" + _.trim(item.model))
+                }
               } else {
-                this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
+                if(item.id === "id"){
+                  this.queryString += ("#&#" + "material_box.id"+ "=" + _.trim(item.model))
+                }else {
+                  this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
+                }
               }
 
             } else {

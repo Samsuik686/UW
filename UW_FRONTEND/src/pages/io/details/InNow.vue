@@ -181,10 +181,11 @@
     taskWindowParkingItems,
     taskInUrl,
     taskFinishUrl,
-    taskDeleteMaterialRecordUrl, taskSeeYouLaterUrl
+    taskDeleteMaterialRecordUrl
   } from "../../../config/globalUrl";
   import {errHandler} from "../../../utils/errorHandler";
   import {handleScanText} from "../../../utils/scan";
+  import eventBus from "../../../utils/eventBus";
 
   export default {
     name: "InNow",
@@ -240,7 +241,9 @@
         patchAutoFinishStack: 0,
         deleteMaterialId: "",
         state:1,
-        stateText:'料盒已满'
+        stateText:'料盒已满',
+        isCleared:false,
+        nowTaskId:''
       }
     },
     mounted() {
@@ -258,7 +261,10 @@
         } else {
           this.initData();
         }
-      }, 1000))
+      }, 1000));
+      eventBus.$on('setIsClear',(item) => {
+        this.isCleared = item;
+      })
     },
     watch: {
       state:function(val){
@@ -267,7 +273,12 @@
         }else{
           this.stateText = "料盒已满"
         }
-      }
+      },
+      /*nowTaskId:function(val){
+        if(val !== ''){
+          this.isCleared = false;
+        }
+      }*/
     },
     computed: {
       ...mapGetters([
@@ -298,6 +309,7 @@
           if (response.data.result === 200) {
             if (response.data.data) {
               this.taskNowItems = response.data.data;
+              //this.nowTaskId = this.taskNowItems.id;
               this.tipsMessage = ""
             } else {
               this.taskNowItems = {};
@@ -319,7 +331,6 @@
 
 
       checkOverQuantity: function () {
-        //console.log("InCheckOverQuantity :",this.isPending,this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity !== 0);
         if (this.taskNowItems.planQuantity - this.taskNowItems.actualQuantity !== 0) {
           this.isMentions = true
         } else {
@@ -363,7 +374,8 @@
                 materialId: tempArray[2],
                 quantity: tempArray[1],
                 productionTime: tempArray[7],
-                supplierName:tempArray[4]
+                supplierName:tempArray[4],
+                isCleared:this.isCleared
               }
             };
             axiosPost(options).then(response => {
@@ -403,6 +415,8 @@
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
               this.isTipsShow = true;
+              this.isCleared = false;
+              eventBus.$emit('setClearFalse',true);
               this.tipsComponentMsg = true;
               setTimeout(() => {
                 this.isTipsShow = false;

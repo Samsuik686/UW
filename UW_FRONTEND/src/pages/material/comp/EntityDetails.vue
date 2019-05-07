@@ -6,7 +6,7 @@
           <div class="form-group mb-0">
             <h3>详情：</h3>
           </div>
-          <datatable v-bind="$data"/>
+          <datatable v-bind="$data" style="width:100%"/>
         </div>
       </div>
       <div id="cancel-btn" class="ml-2 mt-1" @click="closePanel">
@@ -39,6 +39,7 @@
         columns: [
           {title: '料盘唯一码', field: 'id', colStyle: {width: '140px'}},
           {title: '类型', field: 'type', colStyle: {width: '60px'}},
+          {title: '料号', field: 'materialNo', colStyle: {width: '120px'}},
           {title: '所在料盒', field: 'box', colStyle: {width: '90px'}},
           {title: '料盒所在区域', field: 'boxArea', colStyle: {width: '120px'}},
           {title: '盒内行号', field: 'row', colStyle: {width: '90px'}},
@@ -150,7 +151,7 @@
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;
-    max-width: 1000px;
+    max-width: 1200px;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;

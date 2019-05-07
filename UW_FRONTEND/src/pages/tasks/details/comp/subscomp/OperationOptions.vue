@@ -9,11 +9,17 @@
     <div class="btn pl-1 pr-1" title="状态" @click="isEditing = true">
       <icon name="menu" scale="1.8"></icon>
     </div>
+    <div class="btn pl-1 pr-1" title="手动出入库" @click="isUpload = true" v-if="row.type !== 4">
+      <icon name="upload" scale="2.2"></icon>
+    </div>
     <div v-if="isEditing" class="edit-window">
       <edit-status :editData="row"/>
     </div>
     <div v-if="isSetting" class="edit-window">
       <set-priority :editData="row"/>
+    </div>
+    <div v-if="isUpload" class="edit-window">
+      <manual-out :editData="row"/>
     </div>
   </div>
 </template>
@@ -23,18 +29,21 @@
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
   import SetPriority from "./SetPriority";
+  import ManualOut from "./ManualOut";
 
   export default {
     name: "OperationOptions",
     props: ['row'],
     components: {
+      ManualOut,
       SetPriority,
       EditStatus
     },
     data() {
       return {
         isEditing: false,
-        isSetting:false
+        isSetting:false,
+        isUpload:false
       }
     },
     mounted() {
@@ -43,7 +52,10 @@
       });
       eventBus.$on('closeTaskPriorityPanel', () => {
         this.isSetting = false;
-      })
+      });
+      eventBus.$on('closeManualUploadPanel', () => {
+        this.isUpload = false;
+      });
     },
     computed: {
       //...mapGetters['isDetailsActive']
