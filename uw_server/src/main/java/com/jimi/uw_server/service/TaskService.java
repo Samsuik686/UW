@@ -8,6 +8,7 @@ import java.util.List;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.jfinal.aop.Enhancer;
+import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
@@ -90,6 +91,8 @@ public class TaskService {
 	private static final String GET_MATERIAL_ID_IN_SAME_TASK_SQL = "SELECT * FROM task_log WHERE material_id = ? AND packing_list_item_id = ?";
 
 	private static final String GET_MATERIAL_ID_BY_ID_SQL = "SELECT * FROM material WHERE id = ? AND is_in_box = 1";
+	
+	private static final String GET_MATERIAL_BY_BOX_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 
 	private static final String GET_MATERIAL_BY_ID_SQL = "SELECT * FROM material WHERE id = ?";
 
@@ -569,6 +572,9 @@ public class TaskService {
 			Integer supplierId = materialType.getSupplier();
 			// 通过供应商id获取供应商名
 			String sName = Supplier.dao.findById(supplierId).getName();
+			
+			int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
+			
 			if (!supplierName.equals(sName)) {
 				throw new OperationException("扫码错误，供应商 "  + supplierName + " 对应的任务目前没有在本仓口进行任务，" +  "本仓口已绑定 " + sName + " 的任务单！");
 			}
@@ -586,7 +592,13 @@ public class TaskService {
 					boxId = item.getBoxId().intValue();
 				}
 			}
-
+			if (materialType.getRadius().equals(7)) {
+				List<Material> materials = Material.dao.find(GET_MATERIAL_BY_BOX_SQL, boxId);
+				if (materials.size() == materialBoxCapacity) {
+					throw new OperationException("当前料盒已满，请停止扫码！");
+				}
+			}
+			
 			Material material = new Material();
 			material.setId(materialId);
 			material.setType(packingListItem.getMaterialTypeId());
@@ -675,6 +687,11 @@ public class TaskService {
 	}
 
 
+
+	//手动入库
+	public 
+
+	
 	// 删除错误的料盘记录
 	public boolean deleteMaterialRecord(Integer packListItemId, String materialId) {
 		PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);

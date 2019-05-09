@@ -124,8 +124,11 @@ public class TaskPool extends Thread{
 					// 对于出库任务，需要判断库存是否为0
 
 					// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
-					Integer remainderQuantity = materialService.countMaterialIncludeNotInBox(item.getMaterialTypeId());
+					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 					if (remainderQuantity == 0) {
+						if (item.getState().equals(IOTaskItemState.FINISH_CUT)) {
+							break;
+						}
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
 						TaskItemRedisDAO.updateTaskIsForceFinish(item, true);
 						// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
@@ -245,6 +248,10 @@ public class TaskPool extends Thread{
 				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 					if (redisTaskItem.getState() == IOTaskItemState.ARRIVED_WINDOW && redisTaskItem.getTaskId().equals(taskId)) {
 						int tempBoxId = redisTaskItem.getBoxId();
+						MaterialBox materialBox = MaterialBox.dao.findById(tempBoxId);
+						if (materialBox == null || !materialBox.getType().equals(1)) {
+							break;
+						}
 						int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, tempBoxId).size();
 						int unusedcapacity = materialBoxCapacity - usedcapacity;
 						if (unusedcapacity > 0) {
@@ -275,6 +282,7 @@ public class TaskPool extends Thread{
 			List<Material> sameUnfullTypeMaterialBoxs = Material.dao.find(GET_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), 2, BoxState.UNFULL);
 			// 如果存在同类型不满的料盒
 			for (Material sameUnfullTypeMaterialBox : sameUnfullTypeMaterialBoxs) {
+				
 				if (diffTaskBoxs.contains(sameUnfullTypeMaterialBox.getBox().intValue())) {
 					continue;
 				}
@@ -380,5 +388,7 @@ public class TaskPool extends Thread{
 
 		return boxId;
 	}
-
+	
+	
+	
 }
