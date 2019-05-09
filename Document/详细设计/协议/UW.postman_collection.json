@@ -1,0 +1,3321 @@
+{
+	"info": {
+		"_postman_id": "c87ed38c-1e4b-4541-a8c5-6e47f6a6af83",
+		"name": "UW",
+		"description": "**智能无人仓储系统接口文档**  \r\n\r\n----------\r\n\r\n\"#\"代表需要权限的接口  \r\n全部接口使用POST提交  \r\n所有返回值均为JSON格式，基本格式为  \r\n    {  \r\n        \"result\":200,  \r\n      \"data\":\"message\"  \r\n    }  ",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Log",
+			"description": "**任务日志表task_log**  \r\n> id,int,key,autoincrease   \r\n> task_id,int  \r\n> material_id,varchar16(料盘时间戳)  \r\n> quantity,int(实际数目出入库或盘点结果数目)  \r\n> operator,varchar16(uid)  \r\n> auto,bit(只是用于区分出入库操作人工还是机器操作)  \r\n> time,datetime  \r\n> \r\n\r\n**接口调用日志表action_log**  \r\n> id,int,key,autoincrease  \r\n> ip,varchar16  \r\n> uid,varchar16  \r\n> url,varchar128  \r\n> parameters,varchar2048  \r\n> time,datetime\r\n\r\n**物料位置转移日志表position_log**\r\n> id,int,key,autoincrease  \r\n> task_id,int  \r\n> material_id,varchar16  \r\n> old_area,int  \r\n> old_col,int  \r\n> old_row,int  \r\n> old_height,int  \r\n> new_area,int  \r\n> new_col,int  \r\n> new_row,int  \r\n> new_height,int  \r\n> time,datetime",
+			"item": [
+				{
+					"name": "查询日志#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "table",
+									"value": "",
+									"description": "表名：可能的值（task_log, action_log, position_log）",
+									"type": "text"
+								},
+								{
+									"key": "pageNo",
+									"value": "",
+									"type": "text",
+									"description": "可空，页码（从1开始）"
+								},
+								{
+									"key": "pageSize",
+									"value": "",
+									"type": "text",
+									"description": "可空，每页条目数"
+								},
+								{
+									"key": "ascBy",
+									"value": "",
+									"type": "text",
+									"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+									"disabled": true
+								},
+								{
+									"key": "descBy",
+									"value": "",
+									"type": "text",
+									"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+								},
+								{
+									"key": "filter",
+									"value": "",
+									"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/log/select",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"log",
+								"select"
+							]
+						},
+						"description": "**查询报表详情，支持分页，筛选，排序**"
+					},
+					"response": [
+						{
+							"id": "c9323035-dde4-4f6c-8f36-fb759f19dde7",
+							"name": "查询接口调用日志",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "table",
+											"value": "action_log",
+											"description": "表名：可能的值（task_log, action_log, position_log）",
+											"type": "text"
+										},
+										{
+											"key": "pageNo",
+											"value": "1",
+											"type": "text",
+											"description": "可空，页码（从1开始）"
+										},
+										{
+											"key": "pageSize",
+											"value": "20",
+											"type": "text",
+											"description": "可空，每页条目数"
+										},
+										{
+											"key": "ascBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "descBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段降序（不可以与ascBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "filter",
+											"value": "",
+											"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+											"description": "",
+											"type": "text",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/log/select",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"log",
+										"select"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 4,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"ip\": \"10.10.11.110\",\n                \"uid\": \"bobo\",\n                \"action\": \"开始了出库任务，任务编号为2\",\n                \"time\": \"2017-10-26 11:15:11\",\n                \"resultCode\":200\n            },\n            {\n                \"id\": 2,\n                \"ip\": \"10.10.11.110\",\n                \"uid\": \"bobo\",\n                \"action\": \"开始了出库任务，任务编号为1\",\n                \"time\": \"2017-10-26 11:15:11\",\n                \"resultCode\":200\n            },\n            {\n                \"id\": 3,\n                \"ip\": \"10.10.11.110\",\n                \"uid\": \"bobo\",\n                \"action\": \"开始了出库任务，任务编号为4\",\n                \"time\": \"2017-10-26 11:15:11\",\n                \"resultCode\":200\n            },\n            {\n                \"id\": 4,\n                \"ip\": \"10.10.11.110\",\n                \"uid\": \"bobo\",\n                \"action\": \"开始了出库任务，任务编号为22\",\n                \"time\": \"2017-10-26 11:15:11\",\n                \"resultCode\":412\n            }\n        ]\n    }\n}"
+						},
+						{
+							"id": "da92e972-019a-4a2f-80ee-0ae91578684e",
+							"name": "查询任务日志",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "table",
+											"value": "task_log",
+											"description": "表名：可能的值（task_log, action_log）",
+											"type": "text"
+										},
+										{
+											"key": "pageNo",
+											"value": "1",
+											"type": "text",
+											"description": "可空，页码（从1开始）"
+										},
+										{
+											"key": "pageSize",
+											"value": "20",
+											"type": "text",
+											"description": "可空，每页条目数"
+										},
+										{
+											"key": "ascBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "descBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段降序（不可以与ascBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "filter",
+											"value": "",
+											"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "2A1F26616E58EE4F19C0E80C9BEFAA93",
+											"description": "",
+											"type": "text",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/log/select",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"log",
+										"select"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"taskId\": 1,\n                \"taskType\": \"出库\",\n                \"materialId\": 21,\n                \"materialNo\": \"KB341231290\",\n                \"quantity\": 2000,\n                \"operator\": \"bobo\",\n                \"operatorName\": \"波波\",\n                \"auto\": \"手动\",\n                \"time\": \"2017-10-26 11:15:11\"\n            },\n            {\n                \"id\": 2,\n                \"taskId\": 1,\n                \"taskType\": \"盘点\",\n                \"materialId\": 26,\n                \"materialNo\": \"KB3412322220\",\n                \"quantity\": 1000,\n                \"operator\": \"bobo\",\n                \"operatorName\": \"波波\",\n                \"auto\": \"自动\",\n                \"time\": \"2017-10-26 11:15:11\"\n            }\n        ]\n    }\n}"
+						},
+						{
+							"id": "fb02ef7d-4c93-4d7d-abc5-1798e2e7a515",
+							"name": "查询物料位置转移日志",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "table",
+											"value": "position_log",
+											"description": "表名：可能的值（tsak_log, action_log, position_log）",
+											"type": "text"
+										},
+										{
+											"key": "pageNo",
+											"value": "1",
+											"type": "text",
+											"description": "可空，页码（从1开始）"
+										},
+										{
+											"key": "pageSize",
+											"value": "20",
+											"type": "text",
+											"description": "可空，每页条目数"
+										},
+										{
+											"key": "ascBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "descBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段降序（不可以与ascBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "filter",
+											"value": "",
+											"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/log/select",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"log",
+										"select"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"taskId\": 1,\n                \"materialId\": 21,\n                \"materialNo\": \"KB341231290\",\n                \"oldArea\": 1,\n                \"oldRow\": 1,\n                \"oldCol\": 1,\n                \"oldHeight\": 1,\n                \"newArea\": 2,\n                \"newRow\": 2,\n                \"newCol\": 2,\n                \"newHeight\": 2,\n                \"time\": \"2017-10-26 11:15:11\"\n            },\n            {\n                \"id\": 2,\n                \"taskId\": 1,\n                \"materialId\": 22,\n                \"materialNo\": \"KB341231292\",\n                \"oldArea\": 1,\n                \"oldRow\": 2,\n                \"oldCol\": 3,\n                \"oldHeight\": 1,\n                \"newArea\": 3,\n                \"newRow\": 2,\n                \"newCol\": 1,\n                \"newHeight\": 1,\n                \"time\": \"2017-10-26 11:15:11\"\n            }\n        ]\n    }\n}"
+						}
+					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "216ae515-c7f6-4994-82bb-456408980bcd",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "9e959543-3942-4457-bcc9-b2b2e6c388b1",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Task",
+			"description": "**任务表task**  \r\n> id,int,key,autoincrease  \r\n> type,int(0入库 1出库 2盘点 3位置优化)  \r\n> file_name,varchar128(套料单文件名，盘点、位置优化任务为空)  \r\n> state,int(0未审核1未开始2进行中3已完成4已作废)  \r\n> create_time,datetime  \r\n\r\n\r\n**套料单表packing_list_item**  \r\n> id,int,key,autoincrease  \r\n> material_type_id,int  \r\n> quantity(计划出入库数量)  \r\n> task_id,int(出入库任务id)  ",
+			"item": [
+				{
+					"name": "创建任务#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"description": "",
+									"type": "file"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"type": "text",
+									"description": "任务类型（0入库 1出库 2盘点 3位置优化）"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "2A1F26616E58EE4F19C0E80C9BEFAA93",
+									"type": "text",
+									"description": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/create",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"create"
+							]
+						},
+						"description": "注意：一次只能创建一个物料位置优化任务"
+					},
+					"response": [
+						{
+							"id": "b7e44e34-c9f6-49e2-a987-0661bc06105a",
+							"name": "创建任务#",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "type",
+											"value": "",
+											"type": "text",
+											"description": "任务类型（0入库 1出库 2盘点 3位置优化）"
+										},
+										{
+											"key": "filename",
+											"value": "",
+											"type": "text",
+											"description": "套料单名称"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "2A1F26616E58EE4F19C0E80C9BEFAA93",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/create",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"create"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+						}
+					]
+				},
+				{
+					"name": "审核任务##",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "id",
+									"value": "59",
+									"type": "text",
+									"description": "审核的任务id"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+									"type": "text",
+									"description": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/pass",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"pass"
+							]
+						},
+						"description": "令指定任务审核通过"
+					},
+					"response": [
+						{
+							"id": "a1219e04-8aae-43a8-89e9-226be80063f6",
+							"name": "审核任务#",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "59",
+											"type": "text",
+											"description": "审核的任务id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/pass",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"pass"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+						}
+					]
+				},
+				{
+					"name": "开始任务#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text",
+									"description": "开始的任务id"
+								},
+								{
+									"key": "window",
+									"value": "1",
+									"description": "仓口Id",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "B8D3F4606F8AB1C62E74594747CB3AAE",
+									"type": "text",
+									"description": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/start",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"start"
+							]
+						},
+						"description": "只能开始被审核通过的任务"
+					},
+					"response": [
+						{
+							"id": "5d57e331-2c39-4d30-b79f-6dbf49eac47f",
+							"name": "开始任务#",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "key",
+											"value": "59",
+											"type": "text",
+											"description": "开始的任务id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "B8D3F4606F8AB1C62E74594747CB3AAE",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/start",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"start"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+						}
+					]
+				},
+				{
+					"name": "作废任务#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "id",
+									"value": "59",
+									"type": "text",
+									"description": "作废的任务id"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+									"type": "text",
+									"description": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/cancel",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"cancel"
+							]
+						},
+						"description": "取消任务\n<br>注意：如果出入库任务已开始，只能取消部分未分配的任务条目"
+					},
+					"response": [
+						{
+							"id": "31f9f2fa-53ce-4d5c-a52f-083fe4effd45",
+							"name": "作废任务#",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "key",
+											"value": "59",
+											"type": "text",
+											"description": "作废的任务id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/cancel",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"cancel"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+						}
+					]
+				},
+				{
+					"name": "查看任务详情#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "id",
+									"value": "59",
+									"type": "text",
+									"description": "需要查看任务的id"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "CD1F664C16F02ABD25DE75843A84562C",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/check",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"check"
+							]
+						},
+						"description": "可以获取到具体任务详情。\n****\n出入库详情：  \n1.显示套料单条目  \n2.显示实际变动数目  \n3.显示操作时间  \n****\n盘点详情：  \n1.显示物料类型数据库库存数目  \n2.显示物料类型实际扫描库存数目  \n3.显示扫描时间    \n4.显示物料实体  \n****\n位置优化详情：\n1.显示计划条目  \n2.显示已完成情况  \n3.显示操作时间"
+					},
+					"response": [
+						{
+							"id": "2aded2d9-2a59-4ce5-b7a9-1f2332f5a196",
+							"name": "查看出入库任务详情",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "59",
+											"type": "text",
+											"description": "需要查看任务的id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/check",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"check"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"materialNo\": \"KBG132123\",\n                \"planQuantity\": 10000,\n                \"actualQuantity\": 10100,\n                \"finishTime\": \"2017-10-26 11:45:11\",\n                \"details\": [\n                    {\n                        \"materialId\": \"29301282\",\n                        \"quantity\": 2000\n                    },\n                    {\n                        \"materialId\": \"39301282\",\n                        \"quantity\": 8000\n                    },\n                    {\n                        \"materialId\": \"49301282\",\n                        \"quantity\": 100\n                    }\n                ]\n            },\n            {\n                \"id\": 2,\n                \"materialNo\": \"AQBG132123\",\n                \"planQuantity\": 10000,\n                \"actualQuantity\": 10100,\n                \"finishTime\": \"2017-10-26 11:45:11\",\n                \"details\": [\n                    {\n                        \"materialId\": \"22341282\",\n                        \"quantity\": 2000\n                    },\n                    {\n                        \"materialId\": \"19301282\",\n                        \"quantity\": 8000\n                    },\n                    {\n                        \"materialId\": \"79301282\",\n                        \"quantity\": 100\n                    }\n                ]\n            },\n            {\n                \"id\": 3,\n                \"materialNo\": \"FBG132123\",\n                \"planQuantity\": 10000,\n                \"actualQuantity\": 10100,\n                \"finishTime\": \"no\",\n                \"details\": [\n                    {\n                        \"materialId\": \"999301282\",\n                        \"quantity\": 2000\n                    },\n                    {\n                        \"materialId\": \"89301282\",\n                        \"quantity\": 4100\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						{
+							"id": "2ebfea30-68d4-487b-9f5b-6000ba982c2c",
+							"name": "查看盘点任务详情",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "59",
+											"type": "text",
+											"description": "需要查看任务的id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/check",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"check"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": [\n        {\n            \"materialNo\": \"KB782132\",\n            \"recordedQuantity\": 1800,\n            \"actualQuantity\": 2000,\n            \"materials\": [\n                {\n                    \"id\": 3,\n                    \"type\": 1,\n                    \"row\": 1,\n                    \"col\": 1,\n                    \"remainderQuantity\": 1000,\n                    \"scanTime\": \"2017-10-26 11:15:11\"\n                },\n                {\n                    \"id\": 4,\n                    \"type\": 1,\n                    \"row\": 1,\n                    \"col\": 3,\n                    \"remainderQuantity\": 800,\n                    \"scanTime\": \"2017-10-26 11:15:12\"\n                },\n                {\n                    \"id\": 5,\n                    \"type\": 1,\n                    \"row\": 1,\n                    \"col\": 2,\n                    \"remainderQuantity\": 200,\n                    \"scanTime\": \"2017-10-26 11:15:13\"\n                }\n            ]\n        },\n        {\n            \"materialNo\": \"KB782222\",\n            \"recordedQuantity\": 2800,\n            \"actualQuantity\": 2000,\n            \"materials\": [\n                {\n                    \"id\": 6,\n                    \"type\": 2,\n                    \"row\": 1,\n                    \"col\": 1,\n                    \"remainderQuantity\": 1000,\n                    \"scanTime\": \"2017-10-26 11:16:11\"\n                },\n                {\n                    \"id\": 7,\n                    \"type\": 2,\n                    \"row\": 1,\n                    \"col\": 2,\n                    \"remainderQuantity\": 400,\n                    \"scanTime\": \"2017-10-26 11:16:12\"\n                },\n                {\n                    \"id\": 44,\n                    \"type\": 2,\n                    \"row\": 1,\n                    \"col\": 3,\n                    \"remainderQuantity\": 600,\n                    \"scanTime\": \"2017-10-26 11:16:13\"\n                }\n            ]\n        }\n    ]\n}"
+						},
+						{
+							"id": "170a28c8-5091-4095-a580-acdca60a7394",
+							"name": "查看位置优化任务详情",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "59",
+											"type": "text",
+											"description": "需要查看任务的id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/check",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"check"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": [\n        {\n            \"materialNo\": \"KB341231290\",\n            \"oldArea\": 1,\n            \"oldRow\": 1,\n            \"oldCol\": 1,\n            \"oldHeight\": 1,\n            \"newArea\": 2,\n            \"newRow\": 2,\n            \"newCol\": 2,\n            \"newHeight\": 2,\n            \"finishTime\": \"2017-10-26 11:15:11\",\n            \"isFinished\": \"已转移\"\n        },\n        {\n            \"materialNo\": \"KB341232220\",\n            \"oldArea\": 2,\n            \"oldRow\": 1,\n            \"oldCol\": 1,\n            \"oldHeight\": 1,\n            \"newArea\": 2,\n            \"newRow\": 2,\n            \"newCol\": 1,\n            \"newHeight\": 2,\n            \"finishTime\": \"\",\n            \"isFinished\": \"待转移\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "获取所有仓口#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/getWindows",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"getWindows"
+							]
+						},
+						"description": "可以获取所有仓口的id"
+					},
+					"response": [
+						{
+							"id": "d923169e-710c-4971-8697-cd90f9754b63",
+							"name": "获取所有仓口",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/getWindows",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"getWindows"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": [\n        {\"id\":1},{\"id\":2},{\"id\":3}\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "查询任务#",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "pageNo",
+									"value": "",
+									"type": "text",
+									"description": "可空，页码（从1开始）"
+								},
+								{
+									"key": "pageSize",
+									"value": "",
+									"type": "text",
+									"description": "可空，每页条目数"
+								},
+								{
+									"key": "ascBy",
+									"value": "",
+									"type": "text",
+									"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+									"disabled": true
+								},
+								{
+									"key": "descBy",
+									"value": "",
+									"type": "text",
+									"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+								},
+								{
+									"key": "filter",
+									"value": "",
+									"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/select",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"select"
+							]
+						},
+						"description": "查询报表详情，支持分页，筛选，排序"
+					},
+					"response": [
+						{
+							"id": "af193387-f126-4f56-99ab-4ba46c418213",
+							"name": "查询任务",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "pageNo",
+											"value": "",
+											"type": "text",
+											"description": "可空，页码（从1开始）"
+										},
+										{
+											"key": "pageSize",
+											"value": "",
+											"type": "text",
+											"description": "可空，每页条目数"
+										},
+										{
+											"key": "ascBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "descBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+										},
+										{
+											"key": "filter",
+											"value": "",
+											"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/select",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"select"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"state\": 0,\n                \"stateString\": \"未审核\",\n                \"type\": 0,\n                \"typeString\": \"入库\",\n                \"fileName\": \"FFF\",\n                \"createTimeString\": \"2017-10-26 11:15:11\"\n            },\n            {\n                \"id\": 1,\n                \"state\": 1,\n                \"stateString\": \"未开始\",\n                \"type\": 3,\n                \"typeString\": \"位置优化\",\n                \"fileName\": \"ABC\",\n                \"createTimeString\": \"2017-10-26 11:15:11\"\n            },\n            {\n                \"id\": 1,\n                \"state\": 2,\n                \"stateString\": \"进行中\",\n                \"type\": 0,\n                \"typeString\": \"入库\",\n                \"fileName\": \"FFF\",\n                \"createTimeString\": \"2017-10-26 11:15:11\"\n            },\n            {\n                \"id\": 1,\n                \"state\": 3,\n                \"stateString\": \"已完成\",\n                \"type\": 0,\n                \"typeString\": \"入库\",\n                \"fileName\": \"FFF\",\n                \"createTimeString\": \"2017-10-26 11:15:11\"\n            },\n            {\n                \"id\": 1,\n                \"state\": 4,\n                \"stateString\": \"已作废\",\n                \"type\": 0,\n                \"typeString\": \"入库\",\n                \"fileName\": \"FFF\",\n                \"createTimeString\": \"2017-10-26 11:15:11\"\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "查询任务 Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "pageNo",
+									"value": "",
+									"type": "text",
+									"description": "可空，页码（从1开始）"
+								},
+								{
+									"key": "pageSize",
+									"value": "",
+									"type": "text",
+									"description": "可空，每页条目数"
+								},
+								{
+									"key": "ascBy",
+									"value": "",
+									"type": "text",
+									"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+									"disabled": true
+								},
+								{
+									"key": "descBy",
+									"value": "",
+									"type": "text",
+									"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+								},
+								{
+									"key": "filter",
+									"value": "",
+									"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/select",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"select"
+							]
+						},
+						"description": "查询报表详情，支持分页，筛选，排序"
+					},
+					"response": []
+				},
+				{
+					"name": "获取仓口停泊条目#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "仓口id",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/getWindowParkingItem",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"getWindowParkingItem"
+							]
+						},
+						"description": "由App调用，请实时调用"
+					},
+					"response": [
+						{
+							"id": "7bd0b64b-dbf2-4e1a-a5c4-0344e530bd18",
+							"name": "获取仓口停泊条目",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "",
+											"description": "仓口id",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/getWindowTaskItems",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"getWindowTaskItems"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"id\": 1,\n        \"fileName\": \"套料单1\",\n        \"type\": \"出库\",\n        \"materialNo\": \"KBG132123\",\n        \"planQuantity\": 10000,\n        \"actualQuantity\": 10100,\n        \"details\": [\n            {\n                \"materialId\": \"29301282\",\n                \"quantity\": 2000\n            },\n            {\n                \"materialId\": \"39301282\",\n                \"quantity\": 8000\n            },\n            {\n                \"materialId\": \"49301282\",\n                \"quantity\": 100\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "物料出入库#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "packListItemId",
+									"value": "",
+									"description": "套料单条目的id",
+									"type": "text"
+								},
+								{
+									"key": "materialId",
+									"value": "",
+									"description": "料盘唯一码",
+									"type": "text"
+								},
+								{
+									"key": "quantity",
+									"value": "",
+									"description": "实际出入库数目",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/io",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"io"
+							]
+						},
+						"description": "**新增或减少物料表记录，并且写入一条出入库任务日志，该接口由APP调用**"
+					},
+					"response": [
+						{
+							"id": "21c63035-998f-4aa5-a56d-8c6afd477aed",
+							"name": "物料出入库#",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "packListItemId",
+											"value": "",
+											"description": "套料单条目的id",
+											"type": "text"
+										},
+										{
+											"key": "materialId",
+											"value": "",
+											"description": "料盘唯一码",
+											"type": "text"
+										},
+										{
+											"key": "quantity",
+											"value": "",
+											"description": "实际出入库数目",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/io",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"io"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+						}
+					]
+				},
+				{
+					"name": "获取仓口任务条目#",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "仓口id",
+									"type": "text"
+								},
+								{
+									"key": "#TOKEN#",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{ip}}:{{port}}/uw_server/task/getWindowTaskItems",
+							"protocol": "http",
+							"host": [
+								"{{ip}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"uw_server",
+								"task",
+								"getWindowTaskItems"
+							]
+						},
+						"description": "由App调用，不需要实时调用"
+					},
+					"response": [
+						{
+							"id": "13b6c012-db16-4354-86f6-d3fad5494686",
+							"name": "获取仓口任务条目",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "",
+											"description": "仓口id",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/task/getWindowHistoryItems",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"task",
+										"getWindowHistoryItems"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"fileName\": \"套料单1\",\n                \"type\": \"出库\",\n                \"materialNo\": \"KBG132123\",\n                \"planQuantity\": 10000,\n                \"actualQuantity\": 10100,\n                \"finishTime\": \"2017-10-26 11:45:11\",\n                \"details\": [\n                    {\n                        \"materialId\": \"29301282\",\n                        \"quantity\": 2000\n                    },\n                    {\n                        \"materialId\": \"39301282\",\n                        \"quantity\": 8000\n                    },\n                    {\n                        \"materialId\": \"49301282\",\n                        \"quantity\": 100\n                    }\n                ]\n            },\n            {\n                \"id\": 2,\n                \"fileName\": \"套料单2\",\n                \"type\": \"入库\",\n                \"materialNo\": \"AQBG132123\",\n                \"planQuantity\": 10000,\n                \"actualQuantity\": 10100,\n                \"finishTime\": \"2017-10-26 11:45:11\",\n                \"details\": [\n                    {\n                        \"materialId\": \"22341282\",\n                        \"quantity\": 2000\n                    },\n                    {\n                        \"materialId\": \"19301282\",\n                        \"quantity\": 8000\n                    },\n                    {\n                        \"materialId\": \"79301282\",\n                        \"quantity\": 100\n                    }\n                ]\n            },\n            {\n                \"id\": 3,\n                \"fileName\": \"套料单1\",\n                \"type\": \"出库\",\n                \"materialNo\": \"FBG132123\",\n                \"planQuantity\": 10000,\n                \"actualQuantity\": 10100,\n                \"finishTime\": \"no\",\n                \"details\": [\n                    {\n                        \"materialId\": \"999301282\",\n                        \"quantity\": 2000\n                    },\n                    {\n                        \"materialId\": \"89301282\",\n                        \"quantity\": 4100\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						}
+					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "6401b836-9eec-4d91-a0ed-3978f7387203",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "b1c9ad0c-4b66-45c5-b76a-83e4f37bee31",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Manage",
+			"description": "",
+			"item": [
+				{
+					"name": "Robot",
+					"description": "**叉车表robot**\r\n> id,int,key  \r\n> status,int（闲置0; 忙碌1; 错误3; 充电4）  \r\n> battery,int(电池百分比)  \r\n> x,int   \r\n> y,int  \r\n> enabled,int\r\n> load_exception,bit",
+					"item": [
+						{
+							"name": "查询叉车#",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/select",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"robot",
+										"select"
+									]
+								},
+								"description": "查询报表详情，支持分页，筛选，排序"
+							},
+							"response": [
+								{
+									"id": "94bccfbf-8487-42a6-970e-d4531db388a1",
+									"name": "查询叉车",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"description": "",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/select",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"robot",
+												"select"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": [\n        {\n            \"id\": 1,\n            \"status\": 1,\n            \"statusString\":\"忙碌\",\n            \"battery\": 21,\n            \"x\": 4,\n            \"y\": 1,\n            \"enabled\": 1,\n            \"enabledString\": \"是\",\n            \"error\": 255,\n            \"errorString\": \"正常\",\n            \"warn\": 255,\n            \"warnString\": \"正常\",\n            \"pause\": true,\n            \"pauseString\": \"暂停中\",\n            \"loadException\": true,\n            \"loadExceptionString\": \"取空异常\"\n        },\n        {\n            \"id\": 2,\n            \"status\": 1,\n            \"statusString\":\"充电\",\n            \"battery\": 90,\n            \"x\": 4,\n            \"y\": 2,\n            \"enabled\": 1,\n            \"enabledString\": \"是\",\n            \"error\": 255,\n            \"errorString\": \"正常\",\n            \"warn\": 255,\n            \"warnString\": \"正常\",\n            \"pause\": true,\n            \"pauseString\": \"暂停中\",\n            \"loadException\": true,\n            \"loadExceptionString\": \"取空异常\"\n        }\n    ]\n}"
+								}
+							]
+						},
+						{
+							"name": "启动或禁用叉车#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "",
+											"type": "text",
+											"description": "叉车id，多个id用逗号分开"
+										},
+										{
+											"key": "enabled",
+											"value": "",
+											"type": "text",
+											"description": "是否启用（2启用；1禁用）"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/switch",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"robot",
+										"switch"
+									]
+								},
+								"description": "仅管理员可以操作"
+							},
+							"response": [
+								{
+									"id": "aea06f64-b109-4034-ab49-544c2853e6ba",
+									"name": "启停叉车#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "id",
+													"value": "",
+													"type": "text",
+													"description": "叉车id"
+												},
+												{
+													"key": "enabled",
+													"value": "",
+													"type": "text",
+													"description": "是否启用（1启用；0禁用）"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/switch",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"robot",
+												"switch"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						},
+						{
+							"name": "暂停开启所有叉车#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "pause",
+											"value": "",
+											"type": "text",
+											"description": "暂停或开启所有叉车（1开启；0暂停）"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/pause",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"robot",
+										"pause"
+									]
+								},
+								"description": "仅管理员可以操作"
+							},
+							"response": [
+								{
+									"id": "ff0c5337-5fd2-4dcf-ad98-205c069a9af2",
+									"name": "暂停开启所有叉车#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "pause",
+													"value": "",
+													"type": "text",
+													"description": "是否暂停（1暂停；0继续）"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/pause",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"robot",
+												"pause"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						},
+						{
+							"name": "叉车回库#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "",
+											"type": "text",
+											"description": "AGV任务条目id"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/back",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"robot",
+										"back"
+									]
+								},
+								"description": "控制叉车执行SL命令，由app调用"
+							},
+							"response": [
+								{
+									"id": "9c6b4964-874b-44b6-bc87-062956e3a164",
+									"name": "叉车回库#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "id",
+													"value": "",
+													"type": "text",
+													"description": "AGV任务条目id"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/robot/back",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"robot",
+												"back"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4796c474-a943-4d70-a039-f7c2412c9d0f",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "04062a1f-8b9a-43e3-bab7-ac8980c260b2",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Material",
+					"description": "**物料类型表material_type**  \r\n> id,int,key,autoincrease   \r\n> no,varchar128(料号)  \r\n> area,int  \r\n> row,int  \r\n> col,int  \r\n> height,int  \r\n> enabled,bit  \r\n\r\n\r\n**物料实体表material**  \r\n> id,key,varchar16(料盘时间戳)  \r\n> type,int(对应material_type.id)  \r\n> row,int  \r\n> col,int  \r\n> remainder_quantity,int(剩余数量)  ",
+					"item": [
+						{
+							"name": "统计物料类型信息#",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "pageNo",
+											"value": "",
+											"type": "text",
+											"description": "可空，页码（从1开始）"
+										},
+										{
+											"key": "pageSize",
+											"value": "",
+											"type": "text",
+											"description": "可空，每页条目数"
+										},
+										{
+											"key": "ascBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "descBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+										},
+										{
+											"key": "filter",
+											"value": "",
+											"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/count",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"material",
+										"count"
+									]
+								},
+								"description": "包括数量信息\n<br>查询报表详情，支持分页，筛选，排序"
+							},
+							"response": [
+								{
+									"id": "2307f27c-bbc5-48d3-925f-3ca76d5742c8",
+									"name": "统计物料类型信息",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "pageNo",
+													"value": "",
+													"type": "text",
+													"description": "可空，页码（从1开始）"
+												},
+												{
+													"key": "pageSize",
+													"value": "",
+													"type": "text",
+													"description": "可空，每页条目数"
+												},
+												{
+													"key": "ascBy",
+													"value": "",
+													"type": "text",
+													"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+													"disabled": true
+												},
+												{
+													"key": "descBy",
+													"value": "",
+													"type": "text",
+													"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+												},
+												{
+													"key": "filter",
+													"value": "",
+													"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+													"type": "text"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"description": "",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/count",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"material",
+												"count"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 1,\n                \"no\": \"KB10231231\",\n                \"area\": 1,\n                \"row\": 4,\n                \"col\": 1,\n                \"height\": 2,\n                \"enabled\": true,\n                \"enabledString\": \"是\",\n                \"quantity\": 8100\n            },\n            {\n                \"id\": 1,\n                \"no\": \"KB102300031\",\n                \"area\": 1,\n                \"row\": 6,\n                \"col\": 2,\n                \"height\": 2,\n                \"enabled\": true,\n                \"enabledString\": \"是\",\n                \"quantity\": 12200\n            }\n        ]\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "获取物料实体#",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "type",
+											"value": "",
+											"description": "物料类型id",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/getEntities",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"material",
+										"getEntities"
+									]
+								},
+								"description": "根据物料类型id获取所有物料实体"
+							},
+							"response": [
+								{
+									"id": "47d6af45-75e8-4afb-aa5a-79586db524b6",
+									"name": "获取物料实体",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "type",
+													"value": "",
+													"description": "物料类型id",
+													"type": "text"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"description": "",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/getEntities",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"material",
+												"getEntities"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"id\": 3,\n                \"type\": 1,\n                \"row\": 1,\n                \"col\": 1,\n                \"remainderQuantity\": 5000\n            },\n            {\n                \"id\": 3,\n                \"type\": 1,\n                \"row\": 1,\n                \"col\": 1,\n                \"remainderQuantity\": 3100\n            },\n            {\n                \"id\": 3,\n                \"type\": 1,\n                \"row\": 1,\n                \"col\": 1,\n                \"remainderQuantity\": 3100\n            },\n            {\n                \"id\": 3,\n                \"type\": 1,\n                \"row\": 1,\n                \"col\": 1,\n                \"remainderQuantity\": 3100\n            },\n            {\n                \"id\": 3,\n                \"type\": 1,\n                \"row\": 1,\n                \"col\": 1,\n                \"remainderQuantity\": 3100\n            },\n            {\n                \"id\": 3,\n                \"type\": 1,\n                \"row\": 1,\n                \"col\": 1,\n                \"remainderQuantity\": 3100\n            }\n        ]\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "添加物料类型#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "no",
+											"value": "",
+											"type": "text",
+											"description": "料号"
+										},
+										{
+											"key": "area",
+											"value": "",
+											"type": "text",
+											"description": "区域号"
+										},
+										{
+											"key": "row",
+											"value": "",
+											"description": "行号",
+											"type": "text"
+										},
+										{
+											"key": "col",
+											"value": "",
+											"description": "列号",
+											"type": "text"
+										},
+										{
+											"key": "height",
+											"value": "",
+											"description": "高度",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/add",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"material",
+										"add"
+									]
+								},
+								"description": "仅管理员可以操作"
+							},
+							"response": [
+								{
+									"id": "601e28f7-f2f2-4330-8c6b-e80cb1d49cf4",
+									"name": "添加物料类型#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "no",
+													"value": "",
+													"type": "text",
+													"description": "料号"
+												},
+												{
+													"key": "area",
+													"value": "",
+													"type": "text",
+													"description": "区域号"
+												},
+												{
+													"key": "row",
+													"value": "",
+													"description": "行号",
+													"type": "text"
+												},
+												{
+													"key": "col",
+													"value": "",
+													"description": "列号",
+													"type": "text"
+												},
+												{
+													"key": "height",
+													"value": "",
+													"description": "高度",
+													"type": "text"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/add",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"material",
+												"add"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						},
+						{
+							"name": "更新物料类型#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "id",
+											"value": "",
+											"type": "text",
+											"description": "主键"
+										},
+										{
+											"key": "area",
+											"value": "",
+											"type": "text",
+											"description": "可选，区域号"
+										},
+										{
+											"key": "row",
+											"value": "",
+											"description": "可选，行号",
+											"type": "text"
+										},
+										{
+											"key": "no",
+											"value": "",
+											"type": "text",
+											"description": "可选，料号"
+										},
+										{
+											"key": "col",
+											"value": "",
+											"description": "可选，列号",
+											"type": "text"
+										},
+										{
+											"key": "height",
+											"value": "",
+											"description": "可选，高度",
+											"type": "text"
+										},
+										{
+											"key": "enabled",
+											"value": "",
+											"type": "text",
+											"description": "是否启用，0禁用"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/update",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"material",
+										"update"
+									]
+								},
+								"description": "仅管理员可以操作"
+							},
+							"response": [
+								{
+									"id": "d8d0776d-871e-4948-b7f9-e9976ac7452b",
+									"name": "更新物料类型#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "id",
+													"value": "",
+													"type": "text",
+													"description": "主键"
+												},
+												{
+													"key": "area",
+													"value": "",
+													"type": "text",
+													"description": "可选，区域号"
+												},
+												{
+													"key": "row",
+													"value": "",
+													"description": "可选，行号",
+													"type": "text"
+												},
+												{
+													"key": "no",
+													"value": "",
+													"type": "text",
+													"description": "可选，料号"
+												},
+												{
+													"key": "col",
+													"value": "",
+													"description": "可选，列号",
+													"type": "text"
+												},
+												{
+													"key": "height",
+													"value": "",
+													"description": "可选，高度",
+													"type": "text"
+												},
+												{
+													"key": "enabled",
+													"value": "",
+													"type": "text",
+													"description": "是否启用（1启用；0禁用）"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/material/update",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"material",
+												"update"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9ad7b2f5-3d3e-44c8-9b26-313004d723e5",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "40abfae3-2ab0-4f3a-b1d9-dceb86df567e",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "User",
+					"description": "**用户表user**  \r\n> uid,varchar16,key  \r\n> name,varchar32  \r\n> password,varchar16  \r\n> enabled,bit  \r\n> type,int  \r\n\r\n\r\n**用户类型表user_type**  \r\n> id,int,key,autoincrease  \r\n> name,varchar16  \r\n> permission,varchar1024(记录多个controller.method，作为可访问的接口)  ",
+					"item": [
+						{
+							"name": "登录",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "uid",
+											"value": "",
+											"type": "text",
+											"description": "用户名"
+										},
+										{
+											"key": "password",
+											"value": "",
+											"type": "text",
+											"description": "密码"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": "注意：理论上仅第一次请求登录接口时无须带TOKEN。其他情况请统一全带上TOKEN，有利于后期日志收集，并且可以防止重复登录产生大量无用SESSION浪费内存"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/login",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"login"
+									]
+								},
+								"description": "用户登录后方可访问某些带特殊权限的接口，如果权限不足会返回failed，并且data为：access denied"
+							},
+							"response": [
+								{
+									"id": "83ac962a-4e4b-4edf-bc00-8093005169ff",
+									"name": "登录",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "uid",
+													"value": "",
+													"type": "text",
+													"description": "用户名"
+												},
+												{
+													"key": "password",
+													"value": "",
+													"type": "text",
+													"description": "密码"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": "注意：理论上仅第一次请求登录接口时无须带TOKEN。其他情况请统一全带上TOKEN，有利于后期日志收集，并且可以防止重复登录产生大量无用SESSION浪费内存"
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/login",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"login"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"#TOKEN#\": \"D7108219E711FF265F899C49A7C751E1\",\n        \"password\": \"94CA11E813946F5E475BA2E6E05FD5B0\",\n        \"uid\": \"bobo\",\n        \"name\": \"吴彦祖\",\n        \"type\": 0,\n        \"typeString\": \"超级管理员\",\n        \"enabled\": true,\n        \"enabledString\": \"是\"\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "检查是否已登录#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "#TOKEN#",
+											"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/checkLogined",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"checkLogined"
+									]
+								},
+								"description": "字面意思"
+							},
+							"response": [
+								{
+									"id": "a29153ab-2459-44cb-ba01-cef7ff26a35b",
+									"name": "检查是否已登录",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "#TOKEN#",
+													"value": "030649F1BEE20FC3BA9C027C6EC8D691",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/checkLogined",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"checkLogined"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"no user signed in\"\n}"
+								}
+							]
+						},
+						{
+							"name": "添加用户##",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "uid",
+											"value": "",
+											"type": "text",
+											"description": "用户名"
+										},
+										{
+											"key": "name",
+											"value": "",
+											"description": "姓名",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "",
+											"type": "text",
+											"description": "密码"
+										},
+										{
+											"key": "type",
+											"value": "",
+											"type": "text",
+											"description": "用户类型"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/add",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"add"
+									]
+								},
+								"description": "仅管理员可以操作"
+							},
+							"response": [
+								{
+									"id": "aa89c068-9345-4595-8c11-e7becc34f217",
+									"name": "添加用户#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "uid",
+													"value": "",
+													"type": "text",
+													"description": "用户名"
+												},
+												{
+													"key": "name",
+													"value": "",
+													"description": "姓名",
+													"type": "text"
+												},
+												{
+													"key": "password",
+													"value": "",
+													"type": "text",
+													"description": "密码"
+												},
+												{
+													"key": "userType",
+													"value": "",
+													"type": "text",
+													"description": "用户类型"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/add",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"add"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						},
+						{
+							"name": "更新用户##",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "uid",
+											"value": "",
+											"type": "text",
+											"description": "用户名"
+										},
+										{
+											"key": "name",
+											"value": "",
+											"description": "可选，姓名",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "",
+											"type": "text",
+											"description": "可选，密码"
+										},
+										{
+											"key": "type",
+											"value": "",
+											"type": "text",
+											"description": "可选，用户类型"
+										},
+										{
+											"key": "enabled",
+											"value": "",
+											"type": "text",
+											"description": "可选，是否启用（true启用；false禁用）"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/update",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"update"
+									]
+								},
+								"description": "仅管理员可以操作"
+							},
+							"response": [
+								{
+									"id": "1e9c19d4-d4d5-49bd-9d2e-58e164a568fc",
+									"name": "更新用户#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "uid",
+													"value": "",
+													"type": "text",
+													"description": "用户名"
+												},
+												{
+													"key": "name",
+													"value": "",
+													"description": "可选，姓名",
+													"type": "text"
+												},
+												{
+													"key": "password",
+													"value": "",
+													"type": "text",
+													"description": "可选，密码"
+												},
+												{
+													"key": "userType",
+													"value": "",
+													"type": "text",
+													"description": "可选，用户类型"
+												},
+												{
+													"key": "enabled",
+													"value": "",
+													"type": "text",
+													"description": "可选，是否启用（1启用；0禁用）"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/update",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"update"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						},
+						{
+							"name": "查询用户#",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "pageSize",
+											"value": "",
+											"type": "text",
+											"description": "可空，每页条目数"
+										},
+										{
+											"key": "ascBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+											"disabled": true
+										},
+										{
+											"key": "descBy",
+											"value": "",
+											"type": "text",
+											"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+										},
+										{
+											"key": "filter",
+											"value": "",
+											"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+											"type": "text"
+										},
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/select",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"select"
+									]
+								},
+								"description": "查询报表详情，支持分页，筛选，排序\n用户表user\nuid,varchar16,key\npassword,varchar16\nenabled,bit\ntype,int"
+							},
+							"response": [
+								{
+									"id": "01c6597c-6921-4089-b996-a038bfa39bb5",
+									"name": "查询用户",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "pageSize",
+													"value": "",
+													"type": "text",
+													"description": "可空，每页条目数"
+												},
+												{
+													"key": "ascBy",
+													"value": "",
+													"type": "text",
+													"description": "可空，按指定字段升序（不可以与descBy同时使用）",
+													"disabled": true
+												},
+												{
+													"key": "descBy",
+													"value": "",
+													"type": "text",
+													"description": "可空，按指定字段降序（不可以与ascBy同时使用）"
+												},
+												{
+													"key": "filter",
+													"value": "",
+													"description": "可空，筛选（多个字段用&分开，支持>,<,!=,=,>=,<=）",
+													"type": "text"
+												},
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"description": "",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/select",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"select"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n            {\n                \"password\": \"94CA11E813946F5E475BA2E6E05FD5B0\",\n                \"uid\": \"bobo\",\n                \"name\": \"吴彦祖\",\n                \"type\": 0,\n                \"typeString\": \"超级管理员\",\n                \"enabled\": true,\n                \"enabledString\": \"是\"\n            },\n            {\n                \"password\": \"ABFC11E813946F5E475BA2E6E05FABCF\",\n                \"uid\": \"jimi\",\n                \"name\": \"几米\",\n                \"type\": 0,\n                \"typeString\": \"超级管理员\",\n                \"enabled\": true,\n                \"enabledString\": \"是\"\n            }\n        ]\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "获取用户类型#",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/getTypes",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"getTypes"
+									]
+								},
+								"description": "用户类型表user_type\nid,int,key,autoincrease\nname,varchar16\npermission,varchar1024(记录多个controller.method，作为可访问的接口)"
+							},
+							"response": [
+								{
+									"id": "17bba4d3-3aa8-4a8b-822b-d3099028a7b0",
+									"name": "获取用户类型",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"description": "",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/getTypes",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"getTypes"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": {\n        \"totalRow\": 2,\n        \"pageNumber\": 1,\n        \"lastPage\": true,\n        \"firstPage\": true,\n        \"totalPage\": 1,\n        \"pageSize\": 20,\n        \"list\": [\n      {\n                \"id\": 0,\n                \"name\": \"超级管理员\"\n            },\n            {\n                \"id\": 1,\n                \"name\": \"普通管理员\"\n            }\n        ]\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "登出#",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "#TOKEN#",
+											"value": "",
+											"type": "text",
+											"description": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/logout",
+									"protocol": "http",
+									"host": [
+										"{{ip}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"uw_server",
+										"manage",
+										"user",
+										"logout"
+									]
+								},
+								"description": "用户登出"
+							},
+							"response": [
+								{
+									"id": "5ca1d280-368a-436b-a2b6-752a58c09c45",
+									"name": "登出#",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "#TOKEN#",
+													"value": "",
+													"type": "text",
+													"description": ""
+												}
+											]
+										},
+										"url": {
+											"raw": "http://{{ip}}:{{port}}/uw_server/manage/user/logout",
+											"protocol": "http",
+											"host": [
+												"{{ip}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"uw_server",
+												"manage",
+												"user",
+												"logout"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "",
+									"header": [],
+									"cookie": [],
+									"body": "{\n    \"result\": 200,\n    \"data\": \"operation succeed\"\n}"
+								}
+							]
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "1abfd3a5-ff0b-4964-a7ec-387d439d241a",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "434d02ce-46d2-455e-a005-38b8af2dccea",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "3cde1817-715f-40d5-95b9-f25f744ac19d",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "bb744678-bf83-40bb-a46e-4ed50cc38095",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
