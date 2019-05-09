@@ -1,0 +1,126 @@
+cmdid的范围1~99999
+机械臂收到入库或出库包需要进行ack回复，发送回复确认包，cmdid与接收到的出入库包相一致
+接口内容使用json字符串格式，每条报文都含有"cmdcode"和"cmdid",其中"cmdcode"表示报文(指令)类型，值类型是字符串，"cmdid"表示报文序号，值类型是整型
+回复确认包
+{
+    "cmdcode": "ack",
+    "cmdid": 1
+}
+
+
+uw -> ur
+叉车到站包
+{
+	"cmdcode":"reach_in",
+	"cmdid":1,
+	"taskId":1
+}
+ur->uw
+{
+    "cmdcode": "ack",
+    "cmdid": 1
+}
+
+夹完
+ur->uw
+入库包
+{
+	"cmdcode":"in",
+	"cmdid":1,
+	"supplier":"智锐得",
+	"taskId":1,   //同 reach_in
+	"list":[
+		{
+			"materialNo":"132443242",
+			"quantity":100,
+			"row":1,
+			"col":2,
+			"productionTime":"2019-11-12"
+		},
+		{
+			"materialNo":"132443242",
+			"quantity":100,
+			"row":1,
+			"col":2,
+			"productionTime":"2019-11-12"
+		},
+		{
+			"materialNo":"132443242",
+			"quantity":100,
+			"row":1,
+			"col":2,
+			"productionTime":"2019-11-12"
+		}
+	]
+}
+
+uw -> ur
+{
+    "cmdcode": "ack",
+    "cmdid": 1
+}
+
+
+
+出库：
+uw -> ur
+叉车到站包
+{
+	"cmdcode":"reach_out",
+	"cmdid":1,
+	"taskId":1
+}
+ur->uw
+{
+    "cmdcode": "ack",
+    "cmdid": 1
+}
+
+uw -> ur
+出库包
+{
+	"cmdcode":"out",
+	"cmdid":1,
+	"supplier":"智锐得",
+	"taskId":1,
+	"list":[
+		{
+			"materialNo":"132443242",
+			"quantity":100,
+			"row":1,
+			"col":2,
+			"productionTime":"2019-11-12"
+		},
+		{
+			"materialNo":"132443242",
+			"quantity":100,
+			"row":1,
+			"col":2,
+			"productionTime":"2019-11-12"
+		},
+		{
+			"materialNo":"132443242",
+			"quantity":100,
+			"row":1,
+			"col":2,
+			"productionTime":"2019-11-12"
+		}
+	]
+}
+ur->uw
+{
+    "cmdcode": "ack",
+    "cmdid": 1  //同 out
+}
+
+
+
+夹完 ur-uw
+机械臂执行结果
+{
+    "cmdcode": "result",
+    "cmdid": 1,
+    "aimid":1,
+    "result":200,
+    "message":"成功"
+}
