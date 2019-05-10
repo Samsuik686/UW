@@ -80,7 +80,7 @@ public class UwConfig extends JFinalConfig {
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
 			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
-			System.out.println("System is in development envrionment");
+			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		me.add(dp);
 		me.add(rp);

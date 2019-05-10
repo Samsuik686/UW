@@ -149,7 +149,7 @@ public class RobotService extends SelectService {
 							int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, item.getBoxId()).size();
 							int unusedcapacity = materialBoxCapacity - usedcapacity;
 							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && unusedcapacity <= 0)) {
-								IOHandler.sendSL(item, materialBox);
+								IOHandler.sendReturnBoxCmd(item, materialBox);
 							} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
 								TaskItemRedisDAO.updateIOTaskItemState(sameBoxItem, IOTaskItemState.ARRIVED_WINDOW);
 								// 更新任务条目绑定的叉车id
@@ -178,7 +178,7 @@ public class RobotService extends SelectService {
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 							AGVIOTaskItem sameBoxItem = getSameBoxItem(item);
 							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
-								IOHandler.sendSL(item, materialBox);
+								IOHandler.sendReturnBoxCmd(item, materialBox);
 							} else {	// 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
 								TaskItemRedisDAO.updateIOTaskItemState(sameBoxItem, IOTaskItemState.ARRIVED_WINDOW);
 								// 更新任务条目绑定的叉车id

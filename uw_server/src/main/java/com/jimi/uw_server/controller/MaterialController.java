@@ -61,6 +61,18 @@ public class MaterialController extends Controller {
 		}
 	}
 
+	@Log("批量删除物料类型号为[{filter}]的物料类型")
+	public void deleteByIds(String filter) {
+		if (filter == null || filter.equals("")) {
+			throw new OperationException("参数不能为空");
+		}
+		String resultString = materialService.deleteByIds(filter);
+		if(resultString.equals("删除成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.succeed(resultString));
+		}
+	}
 
 	// 获取料盒信息
 	public void getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -103,8 +115,8 @@ public class MaterialController extends Controller {
 
 
 	// 获取物料出入库记录
-	public void getMaterialRecords(Integer type, Integer destination, Integer pageNo, Integer pageSize) {
-		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, destination, pageNo, pageSize)));
+	public void getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize) {
+		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, materialTypeId, destination, pageNo, pageSize)));
 	}
 
 
