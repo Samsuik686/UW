@@ -35,21 +35,24 @@ ur->uw
 			"quantity":100,
 			"row":1,
 			"col":2,
-			"productionTime":"2019-11-12"
+			"productionTime":"2019-11-12",
+			"materialTypeId":"103"
 		},
 		{
 			"materialNo":"132443242",
 			"quantity":100,
 			"row":1,
 			"col":2,
-			"productionTime":"2019-11-12"
+			"productionTime":"2019-11-12",
+			"materialTypeId":"103"
 		},
 		{
 			"materialNo":"132443242",
 			"quantity":100,
 			"row":1,
 			"col":2,
-			"productionTime":"2019-11-12"
+			"productionTime":"2019-11-12",
+			"materialTypeId":"103"
 		}
 	]
 }
@@ -89,21 +92,24 @@ uw -> ur
 			"quantity":100,
 			"row":1,
 			"col":2,
-			"productionTime":"2019-11-12"
+			"productionTime":"2019-11-12",
+			"materialTypeId":"103"
 		},
 		{
 			"materialNo":"132443242",
 			"quantity":100,
 			"row":1,
 			"col":2,
-			"productionTime":"2019-11-12"
+			"productionTime":"2019-11-12",
+			"materialTypeId":"103"
 		},
 		{
 			"materialNo":"132443242",
 			"quantity":100,
 			"row":1,
 			"col":2,
-			"productionTime":"2019-11-12"
+			"productionTime":"2019-11-12",
+			"materialTypeId":"103"
 		}
 	]
 }
