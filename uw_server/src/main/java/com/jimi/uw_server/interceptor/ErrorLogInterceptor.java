@@ -1,19 +1,14 @@
 package com.jimi.uw_server.interceptor;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.jfinal.aop.Interceptor;
 import com.jfinal.aop.Invocation;
 import com.jimi.uw_server.model.ErrorLog;
 import com.jimi.uw_server.util.ResultUtil;
-
-import cc.darhao.dautils.api.ResourcesUtil;
 
 
 /**
@@ -24,16 +19,8 @@ import cc.darhao.dautils.api.ResourcesUtil;
  */
 public class ErrorLogInterceptor implements Interceptor {
 
-	private static Logger logger;
+	private static Logger logger = LogManager.getRootLogger();
 	
-	static {
-		try(InputStream inputStream = ResourcesUtil.getResourceAsStream("log4j.properties")){
-			PropertyConfigurator.configure(inputStream);
-			logger = LogManager.getRootLogger();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 	
 	@Override
 	public void intercept(Invocation invocation) {

@@ -21,6 +21,9 @@ public class IOPackage extends UrBasePackage{
 	private List<UrMaterialInfo> list;
 	
 
+	public IOPackage() {}
+	
+	
 	public IOPackage(boolean isIn) {
 		cmdcode = isIn ? "in" : "out";
 	}

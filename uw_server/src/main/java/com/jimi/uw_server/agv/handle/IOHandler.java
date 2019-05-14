@@ -22,6 +22,7 @@ import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.service.SupplierService;
 import com.jimi.uw_server.service.TaskService;
 import com.jimi.uw_server.ur.entity.IOPackage;
+import com.jimi.uw_server.ur.entity.ReachInPackage;
 import com.jimi.uw_server.ur.entity.ReachOutPackage;
 import com.jimi.uw_server.ur.entity.base.UrMaterialInfo;
 import com.jimi.uw_server.ur.socket.UrSocekt;
@@ -42,17 +43,17 @@ public class IOHandler {
 
 	private static final String GET_REMAIN_MATERIAL_BY_BOX = "SELECT * FROM material where box = ? and remainder_quantity > 0";
 
-	public static void sendReturnBoxCmd(AGVIOTaskItem item, MaterialBox materialBox) throws Exception {
+	public static void sendReturnBoxCmd(AGVIOTaskItem item, MaterialBox materialBox, Window window) throws Exception {
 		//构建指令，令指定robot把料送回原仓位
-		AGVMoveCmd moveCmd = createReturnBoxCmd(materialBox, item);
+		AGVMoveCmd moveCmd = createReturnBoxCmd(materialBox, item, window);
 		//发送>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 	}
 
 
-	public static void sendGetBoxCmd(AGVIOTaskItem item, MaterialBox materialBox) throws Exception {
+	public static void sendGetBoxCmd(AGVIOTaskItem item, MaterialBox materialBox, Window window) throws Exception {
 		//发送>>>
-		AGVMoveCmd cmd = createGetBoxCmd(materialBox, item);
+		AGVMoveCmd cmd = createGetBoxCmd(materialBox, item, window);
 		AGVMainSocket.sendMessage(Json.getJson().toJson(cmd));
 
 		//在数据库标记所有处于该坐标的料盒为不在架***
@@ -202,7 +203,7 @@ public class IOHandler {
 
 
 	private static void pushReachIn(AGVIOTaskItem item) {
-		ReachOutPackage reachInPackage = new ReachOutPackage();
+		ReachInPackage reachInPackage = new ReachInPackage();
 		reachInPackage.setCmdid(getCmdid());
 		reachInPackage.setTaskId(item.getTaskId());
 		UrSocekt.queueHolder.push(reachInPackage);
@@ -269,16 +270,14 @@ public class IOHandler {
 	}
 
 
-	private static AGVMoveCmd createReturnBoxCmd(MaterialBox materialBox, AGVIOTaskItem item) {
+	private static AGVMoveCmd createReturnBoxCmd(MaterialBox materialBox, AGVIOTaskItem item, Window window) {
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getGroupId());//missionGroupId要和LS指令相同
 		group.setRobotid(item.getRobotId());//robotId要和LS指令相同
-		int windowId = Task.dao.findById(item.getTaskId()).getWindow();
-		Window window = Window.dao.findById(windowId);
 		group.setStartx(window.getRow());//起点X为仓口X
 		group.setStarty(window.getCol());//起点Y为仓口Y
-		group.setEndz(2);
+		group.setStartz(2);//仓口高度2
 		group.setEndx(materialBox.getRow());//设置X
 		group.setEndy(materialBox.getCol());//设置Y
 		group.setEndz(materialBox.getHeight());//设置Z
@@ -291,18 +290,16 @@ public class IOHandler {
 	}
 	
 
-	private static AGVMoveCmd createGetBoxCmd(MaterialBox materialBox, AGVIOTaskItem item) {
+	private static AGVMoveCmd createGetBoxCmd(MaterialBox materialBox, AGVIOTaskItem item, Window window) {
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getGroupId());
 		group.setRobotid(0);//让AGV系统自动分配
 		group.setStartx(materialBox.getRow());//物料Row
 		group.setStarty(materialBox.getCol());//物料Col
 		group.setStartz(materialBox.getHeight());//物料Height
-		int windowId = Task.dao.findById(item.getTaskId()).getWindow();
-		Window window = Window.dao.findById(windowId);
 		group.setEndx(window.getRow());//终点X为仓口X
 		group.setEndy(window.getCol());//终点Y为仓口Y
-		group.setEndz(2);
+		group.setEndz(2);//仓口高度2
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		groups.add(group);
 		AGVMoveCmd cmd = new AGVMoveCmd();

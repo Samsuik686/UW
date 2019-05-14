@@ -134,38 +134,38 @@ public class TaskController extends Controller {
 	}
 
 
-	// 物料入库
-	@Log("将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
-	public void in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName) {
-		if (packListItemId ==null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
-			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
-		}
-		// 获取当前使用系统的用户，以便获取操作员uid
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.in(packListItemId, materialId, quantity, productionTime, supplierName, user)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
-	}
+//	// 物料入库
+//	@Log("将id号为{packListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
+//	public void in(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName) {
+//		if (packListItemId ==null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
+//			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+//		}
+//		// 获取当前使用系统的用户，以便获取操作员uid
+//		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+//		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+//		if (taskService.in(packListItemId, materialId, quantity, productionTime, supplierName, user)) {
+//			renderJson(ResultUtil.succeed());
+//		} else {
+//			renderJson(ResultUtil.failed());
+//		}
+//	}
 
 
-	// 物料出库
-	@Log("将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}，供应商名为{supplierName}")
-	public void out(Integer packListItemId, String materialId, Integer quantity, String supplierName) {
-		if (packListItemId ==null || materialId == null || quantity == null || supplierName == null) {
-			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
-		}
-		// 获取当前使用系统的用户，以便获取操作员uid
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.out(packListItemId, materialId, quantity, supplierName, user)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
-	}
+//	// 物料出库
+//	@Log("将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}，供应商名为{supplierName}")
+//	public void out(Integer packListItemId, String materialId, Integer quantity, String supplierName) {
+//		if (packListItemId ==null || materialId == null || quantity == null || supplierName == null) {
+//			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+//		}
+//		// 获取当前使用系统的用户，以便获取操作员uid
+//		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+//		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+//		if (taskService.out(packListItemId, materialId, quantity, supplierName, user)) {
+//			renderJson(ResultUtil.succeed());
+//		} else {
+//			renderJson(ResultUtil.failed());
+//		}
+//	}
 
 
 	// 删除错误的料盘记录

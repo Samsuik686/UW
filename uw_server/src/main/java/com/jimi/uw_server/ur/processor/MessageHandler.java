@@ -14,6 +14,8 @@ import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.model.MaterialBox;
+import com.jimi.uw_server.model.Task;
+import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.TaskService;
 import com.jimi.uw_server.ur.constant.UrCmdType;
 import com.jimi.uw_server.ur.entity.AckPackage;
@@ -89,7 +91,7 @@ public class MessageHandler {
 
 	private JSONObject parseJsonObject(String message) {
 		JSONObject jsonObject = JSON.parseObject(message);
-		if(jsonObject.get("cmdid") != null || jsonObject.get("cmdcode") != null) {
+		if(jsonObject.get("cmdid") == null || jsonObject.get("cmdcode") == null) {
 			throw new JSONException("缺乏cmdid或cmdcode字段："+message);
 		}
 		return jsonObject;
@@ -158,7 +160,9 @@ public class MessageHandler {
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item.getTaskId().equals(ioPackage.getTaskId())) {
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-				IOHandler.sendReturnBoxCmd(item, materialBox);
+				int windowId = Task.dao.findById(item.getTaskId()).getWindow();
+				Window window = Window.dao.findById(windowId);
+				IOHandler.sendReturnBoxCmd(item, materialBox, window);
 				break;
 			}
 		}

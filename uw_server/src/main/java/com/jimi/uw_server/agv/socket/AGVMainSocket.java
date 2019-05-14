@@ -26,7 +26,6 @@ import com.jimi.uw_server.agv.handle.ACKHandler;
 import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
-import com.jimi.uw_server.agv.thread.TaskPool;
 import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;
@@ -46,7 +45,7 @@ public class AGVMainSocket {
 	
 	private static String uri;
 	
-	private TaskPool taskPool;
+//	private TaskPool taskPool;
 	
 	/**
 	 * 发送的CMDID与是否被ACK的关系映射
@@ -79,8 +78,8 @@ public class AGVMainSocket {
 		System.out.println("AGVMainSocket is Running Now...");
 		session = userSession;
 		try {
-			taskPool = new TaskPool();
-			taskPool.start();
+//			taskPool = new TaskPool();
+//			taskPool.start();
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 			e.printStackTrace();
@@ -91,7 +90,7 @@ public class AGVMainSocket {
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
 		ErrorLogWritter.save("AGVMainSocket was Stopped because :" + reason.getCloseCode());
-		taskPool.interrupt();
+//		taskPool.interrupt();
 		try {
 			Thread.sleep(1800000);
 			//重新连接

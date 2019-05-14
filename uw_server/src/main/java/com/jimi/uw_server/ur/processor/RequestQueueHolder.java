@@ -22,7 +22,7 @@ public class RequestQueueHolder {
 	
 	private Long waitAckTimeout = PropKit.use("properties.ini").getLong("waitAckTimeout");
 	
-	private Integer waitAckId = 0;
+	private volatile int  waitAckId = 0;
 	
 	private Session session;
 	
@@ -63,8 +63,9 @@ public class RequestQueueHolder {
 								sendQueue.poll();
 								new Thread(()-> {
 									try {
+										int id = head.getCmdid();
 										Thread.sleep(waitAckTimeout);
-										if(waitAckId == 0) {
+										if(waitAckId == id) {
 											ErrorLogger.saveErrorToDb(new RuntimeException("请求UR超时"));
 										}
 									} catch (InterruptedException e) {

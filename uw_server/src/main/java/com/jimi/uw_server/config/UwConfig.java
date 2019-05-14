@@ -1,6 +1,10 @@
 package com.jimi.uw_server.config;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.log4j.PropertyConfigurator;
 
 import com.jfinal.config.Constants;
 import com.jfinal.config.Handlers;
@@ -30,16 +34,27 @@ import com.jimi.uw_server.interceptor.AccessInterceptor;
 import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
 import com.jimi.uw_server.interceptor.ErrorLogInterceptor;
+import com.jimi.uw_server.interceptor.WebSocketHandler;
 import com.jimi.uw_server.model.MappingKit;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
 
+import cc.darhao.dautils.api.ResourcesUtil;
+
 /**
  * 全局配置
- *
  */
 public class UwConfig extends JFinalConfig {
 
+	static {
+		try(InputStream inputStream = ResourcesUtil.getResourceAsStream("log4j.properties")){
+			PropertyConfigurator.configure(inputStream);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	@Override
 	public void configConstant(Constants me) {
 		me.setDevMode(false);
@@ -52,6 +67,7 @@ public class UwConfig extends JFinalConfig {
 
 	@Override
 	public void configHandler(Handlers me) {
+		me.add(new WebSocketHandler("^/ur"));
 	}
 
 	@Override
@@ -71,15 +87,15 @@ public class UwConfig extends JFinalConfig {
 		RedisPlugin rp = null;
 		if(isProductionEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("p_url"), PropKit.get("p_user"), PropKit.get("p_password"));
-			rp = new RedisPlugin("uw", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
+			rp = new RedisPlugin("uw2", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
 			System.out.println("System is in production envrionment");
 		} else if(isTestEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
-			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
+			rp = new RedisPlugin("uw2", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
+			rp = new RedisPlugin("uw2", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		me.add(dp);

@@ -21,7 +21,7 @@ import com.jimi.uw_server.util.ErrorLogWritter;
 @ServerEndpoint("/ur")
 public class UrSocekt {
 	
-	private MessageHandler handler = null;
+	public static MessageHandler handler = null;
 	
 	public static RequestQueueHolder queueHolder = null;
 	
@@ -34,6 +34,7 @@ public class UrSocekt {
 			queueHolder = new RequestQueueHolder(session);
 			outPackageHolder = new OutPackageHolder();
 			handler = new MessageHandler(session);
+//			testTimeout(queueHolder); //单元测试用
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 			e.printStackTrace();
@@ -43,6 +44,9 @@ public class UrSocekt {
 
 	@OnClose
 	public void onClose(CloseReason reason) {
+		handler = null;
+		queueHolder = null;
+		outPackageHolder = null;
 		ErrorLogWritter.save("UrSocket was Stopped because :" + reason.getCloseCode());
 	}
 
@@ -55,5 +59,22 @@ public class UrSocekt {
 			ErrorLogger.saveErrorToDb(e);
 		}
 	}
+	
+	
+//	private void testTimeout(RequestQueueHolder queueHolder){
+//		//使用断点调试
+//		new Thread(()-> {
+//			while(true) {
+//				ReachInPackage reachInPackage = new ReachInPackage();
+//				reachInPackage.setCmdid(1);
+//				reachInPackage.setTaskId(1);
+//				queueHolder.push(reachInPackage);
+//				reachInPackage = new ReachInPackage();
+//				reachInPackage.setCmdid(2);
+//				reachInPackage.setTaskId(2);
+//				queueHolder.push(reachInPackage);
+//			}
+//		}).start();
+//	}
 	
 }
