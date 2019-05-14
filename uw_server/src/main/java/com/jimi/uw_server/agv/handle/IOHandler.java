@@ -277,7 +277,7 @@ public class IOHandler {
 		group.setRobotid(item.getRobotId());//robotId要和LS指令相同
 		group.setStartx(window.getRow());//起点X为仓口X
 		group.setStarty(window.getCol());//起点Y为仓口Y
-		group.setStartz(2);//仓口高度2
+		group.setStartz(1);//仓口高度1
 		group.setEndx(materialBox.getRow());//设置X
 		group.setEndy(materialBox.getCol());//设置Y
 		group.setEndz(materialBox.getHeight());//设置Z
@@ -299,7 +299,7 @@ public class IOHandler {
 		group.setStartz(materialBox.getHeight());//物料Height
 		group.setEndx(window.getRow());//终点X为仓口X
 		group.setEndy(window.getCol());//终点Y为仓口Y
-		group.setEndz(2);//仓口高度2
+		group.setEndz(1);//仓口高度1
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		groups.add(group);
 		AGVMoveCmd cmd = new AGVMoveCmd();
