@@ -14,7 +14,7 @@ import com.jfinal.plugin.druid.DruidPlugin;
  */
 public class TaskDAO {
 
-	private static final String URL = "jdbc:mysql://localhost:3306/uw?characterEncoding=utf8";
+	private static final String URL = "jdbc:mysql://localhost:3306/uw2?characterEncoding=utf8";
 	private static final String D_USER = "root";
 	private static final String D_PASSWORD = "newttl!@#$1234";
 	private static final String T_USER = "standard";
