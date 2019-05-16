@@ -12,7 +12,7 @@
             <div class="sidebar-link" @click="linkTo('preview')"
                :class="activeItem === 'preview' ? 'active' : ''">查看仓口任务</div>
           </div>
-          <div @click="toggleState('call')">
+          <!--<div @click="toggleState('call')">
             <div class="sidebar-link" @click="linkTo('call')"
                  :class="activeItem === 'call' ? 'active' : ''">扫码呼叫叉车</div>
           </div>
@@ -27,7 +27,7 @@
           <div @click="toggleState('return')">
             <div class="sidebar-link" @click="linkTo('return')"
                  :class="activeItem === 'return' ? 'active' : ''">退料任务操作</div>
-          </div>
+          </div>-->
         </div>
       </div>
     </nav>
