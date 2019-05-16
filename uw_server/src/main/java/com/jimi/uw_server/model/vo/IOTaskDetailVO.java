@@ -14,6 +14,12 @@ import com.jimi.uw_server.model.TaskLog;
 public class IOTaskDetailVO extends TaskLog {
 
 	private List<?> details;
+	
+	private Integer uwStoreNum;
+	
+	private Integer whStoreNum;
+	
+	private String status;
 
 	public IOTaskDetailVO(Integer packingListItemId, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime) {
 		this.set("id", packingListItemId);
@@ -33,6 +39,40 @@ public class IOTaskDetailVO extends TaskLog {
 
 	public void setDetails(List<?> details) {
 		this.set("details", details);
+	}
+
+	public Integer getUwStoreNum() {
+		return uwStoreNum;
+	}
+
+	public void setUwStoreNum(Integer uwStoreNum) {
+		this.set("uwStoreNum", uwStoreNum);
+	}
+
+	public Integer getWhStoreNum() {
+		return whStoreNum;
+	}
+
+	public void setWhStoreNum(Integer whStoreNum) {
+		this.set("whStoreNum", whStoreNum);
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer uwStoreNum, Integer whStoreNum, Integer planQuantity ) {
+		
+		if ((planQuantity - uwStoreNum - whStoreNum) > 0) {
+			this.set("status", "缺料");
+		}else if ((planQuantity - uwStoreNum - whStoreNum) < 0 && whStoreNum > 0) {
+			this.set("status", "超发");
+		}else if ((planQuantity - uwStoreNum - whStoreNum) < 0 && whStoreNum < 0) {
+			this.set("status", "欠料");
+		}else {
+			this.set("status", "正常");
+		}
+		
 	}
 
 

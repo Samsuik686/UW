@@ -109,7 +109,7 @@ public class WindowTaskItemsVO extends TaskLog {
 			this.typeString = "位置优化";
 			break;
 		case TaskType.SEND_BACK:
-			this.typeString = "退料入库";
+			this.typeString = "调拨入库";
 			break;
 		default:
 			this.typeString = "错误类型";

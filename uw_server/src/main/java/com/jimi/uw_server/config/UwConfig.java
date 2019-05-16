@@ -8,6 +8,7 @@ import com.jfinal.config.Interceptors;
 import com.jfinal.config.JFinalConfig;
 import com.jfinal.config.Plugins;
 import com.jfinal.config.Routes;
+import com.jfinal.json.FastJsonFactory;
 import com.jfinal.json.MixedJsonFactory;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -20,6 +21,7 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.controller.BuildController;
 import com.jimi.uw_server.controller.DestinationController;
+import com.jimi.uw_server.controller.ExternalWhController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.MaterialController;
 import com.jimi.uw_server.controller.RobotController;
@@ -80,7 +82,7 @@ public class UwConfig extends JFinalConfig {
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
 			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
-			System.out.println("System is in development envrionment");
+			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		me.add(dp);
 		me.add(rp);
@@ -102,6 +104,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manage/user", UserController.class);
 		me.add("/manage/supplier", SupplierController.class);
 		me.add("/manage/destination", DestinationController.class);
+		me.add("/manage/externalWh", ExternalWhController.class);
 	}
 
 	@Override

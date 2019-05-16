@@ -16,6 +16,10 @@ public class TaskType {
 
 	public static final int POSITION_OPTIZATION = 3;	// 位置优化
 
-	public static final int SEND_BACK = 4;				// 退料入库
+	public static final int SEND_BACK = 4;				// 调拨入库
+	
+	public static final int EXTERNAL_IN_OUT = 5;		//外仓出入库
+	
+	public static final int WASTAGE = 6; 				//损耗
 
 }

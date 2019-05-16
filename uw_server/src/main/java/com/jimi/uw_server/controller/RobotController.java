@@ -8,8 +8,10 @@ import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.RobotService;
 import com.jimi.uw_server.util.ResultUtil;
+import com.jimi.uw_server.util.TokenBox;
 
 /**
  * 叉车控制层
@@ -19,7 +21,7 @@ import com.jimi.uw_server.util.ResultUtil;
 public class RobotController extends Controller {
 
 	private static RobotService robotService = Enhancer.enhance(RobotService.class);
-
+	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 	// 查询叉车
 	public void select(){
@@ -49,7 +51,9 @@ public class RobotController extends Controller {
 		if (id == null || isLater == null || state == null){
 			throw new OperationException("参数不能为空");
 		}
-		String resultString = robotService.back(id, materialOutputRecords, isLater, state);
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String resultString = robotService.back(id, materialOutputRecords, isLater, state, user);
 		if (resultString.equals("已成功发送回库指令！")) {
 			renderJson(ResultUtil.succeed());
 		} else if (resultString.equals("料盒中还有其他需要出库的物料，叉车暂时不回库！")) {

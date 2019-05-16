@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jfinal.aop.Enhancer;
+import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.SupplierVO;
@@ -25,6 +27,10 @@ public class SupplierService extends SelectService {
 	private static final String GET_ENABLED_SUPPLIER_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 
 	private static final String GET_ENABLED_MATERIAL_TYPE_BY_SUPPLIER_ID_SQL = "SELECT * FROM material_type WHERE supplier = ? AND enabled = 1";
+	
+	private static final String GET_MATERIAL_BY_SUPPLIER = "SELECT * FROM material WHERE material.remainder_quantity > 0 AND material.box IN (SELECT id FROM material_box WHERE material_box.supplier = ? AND enabled = 1)";
+
+	private static final String SET_BOX_SUPPLIER_NULL_BY_SUPPLIER = "UPDATE material_box SET material_box.supplier = null WHERE material_box.supplier = ?";
 
 
 	// 添加供应商
@@ -54,11 +60,13 @@ public class SupplierService extends SelectService {
 //			}
 //		}
 		if (!enabled) {
-			MaterialType mt = MaterialType.dao.findFirst(GET_ENABLED_MATERIAL_TYPE_BY_SUPPLIER_ID_SQL, id);
+			MaterialType mt = MaterialType.dao.findFirst(GET_MATERIAL_BY_SUPPLIER, id);
 			if (mt != null) {
-				resultString = "该供应商已绑定了某个物料类型，请先删掉相关的物料类型再进行删除操作！";
+				resultString = "该供应商名下存在物料尚未出库，无法删除！";
 				return resultString;
 			}
+			Db.update(SET_BOX_SUPPLIER_NULL_BY_SUPPLIER, supplier.getId());
+			
 		}
 		supplier.setEnabled(enabled);
 		supplier.update();

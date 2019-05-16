@@ -1,49 +1,38 @@
 package com.jimi.uw_server.model.vo;
 
-import com.jimi.uw_server.model.BoxType;
-import com.jimi.uw_server.model.MaterialBox;
-
 /**
  * 料盒表示层对象
  * @author HardyYao
  * @createTime 2018年9月7日  上午10:56:49
  */
 
-@SuppressWarnings("serial")
-public class MaterialBoxVO extends MaterialBox {
+public class MaterialBoxVO {
 
-	private String enabledString;
+	private Integer id;
+	
+	private String area;
+	
+	private Integer row;
+	
+	private Integer col;
+	
+	private Integer height;
 
 	private String isOnShelfString;
+	
+	private String supplierName;
+	
+	private String typeName;
 
-	private Integer cellWidth;
-
-	public MaterialBoxVO(Integer id, String area, Integer row, Integer col, Integer height, Boolean enabled, Boolean isOnShelf, Integer type) {
+	public MaterialBoxVO(Integer id, String area, Integer row, Integer col, Integer height, Boolean isOnShelf, Integer type, String supplierName) {
 		this.setId(id);
 		this.setArea(area);
 		this.setRow(row);
 		this.setCol(col);
 		this.setHeight(height);
-		this.setEnabled(enabled);
-		this.setEnabledString(enabled);
-		this.set("enabledString", getEnabledString());
-		this.set("isOnShelf", isOnShelf);
 		this.setIsOnShelfString(isOnShelf);
-		this.set("isOnShelfString", getIsOnShelfString());
-		this.setCellWidth(type);
-		this.set("cellWidth", getCellWidth());
-	}
-
-	public String getEnabledString() {
-		return enabledString;
-	}
-
-	public void setEnabledString(Boolean enabled) {
-		if (enabled) {
-			this.enabledString = "是";
-		} else {
-			this.enabledString = "否";
-		}
+		this.setTypeName(type);
+		this.setSupplierName(supplierName);
 	}
 
 	public String getIsOnShelfString() {
@@ -57,14 +46,68 @@ public class MaterialBoxVO extends MaterialBox {
 			this.isOnShelfString = "否";
 		}
 	}
-
-	public Integer getCellWidth() {
-		return cellWidth;
+	
+	public String getSupplierName() {
+		return supplierName;
 	}
 
-	public void setCellWidth(Integer type) {
-		BoxType boxType = BoxType.dao.findById(type);
-		this.cellWidth = boxType.getCellWidth();
+	public void setSupplierName(String supplierName) {
+		this.supplierName = supplierName;
 	}
+
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public void setTypeName(Integer type) {
+		if (type.equals(1)) {
+			this.typeName = "标准";
+		}else {
+			this.typeName = "非标准";
+		}
+		
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getArea() {
+		return area;
+	}
+
+	public void setArea(String area) {
+		this.area = area;
+	}
+
+	public Integer getRow() {
+		return row;
+	}
+
+	public void setRow(Integer row) {
+		this.row = row;
+	}
+
+	public Integer getCol() {
+		return col;
+	}
+
+	public void setCol(Integer col) {
+		this.col = col;
+	}
+
+	public Integer getHeight() {
+		return height;
+	}
+
+	public void setHeight(Integer height) {
+		this.height = height;
+	}
+	
+	
 
 }

@@ -125,10 +125,8 @@ public class TaskPool extends Thread{
 
 					// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
 					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
-					if (remainderQuantity == 0) {
-						if (item.getState().equals(IOTaskItemState.FINISH_CUT)) {
-							break;
-						}
+					if (remainderQuantity == 0 && !item.getIsForceFinish().equals(true)) {
+						
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.LACK);
 						TaskItemRedisDAO.updateTaskIsForceFinish(item, true);
 						// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
@@ -282,7 +280,6 @@ public class TaskPool extends Thread{
 			List<Material> sameUnfullTypeMaterialBoxs = Material.dao.find(GET_SAME_TYPE_MATERIAL_BOX_SQL, materialTypeId, materialType.getSupplier(), 2, BoxState.UNFULL);
 			// 如果存在同类型不满的料盒
 			for (Material sameUnfullTypeMaterialBox : sameUnfullTypeMaterialBoxs) {
-				
 				if (diffTaskBoxs.contains(sameUnfullTypeMaterialBox.getBox().intValue())) {
 					continue;
 				}
@@ -353,12 +350,17 @@ public class TaskPool extends Thread{
 			if (!redisTaskItem.getTaskId().equals(packingListItem.getTaskId()) && redisTaskItem.getIsForceFinish().equals(false)) {
 				boxs.add(redisTaskItem.getBoxId().intValue());
 			}
+			if (redisTaskItem.getId().equals(packingListItem.getId()) && redisTaskItem.getIsForceFinish()) {
+				if (redisTaskItem.getBoxId() != 0) {
+					return redisTaskItem.getBoxId();
+				}
+			}
 		}
 		// 如果物料实体表中有多条该物料类型的记录，且库存大于0
 		if (materialList.size() > 0) {
 			for (Material m : materialList) {
 				// 先判断该料盘是否被等待截料返库的任务条目所绑定
-				if (m.getRemainderQuantity() > 0 && !m.getIsInBox()) {
+				/*if (m.getRemainderQuantity() > 0 && !m.getIsInBox()) {
 					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
 						// 根据任务条目id匹配到redis中的任务条目
 						if (redisTaskItem.getId().intValue() == packingListItemId.intValue()) {
@@ -374,7 +376,8 @@ public class TaskPool extends Thread{
 						}
 					}
 				}
-				else if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
+				else */
+				if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
 
 					if (boxs.contains(m.getBox().intValue())) {
 						continue;
@@ -388,7 +391,5 @@ public class TaskPool extends Thread{
 
 		return boxId;
 	}
-	
-	
-	
+
 }

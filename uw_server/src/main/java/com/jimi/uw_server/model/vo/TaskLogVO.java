@@ -53,7 +53,7 @@ public class TaskLogVO extends TaskLog {
 			this.taskTypeString = "位置优化";
 			break;
 		case TaskType.SEND_BACK:
-			this.taskTypeString = "退料入库";
+			this.taskTypeString = "调拨入库";
 			break;
 		default:
 			this.taskTypeString = "错误类型";

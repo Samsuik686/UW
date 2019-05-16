@@ -52,7 +52,7 @@ public class TaskVO extends Task{
 		}  else if (type == TaskType.POSITION_OPTIZATION) {
 			this.typeString = "位置优化";
 		} else if (type == 4) {
-			this.typeString = "退料入库";
+			this.typeString = "调拨入库";
 		}
 	}
 

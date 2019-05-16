@@ -21,6 +21,7 @@ import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.lock.Lock;
+import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
@@ -28,6 +29,7 @@ import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
+import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
@@ -59,7 +61,8 @@ public class RobotService extends SelectService {
 
 	private static final Object CALL_LOCK = new Object();
 
-
+	private static final int UW_ID = 0;
+	
 	// 查询叉车
 	public List<RobotVO> select() {
 		List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
@@ -103,14 +106,16 @@ public class RobotService extends SelectService {
 	/**
 	 * 叉车回库SL
 	 */
-	public String back(Integer id, String materialOutputRecords, Boolean isLater, Integer state) throws Exception {
+	public String back(Integer id, String materialOutputRecords, Boolean isLater, Integer state, User user) throws Exception {
 		String resultString = "已成功发送回库指令！";
+		Boolean cutFlag = false;
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
 			if (item.getId().intValue() == id) {
 				synchronized(Lock.REDIS_LOCK) {
 					if (item.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
 						// 若是出库任务且为截料后重新入库，则需要判断是否对已截过料的料盘重新扫码过
 						if (item.getIsForceFinish() && Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT && materialOutputRecords == null) {
+							cutFlag = true;
 							resultString = taskService.isScanAgain(item.getId());
 							if (resultString.equals("请扫描修改出库数时所打印出的新料盘二维码!")) {
 								return resultString;
@@ -132,16 +137,7 @@ public class RobotService extends SelectService {
 							if (!isLater) {
 								taskService.finishItem(id, true);
 								item.setIsForceFinish(true);
-							}/*else{
-								// 根据物料类型号获取物料库存数量
-								if (isLater && task.getType().equals(TaskType.OUT)) {
-									Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
-									if (remainderQuantity <= 0) {
-										taskService.finishItem(id, true);
-										item.setIsForceFinish(true);
-									}
-								}
-							}*/
+							}
 							
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 							AGVIOTaskItem sameBoxItem = getSameBoxItem(item);
@@ -158,23 +154,14 @@ public class RobotService extends SelectService {
 							}
 
 							// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
-							if (task.getType() == TaskType.OUT && materialOutputRecords != null) {
-								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater);
+							if (task.getType() == TaskType.OUT) {
+								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater, user, cutFlag);
 							}
 						}else if (materialBox != null && materialBox.getType().equals(2)) {
 							if (!isLater) {
 								taskService.finishItem(id, true);
 								item.setIsForceFinish(true);
-							}/*else{
-								// 根据物料类型号获取物料库存数量
-								if (isLater && task.getType().equals(TaskType.OUT)) {
-									Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
-									if (remainderQuantity <= 0) {
-										taskService.finishItem(id, true);
-										item.setIsForceFinish(true);
-									}
-								}
-							}*/
+							}
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 							AGVIOTaskItem sameBoxItem = getSameBoxItem(item);
 							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
@@ -187,13 +174,34 @@ public class RobotService extends SelectService {
 							}
 
 							// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
-							if (task.getType() == TaskType.OUT && materialOutputRecords != null) {
-								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater);
+							if (task.getType() == TaskType.OUT) {
+								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater, user, cutFlag);
 							}
 
 						}
 						
-
+						if (task.getType() == TaskType.SEND_BACK && materialOutputRecords != null && item.getIsForceFinish()) {
+							int acturallyNum = 0;
+							if (materialOutputRecords != null) {
+								JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
+								for (int i=0; i<jsonArray.size(); i++) {
+									JSONObject jsonObject = jsonArray.getJSONObject(i);
+									Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
+									acturallyNum += quantity;
+								}
+								PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
+								ExternalWhLog externalWhLog = new ExternalWhLog();
+								externalWhLog.setMaterialTypeId(packingListItem.getMaterialTypeId());
+								externalWhLog.setDestination(UW_ID);
+								externalWhLog.setSourceWh(task.getDestination());
+								externalWhLog.setTaskId(task.getId());
+								externalWhLog.setQuantity(acturallyNum);
+								externalWhLog.setTime(new Date());
+								externalWhLog.setOperatior(user.getUid());
+								externalWhLog.save();
+									
+							}
+						}
 					} else {
 						resultString = "该任务条目已发送过回库指令，请勿重复发送回库指令！";
 						return resultString;
@@ -302,7 +310,6 @@ public class RobotService extends SelectService {
 								// 若料盒在架，则将其状态更新为未分配拣料
 								if (materialBox.getIsOnShelf()) {
 									TaskItemRedisDAO.updateIOTaskItemRobot(redisTaskItem, 0);
-									TaskItemRedisDAO.updateTaskItemBoxId(redisTaskItem, 0);
 									TaskItemRedisDAO.updateIOTaskItemState(redisTaskItem, IOTaskItemState.WAIT_ASSIGN);
 									return resultString;
 								} else {	// 若料盒不在架，为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令

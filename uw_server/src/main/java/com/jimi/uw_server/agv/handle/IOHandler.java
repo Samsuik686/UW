@@ -107,6 +107,7 @@ public class IOHandler {
 					Task task = Task.dao.findById(item.getTaskId());
 					if (item.getIsForceFinish().equals(false) && task.getType().equals(TaskType.OUT)) {
 						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+						
 						if (remainderQuantity <= 0) {
 							item.setState(IOTaskItemState.LACK);
 							item.setIsForceFinish(true);
@@ -157,7 +158,7 @@ public class IOHandler {
 
 
 	/**
-	 * 判断该groupid所在的任务是否全部条目状态为"已回库完成"并且没有需要截料返库的，如果是，
+	 * 判断该groupid所在的任务是否全部条目状态为"已回库完成"并且没有需要截料返库的，也如果是，
 	 * 则清除所有该任务id对应的条目，释放内存，并修改数据库任务状态***
 	*/
 	public static void clearTil(String groupid) {
@@ -169,11 +170,13 @@ public class IOHandler {
 				if (item1.getState() == IOTaskItemState.LACK) {
 					isLack = true;
 				}
-				if( (item1.getState() != IOTaskItemState.FINISH_BACK &&  item1.getState() != IOTaskItemState.LACK && !item1.getIsForceFinish())) {
+				if( (item1.getState() != IOTaskItemState.FINISH_BACK && item1.getState() != IOTaskItemState.LACK && !item1.getIsForceFinish())) {
 					isAllFinish = false;
-					
 				}
 				if (item1.getState() == IOTaskItemState.FINISH_CUT) {
+					isAllFinish = false;
+				}
+				if (item1.getIsForceFinish() && item1.getState() >= 0 && item1.getState() <= 3) {
 					isAllFinish = false;
 				}
 			}

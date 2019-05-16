@@ -90,7 +90,6 @@ public abstract class BaseMaterialBox<M extends BaseMaterialBox<M>> extends Mode
 		return getInt("supplier");
 	}
 
-	
 	public M setStatus(java.lang.Integer status) {
 		set("status", status);
 		return (M)this;
@@ -99,15 +98,14 @@ public abstract class BaseMaterialBox<M extends BaseMaterialBox<M>> extends Mode
 	public java.lang.Integer getStatus() {
 		return getInt("status");
 	}
-	
-	
+
 	public M setUpdateTime(java.util.Date updateTime) {
 		set("update_time", updateTime);
 		return (M)this;
 	}
 	
-	
-	public java.util.Date getUpdateTime(){
-		return getDate("update_time");
+	public java.util.Date getUpdateTime() {
+		return get("update_time");
 	}
+
 }

@@ -3,8 +3,10 @@ package com.jimi.uw_server.controller;
 import java.io.File;
 import java.util.Date;
 
+import com.alibaba.fastjson.JSON;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
+import com.jfinal.json.Json;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
@@ -33,8 +35,8 @@ public class TaskController extends Controller {
 		if (file ==null || type == null || supplier ==null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4
-		if (type == TaskType.IN || type == TaskType.OUT || type  == TaskType.SEND_BACK) {
+		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
+		if (type == TaskType.IN || type == TaskType.OUT || type  == TaskType.SEND_BACK ) {
 			file = getFile();
 			String fileName = file.getFileName();
 			String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
@@ -110,6 +112,13 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(taskService.check(id, type, pageSize, pageNo)));
 	}
 	
+	// 查看任务详情
+		public void getIOTaskDetails(Integer id, Integer type, Integer pageSize, Integer pageNo) {
+			if (id ==null || type == null) {
+				throw new ParameterException("任务id或任务类型不能为空！");
+			}
+			renderJson(ResultUtil.succeed(taskService.check(id, type, pageSize, pageNo)));
+		}
 
 	// 查询指定类型的仓口
 	public void getWindows(int type) {
@@ -130,7 +139,8 @@ public class TaskController extends Controller {
 
 	// 获取指定仓口停泊条目
 	public void getWindowParkingItem(Integer id) {
-		renderJson(ResultUtil.succeed(taskService.getWindowParkingItem(id)));
+		ResultUtil result = ResultUtil.succeed(taskService.getWindowParkingItem(id));
+		renderJson(result);
 	}
 
 
@@ -150,7 +160,39 @@ public class TaskController extends Controller {
 		}
 	}
 
-
+	
+	@Log("手工入库，任务ID为{taskId}")
+	public void importInRecords (Integer taskId, UploadFile uploadFile) {
+		if (taskId == null || uploadFile == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = taskService.importInRecords(taskId, uploadFile.getFile(), user); 
+		if (result.equals("导入成功！")) {
+			renderJson(ResultUtil.succeed(result));
+		} else {
+			renderJson(ResultUtil.failed(result));
+		}
+	}
+	
+	
+	@Log("手工出库，任务ID为{taskId}")
+	public void importOutRecords (Integer taskId, UploadFile uploadFile) {
+		if (taskId == null || uploadFile == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = taskService.importOutRecords(taskId, uploadFile.getFile(), user); 
+		if (result.equals("导入成功！")) {
+			renderJson(ResultUtil.succeed(result));
+		} else {
+			renderJson(ResultUtil.failed(result));
+		}
+	}
+	
+	
 	// 物料出库
 	@Log("将id号为{packListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}，供应商名为{supplierName}")
 	public void out(Integer packListItemId, String materialId, Integer quantity, String supplierName) {
