@@ -6,11 +6,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
@@ -24,7 +25,7 @@ import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.bo.TaskItemBO;
-import com.jimi.uw_server.model.vo.EWhMaterialDetail;
+import com.jimi.uw_server.model.vo.EWhMaterialDetailVO;
 import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
@@ -36,14 +37,19 @@ import com.jimi.uw_server.util.ExcelHelper;
  */
 
 public class ExternalWhTaskService {
+	
+	public static final ExternalWhTaskService me = new ExternalWhTaskService();
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 	
 	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id"; 
 	
-	private static ExternalWhLogService externalWhLogService = Enhancer.enhance(ExternalWhLogService.class);
-	
 	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT * FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e ORDER BY e.time ASC";
+	
+	private static ExternalWhLogService externalWhLogService = ExternalWhLogService.me;
+	
+	
+	
 	/**
 	 * 导入外仓的任务
 	 * @param file
@@ -342,6 +348,53 @@ public class ExternalWhTaskService {
 		return pagePaginate;
 	}
 	
+	
+	public List<ExternalWhInfoVO> selectExternalWhInfo(Integer whId, Integer supplierId, String no, Date startTime) {
+		SqlPara sqlPara = new SqlPara();
+		StringBuffer sql = new StringBuffer();
+		List<ExternalWhInfoVO> externalWhInfoVOs = new ArrayList<>();
+		sql.append(GET_EXTERIALWH_MATERIAL_TYPE_SQL);
+		if (whId != null) {
+			sql.append(" WHERE a.wh_id = ? ");
+			sqlPara.addPara(whId);
+		}
+		if (supplierId != null) {
+			if (whId == null) {
+				sql.append(" WHERE  a.supplier_id = ? ");
+				sqlPara.addPara(supplierId);
+			}else {
+				sql.append(" AND a.supplier_id = ? ");
+				sqlPara.addPara(supplierId);
+			}
+		}
+		if (no != null) {
+			if (whId == null && supplierId == null) {
+				sql.append(" WHERE  a.no like ? ");
+				sqlPara.addPara("%" + no + "%");
+			}else {
+				sql.append(" AND  a.no like ? ");
+				sqlPara.addPara("%" + no + "%");
+			}
+		}
+		sql.append(" ORDER BY a.no ASC");
+		sqlPara.setSql(sql.toString());
+		List<Record> records = Db.find(sqlPara);
+		for (Record record : records) {
+			ExternalWhInfoVO externalWhInfoVO = new ExternalWhInfoVO();
+			externalWhInfoVO.setNo(record.getStr("no"));
+			externalWhInfoVO.setSpecification(record.getStr("specification"));
+			externalWhInfoVO.setSupplierId(record.getInt("supplier_id"));
+			externalWhInfoVO.setMaterialTypeId(record.getInt("material_type_id"));
+			externalWhInfoVO.setSupplier(record.getStr("supplier_name"));
+			externalWhInfoVO.setWhId(record.getInt("wh_id"));
+			externalWhInfoVO.setWareHouse(record.getStr("wh_name"));
+			externalWhInfoVO.setQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), startTime));
+			externalWhInfoVOs.add(externalWhInfoVO);
+		}
+		return externalWhInfoVOs;
+	}
+	
+	
 	public PagePaginate selectEWhMaterialDetails(Integer pageNo, Integer pageSize, Integer materialTypeId, Integer whId) {
 		
 		SqlPara sqlPara = new SqlPara();
@@ -356,7 +409,7 @@ public class ExternalWhTaskService {
 		pagePaginate.setPageSize(page.getPageSize());
 		pagePaginate.setTotalPage(page.getTotalPage());
 		pagePaginate.setTotalRow(page.getTotalRow());
-		List<EWhMaterialDetail> materialDetails = EWhMaterialDetail.fillList(page.getList());
+		List<EWhMaterialDetailVO> materialDetails = EWhMaterialDetailVO.fillList(page.getList());
 		pagePaginate.setList(materialDetails);
 		return pagePaginate;
 	}

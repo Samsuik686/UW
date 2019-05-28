@@ -12,7 +12,7 @@ import com.jfinal.plugin.activerecord.Record;
  * @createTime 2019年5月10日  上午9:08:49
  */
 
-public class EWhMaterialDetail {
+public class EWhMaterialDetailVO {
 	
 	private Integer id;
 	
@@ -184,11 +184,11 @@ public class EWhMaterialDetail {
 	}
 
 
-	public static List<EWhMaterialDetail> fillList(List<Record> records){
+	public static List<EWhMaterialDetailVO> fillList(List<Record> records){
 		
-		List<EWhMaterialDetail> eWhMaterialDetails = new ArrayList<EWhMaterialDetail>();
+		List<EWhMaterialDetailVO> eWhMaterialDetails = new ArrayList<EWhMaterialDetailVO>();
 		for (Record record : records) {
-			EWhMaterialDetail eWhMaterialDetail = new EWhMaterialDetail();
+			EWhMaterialDetailVO eWhMaterialDetail = new EWhMaterialDetailVO();
 			eWhMaterialDetail.setId(record.getInt("id"));
 			eWhMaterialDetail.setMaterialTypeId(record.getInt("material_type_id"));
 			eWhMaterialDetail.setTaskId(record.getInt("task_id"));

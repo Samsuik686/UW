@@ -8,7 +8,6 @@ import com.jfinal.config.Interceptors;
 import com.jfinal.config.JFinalConfig;
 import com.jfinal.config.Plugins;
 import com.jfinal.config.Routes;
-import com.jfinal.json.FastJsonFactory;
 import com.jfinal.json.MixedJsonFactory;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -22,6 +21,7 @@ import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.controller.BuildController;
 import com.jimi.uw_server.controller.DestinationController;
 import com.jimi.uw_server.controller.ExternalWhController;
+import com.jimi.uw_server.controller.InventoryTaskController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.MaterialController;
 import com.jimi.uw_server.controller.RobotController;
@@ -105,6 +105,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manage/supplier", SupplierController.class);
 		me.add("/manage/destination", DestinationController.class);
 		me.add("/manage/externalWh", ExternalWhController.class);
+		me.add("/task/inventory", InventoryTaskController.class);
 	}
 
 	@Override

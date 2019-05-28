@@ -2,17 +2,18 @@ package com.jimi.uw_server.controller;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 import com.alibaba.fastjson.JSON;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
-import com.jfinal.json.Json;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
+import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.service.TaskService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
@@ -31,7 +32,7 @@ public class TaskController extends Controller {
 
 	// 创建出入库/退料任务
 	@Log("创建任务类型为{type}的任务，供应商编号为{supplier}")
-	public void create(UploadFile file, Integer type, Integer supplier, Integer destination) throws Exception {
+	public void create(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId) throws Exception {
 		if (file ==null || type == null || supplier ==null) {
 			throw new ParameterException("参数不能为空！");
 		}
@@ -40,7 +41,7 @@ public class TaskController extends Controller {
 			file = getFile();
 			String fileName = file.getFileName();
 			String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
-			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplier, destination);
+			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplier, destination, isInventoryApply, inventoryTaskId);
 
 			if(resultString.equals("添加成功！")) {
 				renderJson(ResultUtil.succeed());
@@ -254,4 +255,24 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(taskService.setPriority(id, priority)));
 	}
 
+	
+	public void setWindowRobots(Integer windowId, String robots) {
+		if (windowId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		if (robots == null) {
+			robots = "";
+		}
+		String result  = taskService.setWindowRobots(windowId, robots);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	public void getWindowRobots(Integer windowId) {
+		if (windowId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		List<RobotBO> result  = taskService.getWindowRobots(windowId);
+		renderJson(ResultUtil.succeed(result));
+	}
 }

@@ -27,6 +27,7 @@ import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
 import com.jimi.uw_server.agv.thread.TaskPool;
+import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;

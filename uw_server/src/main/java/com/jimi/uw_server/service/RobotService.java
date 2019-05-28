@@ -20,6 +20,7 @@ import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.Material;
@@ -109,12 +110,17 @@ public class RobotService extends SelectService {
 	public String back(Integer id, String materialOutputRecords, Boolean isLater, Integer state, User user) throws Exception {
 		String resultString = "已成功发送回库指令！";
 		Boolean cutFlag = false;
-		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
+		PackingListItem packingListItem = PackingListItem.dao.findById(id);
+		if (packingListItem == null) {
+			throw new OperationException("无此任务条目，回库失败");
+		}
+		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 			if (item.getId().intValue() == id) {
 				synchronized(Lock.REDIS_LOCK) {
 					if (item.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
+						Task task = Task.dao.findById(item.getTaskId());
 						// 若是出库任务且为截料后重新入库，则需要判断是否对已截过料的料盘重新扫码过
-						if (item.getIsForceFinish() && Task.dao.findById(item.getTaskId()).getType() == TaskType.OUT && materialOutputRecords == null) {
+						if (item.getIsForceFinish() && task.getType() == TaskType.OUT && materialOutputRecords == null) {
 							cutFlag = true;
 							resultString = taskService.isScanAgain(item.getId());
 							if (resultString.equals("请扫描修改出库数时所打印出的新料盘二维码!")) {
@@ -128,7 +134,7 @@ public class RobotService extends SelectService {
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 						materialBox.setStatus(state);
-						Task task = Task.dao.findById(item.getTaskId());
+						
 						if (task.getType().equals(TaskType.OUT)) {
 							materialBox.setUpdateTime(new Date());
 						}
@@ -189,14 +195,18 @@ public class RobotService extends SelectService {
 									Integer quantity = Integer.parseInt(jsonObject.getString("quantity"));
 									acturallyNum += quantity;
 								}
-								PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
 								ExternalWhLog externalWhLog = new ExternalWhLog();
 								externalWhLog.setMaterialTypeId(packingListItem.getMaterialTypeId());
 								externalWhLog.setDestination(UW_ID);
 								externalWhLog.setSourceWh(task.getDestination());
 								externalWhLog.setTaskId(task.getId());
 								externalWhLog.setQuantity(acturallyNum);
-								externalWhLog.setTime(new Date());
+								if (task.getIsInventoryApply()) {
+									Task inventoryTask = Task.dao.findById(task.getInventoryTaskId());
+									externalWhLog.setTime(inventoryTask.getCreateTime());
+								}else {
+									externalWhLog.setTime(new Date());
+								}
 								externalWhLog.setOperatior(user.getUid());
 								externalWhLog.save();
 									
@@ -234,8 +244,8 @@ public class RobotService extends SelectService {
 	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目；否则返回null
 	 */
 	public AGVIOTaskItem getSameBoxItem(AGVIOTaskItem item) {
-		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems()) {
-			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getTaskId().intValue() == item.getTaskId().intValue() && item1.getState().intValue() == IOTaskItemState.WAIT_ASSIGN) {
+		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems(item.getTaskId())) {
+			if (item1.getBoxId().intValue() == item.getBoxId().intValue()  && item1.getState().intValue() == IOTaskItemState.WAIT_ASSIGN) {
 				return item1;
 			}
 		}
@@ -247,7 +257,7 @@ public class RobotService extends SelectService {
 	 * 物料入库/截料后重新入库扫料盘，用于呼叫叉车
 	 */
 	public String call(Integer id, String no, String supplierName) throws Exception {
-		synchronized(CALL_LOCK) {
+		synchronized(Lock.REDIS_LOCK) {
 			String resultString = "调用成功！";
 
 			// 只在有选择仓口时才读取仓口和任务信息，避免出现NPE异常
@@ -256,6 +266,10 @@ public class RobotService extends SelectService {
 				Integer taskId = window.getBindTaskId();
 				// 通过任务条目id获取套料单记录
 				PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKING_LIST_ITEM_SQL, taskId);
+				if(packingListItem == null) {
+					resultString = "该物料暂时不需要入库或截料！";
+					return resultString;
+				}
 				// 通过套料单记录获取物料类型id
 				MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
 				if(materialType == null) {
@@ -281,7 +295,7 @@ public class RobotService extends SelectService {
 				}
 				// 若是扫描到属于当前仓口任务的料盘二维码，则逐条读取任务队列中的任务条目
 				else {
-					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
+					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 						// 若扫描的料号对应的任务条目与任务队列读取到的数据匹配
 						if (item.getId().intValue() == redisTaskItem.getId().intValue()) {
 							// 若任务条目已完成，则提示不要重复执行已完成任务条目

@@ -5,6 +5,7 @@ import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
+import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.entity.cmd.AGVLoadExceptionCmd;
 import com.jimi.uw_server.agv.entity.cmd.AgvDelMissionExceptionCmd;
 import com.jimi.uw_server.constant.BuildTaskItemState;
@@ -24,7 +25,7 @@ public class ExceptionHandler {
 		String groupid = loadExceptionCmd.getMissiongroupid();
 		// missiongroupid 包含“:”表示为出入库任务
 		if (groupid.contains(":")) {
-			for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
+			for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
 				if(item.getGroupId().equals(groupid)) {
 					//把指定叉车的取空异常置为真
 					RobotInfoRedisDAO.setloadException(item.getRobotId());
@@ -32,8 +33,8 @@ public class ExceptionHandler {
 					break;
 				}
 			}
-		} else {	// missiongroupid 不包含“:”表示为建仓任务
-			for(AGVBuildTaskItem item1 : TaskItemRedisDAO.getBuildTaskItems()) {
+		} else if (groupid.contains("@")) {	// missiongroupid 包含“@”表示为盘点任务
+			for(AGVInventoryTaskItem item1 : TaskItemRedisDAO.getInventoryTaskItems()) {
 				if(item1.getGroupId().equals(groupid)) {
 					//把指定叉车的取空异常置为真
 					RobotInfoRedisDAO.setloadException(item1.getRobotId());
@@ -41,7 +42,17 @@ public class ExceptionHandler {
 					break;
 				}
 			}
+		}else {	// missiongroupid 不包含“:”表示为建仓任务
+			for(AGVBuildTaskItem item2 : TaskItemRedisDAO.getBuildTaskItems()) {
+				if(item2.getGroupId().equals(groupid)) {
+					//把指定叉车的取空异常置为真
+					RobotInfoRedisDAO.setloadException(item2.getRobotId());
+
+					break;
+				}
+			}
 		}
+		
 
 	}
 	
@@ -52,26 +63,35 @@ public class ExceptionHandler {
 		String groupid = delMissionExceptionCmd.getMissiongroupid();
 		// missiongroupid 包含“:”表示为出入库任务
 		if (groupid.contains(":")) {
-			for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems()) {
+			for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
 				if(item.getGroupId().equals(groupid) && item.getState().intValue() > IOTaskItemState.WAIT_ASSIGN) {
 					// 清除掉对应的出入库任务条目
-					TaskItemRedisDAO.removeTaskItemByPackingListId(item.getId().intValue());
+					TaskItemRedisDAO.removeTaskItemByPackingListId(Integer.valueOf(groupid.split(":")[1]), item.getId().intValue());
 						
 					break;
 				}
 			}
 			IOHandler.clearTil(groupid);
-		} else {	// missiongroupid 不包含“:”表示为建仓任务
-			for(AGVBuildTaskItem item1 : TaskItemRedisDAO.getBuildTaskItems()) {
-				if(item1.getGroupId().equals(groupid) && item1.getState() > BuildTaskItemState.WAIT_MOVE) {
+		}  else if (groupid.contains("@")) {	// missiongroupid 包含“@”表示为盘点任务
+			for(AGVInventoryTaskItem item1 : TaskItemRedisDAO.getInventoryTaskItems()) {
+				if(item1.getGroupId().equals(groupid)) {
+					TaskItemRedisDAO.removeInventoryTaskItemById(item1.getTaskId(), item1.getBoxId());
+					break;
+				}
+			}
+			IOHandler.clearInventoryTask(Integer.valueOf(groupid.split("@")[0]));
+		}else {	// missiongroupid 不包含“:”表示为建仓任务
+			for(AGVBuildTaskItem item2 : TaskItemRedisDAO.getBuildTaskItems()) {
+				if(item2.getGroupId().equals(groupid) && item2.getState() > BuildTaskItemState.WAIT_MOVE) {
 					// 清除掉对应的建仓任务条目
-					TaskItemRedisDAO.removeBuildTaskItemByBoxId(item1.getBoxId().intValue());
+					TaskItemRedisDAO.removeBuildTaskItemByBoxId(item2.getBoxId().intValue());
 
 					break;
 				}
-				BuildHandler.clearTil(item1.getSrcPosition());
+				BuildHandler.clearTil(item2.getSrcPosition());
 			}
 		}
+		
 
 	}
 

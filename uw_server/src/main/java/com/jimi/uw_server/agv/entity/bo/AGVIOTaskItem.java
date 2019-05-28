@@ -40,7 +40,8 @@ public class AGVIOTaskItem implements Serializable {
 	 */
 	private Integer priority;
 
-
+	private Boolean isCut;
+	
 	public AGVIOTaskItem() {}
 
 	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
@@ -53,6 +54,7 @@ public class AGVIOTaskItem implements Serializable {
 		this.boxId = 0;
 		this.isForceFinish = false;
 		this.priority = priority;
+		this.isCut = false;
 	}
 
 	public Integer getRobotId() {
@@ -131,5 +133,14 @@ public class AGVIOTaskItem implements Serializable {
 		return boxId + ":" + taskId;
 	}
 
+	public Boolean getIsCut() {
+		return isCut;
+	}
+
+	public void setIsCut(Boolean isCut) {
+		this.isCut = isCut;
+	}
+
+	
 
 }

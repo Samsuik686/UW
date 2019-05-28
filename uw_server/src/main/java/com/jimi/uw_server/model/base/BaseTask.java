@@ -63,6 +63,51 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 		return getInt("priority");
 	}
 
+	public M setStartTime(java.util.Date startTime) {
+		set("start_time", startTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getStartTime() {
+		return get("start_time");
+	}
+
+	public M setEndTime(java.util.Date endTime) {
+		set("end_time", endTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getEndTime() {
+		return get("end_time");
+	}
+
+	public M setCheckedOperatior(java.lang.String checkedOperatior) {
+		set("checked_operatior", checkedOperatior);
+		return (M)this;
+	}
+	
+	public java.lang.String getCheckedOperatior() {
+		return getStr("checked_operatior");
+	}
+
+	public M setCheckedTime(java.util.Date checkedTime) {
+		set("checked_time", checkedTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getCheckedTime() {
+		return get("checked_time");
+	}
+
+	public M setChecked(java.lang.Boolean checked) {
+		set("checked", checked);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getChecked() {
+		return get("checked");
+	}
+
 	public M setCreateTime(java.util.Date createTime) {
 		set("create_time", createTime);
 		return (M)this;
@@ -88,6 +133,24 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 	
 	public java.lang.Integer getDestination() {
 		return getInt("destination");
+	}
+
+	public M setIsInventoryApply(java.lang.Boolean isInventoryApply) {
+		set("is_inventory_apply", isInventoryApply);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getIsInventoryApply() {
+		return get("is_inventory_apply");
+	}
+
+	public M setInventoryTaskId(java.lang.Integer inventoryTaskId) {
+		set("inventory_task_id", inventoryTaskId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getInventoryTaskId() {
+		return getInt("inventory_task_id");
 	}
 
 }
