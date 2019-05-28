@@ -32,9 +32,12 @@
         </div>
         <span>出入库</span>
       </div>
-      <!--<div class="icon-container">-->
-      <!--<div class="setting-icon"></div>-->
-      <!--</div>-->
+      <div class="icon-container" :class="activeItem === 'check' ? 'icon-active' : ''" @click="initData('check')">
+        <div class="setting-icon">
+          <icon name="check-material" scale="1.8" style="color: #fff;"></icon>
+        </div>
+        <span>盘点</span>
+      </div>
       <div class="mt-auto w-100">
         <div class="icon-container " :class="activeItem === 'config' ? 'icon-active' : ''"
              @click="initData('config')">
@@ -83,20 +86,14 @@
         activeItem: 'material' //活动项目
       }
     },
-    watch: {
-      // $route: function (val) {
-      //   console.log(val.path)
-      //   //this.activeItem = val.path
-      // }
-    },
     mounted() {
       if (this.$route.path !== '/') {
         let tempPath = this.$route.path.slice(1);
         let index = tempPath.indexOf('/');
         if (index > -1) {
-          this.activeItem = tempPath.slice(0, tempPath.indexOf('/'))
+          this.activeItem = tempPath.slice(0, tempPath.indexOf('/'));
         } else {
-          this.activeItem = tempPath
+          this.activeItem = tempPath;
         }
       }
     },
@@ -118,7 +115,6 @@
       },
       /*路由导航*/
       linkTo: function (val) {
-        //this.setTableRouter('default');
         this.setLoading(true);
         this.$router.push({
           path: '/' + val,
@@ -135,7 +131,7 @@
             localStorage.removeItem('token');
             window.location.href = window.g.SYSTEM_PATH + '/#/login'
           } else {
-            errHandler(res.data.result)
+            errHandler(res.data);
           }
         }).catch(err => {
           console.log(JSON.stringify(err));

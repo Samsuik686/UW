@@ -2,23 +2,18 @@
 <template>
   <div>
     <page-header/>
-
     <div class="login-container container justify-content-center" :style="{height: pageHeight + 'px'}">
       <div class="login-panel align-self-center col col-sm-10 col-md-5">
         <form @submit.prevent="loginSubmit">
           <div class="form-group mb-4 mt-4">
             <label for="login-username">用户名</label>
-            <input type="text" id="login-username" class="form-control" placeholder="用户名" v-model="loginInfos.uid" autocomplete="off">
+            <input type="text" id="login-username" class="form-control" placeholder="用户名" v-model="loginInfo.uid" autocomplete="off">
           </div>
           <div class="form-group mb-2">
             <label for="login-password">密 码</label>
             <input type="password" id="login-password" class="form-control" placeholder="密码"
-                   v-model="loginInfos.password" autocomplete="off">
+                   v-model="loginInfo.password" autocomplete="off">
           </div>
-          <!--<div class="form-check mb-2">-->
-          <!--<input type="checkbox" class="form-check-input" id="login-check" v-model="loginInfos.checked">-->
-          <!--<label class="form-check-label" for="login-check">干点啥</label>-->
-          <!--</div>-->
           <div class="form-group mb-4 justify-content-center">
             <input type="submit" class="btn btn-primary" value="登录" style="width: 100%">
           </div>
@@ -44,11 +39,9 @@
       return {
         pageHeight: 0,
         isPending: false,
-        loginInfos: {
+        loginInfo: {
           "uid": "",
-          "password": "",
-          //"#TOKEN#": ""
-          //checked: false
+          "password": ""
         },
         token: ''
       }
@@ -75,7 +68,7 @@
           this.isPending = true;
           let options = {
             url: loginUrl,
-            data: this.loginInfos
+            data: this.loginInfo
           };
           axiosPost(options).then(res => {
             this.isPending = false;

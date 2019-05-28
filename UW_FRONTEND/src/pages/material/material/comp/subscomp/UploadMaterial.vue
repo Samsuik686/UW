@@ -79,6 +79,7 @@
           } else {
             this.$alertWarning("内容不可为空");
             this.isPending = false;
+            this.setLoading(false);
             return;
           }
           formData.append('#TOKEN#', store.state.token);
@@ -105,6 +106,10 @@
               this.setLoading(false);
               errHandler(res.data)
             }
+          }).catch(err => {
+            this.isPending = false;
+            this.setLoading(false);
+            console.log(err);
           })
         }
       }

@@ -60,7 +60,7 @@
           {field: 'taskType', title: '类型', colStyle: {'width': '70px'}},
           {field: 'planQuantity', title: '计划数量', colStyle: {'width': '90px'}},
           {field: 'actualQuantity', title: '实际数量', colStyle: {'width': '90px'}},
-          {field: 'superIssuedQuantity', title: '超发数量', colStyle: {'width': '90px'}},
+          //{field: 'superIssuedQuantity', title: '超发数量', colStyle: {'width': '90px'}},
           {field: 'operator', title: '操作员', colStyle: {'width': '90px'}},
           {field: 'ioTime', title: '出入库时间', colStyle: {'width': '130px'}},
         ],
@@ -180,7 +180,7 @@
               this.destination = this.destinations[0].id + '';
               this.getMaterialRecords();
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {

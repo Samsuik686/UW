@@ -41,7 +41,7 @@
 <script>
   import EditBox from './EditBox'
   import eventBus from '@/utils/eventBus'
-  import {mapActions, mapGetters} from 'vuex'
+  import {mapActions} from 'vuex'
   import {deleteBoxUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
@@ -64,9 +64,6 @@
       eventBus.$on('closeEditPanel', () => {
         this.isEditing = false;
       })
-    },
-    computed: {
-      //...mapGetters['isDetailsActive']
     },
     methods: {
       ...mapActions(['setDetailsActiveState', 'setDetailsData', 'setLoading']),
@@ -99,7 +96,7 @@
             if (response.data.result === 200) {
               this.$alertSuccess('删除成功');
               this.isDeleting = false;
-              let tempUrl = this.$route.path;
+              let tempUrl = this.$route.fullPath;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result === 412) {

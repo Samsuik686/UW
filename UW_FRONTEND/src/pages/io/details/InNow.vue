@@ -21,7 +21,7 @@
     </div>
     <div class="io-now mt-1 mb-3" v-else>
       <div class="row m-3 align-content-start">
-        <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2 ">
+        <div class="card bg-light col-8 mr-2">
           <div class="card-body row">
             <div class="col pl-0">
               <span class="col-form-label">任务: </span>
@@ -68,7 +68,7 @@
             </div>
           </div>
         </div>
-        <div class="card bg-light col-12 col-lg-5 col-xl-3 m-2">
+        <div class="card bg-light col-3">
           <div class="border-light row ml-auto mr-auto mt-4">
             <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
           </div>
@@ -80,7 +80,7 @@
         </div>
       </div>
       <div class="row m-3">
-        <div class="card bg-light col-12 col-xl-9 ml-2">
+        <div class="card bg-light col-11">
           <div class="row card-body mb-0 pb-1">
             <div class="col">
               <span class="text-center col-form-label">料盘: </span>
@@ -241,15 +241,17 @@
         patchAutoFinishStack: 0,
         deleteMaterialId: "",
         state:1,
-        stateText:'料盒已满',
-        isCleared:false,
-        nowTaskId:''
+        stateText:'料盒已满'
       }
     },
     mounted() {
       this.initData();
       this.setFocus();
-      this.fetchData(this.currentWindowId);
+      if (this.currentWindowId !== '') {
+        this.fetchData(this.currentWindowId)
+      } else {
+        this.initData();
+      }
       if (this.$route.path === '/io/innow') {
         this.setCurrentOprType('1');
       } else if (this.$route.path === '/io/return') {
@@ -262,9 +264,6 @@
           this.initData();
         }
       }, 1000));
-      eventBus.$on('setIsClear',(item) => {
-        this.isCleared = item;
-      })
     },
     watch: {
       state:function(val){
@@ -273,12 +272,7 @@
         }else{
           this.stateText = "料盒已满"
         }
-      },
-      /*nowTaskId:function(val){
-        if(val !== ''){
-          this.isCleared = false;
-        }
-      }*/
+      }
     },
     computed: {
       ...mapGetters([
@@ -295,7 +289,6 @@
         this.tipsMessage = '无数据';
         this.tipsComponentMsg = '';
         this.isTipsShow = false;
-
       },
 
       fetchData: function (id) {
@@ -309,7 +302,6 @@
           if (response.data.result === 200) {
             if (response.data.data) {
               this.taskNowItems = response.data.data;
-              //this.nowTaskId = this.taskNowItems.id;
               this.tipsMessage = ""
             } else {
               this.taskNowItems = {};
@@ -318,9 +310,12 @@
           } else if (response.data.result === 412) {
             this.taskNowItems = {};
             this.tipsMessage = response.data.data
+          }else{
+            errHandler(response.data);
           }
+        }).catch(err => {
+          console.log(err);
         })
-
       },
       /*设置输入框焦点*/
       setFocus: function () {
@@ -374,8 +369,7 @@
                 materialId: tempArray[2],
                 quantity: tempArray[1],
                 productionTime: tempArray[7],
-                supplierName:tempArray[4],
-                isCleared:this.isCleared
+                supplierName:tempArray[4]
               }
             };
             axiosPost(options).then(response => {
@@ -397,7 +391,6 @@
               }
             })
           }
-
         }
       },
 
@@ -409,14 +402,13 @@
             data: {
               id: this.taskNowItems.id,
               state:this.state,
+              materialOutputRecords:JSON.stringify(this.taskNowItems.details),
               isLater:isLater
             }
           };
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
               this.isTipsShow = true;
-              this.isCleared = false;
-              eventBus.$emit('setClearFalse',true);
               this.tipsComponentMsg = true;
               setTimeout(() => {
                 this.isTipsShow = false;
@@ -431,6 +423,9 @@
             }
             this.isPending = false;
             this.state = 1;
+          }).catch(err => {
+            console.log(err);
+            this.isPending = false;
           })
         }
       },
@@ -468,13 +463,15 @@
             }
           };
           axiosPost(options).then(response => {
+            this.isPending = false;
             if (response.data.result === 200) {
-              this.isPending = false;
               callback();
             } else {
               errHandler(response.data)
             }
+          }).catch(err => {
             this.isPending = false;
+            console.log(err);
           })
         }
 
@@ -496,13 +493,17 @@
             }
           };
           axiosPost(options).then(response => {
+            this.isPending = false;
             this.isDeleting = false;
             if (response.data.result === 200) {
               this.$alertSuccess("删除成功");
+              this.fetchData(this.currentWindowId);
             } else {
               errHandler(response.data);
             }
+          }).catch(err => {
             this.isPending = false;
+            console.log(err);
           })
         }
       },

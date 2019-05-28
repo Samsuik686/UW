@@ -17,15 +17,7 @@
       >页
     </div>
     <entity-details v-if="isTaskDetailsActive"/>
-    <!--<div class="row">-->
-    <!--<div class="form-group col pr-3">-->
-    <!--<label :for="opt.id" class="col-form-label">{{opt.name}}：</label>-->
-    <!--<select :id="opt.id" v-model="opt.model" class="custom-select">-->
-    <!--<option value="" disabled>请选择</option>-->
-    <!--<option :value="item.value"  v-for="item in opt.list">{{item.string}}</option>-->
-    <!--</select>-->
-    <!--</div>-->
-    <!--</div>-->
+    <entity-details2 v-if="isTaskDetailsActive2"/>
   </div>
 </template>
 
@@ -36,12 +28,13 @@
   import {errHandler} from "../../../../utils/errorHandler";
   import OperationOptions from "./subscomp/OperationOptions";
   import EntityDetails from './EntityDetails'
-
+  import EntityDetails2 from './EntityDetails2'
   export default {
     name: "Details",
     components: {
       OperationOptions,
-      EntityDetails
+      EntityDetails,
+      EntityDetails2
     },
     data() {
       return {
@@ -55,7 +48,6 @@
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80, 100],
         data: [],
-        //srcData: [],
         columns: [],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -79,7 +71,8 @@
     },
     computed: {
       ...mapGetters([
-        'isTaskDetailsActive'
+        'isTaskDetailsActive',
+        'isTaskDetailsActive2'
       ]),
 
     },
@@ -129,11 +122,10 @@
           {field: 'type', title: '类型', visible: false},
           {field: 'typeString', title: '类型', colStyle: {'width': '80px'}},
           {field: 'supplierName', title: '供应商', colStyle: {'width': '100px'}},
-          {field: 'priority', title: '优先级', colStyle: {'width': '60px'}},
+          {field: 'priority', title: '优先级', colStyle: {'width': '50px'}},
           {field: 'fileName', title: '文件名', colStyle: {'width': '120px'}},
-          {field: 'createTimeString', title: '创建时间', colStyle: {'width': '70px'}},
-          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}
-
+          {field: 'createTimeString', title: '创建时间', colStyle: {'width': '100px'}},
+          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '70px'}}
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
@@ -145,7 +137,12 @@
             this.setLoading(false);
             this.isPending = false;
             if (response.data.result === 200) {
-              this.data = response.data.data.list;
+              let data = response.data.data.list;
+              data.map((item) => {
+                if(item.type !== 2){
+                  this.data.push(item);
+                }
+              });
               this.data.map((item, index) => {
                 item.showId = index + 1 + this.query.offset;
               });

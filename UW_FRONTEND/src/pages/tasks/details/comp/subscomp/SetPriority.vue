@@ -74,11 +74,11 @@
               if (res.data.result === 200) {
                 this.$alertSuccess('设置成功');
                 this.closeEditPanel();
-                let tempUrl = this.$route.path;
+                let tempUrl = this.$route.fullPath;
                 this.$router.push('/_empty');
                 this.$router.replace(tempUrl)
               } else {
-                errHandler(res.data.result)
+                errHandler(res.data)
               }
             }).catch(err => {
               if (JSON.stringify(err) !== '{}'){

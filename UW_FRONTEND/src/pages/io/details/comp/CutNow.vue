@@ -26,7 +26,7 @@
           </div>
           <div v-else>
             <div class="row m-3 align-content-start">
-              <div class="card bg-light col-12 col-lg-6 col-xl-7 m-2">
+              <div class="card bg-light col-8 mr-2">
                 <div class="card-body row">
                   <div class="col pl-0">
                     <span class="col-form-label">任务: </span>
@@ -73,7 +73,7 @@
                   </div>
                 </div>
               </div>
-              <div class="card bg-light col-12 col-lg-5 col-xl-4 m-2">
+              <div class="card bg-light col-3">
                 <div class="border-light row ml-auto mr-auto mt-4">
                   <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
                 </div>
@@ -85,7 +85,7 @@
               </div>
             </div>
             <div class="row m-3">
-              <div class="card bg-light col-12 col-xl-11 ml-2">
+              <div class="card bg-light col-11">
                 <div class="row card-body mb-0 pb-1">
                   <div class="col">
                     <span class="text-center col-form-label">料盘: </span>
@@ -154,7 +154,8 @@
     props: {
       item: Object,
       currentWindowId: Number,
-      messageTip: String
+      messageTip: String,
+      isForceFinish:Boolean
     },
     data() {
       return {
@@ -174,6 +175,11 @@
           this.stateText = '料盒未满'
         }else{
           this.stateText = "料盒已满"
+        }
+      },
+      isForceFinish:function(val){
+        if(val === false){
+          this.closePanel();
         }
       }
     },
@@ -275,11 +281,9 @@
             }
             this.isPending = false;
           }).catch(err => {
-            if (JSON.stringify(err) !== '{}') {
-              this.$alertDanger(JSON.stringify(err));
+              this.$alertDanger(err);
               this.failAudioPlay();
               this.isPending = false;
-            }
           })
         }
       },
@@ -303,11 +307,9 @@
             this.isPending = false;
             this.state = 1;
           }).catch(err => {
-            if (JSON.stringify(err) !== '{}') {
-              this.$alertDanger(JSON.stringify(err));
+              this.$alertDanger(err);
               this.isPending = false;
               this.state = 1;
-            }
           })
         }
       },
@@ -357,9 +359,7 @@
             this.$alertDanger(response.data.msg);
           }
         }).catch(err => {
-          if (JSON.stringify(err) !== '{}') {
-            this.$alertDanger(JSON.stringify(err))
-          }
+            this.$alertDanger(err);
         })
       },
       changeState:function () {

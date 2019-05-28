@@ -131,7 +131,7 @@
               // },
               {
                 value: '4',
-                string: '退料'
+                string: '调拨入库'
               }
             ]
           },
@@ -163,11 +163,11 @@
     },
     computed: {},
     watch: {
-      $route: function (route) {
+      /*$route: function (route) {
         if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
           this.initForm();
         }
-      },
+      },*/
     },
     methods: {
       ...mapActions(['setLoading']),
@@ -225,7 +225,7 @@
               // },
               {
                 id: '4',
-                name: '退料'
+                name: '调拨入库'
               }
             ]
           },
@@ -293,7 +293,6 @@
               } else {
                 this.$alertWarning('日期格式错误');
                 this.setLoading(false);
-                return
               }
             }
           }
@@ -341,10 +340,9 @@
                   this.suppliers.push(item);
                 }
               });
-              console.log(this.suppliers,this.queryOptions);
               this.queryOptions[4].list = this.suppliers;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data);
             }
           })
             .catch(err => {

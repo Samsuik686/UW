@@ -12,36 +12,21 @@ export const logsRouterApi = (state) => {
 export const isLoading = (state) => {
   return state.isLoading;
 };
-
-export const isMaterialAdding = (state) => {
-  return state.isMaterialAdding
-};
-export const isMaterialEditing = (state) => {
-  return state.isMaterialEditing
-};
 export const editData = (state) => {
   return state.editData
-};
-export const copyData = (state) => {
-  return state.copyData
 };
 export const isDetailsActive = (state) => {
   return state.isDetailsActive
 };
-export const materialDetails = (state) => {
-  return state.materialDetails
-};
 export const isTaskDetailsActive = (state) => {
   return state.isTaskDetailsActive
 };
-export const taskDetails = (state) => {
-  return state.taskDetails
+export const isTaskDetailsActive2 = (state) => {
+  return state.isTaskDetailsActive2
 };
-
 export const userTypeList = (state) => {
   return state.userTypeList
 };
-
 export const currentWindowId = (state) => {
   return state.currentWindowId
 };
@@ -53,4 +38,22 @@ export const configData = (state) => {
 };
 export const editMaterialOutRecords = (state) => {
   return state.editMaterialOutRecords;
+};
+export  const checkWindowId = (state) => {
+  return state.checkWindowId;
+};
+export const checkWindowData = (state) => {
+  return state.checkWindowData;
+};
+export  const checkOperationData = (state) => {
+  return state.checkOperationData;
+};
+export const isRefresh = (state) => {
+  return state.isRefresh;
+};
+export const isScanner = (state) => {
+  return state.isScanner;
+};
+export const unInventoryData = (state) => {
+  return state.unInventoryData;
 };

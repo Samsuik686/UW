@@ -31,9 +31,6 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
-  import {axiosPost} from "../../../../utils/fetchData";
-  import {errHandler} from "../../../../utils/errorHandler";
-  import {taskUpdateOutQuantityUrl} from "../../../../config/globalUrl";
 
   export default {
     name: "EditMaterialId",

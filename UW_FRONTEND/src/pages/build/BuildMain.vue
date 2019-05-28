@@ -136,7 +136,7 @@
             this.isPending = false;
             if (response.data.result === 200) {
               let data = response.data.data.list;
-              data.map((item, index) => {
+              data.map((item) => {
                 if (item.enabled === true) {
                   this.suppliers.push(item);
                 }
@@ -186,7 +186,6 @@
             } else {
               errHandler(response.data)
             }
-            this.isPending = false;
           }).catch(err => {
             if (JSON.stringify(err) !== '{}') {
               this.isPending = false;

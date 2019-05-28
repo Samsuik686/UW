@@ -15,7 +15,6 @@
               <label for="user-des" class="col-form-label">用户描述:</label>
               <input type="text" id="user-des" class="form-control" v-model="userData.name" autocomplete="off">
             </div>
-
             <div class="form-row col-6 pl-2 pr-2">
               <label for="user-pwd" class="col-form-label">密码:</label>
               <input type="password" id="user-pwd" class="form-control" v-model="userData.password" autocomplete="off">
@@ -79,9 +78,6 @@
       ...mapGetters(['userTypeList'])
     },
     methods: {
-      init: function () {
-
-      },
       editUser: function (val) {
         this.isEditing = true;
         this.userData.uid = val.uid;
@@ -95,7 +91,7 @@
         if (!this.isPending) {
           this.isPending = true;
           for (let i in this.userData) {
-            this.userData[i] = _.trim(this.userData[i])
+            this.userData[i] = _.trim(this.userData[i]);
           }
           this.tempPwd = _.trim(this.tempPwd);
           let options = {
@@ -112,7 +108,7 @@
               this.isEditing = false;
               let tempUrl = this.$route.path;
               this.$router.push('/_empty');
-              this.$router.replace(tempUrl)
+              this.$router.replace(tempUrl);
             } else {
               errHandler(response.data)
             }

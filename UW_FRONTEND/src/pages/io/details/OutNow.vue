@@ -22,7 +22,7 @@
     <div v-else>
       <div class="io-now mt-1 mb-3" v-if="!taskNowItems.isForceFinish">
         <div class="row m-3 align-content-start">
-          <div class="card bg-light col-12 col-lg-6 col-xl-4 m-2">
+          <div class="card bg-light col-8 mr-2">
             <div class="card-body row">
               <div class="col pl-0">
                 <span class="col-form-label">任务: </span>
@@ -68,8 +68,18 @@
                   actualQuantity)}}</p>
               </div>
             </div>
+            <div class="card-body row">
+              <div class="col pl-0">
+                <span class="col-form-label">目的仓口库存: </span>
+                <p class="card-text form-control">{{taskNowItems.storeQuantity}}</p>
+              </div>
+              <div class="col pl-0">
+                <span class="col-form-label">料盘数: </span>
+                <p class="card-text form-control">{{taskNowItems.reelNum}}</p>
+              </div>
+            </div>
           </div>
-          <div class="card bg-light col-12 col-lg-5 col-xl-3 m-2">
+          <div class="card bg-light col-3">
             <div class="border-light row ml-auto mr-auto mt-4">
               <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
             </div>
@@ -81,7 +91,7 @@
           </div>
         </div>
         <div class="row m-3">
-          <div class="card bg-light col-12 col-xl-9 ml-2">
+          <div class="card bg-light col-11">
             <div class="row card-body mb-0 pb-1">
               <div class="col">
                 <span class="text-center col-form-label">料盘: </span>
@@ -145,7 +155,7 @@
         <div class="form-row justify-content-around">
           <button class="btn btn-secondary col mr-1 text-white" @click="isMentions = false">取消</button>
           <button class="btn btn-delay col ml-1 text-white" @click="delay" :disabled="isHide"
-                  v-if="taskNowItems.planQuantity - actualQuantity > 0">稍候再见
+                  v-if="taskNowItems.planQuantity - actualQuantity >= 0">稍候再见
           </button>
           <button class="btn btn-primary col ml-1 text-white" @click="submit">确认完成</button>
         </div>
@@ -175,7 +185,7 @@
         </div>
       </div>
     </div>
-    <cut-now v-if="isCutting" :item="taskNowItems" :currentWindowId="currentWindowId"
+    <cut-now v-if="isCutting" :item="taskNowItems" :currentWindowId="currentWindowId" :isForceFinish="taskNowItems.isForceFinish"
              :messageTip="tipsMessage"></cut-now>
   </div>
 </template>
@@ -208,7 +218,6 @@
       EditMaterialId
     },
     data() {
-
       return {
         /* --item sample--
         {
@@ -288,29 +297,22 @@
       });
       this.initData();
       this.setFocus();
-      if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== '' && this.taskNowItems.type === "出库"){
-        this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
-        this.countActualQuantity();
-      }else{
-        this.materialOutRecords = [];
-      }
+      this.handleEditData();
       this.fetchData(this.currentWindowId);
       this.setCurrentOprType('2');
       window.g.PARKING_ITEMS_INTERVAL_OUT.push(setInterval(() => {
         if (this.currentWindowId !== '') {
-          this.fetchData(this.currentWindowId)
+          this.fetchData(this.currentWindowId);
+          this.handleEditData();
         } else {
           this.initData();
         }
       }, 1000));
     },
     watch: {
-      currentWindowId:function () {
-        if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== '' && this.taskNowItems.type === "出库"){
-          this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
-          this.countActualQuantity();
-        }else{
-          this.materialOutRecords = [];
+      currentWindowId:function (val) {
+        if(val !== ''){
+          this.handleEditData();
         }
       },
       state:function(val){
@@ -338,6 +340,7 @@
       },
       //获取任务详情
       fetchData: function (id) {
+        if(id === '')return;
         if (!this.isPending) {
           this.isPending = true;
           let options = {
@@ -347,6 +350,8 @@
             }
           };
           axiosPost(options).then(response => {
+            this.isPending = false;
+            if(response.data === undefined){return}
             if (response.data.result === 200) {
               if (response.data.data) {
                 this.taskNowItems = response.data.data;
@@ -363,7 +368,11 @@
             } else if (response.data.result === 412) {
               this.taskNowItems = {};
               this.tipsMessage = response.data.data
+            }else{
+              errHandler(response.data);
             }
+          }).catch(err => {
+            console.log(err);
             this.isPending = false;
           })
         }
@@ -377,7 +386,6 @@
       },
       //操作完毕
       checkOverQuantity: function () {
-        //console.log("OutCheckOverQuantity :",this.isPending,this.taskNowItems.planQuantity - this.actualQuantity !== 0);
         this.isHide = false;
         for(let i=0;i<this.materialOutRecords.length;i++){
           if(this.materialOutRecords[i].materialId === this.taskNowItems.details[i].materialId){
@@ -452,6 +460,8 @@
                   this.isTipsShow = false;
                 }, 3000)*/
               }
+            }).catch(err => {
+              console.log(err);
             })
           }
 
@@ -489,6 +499,9 @@
             }
             this.isPending = false;
             this.state = 1;
+          }).catch(err => {
+            console.log(err);
+            this.isPending = false;
           })
         }
       },
@@ -529,12 +542,14 @@
             }
           };
           axiosPost(options).then(response => {
+            this.isPending = false;
             if (response.data.result === 200) {
-              this.isPending = false;
               callback();
             } else {
               errHandler(response.data)
             }
+          }).catch(err => {
+            console.log(err);
             this.isPending = false;
           })
         }
@@ -586,9 +601,13 @@
                 }
               }
               this.setEditMaterials();
+              this.fetchData(this.currentWindowId);
             } else {
               errHandler(response.data);
             }
+            this.isPending = false;
+          }).catch(err => {
+            console.log(err);
             this.isPending = false;
           })
         }
@@ -681,6 +700,14 @@
           this.state = 1;
         }else{
           this.state = 0;
+        }
+      },
+      handleEditData:function(){
+        if(this.editMaterialOutRecords.hasOwnProperty(this.currentWindowId) && this.currentWindowId !== ''){
+          this.materialOutRecords = this.editMaterialOutRecords[this.currentWindowId];
+          this.countActualQuantity();
+        }else{
+          this.materialOutRecords = [];
         }
       }
     }

@@ -28,7 +28,6 @@
   import eventBus from '@/utils/eventBus'
   import AddSupplier from './subscomp/AddSupplier'
   import {mapActions} from 'vuex';
-  import {materialCountUrl} from "../../../../config/globalUrl";
   import _ from 'lodash'
 
   export default {
@@ -45,7 +44,6 @@
     },
     data() {
       return {
-        // pageSize: 2000,
         queryOptions: [
           {
             id: 'name',
@@ -66,11 +64,11 @@
       })
     },
     watch: {
-      $route: function (route) {
+      /*$route: function (route) {
         if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
           this.initForm();
         }
-      },
+      },*/
     },
     methods: {
       ...mapActions(['setLoading']),

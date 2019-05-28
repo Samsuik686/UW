@@ -10,7 +10,7 @@
   import TableDetails from './comp/TableDetails'
 
   export default {
-    name: "BoxTypeModule",
+    name: "TransferModule",
     components: {
       Options,
       TableDetails

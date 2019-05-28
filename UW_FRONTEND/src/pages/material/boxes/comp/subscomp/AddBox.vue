@@ -9,9 +9,6 @@
       <div class="form-row">
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-area" class="col-form-label">区域:</label>
-          <!--<input type="text" id="material-area" class="form-control" v-model="thisData.area"
-                 @input="validate('area', '^[0-9]*[1-9][0-9]*$', '请输入正整数区域号')"  autocomplete="off">
-          <span class="form-span col">{{warningMsg.areaMsg}}</span>-->
           <select id="material-area" v-model="thisData.area" class="custom-select">
             <option value="A" label="A"></option>
             <option value="B" label="B"></option>
@@ -39,12 +36,9 @@
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-isStandard" class="col-form-label">料盒类型:</label>
-          <!--<input type="text" id="material-cellWidth" class="form-control" v-model="thisData.cellWidth"
-                 @input="validate('cellWidth', '^[0-9]*[1-9][0-9]*$', '请输入正整数规格')"  autocomplete="off">
-          <span class="form-span col">{{warningMsg.cellWidthMsg}}</span>-->
           <select id="material-isStandard" v-model="isStandard" class="custom-select">
             <option value="1" label="标准"></option>
-            <option value="0" label="不标准"></option>
+            <option value="0" label="非标准"></option>
           </select>
           <span class="form-span col"></span>
         </div>
@@ -130,7 +124,7 @@
             if (response.data.result === 200) {
               this.$alertSuccess('添加成功');
               this.closeAddPanel();
-              let tempUrl = this.$route.path;
+              let tempUrl = this.$route.fullPath;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result >= 412 && response.data.result < 500) {
@@ -153,13 +147,13 @@
             this.isPending = false;
             if (response.data.result === 200) {
               let data = response.data.data.list;
-              data.map((item,index) => {
+              data.map((item) => {
                 if(item.enabled === true){
                   this.suppliers.push(item);
                 }
               })
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {

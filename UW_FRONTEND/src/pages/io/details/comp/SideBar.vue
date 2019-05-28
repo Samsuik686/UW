@@ -26,7 +26,7 @@
           </div>
           <div @click="toggleState('return')">
             <div class="sidebar-link" @click="linkTo('return')"
-                 :class="activeItem === 'return' ? 'active' : ''">退料任务操作</div>
+                 :class="activeItem === 'return' ? 'active' : ''">调拨入库任务操作</div>
           </div>
         </div>
       </div>

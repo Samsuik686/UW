@@ -16,9 +16,7 @@
 </template>
 
 <script>
-  import eventBus from '@/utils/eventBus'
-  import {mapGetters, mapActions} from 'vuex';
-  import {robotSelectUrl} from "../../../../config/globalUrl";
+  import {mapActions} from 'vuex';
   import _ from 'lodash'
 
   export default {

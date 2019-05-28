@@ -48,7 +48,7 @@
         queryOptions: [
           {
             id: 'name',
-            name: '发源目的地',
+            name: '发料目的地',
             model: '',
             type: 'text'
           },
@@ -65,11 +65,11 @@
       })
     },
     watch: {
-      $route: function (route) {
+      /*$route: function (route) {
         if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
           this.initForm();
         }
-      },
+      },*/
     },
     methods: {
       ...mapActions(['setLoading']),

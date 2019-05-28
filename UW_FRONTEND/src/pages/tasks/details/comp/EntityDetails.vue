@@ -20,15 +20,16 @@
   import {mapGetters, mapActions} from 'vuex';
   import store from '../../../../store'
   import {axiosPost} from "../../../../utils/fetchData";
-  import {taskCheckUrl} from "../../../../config/globalUrl";
+  import {taskGetIOTaskDetailsUrl} from "../../../../config/globalUrl";
   import {errHandler} from "../../../../utils/errorHandler";
   import {getTaskDetailsConfig} from "../../../../config/taskDetailsConfig";
   import SubsOperation from './subscomp/SubsOperationOption'
-
+  import ShowStatus from './subscomp/ShowStatus'
   export default {
     name: "EntityDetails",
     components: {
-      SubsOperation
+      SubsOperation,
+      ShowStatus
     },
     data() {
       return {
@@ -53,7 +54,7 @@
         this.columns = getTaskDetailsConfig('io')
       }
       let options = {
-        url: taskCheckUrl,
+        url: taskGetIOTaskDetailsUrl,
         data: {
           pageNo: 1,
           pageSize: 20,
@@ -81,7 +82,6 @@
       fetchData: function (options) {
         if (!this.isPending) {
           this.isPending = true;
-
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200 && response.data.data !== null) {
@@ -111,7 +111,7 @@
       dataFilter: function () {
         let val = store.state.taskDetails;
         let options = {
-          url: taskCheckUrl,
+          url: taskGetIOTaskDetailsUrl,
           data: {
             id: val.id,
             type: val.type
@@ -139,11 +139,11 @@
     top: 0;
     background: rgba(0, 0, 0, 0.1);
     z-index: 101;
+    overflow-y:auto;
   }
-
   .details-panel-container {
     background: #ffffff;
-    min-height: 300px;
+    min-height:300px;
     max-width: 90%;
     z-index: 102;
     border-radius: 10px;

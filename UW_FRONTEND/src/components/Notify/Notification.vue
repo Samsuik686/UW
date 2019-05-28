@@ -5,11 +5,6 @@
   >
     <div v-if="show" :class="[container,status, 'notify-me']" :style="{ width: width }">
       <slot name="content"></slot>
-      <!--<button v-if="close === 'bulma'" class="delete" @click="hideMe"></button>-->
-      <!--<button v-else-if="close === 'bootstrap'" type="button" class="close" aria-label="Close" @click="hideMe">-->
-      <!--<span aria-hidden="true">&times;</span>-->
-      <!--</button>-->
-      <!--<i v-else :class="close + ' material-icons'" @click="hideMe">clear</i>-->
     </div>
   </transition>
 </template>

@@ -94,13 +94,18 @@
             this.setLoading(false);
             this.isPending = false;
             if (response.data.result === 200) {
-              this.data = response.data.data.list;
+              let data = response.data.data.list;
+              data.map((item,index) => {
+                if(item.id !== -1 && item.id !== 0){
+                  this.data.push(item);
+                }
+              });
               this.data.map((item, index) => {
                 item.showId = index + 1 + this.query.offset;
               });
-              this.total = response.data.data.totalRow
+              this.total = this.data.length;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data);
             }
           })
             .catch(err => {

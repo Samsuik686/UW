@@ -7,10 +7,10 @@ import Main from '../pages/Main'
 import BuildMain from '../pages/build/BuildMain'
 import MaterialMain from '../pages/material/MaterialMain'
 import BoxesModule from '../pages/material/boxes/BoxesModule'
-import BoxTypeModule from '../pages/material/boxType/BoxTypeModule'
 import MaterialModule from '../pages/material/material/MaterialModule'
 import SupplierModule from '../pages/material/supplier/SupplierModule'
 import DestinationModule from '../pages/material/destination/DestinationModule'
+import TransferModule from '../pages/material/transfer/TransferModule'
 import LogsMain from '../pages/logs/LogsMain'
 import LogsModule from '../pages/logs/details/TableModule'
 import TasksMain from '../pages/tasks/TaskMain'
@@ -23,7 +23,10 @@ import OutNow from '../pages/io/details/OutNow'
 import InNow from '../pages/io/details/InNow'
 import IoPreview from '../pages/io/details/IoPreview'
 import CallRobot from '../pages/io/details/CallRobot'
-
+import CheckMain from '../pages/check/CheckMain'
+import DetailsModule from '../pages/check/details/DetailsModule'
+import TasksModule from '../pages/check/tasks/TasksModule'
+import OperationModule from '../pages/check/operation/OperationModule'
 
 Vue.use(Router);
 
@@ -64,8 +67,8 @@ const router = new Router({
               component:DestinationModule
             },
             {
-              path:'boxType',
-              component:BoxTypeModule
+              path:'transfer',
+              component:TransferModule
             }
           ]
         },
@@ -136,6 +139,25 @@ const router = new Router({
             {
               path:'call',
               component:CallRobot
+            }
+          ]
+        },
+        {
+          path:'check',
+          name:'CheckMain',
+          component:CheckMain,
+          children:[
+            {
+              path:'tasks',
+              component:TasksModule
+            },
+            {
+              path:'operation',
+              component:OperationModule
+            },
+            {
+              path:'details',
+              component:DetailsModule
             }
           ]
         }

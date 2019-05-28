@@ -1,5 +1,3 @@
-
-
 <template>
   <div class="notification-container">
     <notification v-for="(item,key) in list" :key="item.id"
@@ -49,7 +47,6 @@
         type: Number,
         default: 3000
       },
-      // central event bus
       eventBus: {
         default: null
       },

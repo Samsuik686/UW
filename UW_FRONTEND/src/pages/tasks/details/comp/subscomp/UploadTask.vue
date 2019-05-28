@@ -14,8 +14,8 @@
           <option value="1">出库</option>
           <!--<option value="2">盘点</option>-->
           <!--<option value="3">位置优化</option>-->
-          <option value="4">退料入库</option>
-
+          <option value="4">调拨入库</option>
+          <option value="11">出库 - 盘点前申补</option>
         </select>
       </div>
       <div class="form-row">
@@ -24,13 +24,19 @@
           <option v-for="item in suppliers" :value="item.id">{{item.name}}</option>
         </select>
       </div>
+      <div class="form-row" v-if="isInventoryApply">
+        <label for="type-inventoryTask" class="col-form-label">盘点任务:</label>
+        <select id="type-inventoryTask" v-model="inventoryTaskId" class="custom-select">
+          <option v-for="item in inventoryTasks" :value="item.id">{{item.file_name}}</option>
+        </select>
+      </div>
       <div class="form-row" v-if="isShow">
-        <label for="type-destination" class="col-form-label">发料目的地 / 退料仓位:</label>
+        <label for="type-destination" class="col-form-label">{{tip}}:</label>
         <select id="type-destination" v-model="destination" class="custom-select">
           <option v-for="item in destinations" :value="item.id">{{item.name}}</option>
         </select>
       </div>
-      <div class="form-row" v-if="taskType < 2 || taskType == 4">
+      <div class="form-row" v-if="taskType < 2 || taskType == 4 || taskType == 11">
         <label for="upload-comp" class="col-form-label">选择文件:</label>
         <input id="upload-comp" type="text" class="form-control" v-model="fileName" onfocus="this.blur()"
                @click="setUpload" autocomplete="off">
@@ -50,7 +56,12 @@
 <script>
   import {mapActions} from 'vuex'
   import eventBus from '@/utils/eventBus';
-  import {destinationSelectUrl, supplierSelectUrl, taskCreateUrl} from "../../../../../config/globalUrl";
+  import {
+    destinationSelectUrl,
+    getUnStartInventoryTaskUrl,
+    supplierSelectUrl,
+    taskCreateUrl
+  } from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
   import store from '../../../../../store'
@@ -67,7 +78,11 @@
         suppliers: [],
         destination: '',
         destinations: [],
-        isShow: false
+        isShow: false,
+        tip:'目的地',
+        isInventoryApply:false,
+        inventoryTaskId:'',
+        inventoryTasks:[]
       }
     },
     created() {
@@ -75,7 +90,18 @@
     },
     watch: {
       taskType: function (val) {
-        this.isShow = val === "1" || val === "4";
+        this.isShow = val === "1" || val === "4" || val === "11";
+        this.isInventoryApply = val === "11";
+        if(val === '1'){
+          this.tip="目的地"
+        }else{
+          this.tip="退料仓位"
+        }
+      },
+      supplier:function(val){
+        if(val !== ''){
+          this.getUnStartInventoryTasks();
+        }
       }
     },
     methods: {
@@ -101,17 +127,29 @@
             this.isPending = true;
             this.setLoading(true);
             let formData = new FormData();
-            if (this.taskType < 2 || this.taskType == 4) {
+            if (this.taskType < 2 || this.taskType == 4 || this.taskType == 11) {
               if (this.thisFile !== "" && this.supplier !== "") {
                 formData.append('file', this.thisFile);
                 formData.append('supplier', this.supplier);
                 formData.append('destination', this.destination);
               } else {
                 this.$alertWarning("内容不可为空");
+                this.setLoading(false);
                 this.isPending = false;
                 return;
               }
             }
+            if(this.isInventoryApply === true){
+              if(this.inventoryTaskId === ''){
+                this.$alertWarning("盘点任务不可为空");
+                this.setLoading(false);
+                this.isPending = false;
+                return;
+              }
+              formData.append('isInventoryApply', this.isInventoryApply);
+              formData.append('inventoryTaskId', this.inventoryTaskId);
+            }
+            if(this.taskType === '11')this.taskType = 1;
             formData.append('type', this.taskType);
             formData.append('#TOKEN#', store.state.token);
             let config = {
@@ -125,7 +163,7 @@
                 this.setLoading(false);
                 this.$alertSuccess('添加成功');
                 this.closeUploadPanel();
-                let tempUrl = this.$route.path;
+                let tempUrl = this.$route.fullPath;
                 this.$router.push('_empty');
                 this.$router.replace(tempUrl);
               } else if (res.data.result === 412) {
@@ -138,6 +176,10 @@
                 this.setLoading(false);
                 errHandler(res.data)
               }
+            }).catch(err => {
+              console.log(err);
+              this.isPending = false;
+              this.setLoading(false);
             })
           } else {
             this.$alertWarning("选项不能为空");
@@ -162,7 +204,7 @@
                 }
               })
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {
@@ -184,9 +226,46 @@
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
-              this.destinations = response.data.data.list;
+              let data = response.data.data.list;
+              let list = [];
+              data.map((item) => {
+                if(item.id !== 0 && item.id !== -1){
+                  list.push(item);
+                }
+              });
+              this.destinations = list;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
+            }
+          })
+            .catch(err => {
+              if (JSON.stringify(err) !== '{}') {
+                this.isPending = false;
+                console.log(JSON.stringify(err));
+                this.$alertDanger('请求超时，请刷新重试');
+              }
+            })
+        }
+      },
+      getUnStartInventoryTasks: function () {
+        if(this.supplier === ''){
+          this.$alertWarning('请先选择供应商');
+          return;
+        }
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: getUnStartInventoryTaskUrl,
+            data: {
+              supplierId:this.supplier
+            }
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              this.inventoryTasks = response.data.data;
+            } else {
+              errHandler(response.data)
             }
           })
             .catch(err => {

@@ -51,6 +51,7 @@
 
 <script>
   import eventBus from '@/utils/eventBus';
+  import {mapActions} from 'vuex'
   import {taskUrl, taskWindowsUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
@@ -87,11 +88,19 @@
       })
     },
     watch: {
-      thisState: function (val) {
-        this.windowShow = val
+      thisState: function (newVal, oldVal) {
+        this.windowShow = newVal;
+        if(newVal === '1' && oldVal !== '' && this.editData.type === 1){
+          this.closeEditPanel();
+          this.setLoading(true);
+          this.setTaskActiveState2(true);
+          this.setTaskData('');
+          this.setTaskData(this.editData);
+        }
       }
     },
     methods: {
+      ...mapActions(['setTaskActiveState2', 'setTaskData', 'setLoading']),
       closeEditPanel: function () {
         eventBus.$emit('closeTaskStatusPanel');
       },
@@ -131,7 +140,7 @@
                 this.$alertSuccess('设置成功');
                 this.windowShow = '';
                 this.thisData = {};
-                let tempUrl = this.$route.path;
+                let tempUrl = this.$route.fullPath;
                 this.$router.push('/_empty');
                 this.$router.replace(tempUrl)
               } else {

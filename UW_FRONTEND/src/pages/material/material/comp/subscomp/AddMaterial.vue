@@ -128,7 +128,7 @@
                 }
               })
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {

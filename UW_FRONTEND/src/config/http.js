@@ -1,16 +1,11 @@
 import axios from 'axios';
-import Qs from 'qs';
 import {setLoginToken} from "../store/actions";
 import store from "../store";
 import router from '../router';
 import {alertWarning} from "../utils/modal";
 
-//axios.defaults.timeout = 5000;
-//axios.defaults.baseURL = window.g.API_URL;
-
 axios.interceptors.request.use(
   config => {
-    //console.log(store.state.token)
     if (config.headers['Content-type'] === "application/x-www-form-urlencoded; charset=UTF-8") {
       if (store.state.token !== '') {
         if (config.data === "") {
@@ -18,8 +13,6 @@ axios.interceptors.request.use(
         } else {
           config.data += ("&#TOKEN#=" + store.state.token);
         }
-
-        //console.log(config)
       }
     }
     return config;
@@ -28,7 +21,6 @@ axios.interceptors.request.use(
     return Promise.reject(error)
   }
 );
-
 
 axios.interceptors.response.use(
   res => {
@@ -41,8 +33,8 @@ axios.interceptors.response.use(
         path: '/login',
         query: {redirect: router.currentRoute.fullPath}
       });
-      alertWarning('权限不足');
-      return;
+      //alertWarning('权限不足');
+      //return;
     }
     return res;
   },

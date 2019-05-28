@@ -1,4 +1,3 @@
-<!--料盒类型管理-->
 <template>
   <div class="main-details mt-1 mb-3">
     <datatable
@@ -8,12 +7,11 @@
 </template>
 
 <script>
+  import {mapActions} from 'vuex'
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
-  import {getBoxTypesUrl} from "../../../../config/globalUrl";
-  import {mapActions} from 'vuex'
-  import OperationOptions from "./subscomp/OperationOptions";
-
+  import {selectAllInventoryTaskUrl} from "../../../../config/globalUrl";
+  import OperationOptions from './subscomp/OperationOptions'
   export default {
     name: "TableDetails",
     data() {
@@ -21,7 +19,9 @@
         fixHeaderAndSetBodyMaxHeight: 650,
         tblStyle: {
           'word-break': 'break-all',
-          'table-layout': 'fixed'
+          'table-layout': 'fixed',
+          'white-space': 'pre-wrap'
+
         },
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80, 100],
@@ -30,14 +30,15 @@
         total: 0,
         query: {"limit": 20, "offset": 0},
         isPending: false,
-        thisRouter: '',
-        filter: '',
       }
+    },
+    components:{
+      OperationOptions
     },
     created() {
       this.init();
       let options = {
-        url: getBoxTypesUrl,
+        url: selectAllInventoryTaskUrl,
         data: {
           pageNo: 1,
           pageSize: 20
@@ -45,15 +46,12 @@
       };
       this.fetchData(options)
     },
-    components: {
-      OperationOptions
-    },
     watch: {
       $route: function (route) {
         this.init();
         this.setLoading(true);
         let options = {
-          url: getBoxTypesUrl,
+          url:selectAllInventoryTaskUrl,
           data: {
             pageNo: 1,
             pageSize: 20
@@ -76,17 +74,15 @@
       }
     },
     methods: {
-      ...mapActions(['setTableRouter', 'setLoading']),
+      ...mapActions(['setLoading']),
       init: function () {
         this.data = [];
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
-          {field: 'id', title: '规格号', visible: false},
-          {field: 'cellWidth', title: '规格', colStyle: {'width': '70px'}},
-          {field: 'cellRows', title: '料盒总行数', colStyle: {'width': '70px'}},
-          {field: 'cellCols', title: '料盒总列数', colStyle: {'width': '70px'}},
-          {field: 'enabled', title: '可用性', visible: false},
-          {field: 'enabledString', title: '是否可用', visible: false},
+          {field: 'taskName', title: '任务名', colStyle: {'width': '120px'}},
+          {field: 'stateString', title: '状态', colStyle: {'width': '80px'}},
+          {field: 'supplierName', title: '供应商', colStyle: {'width': '80px'}},
+          {field: 'checkedTime', title: '创建时间', colStyle: {'width': '120px'}},
           {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}
         ];
         this.total = 0;
@@ -103,24 +99,22 @@
               this.data.map((item, index) => {
                 item.showId = index + 1 + this.query.offset;
               });
-              this.total = response.data.data.totalRow
+              this.total = response.data.data.totalRow;
             } else {
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
             .catch(err => {
-              if (JSON.stringify(err) !== '{}') {
                 this.isPending = false;
-                console.log(JSON.stringify(err));
+                console.log(err);
                 this.$alertDanger('请求超时，请刷新重试');
                 this.setLoading(false)
-              }
             })
         }
       },
       dataFilter: function () {
         let options = {
-          url: getBoxTypesUrl,
+          url: selectAllInventoryTaskUrl,
           data: {}
         };
         options.data.pageNo = this.query.offset / this.query.limit + 1;

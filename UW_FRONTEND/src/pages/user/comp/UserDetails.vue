@@ -7,11 +7,11 @@
 </template>
 
 <script>
-  import {userAddUrl, userUpdateUrl, userSelectUrl} from "../../../config/globalUrl";
-  import {mapGetters, mapActions} from 'vuex'
+  import {userSelectUrl} from "../../../config/globalUrl";
+  import {mapActions} from 'vuex';
   import {axiosPost} from "../../../utils/fetchData";
   import {errHandler} from "../../../utils/errorHandler";
-  import UserOperation from "./UserOperation"
+  import UserOperation from "./UserOperation";
 
   export default {
     name: "UserDetails",
@@ -85,7 +85,7 @@
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
       },
-      thisFetch: function (opt) {
+      thisFetch: function () {
         let options = {
           url: userSelectUrl,
           data: {}
@@ -107,7 +107,6 @@
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);
             } else {
-              this.isPending = false;
               errHandler(response.data)
             }
           })

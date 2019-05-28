@@ -22,7 +22,6 @@
 </template>
 
 <script>
-  import eventBus from '@/utils/eventBus'
   import {axiosPost} from "../../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
   import {deleteByIdsUrl, materialCountUrl} from "../../../../config/globalUrl";
@@ -47,7 +46,6 @@
         HeaderSettings: false,
         pageSizeOptions: [20, 40, 80, 100],
         data: [],
-        //srcData: [],
         columns: [],
         total: 0,
         selection:[],
@@ -63,10 +61,10 @@
       let options = {
         url: materialCountUrl,
         data: {
-          pageNo: 1,
-          pageSize: 20
         }
       };
+      options.data.pageNo = this.query.offset / this.query.limit + 1;
+      options.data.pageSize = this.query.limit;
       this.fetchData(options)
     },
     computed: {
@@ -82,10 +80,10 @@
         let options = {
           url: materialCountUrl,
           data: {
-            pageNo: 1,
-            pageSize: 20
           }
         };
+        options.data.pageNo = this.query.offset / this.query.limit + 1;
+        options.data.pageSize = this.query.limit;
         if (route.query.filter) {
           this.filter = route.query.filter;
           options.data.filter = this.filter
@@ -93,7 +91,6 @@
           this.filter = "";
         }
         this.fetchData(options)
-
       },
       query: {
         handler(query) {
@@ -113,13 +110,13 @@
           {field: 'id', title: '物料类型号', colStyle: {'width': '70px'}},
           {field: 'no', title: '料号', colStyle: {'width': '120px'}},
           {field: 'supplierName', title: '供应商', colStyle: {'width': '100px'}},
-          {field: 'specification', title: '规格', colStyle: {'width': '180px'}},
+          {field: 'specification', title: '规格', colStyle: {'width': '120px'}},
           {field: 'thickness', title: '厚度', colStyle: {'width': '80px'}},
           {field: 'radius', title: '直径', colStyle: {'width': '80px'}},
           {field: 'enabled', title: '可用性', visible: false},
           {field: 'enabledString', title: '是否可用', colStyle: {'width': '70px'}, visible: false},
           {field: 'quantity', title: '数量', colStyle: {'width': '70px'}},
-          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '80px'}}
+          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '120px'}}
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
@@ -204,7 +201,7 @@
             this.isPending = false;
             if(res.data.result === 200){
               this.$alertSuccess(res.data.data);
-              let tempUrl = this.$route.path;
+              let tempUrl = this.$route.fullPath;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             }else{

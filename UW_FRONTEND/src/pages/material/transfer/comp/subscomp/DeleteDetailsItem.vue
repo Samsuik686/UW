@@ -1,6 +1,6 @@
 <template>
   <div class="user-options form-row">
-    <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)">
+    <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)" v-if="row.taskType === 6">
       <icon name="cancel" scale="1.8"></icon>
     </div>
 
@@ -14,11 +14,11 @@
           </div>
           <div class="form-row">
             <div class="form-row col pl-2 pr-2">
-              你正在删除规格为 "{{rowData.cellWidth}}" 的物料类型，请确认是否删除
+              你正在删除任务为{{row.taskName}}的任务条目，请确认是否删除
             </div>
           </div>
           <div class="dropdown-divider"></div>
-          <div class="form-row justify-content-around">
+          <div class="form-row">
             <a class="btn btn-secondary col mr-1 text-white" @click="isDeleting = false">取消</a>
             <a class="btn btn-danger col ml-1 text-white" @click="submitDelete">确定</a>
           </div>
@@ -29,33 +29,34 @@
 </template>
 
 <script>
-  import {deleteBoxTypeUrl} from "../../../../../config/globalUrl";
+
+  import {externalWhDeleteExternalWhLogUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
+  import eventBus from "../../../../../utils/eventBus";
 
   export default {
-    name: "OperationOptions",
+    name: "DeleteDetails",
     props: ['row'],
     data() {
       return {
         isDeleting:false,
-        rowData: {},
+        logId:'',
         isPending: false
       }
     },
     methods:{
       showWarning: function (val) {
-        this.rowData = val;
+        this.logId = val.id;
         this.isDeleting = true;
       },
       submitDelete: function () {
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url: deleteBoxTypeUrl,
-            data:{
-              id: this.rowData.id,
-              enabled: 0
+            url: externalWhDeleteExternalWhLogUrl,
+            data: {
+              logId:this.logId
             }
           };
           axiosPost(options).then(response => {
@@ -63,20 +64,19 @@
             if (response.data.result === 200) {
               this.$alertSuccess('删除成功');
               this.isDeleting = false;
-              let tempUrl = this.$route.path;
-              this.$router.push('_empty');
-              this.$router.replace(tempUrl);
+              eventBus.$emit('refresh',true);
             } else if (response.data.result === 412) {
               this.$alertWarning(response.data.data);
               this.isDeleting = false;
             } else {
               this.isPending = false;
-              errHandler(response.data.result);
+              errHandler(response.data);
               this.isDeleting = false;
             }
           }).catch(err => {
             if (JSON.stringify(err)) {
               this.isPending = false;
+              console.log(JSON.stringify(err));
               this.$alertDanger('请求超时，请刷新重试')
             }
           })
@@ -97,16 +97,22 @@
     left: 0;
     top: 0;
     background: rgba(0, 0, 0, 0.1);
-    z-index: 101;
+    z-index:103;
   }
 
   .delete-panel-container {
     background: #ffffff;
-    height: 220px;
     width: 400px;
-    z-index: 102;
+    z-index: 104;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
+  }
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+  }
+
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
   }
 </style>

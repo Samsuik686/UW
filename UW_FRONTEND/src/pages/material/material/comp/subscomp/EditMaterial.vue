@@ -117,7 +117,7 @@
             if (response.data.result === 200) {
               this.$alertSuccess('更新成功');
               this.closeEditPanel();
-              let tempUrl = this.$route.path;
+              let tempUrl = this.$route.fullPath;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else {

@@ -104,11 +104,10 @@
           if (item.type === 'text') {
             if (_.trim(item.model) !== "") {
               if (index === 0) {
-                this.queryString += (item.id + "=" + _.trim(item.model))
+                this.queryString += (item.id + "like" + _.trim(item.model))
               } else {
-                this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
+                this.queryString += ("#&#" + item.id + "like" + _.trim(item.model))
               }
-
             } else {
               this.setLoading(false)
             }
@@ -137,7 +136,8 @@
           data: {
             table: this.$store.state.logsRouterApi,
             pageNo: 1,
-            pageSize: 20
+            pageSize: 20,
+            descBy: 'time'
           }
         };
         if (this.queryString !== "") {

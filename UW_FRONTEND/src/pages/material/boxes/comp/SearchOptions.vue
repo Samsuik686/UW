@@ -60,7 +60,6 @@
     },
     data() {
       return {
-        // pageSize: 2000,
         queryOptions: [
           {
             id: 'id',
@@ -137,7 +136,8 @@
                 name:'标准'
               },{
                 id:2,
-                name:'不标准'
+                name:'' +
+                  '非标准'
               }
             ]
           }
@@ -161,11 +161,11 @@
       ]),
     },
     watch: {
-      $route: function (route) {
+      /*$route: function (route) {
         if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
           this.initForm();
         }
-      },
+      },*/
     },
     methods: {
       ...mapActions(['setLoading']),
@@ -270,7 +270,7 @@
   #add-window {
     z-index: 100;
   }
-  #add-type-window{
+  #add-window{
     z-index:100;
   }
   .fade-enter-active, .fade-leave-active {

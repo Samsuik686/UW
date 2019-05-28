@@ -9,9 +9,6 @@
     <div class="btn pl-1 pr-1" title="状态" @click="isEditing = true">
       <icon name="menu" scale="1.8"></icon>
     </div>
-    <div class="btn pl-1 pr-1" title="手动出入库" @click="isUpload = true" v-if="row.type !== 4">
-      <icon name="upload" scale="2.2"></icon>
-    </div>
     <div v-if="isEditing" class="edit-window">
       <edit-status :editData="row"/>
     </div>
@@ -27,7 +24,7 @@
 <script>
   import EditStatus from './EditStatus'
   import eventBus from '@/utils/eventBus'
-  import {mapActions, mapGetters} from 'vuex'
+  import {mapActions} from 'vuex'
   import SetPriority from "./SetPriority";
   import ManualOut from "./ManualOut";
 
@@ -57,9 +54,6 @@
         this.isUpload = false;
       });
     },
-    computed: {
-      //...mapGetters['isDetailsActive']
-    },
     methods: {
       ...mapActions(['setTaskActiveState', 'setTaskData', 'setLoading']),
       checkTaskDetails: function (val) {
@@ -70,7 +64,6 @@
           this.setTaskData(val)
         } else {
           this.$alertInfo('暂不支持此类型任务的详情查看');
-          return;
         }
       },
       confirmSetting:function(row){

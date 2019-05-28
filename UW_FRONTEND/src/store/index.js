@@ -34,6 +34,7 @@ const state = {
   taskDetails: {},
   /*用于控制任务详情面板显示*/
   isTaskDetailsActive: false,
+  isTaskDetailsActive2: false,
 
   /*缓存用户类型列表*/
   userTypeList: {},
@@ -48,8 +49,15 @@ const state = {
     printerIP:""
   },
   /*出库界面修改出库数*/
-  editMaterialOutRecords:{}
+  editMaterialOutRecords:{},
 
+  /*盘点*/
+  checkWindowId:'',
+  checkWindowData:{},
+  checkOperationData: {},
+  isRefresh:false,
+  isScanner:false,
+  unInventoryData:[]
 };
 
 const store = new Vuex.Store({

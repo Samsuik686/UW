@@ -105,7 +105,6 @@
             list: []
           }
         ],
-
         copyQueryOptions: [],
         queryString: ""
       }
@@ -207,7 +206,6 @@
           } else {
             this.$alertWarning("内容不能为空");
             this.isPending = false;
-            return;
           }
         }
       },
@@ -218,7 +216,6 @@
             return true;
           }
         });
-
         this.copyQueryOptions.map((item, index) => {
           if (item.type === 'text' || item.type === 'select') {
             if (_.trim(item.model) !== "") {
@@ -227,12 +224,10 @@
               } else {
                 this.queryString += ("#&#" + item.id + "=" + _.trim(item.model))
               }
-
             } else {
               this.setLoading(false)
             }
           }
-
         })
       },
       fetchData: function () {

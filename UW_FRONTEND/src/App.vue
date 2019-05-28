@@ -52,9 +52,6 @@
   html, body {
     height: 100%;
   }
-  .notification{
-    background-color: #ffffff;
-  }
   .table td, .table th {
     vertical-align: middle !important;
   }

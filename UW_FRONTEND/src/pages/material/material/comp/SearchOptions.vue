@@ -154,13 +154,6 @@
         'tableRouterApi'
       ]),
     },
-    watch: {
-      $route: function (route) {
-        if(JSON.stringify(route.params) === "{}" && JSON.stringify(route.query) === "{}"){
-          this.initForm();
-        }
-      },
-    },
     methods: {
       ...mapActions(['setLoading']),
       initForm: function () {
@@ -230,6 +223,10 @@
         this.fetchData()
       },
       exportReport: function () {
+        if(this.supplier === ''){
+          this.$alertWarning('请选择供应商');
+          return;
+        }
         if (!this.isPending) {
           this.isPending = true;
           let data = {

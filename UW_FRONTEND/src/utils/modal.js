@@ -9,17 +9,12 @@ function alertMsg (status, string, timeout, title) {
     }
   })
 }
-
-
 export const alertDanger = function (string) {
   alertMsg('is-danger', string, 3000, '警告')
 };
-
-
 export const alertSuccess = function (string) {
   alertMsg('is-success', string, 3000, '成功')
 };
-
 export const alertInfo = function (string) {
   alertMsg('is-info', string, 3000, '提示')
 };

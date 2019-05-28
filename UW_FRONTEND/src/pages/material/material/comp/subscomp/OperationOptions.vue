@@ -121,7 +121,8 @@
             if (response.data.result === 200) {
               this.$alertSuccess('删除成功');
               this.isDeleting = false;
-              let tempUrl = this.$route.path;
+              let tempUrl = this.$route.fullPath;
+              console.log(tempUrl);
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result === 412) {

@@ -38,10 +38,8 @@ const ACTION_CONFIG = [
   {field: 'ip', title: 'IP地址', colStyle: {'width': '120px'}},
   {field: 'uid', title: '用户', colStyle: {'width': '80px'}},
   {field: 'action', title: '操作', colStyle: {'width': '200px'}},
-  // {field: 'resultCode', title: '结果码', colStyle: {'width': '60px'}, tdComp: 'HighLight'},
   {field: 'resultString', title: '操作结果', colStyle: {'width': '80px'}, tdComp: 'HighLight'},
   {field: 'time', title: '时间', colStyle: {'width': '170px'}}
-
 ];
 
 const POSITION_CONFIG = [
@@ -59,7 +57,6 @@ const POSITION_CONFIG = [
   {field: "newHeight", title: '新高度', colStyle: {'width': '70px'}},
   {field: "time",title: '时间',  colStyle: {'width': '170px'}}
 ];
-
 
 const ACTION_QUERY = [
   {
@@ -90,21 +87,21 @@ const TASK_QUERY = [
     model: '',
     type: 'text'
   },
-  // {
-  //   id: 'taskType',
-  //   name: '任务类型',
-  //   model: '',
-  //   type: 'text'
-  // },
-  // {
-  //   id: 'materialNo',
-  //   name: '料号',
-  //   model: '',
-  //   type: 'text'
-  // },
   {
     id: 'operator',
     name: '操作员ID',
+    model: '',
+    type: 'text'
+  },
+  {
+    id: 'material_id',
+    name: '料盘唯一码',
+    model: '',
+    type: 'text'
+  },
+  {
+    id: 'no',
+    name: '料号',
     model: '',
     type: 'text'
   },
@@ -118,12 +115,6 @@ const TASK_QUERY = [
 ];
 
 const POSITION_QUERY = [
-  // {
-  //   id: 'materialNo',
-  //   name: '料号',
-  //   model: '',
-  //   type: 'text'
-  // },
   {
     id: 'time',
     name: '时间',

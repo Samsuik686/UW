@@ -1,5 +1,3 @@
-<!--表单查看页面的统一侧边栏导航-->
-
 <template>
   <div class="mt-3 mb-3">
     <nav>
@@ -13,30 +11,29 @@
                  :class="activeItem === 'boxes' ? 'active' : ''">料盒管理
             </div>
           </div>
-          <div @click="toggleState('material')">
-            <div class="sidebar-link" @click="linkTo('material')"
-                 :class="activeItem === 'material' ? 'active' : ''">物料管理
-            </div>
-          </div>
           <div @click="toggleState('supplier')">
             <div class="sidebar-link" @click="linkTo('supplier')"
                  :class="activeItem === 'supplier' ? 'active' : ''">供应商管理
             </div>
           </div>
-          <!--<div @click="toggleState('boxType')">
-          <div class="sidebar-link" @click="linkTo('boxType')"
-               :class="activeItem === 'boxType' ? 'active' : ''">料盒类型管理
-          </div>
-        </div>-->
           <div @click="toggleState('destination')">
             <div class="sidebar-link" @click="linkTo('destination')"
                  :class="activeItem === 'destination' ? 'active' : ''">发料目的地管理
             </div>
           </div>
+          <div @click="toggleState('material')">
+            <div class="sidebar-link" @click="linkTo('material')"
+                 :class="activeItem === 'material' ? 'active' : ''">物料管理
+            </div>
+          </div>
+          <div @click="toggleState('transfer')">
+            <div class="sidebar-link" @click="linkTo('transfer')"
+                 :class="activeItem === 'transfer' ? 'active' : ''">物料仓物料管理
+            </div>
+          </div>
         </div>
       </div>
     </nav>
-
   </div>
 </template>
 
@@ -52,19 +49,13 @@
       }
     },
     mounted: function () {
-      if (this.$route.path === '/material/material') {
-        this.toggleState('material')
-      } else if (this.$route.path === '/material/boxes') {
-        this.toggleState('boxes')
-      }
+      let activeItem = this.$route.path.split('/')[2];
+      this.toggleState(activeItem);
     },
     watch: {
       $route: function (route) {
-        if (route.path === '/material/material') {
-          this.toggleState('material')
-        } else if (route.path === '/material/boxes') {
-          this.toggleState('boxes')
-        }
+        let activeItem = route.path.split('/')[2];
+        this.toggleState(activeItem);
       },
     },
     computed: {
@@ -98,16 +89,9 @@
     color: #000;
   }
 
-  .sidebar {
-  }
-
   .sidebar-items {
-    /*border: 1px solid #eeeeee;*/
-    /*border-top: none;*/
-    /*border-bottom: none;*/
     border: none;
     height: 100%;
-    /*border-radius: 8px;*/
   }
 
   .sidebar-title {

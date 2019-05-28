@@ -59,14 +59,14 @@
             if (response.data.result === 200) {
               this.$alertSuccess('添加成功');
               this.closeAddPanel();
-              let tempUrl = this.$route.path;
+              let tempUrl = this.$route.fullPath;
               this.$router.push('_empty');
               this.$router.replace(tempUrl);
             } else if (response.data.result === 412) {
               this.$alertWarning('请勿添加重复供应商')
             } else {
               this.isPending = false;
-              errHandler(response.data.result)
+              errHandler(response.data)
             }
           })
         }
