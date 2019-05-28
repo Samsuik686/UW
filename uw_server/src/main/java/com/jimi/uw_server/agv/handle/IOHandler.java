@@ -43,7 +43,7 @@ public class IOHandler {
 		Integer count = sendNumMap.get(item.getRobotId());
 		
 		
-		sendNumMap.put(item.getRobotId(), count);
+		
 		//构建SL指令，令指定robot把料送回原仓位
 		AGVMoveCmd moveCmd = createSLCmd(materialBox, item);
 		//发送SL>>>
@@ -53,6 +53,7 @@ public class IOHandler {
 		}else {
 			count -= 1;
 		}
+		sendNumMap.put(item.getRobotId(), count);
 	}
 
 

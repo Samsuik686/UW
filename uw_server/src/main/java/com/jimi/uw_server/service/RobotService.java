@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.Box;
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.jfinal.aop.Enhancer;
@@ -46,8 +44,6 @@ public class RobotService extends SelectService {
 
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ? AND supplier = ?)";
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
@@ -56,11 +52,11 @@ public class RobotService extends SelectService {
 	
 	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 	
-	private static final String GET_FULL_MATERIAL_BOX_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
+	/*private static final String GET_FULL_MATERIAL_BOX_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 	
 	private static final Object BACK_LOCK = new Object();
 
-	private static final Object CALL_LOCK = new Object();
+	private static final Object CALL_LOCK = new Object();*/
 
 	private static final int UW_ID = 0;
 	
@@ -130,7 +126,6 @@ public class RobotService extends SelectService {
 
 						// 更新任务条目状态为已分配回库
 						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
-						// 获取实际出入库数量，与计划出入库数量进行对比，若一致，则将该任务条目标记为已完成,出库稍后再减 isLater true;
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 						materialBox.setStatus(state);

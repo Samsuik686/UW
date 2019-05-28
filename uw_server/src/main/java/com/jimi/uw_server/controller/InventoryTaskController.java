@@ -1,11 +1,17 @@
 package com.jimi.uw_server.controller;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
@@ -299,5 +305,40 @@ public class InventoryTaskController extends Controller {
 		}
 		String result = inventoryTaskService.finishInventoryTask(taskId);
 		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	@Log("导出盘点报表")
+	public void exportEWhReport(Integer taskId, String no) {
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空");
+		}
+		String fileName = inventoryTaskService.getInventoryTaskName(taskId);
+		if (fileName == null) {
+			throw new OperationException("任务不存在，导出失败！");
+		}
+		fileName = fileName + ".xlsx";
+		OutputStream output = null;
+		try {
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			inventoryTaskService.exportInventoryTask(taskId, no, fileName, output);
+			
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
+		}
+		renderNull();
 	}
 }

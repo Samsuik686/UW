@@ -2,6 +2,8 @@ package com.jimi.uw_server.service;
 
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import com.jimi.uw_server.model.vo.EWhMaterialDetailVO;
 import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
+import com.jimi.uw_server.util.ExcelWritter;
 
 /**
  * 
@@ -346,6 +349,49 @@ public class ExternalWhTaskService {
 		pagePaginate.setTotalPage(page.getTotalPage());
 		pagePaginate.setList(externalWhInfoVOs);
 		return pagePaginate;
+	}
+	
+	
+	// 导出物料仓库存报表
+	public void exportEWhReport(Integer whId, Integer supplierId, String no, String fileName, OutputStream output) throws IOException {
+		SqlPara sqlPara = new SqlPara();
+		StringBuffer sql = new StringBuffer();
+		sql.append(GET_EXTERIALWH_MATERIAL_TYPE_SQL);
+		if (whId != null) {
+			sql.append(" WHERE a.wh_id = ? ");
+			sqlPara.addPara(whId);
+		}
+		if (supplierId != null) {
+			if (whId == null) {
+				sql.append(" WHERE  a.supplier_id = ? ");
+				sqlPara.addPara(supplierId);
+			}else {
+				sql.append(" AND a.supplier_id = ? ");
+				sqlPara.addPara(supplierId);
+			}
+		}
+		if (no != null) {
+			if (whId == null && supplierId == null) {
+				sql.append(" WHERE  a.no like ? ");
+				sqlPara.addPara("%" + no + "%");
+			}else {
+				sql.append(" AND  a.no like ? ");
+				sqlPara.addPara("%" + no + "%");
+			}
+		}
+		sql.append(" ORDER BY a.wh_id,a.no ASC");
+		sqlPara.setSql(sql.toString());
+		List<Record> records = Db.find(sqlPara);
+		for (Record record : records) {
+			record.set("quantity", externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")));
+		}
+		String[] field = null;
+		String[] head = null;
+		field = new String[] {"wh_name", "no", "specification", "supplier_name", "quantity"};
+		head =  new String[] {"仓库名", "料号", "规格", "供应商", "库存"};	
+		ExcelWritter writter = ExcelWritter.create(true);
+		writter.fill(records, fileName, field, head);
+		writter.write(output, true);
 	}
 	
 	

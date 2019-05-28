@@ -2,12 +2,20 @@ package com.jimi.uw_server.controller;
 
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.ParameterException;
+import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.ExternalWhTaskService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.servlet.http.HttpServletResponse;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
@@ -125,4 +133,42 @@ public class ExternalWhController extends Controller{
 		renderJson(ResultUtil.succeed(result));
 		
 	}
+	
+	
+	@Log("导出物料仓库存报表")
+	public void exportEWhReport(Integer whId, Integer supplierId, String no) {
+		OutputStream output = null;
+		try {
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
+			String fileName = getFileName(new Date()) + ".xlsx";
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			externalWhTaskService.exportEWhReport(whId, supplierId, no, fileName, output);
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
+		}
+		renderNull();
+	}
+	
+	
+	public String getFileName(Date date) {
+		
+		String fileName = "物料仓报表_";
+		DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+		String time = formatter.format(date);
+		fileName = fileName + time;
+		return fileName;
+	}
+		
 }

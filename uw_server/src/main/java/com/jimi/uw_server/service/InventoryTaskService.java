@@ -1,6 +1,8 @@
 package com.jimi.uw_server.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,8 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.jfinal.aop.Enhancer;
-import com.jfinal.kit.HashKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
@@ -20,6 +23,7 @@ import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.handle.IOHandler;
+import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.InventoryTaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
@@ -45,6 +49,7 @@ import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
+import com.jimi.uw_server.util.ExcelWritter;
 
 /**
  * 
@@ -749,6 +754,36 @@ public class InventoryTaskService {
 	}
 	
 	
+	@Log("导出盘点任务ID为{taskId}的盘点记录")
+	public void exportInventoryTask(Integer taskId, String no, String fileName, OutputStream output) throws IOException {
+		SqlPara sqlPara = new SqlPara();
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.COUNT)) {
+			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
+		}
+		if (no == null) {
+			sqlPara.setSql(GET_INVENTORY_TASK_INFO);
+			sqlPara.addPara(taskId);
+			sqlPara.addPara(taskId);
+		}else {
+			sqlPara.setSql(GET_INVENTORY_TASK_INFO_BY_MATERIALTYPE);
+			sqlPara.addPara(taskId);
+			sqlPara.addPara("%" + no + "%");
+			sqlPara.addPara(taskId);
+			sqlPara.addPara("%" + no + "%");
+		}
+		List<Record> inventoryRecords =Db.find(sqlPara);
+
+		String[] field = null;
+		String[] head = null;
+		field = new String[] {"supplier_name", "no", "before_num", "actural_num", "different_num"};
+		head =  new String[] {"供应商", "料号", "盘前数量", "盘点数量", "盈亏"};
+		ExcelWritter writter = ExcelWritter.create(true);
+		writter.fill(inventoryRecords, fileName, field, head);
+		writter.write(output, true);
+	}
+	
+	
 	public List<Record> getInventoryTaskInfo(Integer taskId, String no) {
 		SqlPara sqlPara = new SqlPara();
 		Task task = Task.dao.findById(taskId);
@@ -858,5 +893,13 @@ public class InventoryTaskService {
 		
 		List<Task> tasks = Task.dao.find(GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER, supplierId);
 		return tasks;
+	}
+	
+	public String getInventoryTaskName(Integer id) {
+		Task task = Task.dao.findById(id);
+		if (task != null) {
+			return task.getFileName();
+		}
+		return null;
 	}
 }
