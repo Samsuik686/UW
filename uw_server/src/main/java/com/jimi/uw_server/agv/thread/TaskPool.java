@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.alibaba.druid.sql.visitor.functions.If;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
@@ -104,7 +103,7 @@ public class TaskPool extends Thread{
 					List<AGVInventoryTaskItem> inventoryTaskItems = new ArrayList<>();
 					TaskItemRedisDAO.appendInventoryTaskItems(inventoryTaskItems);
 					if (!inventoryTaskItems.isEmpty() && robotBOs.size() > 0) {
-						sendInventoryTaskItemCmds(robotBOs.size(), inventoryTaskItems);
+						sendInventoryTaskItemCmds(robotBOs, inventoryTaskItems);
 					}
 				}
 				//判断tilOfBuild是否为空或者cn为0
@@ -198,7 +197,7 @@ public class TaskPool extends Thread{
 	}
 	
 	
-	public static void sendInventoryTaskItemCmds(int cn, List<AGVInventoryTaskItem> inventoryTaskItems) throws Exception {
+	/*public static void sendInventoryTaskItemCmds(int cn, List<AGVInventoryTaskItem> inventoryTaskItems) throws Exception {
 		//获取第a个元素
 		int a = 0;
 		do {
@@ -233,8 +232,53 @@ public class TaskPool extends Thread{
 
 			a++;
 		} while( a != inventoryTaskItems.size());
-	}
+	}*/
 
+	
+	public static void sendInventoryTaskItemCmds(List<RobotBO> robotBOs, List<AGVInventoryTaskItem> inventoryTaskItems) throws Exception {
+		//获取第a个元素
+		int a = 0;
+		do {
+			//获取对应item
+			AGVInventoryTaskItem item = inventoryTaskItems.get(a);
+
+			// 判断任务条目状态是否为0
+			if (item.getState().intValue() == InventoryTaskItemState.WAIT_ASSIGN) {
+
+				List<Window> windows = Window.dao.find(GET_WINDOWS_BY_TASKID, item.getTaskId());
+				Window window = null;
+				for (Window w : windows) {
+					//如果仓口未被叉车使用
+					if (!TaskItemRedisDAO.getWindowFlag(w.getId() )) {
+						window = w;
+						break;
+					}
+				}
+				//所有仓口都已被叉车使用，则不发送指令
+				if (window == null) {
+					break;
+				}
+				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+				// 判断料盒是否在架
+				
+				for (RobotBO robotBO : robotBOs) {
+					Integer taskId = TaskItemRedisDAO.getRobotTask(robotBO.getId());
+					if (taskId == null || !taskId.equals(item.getTaskId()) || (IOHandler.sendNumMap.get(robotBO.getId()) != null && IOHandler.sendNumMap.get(robotBO.getId()).equals(1))) {
+						continue;
+					}
+					if (materialBox.getIsOnShelf()) {
+						IOHandler.sendLS(item, materialBox, window, robotBO.getId());
+						TaskItemRedisDAO.setWindowFlag(window.getId(), true);
+						break;
+					}
+				}
+				
+			}
+
+			a++;
+		} while( a != inventoryTaskItems.size());
+	}
+	
 
 	public static void sendBuildCmds(int cn, List<AGVBuildTaskItem> buildTaskItems) throws Exception {
 		//获取第a个元素

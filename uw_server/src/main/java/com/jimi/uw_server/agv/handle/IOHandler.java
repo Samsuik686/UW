@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
+import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -17,9 +18,11 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.constant.IOTaskItemState;
 import com.jimi.uw_server.constant.InventoryTaskItemState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.service.TaskService;
 
@@ -37,13 +40,10 @@ public class IOHandler {
 
 	private static String GET_WINDOW_BY_TASK_ID = "select * from window where bind_task_id = ?";
 	
-	private static Map<Integer, Integer> sendNumMap = new ConcurrentHashMap<>();
+	public static Map<Integer, Integer> sendNumMap = new ConcurrentHashMap<>();
 
 	public static void sendSL(AGVIOTaskItem item, MaterialBox materialBox) throws Exception {
 		Integer count = sendNumMap.get(item.getRobotId());
-		
-		
-		
 		//构建SL指令，令指定robot把料送回原仓位
 		AGVMoveCmd moveCmd = createSLCmd(materialBox, item);
 		//发送SL>>>
@@ -84,7 +84,7 @@ public class IOHandler {
 	 * @param item
 	 * @param materialBox
 	 * @throws Exception
-	 */
+	 *//*
 	public static void sendSL(AGVInventoryTaskItem item, MaterialBox materialBox, Window window) throws Exception {
 		//构建SL指令，令指定robot把料送回原仓位
 		AGVMoveCmd moveCmd = createSLCmd(materialBox, item, window);
@@ -93,12 +93,12 @@ public class IOHandler {
 	}
 
 
-	/**
+	*//**
 	 * 发送盘点取货指令
 	 * @param item
 	 * @param materialBox
 	 * @throws Exception
-	 */
+	 *//*
 	public static void sendLS(AGVInventoryTaskItem item, MaterialBox materialBox, Window window) throws Exception {
 		//发送LS>>>
 		AGVMoveCmd cmd = createLSCmd(materialBox, item, window);
@@ -111,8 +111,65 @@ public class IOHandler {
 		
 		TaskItemRedisDAO.updateInventoryTaskItemWindow(item, window.getId());
 		TaskItemRedisDAO.updateInventoryTaskItemState(item, InventoryTaskItemState.ASSIGNED);
-	}
+	}*/
 	
+	
+	
+	/**
+	 * 发送指定叉车盘点回库指令
+	 * @param item
+	 * @param materialBox
+	 * @throws Exception
+	 */
+	public static void sendSL(AGVInventoryTaskItem item, MaterialBox materialBox, Window window) throws Exception {
+		Integer count = sendNumMap.get(item.getRobotId());
+		
+		
+		
+		//构建SL指令，令指定robot把料送回原仓位
+		AGVMoveCmd moveCmd = createSLCmd(materialBox, item, window);
+		//发送SL>>>
+		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
+		if (count == null) {
+			count = 0;
+		}else {
+			count -= 1;
+		}
+		sendNumMap.put(item.getRobotId(), count);
+		
+	}
+
+
+	/**
+	 * 发送指定叉车盘点取货指令
+	 * @param item
+	 * @param materialBox
+	 * @throws Exception
+	 */
+	public static void sendLS(AGVInventoryTaskItem item, MaterialBox materialBox, Window window, Integer robotId) throws Exception {
+		//发送LS>>>
+		Integer count = sendNumMap.get(robotId);
+		if (count == null || count.intValue() < 1) {
+			
+			AGVMoveCmd cmd = createLSCmd(materialBox, item, window, robotId);
+			AGVMainSocket.sendMessage(Json.getJson().toJson(cmd));
+			if (count == null) {
+				count = 0;
+			}
+			sendNumMap.put(robotId, count + 1);
+			//在数据库标记所有处于该坐标的料盒为不在架***
+			//在数据库标记所有处于该坐标的料盒为不在架***
+			setMaterialBoxIsOnShelf(materialBox, false);
+
+			//更新任务条目状态为已分配***
+			
+			TaskItemRedisDAO.updateInventoryTaskItemWindow(item, window.getId());
+			TaskItemRedisDAO.updateInventoryTaskItemState(item, InventoryTaskItemState.ASSIGNED);
+		}
+		
+
+		
+	}
 	
 	/**
 	 * 处理Status指令
@@ -319,10 +376,21 @@ public class IOHandler {
 		if (flag) {
 			TaskItemRedisDAO.removeInventoryTaskItemByTaskId(taskId);
 			List<Window> windows = Window.dao.find(GET_WINDOW_BY_TASK_ID, taskId);
+			// 将仓口解绑(作废任务时，如果还有任务条目没跑完就不会解绑仓口，因此不管任务状态是为进行中还是作废，这里都需要解绑仓口)
+			synchronized (Lock.ROBOT_TASK_REDIS_LOCK) {
+				List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
+				for (RobotBO robotBO : robotBOs) {
+					Integer taskId2 = TaskItemRedisDAO.getRobotTask(robotBO.getId());
+					if (taskId2 != null && taskId2.equals(taskId)) {
+						TaskItemRedisDAO.delRobotTask(robotBO.getId());
+					}
+				}
+			}
 			for (Window window : windows) {
 				TaskItemRedisDAO.delWindowFlag(window.getId());;
 				window.setBindTaskId(null).update();
 			}
+			
 		}
 	}
 	
@@ -397,10 +465,28 @@ public class IOHandler {
 	}
 
 
-	private static AGVMoveCmd createLSCmd(MaterialBox materialBox, AGVInventoryTaskItem item, Window window) {
+	/*private static AGVMoveCmd createLSCmd(MaterialBox materialBox, AGVInventoryTaskItem item, Window window) {
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getGroupId());
 		group.setRobotid(0);//让AGV系统自动分配
+		group.setStartx(materialBox.getRow());//物料Row
+		group.setStarty(materialBox.getCol());//物料Col
+		group.setStartz(materialBox.getHeight());//物料Height
+		group.setEndx(window.getRow());//终点X为仓口X
+		group.setEndy(window.getCol());//终点Y为仓口Y
+		List<AGVMissionGroup> groups = new ArrayList<>();
+		groups.add(group);
+		AGVMoveCmd cmd = new AGVMoveCmd();
+		cmd.setCmdcode("LS");
+		cmd.setCmdid(TaskItemRedisDAO.getCmdId());
+		cmd.setMissiongroups(groups);
+		return cmd;
+	}*/
+	
+	private static AGVMoveCmd createLSCmd(MaterialBox materialBox, AGVInventoryTaskItem item, Window window, Integer robotId) {
+		AGVMissionGroup group = new AGVMissionGroup();
+		group.setMissiongroupid(item.getGroupId());
+		group.setRobotid(robotId);//让AGV系统自动分配
 		group.setStartx(materialBox.getRow());//物料Row
 		group.setStarty(materialBox.getCol());//物料Col
 		group.setStartz(materialBox.getHeight());//物料Height

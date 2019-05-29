@@ -2,6 +2,7 @@ package com.jimi.uw_server.controller;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -10,11 +11,17 @@ import javax.servlet.http.HttpServletResponse;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
+import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
+import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
+import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
 import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
 import com.jimi.uw_server.service.InventoryTaskService;
@@ -340,5 +347,27 @@ public class InventoryTaskController extends Controller {
 			}
 		}
 		renderNull();
+	}
+	
+	
+	@Log("设置盘点任务叉车，任务ID{taskId}， 叉车{robots}")
+	public void setTaskRobots(Integer taskId, String robots) {
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		if (robots == null) {
+			robots = "";
+		}
+		String result  = inventoryTaskService.setTaskRobots(taskId, robots);
+		renderJson(ResultUtil.succeed(result));
+	}
+
+	
+	public void getWindowRobots(Integer taskId) {
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		List<RobotBO> result  = inventoryTaskService.getWindowRobots(taskId);
+		renderJson(ResultUtil.succeed(result));
 	}
 }

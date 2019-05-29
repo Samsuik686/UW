@@ -20,6 +20,7 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
+import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.handle.IOHandler;
@@ -41,6 +42,7 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.EWhInventoryRecordBO;
+import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
 import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
 import com.jimi.uw_server.model.vo.InventoryTaskVO;
@@ -110,6 +112,8 @@ public class InventoryTaskService {
 	private static final String GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER = "SELECT * FROM task where state = 1 and type = 2 and supplier = ? order by create_time desc";
 	
 	private static ExternalWhTaskService externalWhTaskService = ExternalWhTaskService.me;
+	
+	private static String GET_WINDOW_BY_TASK_ID = "select * from window where bind_task_id = ?";
 	
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 	
@@ -877,6 +881,74 @@ public class InventoryTaskService {
 	}
 	
 	
+	public String setTaskRobots(Integer taskId, String robots) {
+		Task task = Task.dao.findById(taskId);
+		
+		if (task == null || !task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务并未处于进行状态，无法指定叉车");
+		}
+		Window window = Window.dao.findFirst(GET_WINDOW_BY_TASK_ID, taskId);
+		if (window == null) {
+			throw new OperationException("盘点任务的UW仓盘点工作已结束，无法指定叉车");
+		}
+		synchronized (Lock.ROBOT_TASK_REDIS_LOCK) {
+			List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
+			String[] robotSp = robots.split(",");
+			for (RobotBO robotBO : robotBOs) {
+				
+				Integer taskIdTemp = TaskItemRedisDAO.getRobotTask(robotBO.getId());
+				
+				for (String string : robotSp) {
+					if (string != null && !string.equals("")) {
+						Integer robotId = Integer.valueOf(string);
+						if (robotBO.getId().equals(robotId) ) {
+							if (taskIdTemp == null || !taskIdTemp.equals(taskId)) {
+								TaskItemRedisDAO.setRobotTask(robotId, taskId);
+							}
+							break;
+						}
+					}
+				}
+			}
+			
+			for (RobotBO robotBO : robotBOs) {
+				Integer taskIdTemp = TaskItemRedisDAO.getRobotTask(robotBO.getId());
+				if (taskIdTemp != null && taskIdTemp.equals(taskId)) {
+					boolean flag = true;
+					for (String string : robotSp) {
+						if (string != null && !string.equals("")) {
+							Integer robotId = Integer.valueOf(string);
+							if (robotId.equals(robotBO.getId())) {
+								flag = false;
+							}
+						}
+						
+					}
+					if (flag) {
+						TaskItemRedisDAO.delRobotTask(robotBO.getId());
+					}
+				}
+			}
+		}
+		
+		return "操作成功";
+	}
+
+	
+	public List<RobotBO> getWindowRobots(Integer taskId) {
+		List<RobotBO> results = new ArrayList<>();
+		synchronized (Lock.ROBOT_TASK_REDIS_LOCK) {
+			List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
+			for (RobotBO robotBO : robotBOs) {
+				Integer taskIdTemp = TaskItemRedisDAO.getRobotTask(robotBO.getId());
+				if (taskIdTemp != null && taskIdTemp.equals(taskId)) {
+					results.add(robotBO);
+				}
+			}
+		}
+		
+		return results;
+	}
 	
 	
 	public String getTaskName(Date date) {
