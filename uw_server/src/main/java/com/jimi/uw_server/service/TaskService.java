@@ -26,7 +26,6 @@ import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.PackingListItemBO;
 import com.jimi.uw_server.model.vo.IOTaskDetailVO;
@@ -109,6 +108,8 @@ public class TaskService {
 	private static final String GET_REMAIN_MATERIAL_BY_BOX = "SELECT * FROM material where box = ? and remainder_quantity > 0";
 	
 	private static final String GET_MATERIAL_BY_TYPE_SQL = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0";
+	
+	private static final String GET_SUM_REMAINDER_QUANTITY_GROUP_BY_MATERIAL_TYPE = "SELECT type,SUM(remainder_quantity) AS sum_remainder_quantity FROM material GROUP BY type";
 	
 	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, String fullFileName, Integer supplier, Integer destination) throws Exception {
@@ -298,6 +299,16 @@ public class TaskService {
 				putTaskItemToRedisAndSendGetBoxCmd(packingListItems, emptyBox, window);
 				
 			} else if (task.getType() == TaskType.OUT) { // 如果任务类型为出库
+				
+				//检查库存是否足够
+				List<Record> quantityInfos = Db.find(GET_SUM_REMAINDER_QUANTITY_GROUP_BY_MATERIAL_TYPE);
+				for (Record record : quantityInfos) {
+					for (PackingListItem item : packingListItems) {
+						if(record.getInt("type").equals(item.getMaterialTypeId()) && record.getInt("sum_remainder_quantity").intValue() < item.getQuantity()) {
+							throw new OperationException("类型ID为"+item.getMaterialTypeId()+"的物料库存不足"+item.getQuantity()+"个，无法开始出库任务");
+						}
+					}
+				}
 				
 				// 根据其中一个物料类型获取其中一个物料，进而获取它的盒号（物料获取料演示版本特例：任务所需物料都存在一个料盒中）
 				Material material = Material.dao.findFirst(GET_MATERIAL_BY_TYPE_SQL, packingListItems.get(0).getMaterialTypeId());

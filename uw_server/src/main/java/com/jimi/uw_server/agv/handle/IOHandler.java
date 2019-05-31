@@ -27,6 +27,8 @@ import com.jimi.uw_server.ur.entity.ReachOutPackage;
 import com.jimi.uw_server.ur.entity.base.UrMaterialInfo;
 import com.jimi.uw_server.ur.socket.UrSocekt;
 
+import cc.darhao.dautils.api.DateUtil;
+
 /**
  * 出入库命令处理器
  * <br>
@@ -125,7 +127,7 @@ public class IOHandler {
 									urMaterialInfo.setMaterialNo(material.getId());
 									urMaterialInfo.setMaterialTypeId(material.getType());
 									urMaterialInfo.setQuantity(material.getRemainderQuantity());
-									urMaterialInfo.setProductionTime(material.getProductionTime());
+									urMaterialInfo.setProductionTime(DateUtil.yyyyMMdd(material.getProductionTime()));
 									urMaterialInfo.setCol(material.getCol());
 									urMaterialInfo.setRow(material.getRow());
 									urMaterialInfos.add(urMaterialInfo);

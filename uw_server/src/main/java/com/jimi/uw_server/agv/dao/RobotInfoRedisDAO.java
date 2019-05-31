@@ -23,9 +23,9 @@ public class RobotInfoRedisDAO {
 	 * 更新机器实时数据到Redis
 	 */
 	public synchronized static void update(List<RobotBO> robotBOs) {
-		cache.del("robot");
+		cache.del("robot2");
 		for (RobotBO agvRobot : robotBOs) {
-			cache.lpush("robot", Json.getJson().toJson(agvRobot));
+			cache.lpush("robot2", Json.getJson().toJson(agvRobot));
 		}
 	}
 	
@@ -35,7 +35,7 @@ public class RobotInfoRedisDAO {
 	 */
 	public synchronized static List<RobotBO> check(){
 		List<RobotBO> robotBOs = new ArrayList<>();
-		List<String> robots = cache.lrange("robot", 0, -1);
+		List<String> robots = cache.lrange("robot2", 0, -1);
 		for (String robot : robots) {
 			robotBOs.add(Json.getJson().parse(robot, RobotBO.class));
 		}

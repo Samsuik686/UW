@@ -1,6 +1,7 @@
 package com.jimi.uw_server.ur.processor;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import javax.websocket.Session;
@@ -24,6 +25,8 @@ import com.jimi.uw_server.ur.entity.ResultPackage;
 import com.jimi.uw_server.ur.entity.base.UrBasePackage;
 import com.jimi.uw_server.ur.entity.base.UrMaterialInfo;
 import com.jimi.uw_server.ur.socket.UrSocekt;
+
+import cc.darhao.dautils.api.DateUtil;
 
 
 /**
@@ -104,7 +107,7 @@ public class MessageHandler {
 	 */
 	private void handleInPackage(IOPackage inPackage) throws Exception {
 		//判断是否存在空值
-		if(inPackage.isContainsNullFields()) {
+		if(inPackage.containsNullFields()) {
 			throw new IllegalArgumentException("接受的包存在空属性");
 		}
 		
@@ -136,20 +139,20 @@ public class MessageHandler {
 	}
 
 
-	private void updateDb(IOPackage ioPackage) {
+	private void updateDb(IOPackage ioPackage) throws ParseException {
 		//库存更新和记录入库日志
 		List<UrMaterialInfo> urMaterialInfos = ioPackage.getList();
 		if (urMaterialInfos == null || urMaterialInfos.size() == 0) {
 			throw new IllegalArgumentException("list不能为空");
 		}
 		for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
-			if(urMaterialInfo.isContainsNullFields()) {
+			if(urMaterialInfo.containsNullFields()) {
 				throw new IllegalArgumentException("list的内容不能存在空属性");
 			}
 			if(ioPackage.getCmdcode().equals("out")) {
 				taskService.out(ioPackage.getTaskId(), urMaterialInfo.getMaterialNo(), urMaterialInfo.getMaterialTypeId(), urMaterialInfo.getQuantity(), ioPackage.getSupplier());
 			}else {
-				taskService.in(ioPackage.getTaskId(), urMaterialInfo.getMaterialNo(), urMaterialInfo.getRow(), urMaterialInfo.getCol(), urMaterialInfo.getMaterialTypeId(), urMaterialInfo.getQuantity(), ioPackage.getSupplier(), urMaterialInfo.getProductionTime());
+				taskService.in(ioPackage.getTaskId(), urMaterialInfo.getMaterialNo(), urMaterialInfo.getRow(), urMaterialInfo.getCol(), urMaterialInfo.getMaterialTypeId(), urMaterialInfo.getQuantity(), ioPackage.getSupplier(), DateUtil.yyyyMMdd(urMaterialInfo.getProductionTime()));
 			}
 		}
 	}

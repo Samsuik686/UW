@@ -30,9 +30,9 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static int isPauseAssign() {
 		try {
-			return cache.get("pause");
+			return cache.get("pause2");
 		} catch (NullPointerException e) {
-			cache.set("pause", 0);
+			cache.set("pause2", 0);
 			return isPauseAssign();
 		}
 	}
@@ -42,7 +42,7 @@ public class TaskItemRedisDAO {
 	 * 设置停止分配任务标志位
 	 */
 	public synchronized static void setPauseAssign(int pause) {
-		cache.set("pause", pause);
+		cache.set("pause2", pause);
 	}
 	
 	
@@ -57,8 +57,8 @@ public class TaskItemRedisDAO {
 			items.add(Json.getJson().toJson(item).getBytes());
 		}
 		Collections.reverse(ioTaskItems);
-		cache.del("til");
-		cache.lpush("til", items.toArray());
+		cache.del("til2");
+		cache.lpush("til2", items.toArray());
 	}
 	
 	
@@ -66,11 +66,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的未分配的条目<br>
 	 */
 	public synchronized static void removeUnAssignedTaskItemByTaskId(int taskId) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN || agvioTaskItem.getState().intValue() == IOTaskItemState.LACK)){
-				cache.lrem("til", 1, item);
+				cache.lrem("til2", 1, item);
 				i--;
 			}
 		}
@@ -81,11 +81,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的条目<br>
 	 */
 	public static void removeTaskItemByTaskId(int taskId) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getTaskId().intValue() == taskId){
-				cache.lrem("til", 1, item);
+				cache.lrem("til2", 1, item);
 				i--;
 			}
 		}
@@ -96,11 +96,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定的出入库任务条目<br>
 	 */
 	public static void removeTaskItemByPackingListId(int packingListId) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == packingListId){
-				cache.lrem("til", 1, item);
+				cache.lrem("til2", 1, item);
 				i--;
 			}
 		}
@@ -111,12 +111,12 @@ public class TaskItemRedisDAO {
 	 * 更新出入库任务条目执行状态<br>
 	 */
 	public synchronized static void updateIOTaskItemState(AGVIOTaskItem taskItem, int state) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setState(state);
-				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				cache.lset("til2", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}
 		}
@@ -127,12 +127,12 @@ public class TaskItemRedisDAO {
 	 * 更新任务条目为已完成，标识出入库数量已满足实际需求<br>
 	 */
 	public synchronized static void updateTaskIsForceFinish(AGVIOTaskItem taskItem, boolean isForceFinish) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setIsForceFinish(isForceFinish);
-				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				cache.lset("til2", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}
 		}
@@ -143,12 +143,12 @@ public class TaskItemRedisDAO {
 	 * 更新任务条目盒号<br>
 	 */
 	public synchronized static void updateTaskItemBoxId(AGVIOTaskItem taskItem, int boxId) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setBoxId(boxId);
-				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				cache.lset("til2", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}
 		}
@@ -159,12 +159,12 @@ public class TaskItemRedisDAO {
 	 *  填写指定出入库任务条目的执行机器
 	 */
 	public synchronized static void updateIOTaskItemRobot(AGVIOTaskItem taskItem, int robotid) {
-		for (int i = 0; i < cache.llen("til"); i++) {
-			byte[] item = cache.lindex("til", i);
+		for (int i = 0; i < cache.llen("til2"); i++) {
+			byte[] item = cache.lindex("til2", i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if(agvioTaskItem.getId().intValue() == taskItem.getId().intValue()){
 				agvioTaskItem.setRobotId(robotid);
-				cache.lset("til", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				cache.lset("til2", i, Json.getJson().toJson(agvioTaskItem).getBytes());
 				break;
 			}
 		}
@@ -184,7 +184,7 @@ public class TaskItemRedisDAO {
 	 * 把redis的til内容追加到参数里然后返回
 	 */
 	public synchronized static List<AGVIOTaskItem> appendIOTaskItems(List<AGVIOTaskItem> ioTaskItems) {
-		List<byte[]> items = cache.lrange("til", 0, -1);
+		List<byte[]> items = cache.lrange("til2", 0, -1);
 		for (byte[] item : items) {
 			ioTaskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
 		}
@@ -199,12 +199,12 @@ public class TaskItemRedisDAO {
 	public synchronized static int getCmdId() {
 		int cmdid = 0;
 		try {
-			cmdid = cache.get("cmdid");
+			cmdid = cache.get("cmdid2");
 		} catch (NullPointerException e) {
 		}
 		cmdid%=999999;
 		cmdid++;
-		cache.set("cmdid", cmdid);
+		cache.set("cmdid2", cmdid);
 		return cmdid;
 	}
 
@@ -219,8 +219,8 @@ public class TaskItemRedisDAO {
 			items.add(Json.getJson().toJson(item).getBytes());
 		}
 		Collections.reverse(buildTaskItems);
-		cache.del("tilOfBuild");
-		cache.lpush("tilOfBuild", items.toArray());
+		cache.del("tilOfBuild2");
+		cache.lpush("tilOfBuild2", items.toArray());
 	}
 
 
@@ -228,7 +228,7 @@ public class TaskItemRedisDAO {
 	 * 把redis的tilOfBuild内容追加到参数里然后返回
 	 */
 	public synchronized static List<AGVBuildTaskItem> appendBuildTaskItems(List<AGVBuildTaskItem> buildTaskItems) {
-		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
+		List<byte[]> items = cache.lrange("tilOfBuild2", 0, -1);
 		for (byte[] item : items) {
 			buildTaskItems.add(Json.getJson().parse(new String(item), AGVBuildTaskItem.class));
 		}
@@ -249,11 +249,11 @@ public class TaskItemRedisDAO {
 	 * 批量删除指定的建仓任务条目<br>
 	 */
 	public static void removeBuildTaskItemBySrcPosition(String srcPosition) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen("tilOfBuild2"); i++) {
+			byte[] item = cache.lindex("tilOfBuild2", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
 			if(agvBuildTaskItem.getSrcPosition().equals(srcPosition)){
-				cache.lrem("tilOfBuild", 1, item);
+				cache.lrem("tilOfBuild2", 1, item);
 				i--;
 			}
 		}
@@ -264,11 +264,11 @@ public class TaskItemRedisDAO {
 	 * 删除某条指定的建仓任务条目<br>
 	 */
 	public static void removeBuildTaskItemByBoxId(int boxId) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen("tilOfBuild2"); i++) {
+			byte[] item = cache.lindex("tilOfBuild2", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
 			if(agvBuildTaskItem.getBoxId().intValue() == boxId){
-				cache.lrem("tilOfBuild", 1, item);
+				cache.lrem("tilOfBuild2", 1, item);
 				i--;
 			}
 		}
@@ -279,12 +279,12 @@ public class TaskItemRedisDAO {
 	 *  填写指定建仓任务条目的执行机器
 	 */
 	public synchronized static void updateBuildTaskItemRobot(AGVBuildTaskItem buildTaskItem, int robotid) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen("tilOfBuild2"); i++) {
+			byte[] item = cache.lindex("tilOfBuild2", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
 			if(agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()){
 				agvBuildTaskItem.setRobotId(robotid);
-				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
+				cache.lset("tilOfBuild2", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
 				break;
 			}
 		}
@@ -295,12 +295,12 @@ public class TaskItemRedisDAO {
 	 * 更新建仓任务条目执行状态<br>
 	 */
 	public synchronized static void updateBuildTaskItemState(AGVBuildTaskItem buildTaskItem, int state) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen("tilOfBuild2"); i++) {
+			byte[] item = cache.lindex("tilOfBuild2", i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
 			if(agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()){
 				agvBuildTaskItem.setState(state);
-				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
+				cache.lset("tilOfBuild2", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
 				break;
 			}
 		}
@@ -312,9 +312,9 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static boolean getIsBuildAssign() {
 		try {
-			return cache.get("build");
+			return cache.get("build2");
 		} catch (NullPointerException e) {
-			cache.set("build", false);
+			cache.set("build2", false);
 			return getIsBuildAssign();
 		}
 	}
@@ -324,7 +324,7 @@ public class TaskItemRedisDAO {
 	 * 设置建仓任务标志位
 	 */
 	public synchronized static void setBuildAssign(boolean build) {
-		cache.set("build", build);
+		cache.set("build2", build);
 	}
 
 
@@ -332,7 +332,7 @@ public class TaskItemRedisDAO {
 	 * 判断建仓任务是否已完成
 	 */
 	public synchronized static void isBuildFinish() {
-		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
+		List<byte[]> items = cache.lrange("tilOfBuild2", 0, -1);
 		if (items.size() == 0) {
 			setBuildAssign(false);
 		}

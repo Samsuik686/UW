@@ -87,15 +87,15 @@ public class UwConfig extends JFinalConfig {
 		RedisPlugin rp = null;
 		if(isProductionEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("p_url"), PropKit.get("p_user"), PropKit.get("p_password"));
-			rp = new RedisPlugin("uw2", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
 			System.out.println("System is in production envrionment");
 		} else if(isTestEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
-			rp = new RedisPlugin("uw2", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw2", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		me.add(dp);

@@ -1,7 +1,5 @@
 package com.jimi.uw_server.ur.entity.base;
 
-import java.util.Date;
-
 /**
  * 
  * @author HardyYao
@@ -20,10 +18,10 @@ public class UrMaterialInfo {
 	
 	private Integer materialTypeId;
 	
-	private Date productionTime;
+	private String productionTime;
 	
 	
-	public boolean isContainsNullFields() {
+	public boolean containsNullFields() {
 		if(materialNo == null || row == null || col == null || quantity == null || materialTypeId == null || productionTime == null) {
 			return true;
 		}else {
@@ -72,11 +70,11 @@ public class UrMaterialInfo {
 		this.materialTypeId = materialTypeId;
 	}
 
-	public Date getProductionTime() {
+	public String getProductionTime() {
 		return productionTime;
 	}
 
-	public void setProductionTime(Date productionTime) {
+	public void setProductionTime(String productionTime) {
 		this.productionTime = productionTime;
 	}
 	

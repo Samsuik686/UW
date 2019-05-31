@@ -2,8 +2,8 @@ package com.jimi.uw_server.ur.entity;
 
 import java.util.List;
 
-import com.jimi.uw_server.ur.entity.base.UrMaterialInfo;
 import com.jimi.uw_server.ur.entity.base.UrBasePackage;
+import com.jimi.uw_server.ur.entity.base.UrMaterialInfo;
 
 
 /**
@@ -29,7 +29,7 @@ public class IOPackage extends UrBasePackage{
 	}
 	
 	
-	public boolean isContainsNullFields() {
+	public boolean containsNullFields() {
 		if(supplier == null || taskId == null || list == null) {
 			return true;
 		}else {
@@ -67,5 +67,8 @@ public class IOPackage extends UrBasePackage{
 		this.list = list;
 	}
 	
-	
+//	public static void main(String[] args) {
+//		IOPackage package1 = new IOPackage();
+//		System.out.println(JSON.toJSONString(package1));
+//	}
 }
