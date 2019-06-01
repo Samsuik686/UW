@@ -30,7 +30,7 @@
       }
     },
     computed: {
-      ...mapGetters(['checkWindowId', 'checkWindowData', 'isRefresh', 'isScanner']),
+      ...mapGetters(['checkWindowId', 'checkWindowData', 'isRefresh', 'isScanner','focusInput']),
     },
     mounted() {
       if (this.checkWindowData.hasOwnProperty(this.checkWindowId)) {
@@ -80,12 +80,18 @@
         if (val === true) {
           this.getScannerState();
         }
+      },
+      focusInput:function(val){
+        if(val !== this.row.materialId){
+          this.isHighLight = false;
+        }
       }
     },
     methods: {
-      ...mapActions(['setCheckWindowData', 'setIsScanner']),
+      ...mapActions(['setCheckWindowData', 'setIsScanner','setFocusInput']),
       setFocus: function () {
         eventBus.$emit('setIsInput', true);
+        this.setFocusInput(this.row.materialId);
         this.isHighLight = true;
         this.$refs.myInput.focus();
       },
@@ -117,16 +123,23 @@
       },
       //获取扫描状态，判断是否扫描
       getScannerState: function () {
+        let that = this;
+        setTimeout(function(){
+          that.setIsScanner(false);
+        },0);
         //获取当前窗口的数据
         let data = JSON.parse(JSON.stringify(this.checkWindowData[this.checkWindowId]));
         //匹配
         for (let i = 0; i < data.length; i++) {
           let obj = data[i];
-          if (obj.materialId === this.row.materialId && obj.isScanner === true) {
-            this.inputVal = obj.checkQuantity;
-            this.isHighLight = obj.isHighLight;
-            this.index = i;
-            this.setIsScanner(false);
+          if (obj.materialId === this.row.materialId) {
+            if(obj.isScanner === true){
+              this.inputVal = obj.checkQuantity;
+              this.isHighLight = obj.isHighLight;
+              this.index = i;
+            }else{
+              this.isHighLight = false;
+            }
             break;
           }
         }
@@ -144,6 +157,6 @@
 
 <style scoped>
   .highLight {
-    border-color: green;
+    background: rgba(255, 161, 117, 0.44)
   }
 </style>

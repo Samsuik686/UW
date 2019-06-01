@@ -8,7 +8,7 @@
     ></datatable>
     <div class="form-group row check-btn">
       <div class="btn btn-primary" @click="checkInventoryData">审核盘点数据</div>
-      <!--<div class="btn btn-primary ml-3 mr-4">盘点数据导出EXCEL</div>-->
+      <div class="btn btn-primary ml-3 mr-4" @click="exportCheckReport">导出盘点报表</div>
     </div>
     <check-details v-if="isShow" :row="row"></check-details>
     <upload-check-task v-if="isUploadCheck" :taskId = "taskId"></upload-check-task>
@@ -19,8 +19,12 @@
   import {mapActions,mapGetters} from 'vuex'
   import CheckDetails from './subscomp/CheckDetails'
   import eventBus from "../../../../utils/eventBus";
-  import {checkInventoryTaskUrl, getInventoryTaskInfoUrl} from "../../../../config/globalUrl";
-  import {axiosPost} from "../../../../utils/fetchData";
+  import {
+    checkInventoryTaskUrl,
+    exportEWhReportInventoryUrl,
+    getInventoryTaskInfoUrl
+  } from "../../../../config/globalUrl";
+  import {axiosPost, downloadFile} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
   import UploadCheckTask from './subscomp/UploadCheckTask'
   import OperationOptions from './subscomp/OperationOptions'
@@ -172,7 +176,7 @@
                 this.$alertSuccess('审核成功');
                 this.setUnInventoryData([]);
               }else{
-                this.$alertWarning(res.data.data);
+                this.$alertWarning('存在物料未盘点');
                 let data = res.data.data;
                 let arr = data.split('[')[1].split(']')[0].split(',');
                 this.setUnInventoryData(arr);
@@ -243,6 +247,33 @@
               break;
             }
           }
+        }
+      },
+      exportCheckReport:function(){
+        if(this.taskId === ''){
+          this.$alertWarning('盘点任务不能为空');
+          return;
+        }
+        if (!this.isPending) {
+          this.isPending = true;
+          let data = {
+            taskId:this.taskId,
+            no:this.no,
+            '#TOKEN#': this.$store.state.token
+          };
+          downloadFile(exportEWhReportInventoryUrl, data);
+          let count = 0;
+          let mark = setInterval(() => {
+            count++;
+            if (count > 9) {
+              count = 0;
+              clearInterval(mark);
+              this.isPending = false
+            }
+          }, 1000);
+          this.$alertSuccess('请求成功，请等待下载');
+        } else {
+          this.$alertInfo('请稍后再试')
         }
       }
     }

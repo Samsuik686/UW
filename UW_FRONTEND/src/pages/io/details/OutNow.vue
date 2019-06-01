@@ -665,6 +665,19 @@
             this.materialOutRecords.push(item);
           }
         });
+        this.materialOutRecords.map((item,index) => {
+          let isExit = false;
+          for(let i=0;i<this.taskNowItems.details.length;i++){
+            let obj = this.taskNowItems.details[i];
+            if(item.materialId === obj.materialId){
+              isExit = true;
+              break;
+            }
+          }
+          if(isExit === false){
+             this.materialOutRecords.splice(index,1);
+          }
+        });
         this.setEditMaterials();
       },
       // 扫描成功提示

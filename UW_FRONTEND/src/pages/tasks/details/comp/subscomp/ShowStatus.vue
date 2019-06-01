@@ -34,7 +34,7 @@
           case '缺料':
             this.itemStyle.color = 'red'; break;
           case '欠料':
-            this.itemStyle.color = 'blue'; break;
+            this.itemStyle.color = 'red'; break;
           default:
             this.itemStyle.color = 'black'; break;
         }

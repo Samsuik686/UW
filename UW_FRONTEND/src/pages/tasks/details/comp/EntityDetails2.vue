@@ -4,7 +4,7 @@
       <div class="details-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
-            <h3>任务详情：</h3>
+            <h3>正在审核：</h3>
           </div>
           <datatable v-bind="$data"/>
           <div style="width:100%;text-align:right">

@@ -62,7 +62,7 @@
       printBarcode: function (acturalNum) {
         let checkQuantity = this.getCheckQuantity();
         if (checkQuantity === '') {
-          this.$alertWarning('你好，我是bug，我现在慌得一逼');
+          console.log('获取数量失败');
           return;
         }
         let date = this.row.productionTime.split(' ');

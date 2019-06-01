@@ -4,7 +4,7 @@
       <div class="details-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
-            <h3>任务详情：</h3>
+            <h3>任务实时执行情况：</h3>
           </div>
           <datatable v-bind="$data"/>
         </div>
@@ -86,6 +86,11 @@
             this.isPending = false;
             if (response.data.result === 200 && response.data.data !== null) {
               this.data = response.data.data.list;
+              this.data.map((item) => {
+                if(item.finishTime === 'no'){
+                  item.finishTime = '等待操作';
+                }
+              });
               this.total = response.data.data.totalRow;
             } else {
               errHandler(response.data)

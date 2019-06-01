@@ -69,7 +69,7 @@
             </div>
           </div>
           <div class="form-group ">
-            <label class="control-label">极限坐标：</label>
+            <label class="control-label">边界坐标：</label>
             <div>
               <input type="number" id="limitX" class="form-control col-1" placeholder="limitYL"
                      v-model.trim.number="buildInfo.parameters.limitYL">

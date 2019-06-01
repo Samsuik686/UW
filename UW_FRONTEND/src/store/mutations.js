@@ -66,3 +66,6 @@ export const setIsScanner = (state,isScanner) => {
 export const setUnInventoryData = (state,unInventoryData) => {
   state.unInventoryData = unInventoryData;
 };
+export const setFocusInput = (state,focusInput) => {
+  state.focusInput = focusInput;
+};

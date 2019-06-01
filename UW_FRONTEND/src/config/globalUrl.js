@@ -80,6 +80,7 @@ export const externalWhSelectExternalWhInfoUrl = url + '/manage/externalWh/selec
 export const externalWhSelectEWhMaterialDetailsUrl = url + '/manage/externalWh/selectEWhMaterialDetails';
 export const externalWhDeleteExternalWhLogUrl = url + '/manage/externalWh/deleteExternalWhLog';
 export const externalWhAddWorstageLogUrl = url + '/manage/externalWh/addWorstageLog';
+export const exportEWhReportUrl = url + '/manage/externalWh/exportEWhReport';
 
 //inventory task
 export const  createInventoryTaskUrl = url + '/task/inventory/createInventoryTask';
@@ -95,9 +96,12 @@ export const  inventoryMaterialUrl = url + '/task/inventory/inventoryMaterial';
 export const  importEWhInventoryRecordUrl = url + '/task/inventory/importEWhInventoryRecord';
 export const checkInventoryTaskUrl = url + '/task/inventory/checkInventoryTask';
 export const getUnStartInventoryTaskUrl = url + '/task/inventory/getUnStartInventoryTask';
+export const exportEWhReportInventoryUrl = url + '/task/inventory/exportEWhReport';
 //一键平仓
 export const coverMaterialByTaskIdUrl = url + '/task/inventory/coverMaterialByTaskId';
 //平UW仓
 export const coverMaterialUrl = url + '/task/inventory/coverMaterial';
 //平外仓
 export const coverEWhMaterialUrl = url + '/task/inventory/coverEWhMaterial';
+export const setInventoryTaskRobotsUrl = url + '/task/inventory/setTaskRobots';
+export const getInventoryWindowRobotsUrl = url + '/task/inventory/getWindowRobots';

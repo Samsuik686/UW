@@ -23,7 +23,7 @@
           </div>
           <div @click="toggleState('material')">
             <div class="sidebar-link" @click="linkTo('material')"
-                 :class="activeItem === 'material' ? 'active' : ''">物料管理
+                 :class="activeItem === 'material' ? 'active' : ''">UW仓物料管理
             </div>
           </div>
           <div @click="toggleState('transfer')">

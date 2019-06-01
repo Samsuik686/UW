@@ -6,20 +6,36 @@
           <div class="form-group mb-0 mr-5">
             <h3>出入库记录：</h3>
           </div>
-          <div class="form-group destination" style="margin-right:20px;">
-            <label for="type" class="mb-0 destination-label">出入库类型：</label>
-            <select id="type" v-model="type" class="custom-select">
-              <option value="" disabled>请选择</option>
-              <option label="出库" value="0"></option>
-              <option label="入库" value="1"></option>
-            </select>
-          </div>
-          <div class="form-group destination">
-            <label for="destination" class="mb-0 destination-label">发料目的地：</label>
-            <select id="destination" v-model="destination" class="custom-select" :disabled="type === '1'">
-              <option value="" disabled>请选择</option>
-              <option :value="item.id" v-for="item in destinations">{{item.name}}</option>
-            </select>
+          <div class="form-row" style="margin-top:10px;margin-left:8px;">
+            <div class="form-group destination" style="margin-right:20px;">
+              <label for="type" class="mb-0 destination-label">出入库类型：</label>
+              <select id="type" v-model="type" class="custom-select">
+                <option label="全部" value="3" ></option>
+                <option label="出库" value="0"></option>
+                <option label="入库" value="1"></option>
+              </select>
+            </div>
+            <div class="form-group destination" style="margin-right:20px;">
+              <label for="destination" class="mb-0 destination-label">发料目的地：</label>
+              <select id="destination" v-model="destination" class="custom-select" :disabled="type === '1' || type === '3'">
+                <option value="" label="全部"></option>
+                <option :value="item.id" v-for="item in destinations">{{item.name}}</option>
+              </select>
+            </div>
+            <div class="form-group time-box" style="margin-right:5px;">
+              <label for="startTime" class="mb-0 time-label">出入库时间 从：</label>
+              <datetime v-model="startTime" id="startTime" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai"/>
+            </div>
+            <div class="form-group time-box" style="margin-right:10px;">
+              <label for="endTime" class="mb-0 time-label">至：</label>
+              <datetime v-model="endTime" id="endTime" type="datetime" zone="Asia/Shanghai" value-zone="Asia/Shanghai"/>
+            </div>
+            <div class="form-group row align-items-end">
+              <a href="#" class="btn btn-secondary ml-3 mr-4" @click="initForm">清空条件</a>
+            </div>
+            <div class="form-group row align-items-end">
+              <a href="#" class="btn btn-primary ml-3 mr-4" @click="findIODetails">查询</a>
+            </div>
           </div>
           <datatable v-bind="$data"/>
         </div>
@@ -32,19 +48,25 @@
 </template>
 
 <script>
+  import Qs from 'qs'
   import eventBus from '@/utils/eventBus'
   import {mapActions, mapGetters} from 'vuex'
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
   import {destinationSelectUrl, getMaterialRecordsUrl} from "../../../../../config/globalUrl";
-
+  import Datetime from '@/components/vue-datetime/Datetime'
   export default {
     name: "IODetails",
     props: ['detailsID'],
+    components:{
+      Datetime
+    },
     data() {
       return {
         destination:'',
-        type:'0',
+        type:'3',
+        startTime:'',
+        endTime:'',
         destinations:[],
         fixHeaderAndSetBodyMaxHeight: 450,
         tblStyle: {
@@ -77,22 +99,6 @@
           this.dataFilter(val);
         },
         deep: true
-      },
-      destination:{
-        handler(val){
-          this.query.limit = 20;
-          this.query.offset = 0;
-          this.getMaterialRecords();
-        },
-        deep:true
-      },
-      type:{
-        handler(val){
-          this.query.limit = 20;
-          this.query.offset = 0;
-          this.getMaterialRecords();
-        },
-        deep:true
       }
     },
     mounted() {
@@ -114,6 +120,8 @@
             pageSize: 20
           }
         };
+        options.data.startTime = this.startTime.replace('T', ' ').replace('Z', '').split('.')[0];
+        options.data.endTime = this.endTime.replace('T', ' ').replace('Z', '').split('.')[0];
         this.fetchData(options);
       },
       init: function () {
@@ -123,7 +131,6 @@
       fetchData: function (options) {
         if (!this.isPending) {
           this.isPending = true;
-
           axiosPost(options).then(response => {
             this.isPending = false;
             if (response.data.result === 200) {
@@ -149,16 +156,18 @@
       },
       dataFilter: function () {
         this.setLoading(true);
-        let val = this.thisDetailsID;
         let options = {
           url: getMaterialRecordsUrl,
           data: {
-            type: val,
+            materialTypeId: this.thisDetailsID,
+            type:this.type,
             destination:this.destination
           }
         };
         options.data.pageNo = this.query.offset / this.query.limit + 1;
         options.data.pageSize = this.query.limit;
+        options.data.startTime = this.startTime.replace('T', ' ').replace('Z', '').split('.')[0];
+        options.data.endTime = this.endTime.replace('T', ' ').replace('Z', '').split('.')[0];
         this.fetchData(options);
       },
       closePanel: function () {
@@ -177,7 +186,7 @@
             this.isPending = false;
             if (response.data.result === 200) {
               this.destinations = response.data.data.list;
-              this.destination = this.destinations[0].id + '';
+              this.destination = '';
               this.getMaterialRecords();
             } else {
               errHandler(response.data)
@@ -192,6 +201,28 @@
             })
         }
       },
+      compareDate: function (dateFrom, dateTo) {
+        let compFrom = new Date(dateFrom);
+        let compTo = new Date(dateTo);
+        return (compTo - compFrom);
+      },
+      initForm:function(){
+        this.startTime = '';
+        this.endTime = '';
+        this.destination = '';
+        this.type = '3';
+      },
+      findIODetails:function(){
+        if(this.startTime !== '' && this.endTime !== '') {
+          let tempFrom = this.startTime.replace('T', ' ').replace('Z', '');
+          let tempTo = this.endTime.replace('T', ' ').replace('Z', '');
+          if (this.compareDate(tempFrom, tempTo) < 0) {
+            this.$alertWarning('时间范围错误');
+            return;
+          }
+        }
+        this.getMaterialRecords();
+      }
     }
   }
 </script>
@@ -222,11 +253,18 @@
   }
   .destination{
     display:flex;
-    width:250px
+  }
+  .time-box{
+    display:flex;
   }
   .destination-label{
-    width:180px;
-    line-height:38px
+    min-width:100px;
+    line-height:38px;
+    text-align:right;
+  }
+  .time-label{
+    line-height:38px;
+    text-align:right;
   }
   #cancel-btn {
     height: 100%;

@@ -57,6 +57,7 @@ const state = {
   checkOperationData: {},
   isRefresh:false,
   isScanner:false,
+  focusInput:'',
   unInventoryData:[]
 };
 

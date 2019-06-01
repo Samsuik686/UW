@@ -16,6 +16,9 @@
       <div class="form-group row align-items-end">
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="isWastageAdding = !isWastageAdding">导入物料仓物料损耗表</a>
       </div>
+      <div class="form-group row align-items-end">
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="exportEWhReport">导出物料仓库存报表</a>
+      </div>
       <transition name="fade" v-if="isAdding">
         <add-transfer :suppliers="suppliers"></add-transfer>
       </transition>
@@ -29,8 +32,8 @@
 <script>
   import eventBus from '@/utils/eventBus'
   import {mapActions} from 'vuex';
-  import {destinationSelectUrl, supplierSelectUrl} from "../../../../config/globalUrl";
-  import {axiosPost} from "../../../../utils/fetchData";
+  import {destinationSelectUrl, exportEWhReportUrl, supplierSelectUrl} from "../../../../config/globalUrl";
+  import {axiosPost, downloadFile} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
   import AddTransfer from "./subscomp/AddTransfer";
   import AddWastage from "./subscomp/AddWastage";
@@ -207,6 +210,30 @@
               this.$alertDanger('请求超时，请刷新重试');
             }
           });
+        }
+      },
+      exportEWhReport:function(){
+        if (!this.isPending) {
+          this.isPending = true;
+          let data = {
+            whId:this.queryOptions[1].model,
+            supplierId:this.queryOptions[2].model,
+            no:this.queryOptions[0].model,
+            '#TOKEN#': this.$store.state.token
+          };
+          downloadFile(exportEWhReportUrl, data);
+          let count = 0;
+          let mark = setInterval(() => {
+            count++;
+            if (count > 9) {
+              count = 0;
+              clearInterval(mark);
+              this.isPending = false
+            }
+          }, 1000);
+          this.$alertSuccess('请求成功，请等待下载');
+        } else {
+          this.$alertInfo('请稍后再试')
         }
       }
     }

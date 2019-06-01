@@ -76,3 +76,6 @@ export const setIsScanner = ({commit},isScanner) => {
 export const setUnInventoryData = ({commit},unInventoryData) => {
   commit('setUnInventoryData',unInventoryData);
 };
+export const setFocusInput = ({commit},focusInput) => {
+  commit('setFocusInput',focusInput);
+};

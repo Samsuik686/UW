@@ -133,7 +133,6 @@
         }
         options.query.taskId = taskId;
         options.query.no = no;
-        console.log(options.query.no);
         this.$router.push('_empty');
         this.$router.replace(options
           , () => {
@@ -192,6 +191,7 @@
             this.tasks.map((item => {
               item.name = item.file_name
             }));
+            this.queryOptions[1].model = '';
             this.queryOptions[1].list = this.tasks;
           }).catch(err => {
             this.isPending = false;

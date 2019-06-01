@@ -2,7 +2,8 @@
 <template>
   <div class="side-setting">
     <div class="setting-container">
-      <div class="icon-container" :class="activeItem === 'material' ? 'icon-active' : '' " @click="initData('material')">
+      <div class="icon-container" :class="activeItem === 'material' ? 'icon-active' : '' "
+           @click="initData('material')">
         <div class="setting-icon">
           <icon name="table" scale="1.8" style="color: #fff;"></icon>
         </div>
@@ -39,20 +40,20 @@
         <span>盘点</span>
       </div>
       <div class="mt-auto w-100">
-        <!--<div class="icon-container " :class="activeItem === 'config' ? 'icon-active' : ''"
+        <div class="icon-container " :class="activeItem === 'config' ? 'icon-active' : ''"
              @click="initData('config')">
           <div class="setting-icon">
             <icon name="config" scale="1.8" style="color: #fff;"></icon>
           </div>
           <span>设置</span>
-        </div>-->
-        <!--<div class="icon-container " :class="activeItem === 'build' ? 'icon-active' : ''"
+        </div>
+        <div class="icon-container " :class="activeItem === 'build' ? 'icon-active' : ''"
              @click="initData('build')">
           <div class="setting-icon">
             <icon name="build" scale="1.8" style="color: #fff;"></icon>
           </div>
           <span>建仓</span>
-        </div>-->
+        </div>
         <div class="icon-container "
              v-if="user.type === 1"
              :class="activeItem === 'user' ? 'icon-active' : ''"
@@ -98,7 +99,7 @@
       }
     },
     computed: {
-      ...mapGetters(['routerIn', 'token','user'])
+      ...mapGetters(['routerIn', 'token', 'user'])
     },
     methods: {
       ...mapActions(['setTableRouter', 'setLoading', 'setLoginToken']),
@@ -149,7 +150,7 @@
     position: fixed;
     height: 100%;
     z-index: 10;
-    overflow:auto;
+    overflow: auto;
   }
 
   .setting-container {

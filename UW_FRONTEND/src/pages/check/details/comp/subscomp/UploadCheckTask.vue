@@ -40,7 +40,7 @@
       }
     },
     props:{
-      taskId:String
+      taskId:Number
     },
     methods: {
       ...mapActions(['setLoading']),

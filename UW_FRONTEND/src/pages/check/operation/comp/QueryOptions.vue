@@ -34,6 +34,12 @@
       this.setCheckWindowId('');
       this.setPreset();
     },
+    watch:{
+      $route: function (route){
+        this.setCheckWindowId('');
+        this.setPreset();
+      }
+    },
     methods: {
       ...mapActions(['setCheckWindowId']),
       setPreset: function () {
@@ -51,6 +57,9 @@
                 this.thisWindow = this.windowsList[0].id;
                 this.setCheckWindowId(this.thisWindow);
               }
+            }else{
+              this.thisWindow = '';
+              this.setCheckWindowId(this.thisWindow);
             }
           }else{
             errHandler(response.data);

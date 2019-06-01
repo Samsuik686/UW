@@ -45,15 +45,23 @@
         scanText: '',
         isInput: false,
         boxId: '',
-        taskId: ''
+        taskId: '',
+        //定时器
+        myTimeOut:'',
+        //是否启用定时器
+        isTimeOut:false
       }
     },
     created() {
       this.init();
     },
+    beforeDestroy(){
+      this.clearCheckTimeOut();
+    },
     watch: {
       checkWindowId: function (val) {
         if (val !== '') {
+          this.clearCheckTimeOut();
           this.setIsRefresh(false);
           this.getInventoryBox(val);
         }
@@ -152,8 +160,10 @@
                 this.data = [];
                 this.taskId = '';
                 this.boxId = '';
+                this.setCheckTimeOut();
                 return;
               }
+              this.clearCheckTimeOut();
               this.boxId = response.data.data.boxId;
               this.taskId = response.data.data.taskId;
               this.setCheckOperationData({
@@ -167,12 +177,20 @@
               });
               this.setCheckWindowDataVuex();
             } else {
-              errHandler(response.data)
+              this.clearCheckTimeOut();
+              if(response.data.result === 412){
+                let tempUrl = this.$route.fullPath;
+                this.$router.push('_empty');
+                this.$router.replace(tempUrl);
+              }else{
+                errHandler(response.data);
+              }
             }
           })
             .catch(err => {
               this.isPending = false;
               console.log(err);
+              this.clearCheckTimeOut();
               this.$alertDanger('请求超时，请刷新重试');
               this.setLoading(false)
             })
@@ -263,7 +281,24 @@
           }
         };
         this.fetchData(options)
-      }
+      },
+      //设置定时器
+      setCheckTimeOut:function(){
+        if(this.isTimeOut === true){
+          this.clearCheckTimeOut();
+        }
+        this.isTimeOut = true;
+        let that = this;
+        this.myTimeOut = setInterval(function () {
+          that.getInventoryBox(that.checkWindowId);
+        },1000);
+      },
+      //清除定时器
+      clearCheckTimeOut:function(){
+        this.isTimeOut = false;
+        clearTimeout(this.myTimeOut);
+        this.myTimeOut = null;
+      },
     }
   }
 </script>
