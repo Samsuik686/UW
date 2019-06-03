@@ -122,7 +122,7 @@
       },
       fetchData: function () {
         let options = {
-          path: '/check/details',
+          path: '/check/UWDetails',
           query: {}
         };
         let taskId = this.queryOptions[1].model;

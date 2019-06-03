@@ -24,9 +24,11 @@
   import {axiosPost} from "./../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
   import eventBus from "../../../../../utils/eventBus";
-  import {getInventoryTaskDetailsUrl} from "../../../../../config/globalUrl";
-  import {coverMaterialByTaskIdUrl} from "../../../../../config/globalUrl";
-  import ClosePosition from './ClosePosition'
+  import {
+    coverEwhMaterialByTaskIdUrl,
+    getEwhInventoryTaskDetailsUrl,
+  } from "../../../../../config/globalUrl";
+  import ClosePosition from './CloseTransferPosition'
 
   export default {
     name: "EntityDetails",
@@ -47,16 +49,17 @@
         HeaderSettings: false,
         data: [],
         columns: [
-          {title: '所在仓位', field: 'whName', colStyle: {width: '80px'}},
-          {title: '料盘唯一码', field: 'materialId', colStyle: {width: '80px'}},
+          {title: '所在仓位', field: 'whName', colStyle: {width: '100px'}},
+          {title: '料盘唯一码', field: 'materialId', colStyle: {width: '110px'}},
           {title: '盘前库存', field: 'beforeNum', colStyle: {width: '80px'}},
           {title: '盘点数量', field: 'atrualNum', colStyle: {width: '80px'}},
+          {title: '退料盈亏', field: 'materialreturnNum', colStyle: {width: '80px'}},
           {title: '盘盈/盘亏', field: 'differentNum', colStyle: {width: '80px'}},
           {title: '盘点人', field: 'inventoryOperatior', colStyle: {width: '90px'}},
           {title: '盘点时间', field: 'inventoryTime', colStyle: {width: '120px'}},
           {title: '平仓人', field: 'coverOperatior', colStyle: {width: '90px'}},
           {title: '平仓时间', field: 'coverTime', colStyle: {width: '120px'}},
-          {title: '操作', tdComp: 'ClosePosition', colStyle: {'width': '80px'}}
+          {title: '操作', tdComp: 'ClosePosition', colStyle: {width: '150px'}}
         ],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -65,9 +68,6 @@
       }
     },
     mounted(){
-      /*if(this.row.checked_time === '' || this.row.checked_time === null){
-        this.$alertWarning('当前盘点数据未审核');
-      }*/
       this.getInventoryTaskDetails();
       eventBus.$on('checkDetailsRefresh',() => {
         this.getInventoryTaskDetails();
@@ -83,7 +83,7 @@
         if(!this.isPending){
           this.isPending = true;
           let options = {
-            url:getInventoryTaskDetailsUrl,
+            url:getEwhInventoryTaskDetailsUrl,
             data:{
               taskId:this.row.task_id,
               materialTypeId:this.row.material_type_id
@@ -114,7 +114,7 @@
         if(!this.isPending){
           this.isPending = false;
           let options = {
-            url:coverMaterialByTaskIdUrl,
+            url:coverEwhMaterialByTaskIdUrl,
             data:{
               materialTypeId:this.row.material_type_id,
               taskId:this.row.task_id

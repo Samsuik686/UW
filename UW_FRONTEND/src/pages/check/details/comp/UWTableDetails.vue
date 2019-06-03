@@ -1,14 +1,11 @@
 <template>
   <div class="main-details mt-1 mb-3">
-    <div class="form-group row">
-      <div class="btn btn-primary ml-3 mr-4" @click="isUploadCheck = true">导入物料仓盘点数据</div>
-    </div>
     <datatable
       v-bind="$data"
     ></datatable>
     <div class="form-group row check-btn">
       <div class="btn btn-primary" @click="checkInventoryData">审核盘点数据</div>
-      <div class="btn btn-primary ml-3 mr-4" @click="exportCheckReport">导出盘点报表</div>
+      <!--<div class="btn btn-primary ml-3 mr-4" @click="exportCheckReport">导出盘点报表</div>-->
     </div>
     <check-details v-if="isShow" :row="row"></check-details>
     <upload-check-task v-if="isUploadCheck" :taskId = "taskId"></upload-check-task>
@@ -17,12 +14,12 @@
 
 <script>
   import {mapActions,mapGetters} from 'vuex'
-  import CheckDetails from './subscomp/CheckDetails'
+  import CheckDetails from './subscomp/CheckUWDetails'
   import eventBus from "../../../../utils/eventBus";
   import {
     checkInventoryTaskUrl,
     exportEWhReportInventoryUrl,
-    getInventoryTaskInfoUrl
+    getInventoryTaskInfoUrl, getUwInventoryTaskInfoUrl
   } from "../../../../config/globalUrl";
   import {axiosPost, downloadFile} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
@@ -82,7 +79,7 @@
         this.init();
         this.setLoading(true);
         let options = {
-          url: getInventoryTaskInfoUrl,
+          url: getUwInventoryTaskInfoUrl,
           data: {}
         };
         if (route.query.taskId) {
@@ -123,8 +120,8 @@
           {field: 'inventory_operatior', title: '盘点人', colStyle: {'width': '70px'}},
           {field: 'start_time', title: '盘点开始时间', colStyle: {'width': '100px'}},
           {field: 'end_time', title: '盘点结束时间', colStyle: {'width': '100px'}},
-          {field: 'checked_operatior', title: '审核人', colStyle: {'width': '80px'}},
-          {field: 'checked_time', title: '审核时间', colStyle: {'width': '100px'}}
+          {field: 'check_operatior', title: '审核人', colStyle: {'width': '80px'}},
+          {field: 'check_time', title: '审核时间', colStyle: {'width': '100px'}}
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0};
@@ -163,6 +160,7 @@
         }
         if(!this.isPending){
           this.isPending = true;
+          this.setLoading(true);
           let options = {
             url:checkInventoryTaskUrl,
             data:{
@@ -171,6 +169,7 @@
           };
           axiosPost(options).then(res => {
             this.isPending = false;
+            this.setLoading(false);
             if(res.data.result === 200){
               if(res.data.data === "操作成功"){
                 this.$alertSuccess('审核成功');
@@ -189,6 +188,7 @@
             console.log(err);
             this.$alertDanger('连接超时，请刷新重试');
             this.isPending = false;
+            this.setLoading(false);
           })
         }
       },
@@ -224,7 +224,7 @@
         }
         this.setLoading(true);
         let options = {
-          url: getInventoryTaskInfoUrl,
+          url: getUwInventoryTaskInfoUrl,
           data: {
             taskId:this.taskId,
             no:this.no

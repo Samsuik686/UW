@@ -6,8 +6,8 @@
 </template>
 
 <script>
-  import TableDetails from "./comp/TableDetails";
-  import SearchOptions from "./comp/SearchOptions";
+  import TableDetails from "./comp/UWTableDetails";
+  import SearchOptions from "./comp/UWSearchOptions";
 
   export default {
     name: "DetailsModule",

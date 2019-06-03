@@ -16,9 +16,14 @@
                  :class="activeItem === 'operation' ? 'active' : ''">UW仓盘点操作
             </div>
           </div>
-          <div @click="toggleState('details')">
-            <div class="sidebar-link" @click="linkTo('details')"
-                 :class="activeItem === 'details' ? 'active' : ''">盘点详情
+          <div @click="toggleState('UWDetails')">
+            <div class="sidebar-link" @click="linkTo('UWDetails')"
+                 :class="activeItem === 'UWDetails' ? 'active' : ''">UW仓盘点详情
+            </div>
+          </div>
+          <div @click="toggleState('transferDetails')">
+            <div class="sidebar-link" @click="linkTo('transferDetails')"
+                 :class="activeItem === 'transferDetails' ? 'active' : ''">物料仓盘点详情
             </div>
           </div>
         </div>

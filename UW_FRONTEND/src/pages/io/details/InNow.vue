@@ -576,6 +576,7 @@
     background: #ffffff;
     min-height: 220px;
     max-width: 600px;
+    min-width:500px;
     z-index: 1002;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;

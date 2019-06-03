@@ -92,9 +92,7 @@ export const  getPackingInventoryUrl = url + '/task/inventory/getPackingInventor
 export const  getInventoryTaskInfoUrl = url + '/task/inventory/getInventoryTaskInfo';
 export const  getInventoryTaskDetailsUrl = url + '/task/inventory/getInventoryTaskDetails';
 export const  getInventoryTaskUrl = url + '/task/inventory/getInventoryTask';
-export const  inventoryMaterialUrl = url + '/task/inventory/inventoryMaterial';
 export const  importEWhInventoryRecordUrl = url + '/task/inventory/importEWhInventoryRecord';
-export const checkInventoryTaskUrl = url + '/task/inventory/checkInventoryTask';
 export const getUnStartInventoryTaskUrl = url + '/task/inventory/getUnStartInventoryTask';
 export const exportEWhReportInventoryUrl = url + '/task/inventory/exportEWhReport';
 //一键平仓
@@ -105,3 +103,31 @@ export const coverMaterialUrl = url + '/task/inventory/coverMaterial';
 export const coverEWhMaterialUrl = url + '/task/inventory/coverEWhMaterial';
 export const setInventoryTaskRobotsUrl = url + '/task/inventory/setTaskRobots';
 export const getInventoryWindowRobotsUrl = url + '/task/inventory/getWindowRobots';
+
+
+//盘点UW物料
+export const inventoryMaterialUrl = url + '/task/inventory/inventoryMaterial';
+
+//批量平UW仓
+export const coverUwMaterialByTaskIdUrl = url + '/task/inventory/coverUwMaterialByTaskId';
+//批量平外仓
+export const coverEwhMaterialByTaskIdUrl = url + '/task/inventory/coverEwhMaterialByTaskId';
+
+//审核UW仓盘点任务
+export const checkInventoryTaskUrl = url + '/task/inventory/checkInventoryTask';
+//审核物料仓盘点任务
+export const checkEwhInventoryTaskUrl = url + '/task/inventory/checkEwhInventoryTask';
+
+//修改盘点任务的盘点数量、退料盘盈
+export const editEwhInventoryLogUrl = url + '/task/inventory/editEwhInventoryLog';
+
+//查询物料仓盘点任务详情
+export const getEwhInventoryTaskDetailsUrl = url + '/task/inventory/getEwhInventoryTaskDetails';
+//查询UW仓盘点任务详情
+export const getUwInventoryTaskDetailsUrl = url + '/task/inventory/getUwInventoryTaskDetails';
+
+//查询UW仓盘点任务
+export const getUwInventoryTaskInfoUrl = url + '/task/inventory/getUwInventoryTaskInfo';
+//查询物料仓盘点任务
+export const getEwhInventoryTaskInfoUrl = url + '/task/inventory/getEwhInventoryTaskInfo';
+

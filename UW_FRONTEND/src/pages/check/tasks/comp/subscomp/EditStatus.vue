@@ -47,7 +47,7 @@
   import {axiosPost} from "../../../../../utils/fetchData";
   import eventBus from "../../../../../utils/eventBus";
   import {errHandler} from "../../../../../utils/errorHandler";
-
+  import {mapActions} from 'vuex'
   export default {
     name: "EditStatus",
     props: {
@@ -76,6 +76,7 @@
       this.selectWindows();
     },
     methods: {
+      ...mapActions(['setLoading']),
       //获取仓口
       selectWindows: function () {
         let options = {
@@ -96,6 +97,7 @@
       submitUpdate: function () {
         if (!this.isPending) {
           this.isPending = true;
+          this.setLoading(true);
           if (this.thisState > 0 && (this.thisState !== this.originState)) {
             let statusUrl;
             switch (this.thisState) {
@@ -116,6 +118,7 @@
               if (this.windowArr.length === 0) {
                 this.$alertInfo("请选择仓口");
                 this.isPending = false;
+                this.setLoading(false);
                 return;
               }
               let windows = '';
@@ -130,6 +133,7 @@
             }
             axiosPost(options).then(res => {
               this.isPending = false;
+              this.setLoading(false);
               if (res.data.result === 200) {
                 this.$alertSuccess(res.data.data);
                 this.windowShow = '';
@@ -143,6 +147,7 @@
               }
             }).catch(err => {
               this.isPending = false;
+              this.setLoading(false);
               console.log(err);
               this.$alertDanger('连接超时，请刷新重试');
             })

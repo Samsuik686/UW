@@ -24,7 +24,8 @@ import InNow from '../pages/io/details/InNow'
 import IoPreview from '../pages/io/details/IoPreview'
 import CallRobot from '../pages/io/details/CallRobot'
 import CheckMain from '../pages/check/CheckMain'
-import DetailsModule from '../pages/check/details/DetailsModule'
+import UWDetailsModule from '../pages/check/details/UWDetailsModule'
+import TransferDetailsModule from '../pages/check/details/TransferDetailsModule'
 import TasksModule from '../pages/check/tasks/TasksModule'
 import OperationModule from '../pages/check/operation/OperationModule'
 
@@ -156,8 +157,12 @@ const router = new Router({
               component:OperationModule
             },
             {
-              path:'details',
-              component:DetailsModule
+              path:'UWDetails',
+              component:UWDetailsModule
+            },
+            {
+              path:'transferDetails',
+              component:TransferDetailsModule
             }
           ]
         }
