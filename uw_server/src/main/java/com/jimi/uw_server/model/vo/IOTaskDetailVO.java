@@ -3,8 +3,6 @@ package com.jimi.uw_server.model.vo;
 import java.util.Date;
 import java.util.List;
 
-import javax.validation.constraints.Null;
-
 import com.jimi.uw_server.model.TaskLog;
 
 /** 
@@ -34,13 +32,11 @@ public class IOTaskDetailVO extends TaskLog {
 			this.set("finishTime", finishTime);
 		}
 		this.set("deductQuantity", deductQuantity);
-		if (deductQuantity != 0) {
-			int lackNum = planQuantity - actualQuantity + deductQuantity;
-			if (lackNum < 0) {
-				this.set("itemStatus", "欠料");
-				this.set("lackNum", (0-lackNum));
-			}
-		} else {
+		int lackNum = planQuantity - actualQuantity + deductQuantity;
+		if (lackNum > 0) {
+			this.set("itemStatus", "欠料");
+			this.set("lackNum", (0-lackNum));
+		}else {
 			this.set("itemStatus", "正常");
 			this.set("lackNum", null);
 		}

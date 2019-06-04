@@ -2,7 +2,6 @@ package com.jimi.uw_server.controller;
 
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.ParameterException;
-import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.ExternalWhTaskService;
 import com.jimi.uw_server.service.entity.PagePaginate;

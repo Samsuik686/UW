@@ -2,8 +2,6 @@ package com.jimi.uw_server.controller;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -11,16 +9,12 @@ import javax.servlet.http.HttpServletResponse;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
-import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.annotation.Log;
-import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
-import com.jimi.uw_server.lock.Lock;
+import com.jimi.uw_server.model.ExternalInventoryLog;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
 import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
@@ -92,7 +86,7 @@ public class InventoryTaskController extends Controller {
 	
 	
 	/**
-	 * 盘点物料
+	 * 盘点UW物料
 	 * @param materialId
 	 * @param boxId
 	 * @param taskId
@@ -161,15 +155,35 @@ public class InventoryTaskController extends Controller {
 	 * @param user
 	 * @return
 	 */
-	@Log("批量平仓，物料类型ID为{materialTypeId}，任务ID为{taskId}")
-	public void coverMaterialByTaskId(Integer materialTypeId, Integer taskId) {
+	@Log("UW批量平仓，物料类型ID为{materialTypeId}，任务ID为{taskId}")
+	public void coverUwMaterialByTaskId(Integer materialTypeId, Integer taskId) {
 		if (materialTypeId == null || taskId == null ) {
 			throw new ParameterException("参数不能为空！");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverMaterialByTaskId(materialTypeId, taskId, user);
+		String result = inventoryTaskService.coverUwMaterialByTaskId(materialTypeId, taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	/**
+	 * 批量平仓，根据任务ID和物料类型ID
+	 * @param materialTypeId
+	 * @param taskId
+	 * @param user
+	 * @return
+	 */
+	@Log("外仓批量平仓，物料类型ID为{materialTypeId}，任务ID为{taskId}")
+	public void coverEwhMaterialByTaskId(Integer materialTypeId, Integer taskId) {
+		if (materialTypeId == null || taskId == null ) {
+			throw new ParameterException("参数不能为空！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = inventoryTaskService.coverEwhMaterialByTaskId(materialTypeId, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 	
@@ -179,7 +193,7 @@ public class InventoryTaskController extends Controller {
 	 * @param taskId
 	 * @return
 	 */
-	@Log("审核任务，任务ID为{taskId}")
+	@Log("审核UW仓盘点任务，任务ID为{taskId}")
 	public void checkInventoryTask(Integer taskId) {
 		if (taskId == null ) {
 			throw new ParameterException("参数不能为空！");
@@ -187,11 +201,23 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.checkInventoryTask(taskId, user);
+		String result = inventoryTaskService.checkUwInventoryTask(taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 	
 	
+	
+	@Log("审核物料仓盘点任务，任务ID为{taskId}")
+	public void checkEwhInventoryTask(Integer taskId) {
+		if (taskId == null ) {
+			throw new ParameterException("参数不能为空！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = inventoryTaskService.checkEwhInventoryTask(taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
 	/**
 	 * 导入外仓盘点数据
 	 * @param file
@@ -246,6 +272,12 @@ public class InventoryTaskController extends Controller {
 	}
 	
 	
+	/**
+	 * 查询所有盘点任务（简单信息）
+	 * @param filter
+	 * @param pageNo
+	 * @param pageSize
+	 */
 	public void selectAllInventoryTask(String filter ,Integer pageNo, Integer pageSize){
 		
 		if (pageNo == null || pageSize == null) {
@@ -259,37 +291,64 @@ public class InventoryTaskController extends Controller {
 	}
 	
 	
-	public void getInventoryTaskInfo(Integer taskId, String no) {
+	/**
+	 * 根据任务ID和料号查询UW仓盘点任务信息（较为详细，粒度：料号）
+	 * @param taskId
+	 * @param no
+	 */
+	public void getUwInventoryTaskInfo(Integer taskId, String no) {
 
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		/*if (taskId == null || no == null || pageNo == null || pageSize == null) {
+		List<Record> result = inventoryTaskService.getUwInventoryTaskInfo(taskId, no);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	/**
+	 * 根据任务ID和料号查询物料仓盘点任务信息（较为详细，粒度：料号）
+	 * @param taskId
+	 * @param no
+	 */
+	public void getEwhInventoryTaskInfo(Integer taskId, String no) {
+
+		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		if (pageNo <= 0 || pageSize <= 0) {
-			throw new ParameterException("页码和页容量必须大于0");
-		}*/
-		List<Record> result = inventoryTaskService.getInventoryTaskInfo(taskId, no);
+		List<Record> result = inventoryTaskService.getEwhInventoryTaskInfo(taskId, no);
 		renderJson(ResultUtil.succeed(result));
 	}
 	
 	
-	public void getInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
+	/**
+	 * 根据任务ID和物料ID查询UW仓盘点任务信息(详细，粒度：料盘）
+	 * @param taskId
+	 * @param materialTypeId
+	 */
+	public void getUwInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
 
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		/*if (taskId == null || materailTypeId == null || pageNo == null || pageSize == null) {
-			throw new ParameterException("参数不能为空");
-		}
-		if (pageNo <= 0 || pageSize <= 0) {
-			throw new ParameterException("页码和页容量必须大于0");
-		}*/
-		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = inventoryTaskService.getInventoryTaskDetails(taskId, materialTypeId);
+		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = inventoryTaskService.getUwInventoryTaskDetails(taskId, materialTypeId);
 		renderJson(ResultUtil.succeed(inventoryTaskDetailVOs));
 	}
 	
+	
+	/**
+	 * 根据任务ID和物料ID查询物料仓盘点任务信息(详细，粒度：仓库，料号）
+	 * @param taskId
+	 * @param materialTypeId
+	 */
+	public void getEwhInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
+
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空");
+		}
+		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = inventoryTaskService.getEwhInventoryTaskDetails(taskId, materialTypeId);
+		renderJson(ResultUtil.succeed(inventoryTaskDetailVOs));
+	}
+
 	
 	public void getUnStartInventoryTask(Integer supplierId) {
 		if (supplierId == null) {
@@ -311,6 +370,28 @@ public class InventoryTaskController extends Controller {
 			throw new ParameterException("参数不能为空");
 		}
 		String result = inventoryTaskService.finishInventoryTask(taskId);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	/**
+	 * 修改盘点记录的盘点数量和退料盘盈
+	 * @param id
+	 * @param acturalNum
+	 * @param returnNum
+	 * @return
+	 */
+	@Log("修改盘点记录ID为{id}的盘点数量为{acturalNum}，退料盘盈数为{returnNum}")
+	public void editEwhInventoryLog(Integer id, Integer acturalNum, Integer returnNum) {
+		if (id == null || acturalNum == null || returnNum == null) {
+			throw new OperationException("参数不能为空！");
+		}
+		if (acturalNum < 0 || returnNum < 0) {
+			throw new OperationException("数量不能小于0");
+		}
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = inventoryTaskService.editEwhInventoryLog(id, acturalNum, returnNum, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 	

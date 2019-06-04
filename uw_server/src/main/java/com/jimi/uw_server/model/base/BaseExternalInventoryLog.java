@@ -72,6 +72,15 @@ public abstract class BaseExternalInventoryLog<M extends BaseExternalInventoryLo
 		return getInt("different_num");
 	}
 
+	public M setMaterialReturnNum(java.lang.Integer materialReturnNum) {
+		set("material_return_num", materialReturnNum);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getMaterialReturnNum() {
+		return getInt("material_return_num");
+	}
+
 	public M setInventoryOperatior(java.lang.String inventoryOperatior) {
 		set("inventory_operatior", inventoryOperatior);
 		return (M)this;

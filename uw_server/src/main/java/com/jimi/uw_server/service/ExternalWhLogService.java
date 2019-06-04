@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.ExternalWhLog;
-import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
 
 /**

@@ -255,6 +255,7 @@ public class TaskController extends Controller {
 	}
 
 	
+	@Log("设置仓口{windowId}的叉车为{robots}")
 	public void setWindowRobots(Integer windowId, String robots) {
 		if (windowId == null) {
 			throw new ParameterException("参数不能为空！");

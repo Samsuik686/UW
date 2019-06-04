@@ -8,7 +8,7 @@ package com.jimi.uw_server.lock;
 
 public class Lock {
 
-	public static Object REDIS_LOCK = new Object();
+	public static Object IO_TASK_REDIS_LOCK = new Object();
 	
 	public static Object ROBOT_TASK_REDIS_LOCK = new Object();
 	
@@ -17,4 +17,6 @@ public class Lock {
 	public static Object INVENTORY_REDIS_LOCK = new Object();
 
 	public static Object IMPORT_EWH_INVENTORY_FILE_LOCK = new Object();
+	
+	public static Object ROBOT_ORDER_REDIS_LOCK = new Object();
 }

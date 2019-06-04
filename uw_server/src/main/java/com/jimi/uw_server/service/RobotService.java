@@ -17,12 +17,14 @@ import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.IOTaskItemState;
+import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
+import com.jimi.uw_server.model.MaterialReturnRecord;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
@@ -52,11 +54,9 @@ public class RobotService extends SelectService {
 	
 	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 	
-	/*private static final String GET_FULL_MATERIAL_BOX_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
+	private static final String GET_TASK_BY_TYPE_STATE_SUPPLIER = "select * from task where task.type = ? and task.state = ? and task.supplier = ?";
 	
-	private static final Object BACK_LOCK = new Object();
-
-	private static final Object CALL_LOCK = new Object();*/
+	private static  ExternalWhLogService externalWhLogService = ExternalWhLogService.me;
 
 	private static final int UW_ID = 0;
 	
@@ -112,7 +112,7 @@ public class RobotService extends SelectService {
 		}
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 			if (item.getId().intValue() == id) {
-				synchronized(Lock.REDIS_LOCK) {
+				synchronized(Lock.IO_TASK_REDIS_LOCK) {
 					if (item.getState().intValue() == IOTaskItemState.ARRIVED_WINDOW) {
 						Task task = Task.dao.findById(item.getTaskId());
 						// 若是出库任务且为截料后重新入库，则需要判断是否对已截过料的料盘重新扫码过
@@ -183,6 +183,7 @@ public class RobotService extends SelectService {
 						
 						if (task.getType() == TaskType.SEND_BACK && materialOutputRecords != null && item.getIsForceFinish()) {
 							int acturallyNum = 0;
+							Task task2 = Task.dao.findFirst(GET_TASK_BY_TYPE_STATE_SUPPLIER, TaskType.COUNT, TaskState.WAIT_START, task.getSupplier());
 							if (materialOutputRecords != null) {
 								JSONArray jsonArray = JSONArray.parseArray(materialOutputRecords);
 								for (int i=0; i<jsonArray.size(); i++) {
@@ -195,11 +196,38 @@ public class RobotService extends SelectService {
 								externalWhLog.setDestination(UW_ID);
 								externalWhLog.setSourceWh(task.getDestination());
 								externalWhLog.setTaskId(task.getId());
-								externalWhLog.setQuantity(acturallyNum);
-								if (task.getIsInventoryApply()) {
-									Task inventoryTask = Task.dao.findById(task.getInventoryTaskId());
-									externalWhLog.setTime(inventoryTask.getCreateTime());
+								int storeNum = 0;
+								if (task2 != null) {
+									storeNum = externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination(), task2.getCreateTime());
+									if (acturallyNum - storeNum > 0) {
+										externalWhLog.setQuantity(storeNum);
+										MaterialReturnRecord materialReturnRecord = new MaterialReturnRecord();
+										materialReturnRecord.setTaskId(task.getId());
+										materialReturnRecord.setMaterialTypeId(packingListItem.getMaterialTypeId());
+										materialReturnRecord.setWhId(task.getDestination());
+										materialReturnRecord.setQuantity(acturallyNum - storeNum);
+										materialReturnRecord.setTime(task2.getCreateTime());
+										materialReturnRecord.setEnabled(true);
+										materialReturnRecord.save();
+									}else {
+										externalWhLog.setQuantity(acturallyNum);
+									}
+									externalWhLog.setTime(task2.getCreateTime());
 								}else {
+									storeNum = externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination());
+									if (acturallyNum - storeNum > 0) {
+										externalWhLog.setQuantity(storeNum);
+										MaterialReturnRecord materialReturnRecord = new MaterialReturnRecord();
+										materialReturnRecord.setTaskId(task.getId());
+										materialReturnRecord.setMaterialTypeId(packingListItem.getMaterialTypeId());
+										materialReturnRecord.setWhId(task.getDestination());
+										materialReturnRecord.setQuantity(acturallyNum - storeNum);
+										materialReturnRecord.setTime(new Date());
+										materialReturnRecord.setEnabled(true);
+										materialReturnRecord.save();
+									}else {
+										externalWhLog.setQuantity(acturallyNum);
+									}
 									externalWhLog.setTime(new Date());
 								}
 								externalWhLog.setOperatior(user.getUid());
@@ -252,7 +280,7 @@ public class RobotService extends SelectService {
 	 * 物料入库/截料后重新入库扫料盘，用于呼叫叉车
 	 */
 	public String call(Integer id, String no, String supplierName) throws Exception {
-		synchronized(Lock.REDIS_LOCK) {
+		synchronized(Lock.IO_TASK_REDIS_LOCK) {
 			String resultString = "调用成功！";
 
 			// 只在有选择仓口时才读取仓口和任务信息，避免出现NPE异常

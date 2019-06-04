@@ -10,7 +10,7 @@ import com.jimi.uw_server.agv.entity.cmd.AGVLoadExceptionCmd;
 import com.jimi.uw_server.agv.entity.cmd.AgvDelMissionExceptionCmd;
 import com.jimi.uw_server.constant.BuildTaskItemState;
 import com.jimi.uw_server.constant.IOTaskItemState;
-
+import com.jimi.uw_server.lock.Lock;
 /**
  * 异常处理器
  * <br>
@@ -65,7 +65,12 @@ public class ExceptionHandler {
 		if (groupid.contains(":")) {
 			for(AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
 				if(item.getGroupId().equals(groupid) && item.getState().intValue() > IOTaskItemState.WAIT_ASSIGN) {
-					// 清除掉对应的出入库任务条目
+					synchronized (Lock.ROBOT_ORDER_REDIS_LOCK) {
+						// 清除掉对应的出入库任务条目
+						if (TaskItemRedisDAO.getRobotOrder(item.getRobotId()).equals(groupid)) {
+							TaskItemRedisDAO.setRobotOrder(item.getRobotId(), IOHandler.UNDEFINED);
+						}
+					}
 					TaskItemRedisDAO.removeTaskItemByPackingListId(Integer.valueOf(groupid.split(":")[1]), item.getId().intValue());
 						
 					break;
@@ -75,6 +80,11 @@ public class ExceptionHandler {
 		}  else if (groupid.contains("@")) {	// missiongroupid 包含“@”表示为盘点任务
 			for(AGVInventoryTaskItem item1 : TaskItemRedisDAO.getInventoryTaskItems()) {
 				if(item1.getGroupId().equals(groupid)) {
+					synchronized (Lock.ROBOT_ORDER_REDIS_LOCK) {
+						if (TaskItemRedisDAO.getRobotOrder(item1.getRobotId()).equals(groupid)) {
+							TaskItemRedisDAO.setRobotOrder(item1.getRobotId(), IOHandler.UNDEFINED);
+						}
+					}
 					TaskItemRedisDAO.removeInventoryTaskItemById(item1.getTaskId(), item1.getBoxId());
 					break;
 				}

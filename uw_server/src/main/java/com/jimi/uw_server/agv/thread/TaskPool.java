@@ -58,13 +58,9 @@ public class TaskPool extends Thread{
 
 	private static final String GET_MATERIAL_BY_TYPE_AND_BOX_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND box = ? AND is_in_box = b'1'";
 
-	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE quantity > 0 AND material_id = ? AND packing_list_item_id = ?";
-
 	private static final String GET_WORKING_WINDOWS = "SELECT distinct bind_task_id FROM window WHERE bind_task_id IS NOT NULL";
 	
 	private static final String GET_WINDOWS_BY_TASKID = "SELECT * FROM window WHERE bind_task_id = ?";
-	
-	private static final String GET_WINDOW_BY_X_AND_Y = "SELECT * FROM window WHERE row = ? AND col = ?";
 	
 	
 	@Override
@@ -81,18 +77,17 @@ public class TaskPool extends Thread{
 				List<RobotBO> robotBOs = countFreeRobot();
 				//判断til是否为空或者cn为0
 				for (RobotBO robotBO : robotBOs) {
-					synchronized (Lock.REDIS_LOCK) {
+					synchronized (Lock.IO_TASK_REDIS_LOCK) {
 						Integer taskId = TaskItemRedisDAO.getRobotTask(robotBO.getId());
 						if (taskId == null) {
 							continue;
 						}
 						Task task = Task.dao.findById(taskId);
 						if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.OUT) || task.getType().equals(TaskType.SEND_BACK)) {
-							
 							List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
 							TaskItemRedisDAO.appendIOTaskItems(taskId, ioTaskItems);
 							if (!ioTaskItems.isEmpty() ) {
-								sendIOCmds(taskId, robotBO.getId(), ioTaskItems);
+								sendIOCmds(task, robotBO.getId(), ioTaskItems);
 							}
 						}
 					}
@@ -125,7 +120,8 @@ public class TaskPool extends Thread{
 		}
 	}
 
-	public static void sendIOCmds(Integer taskId, Integer robotId, List<AGVIOTaskItem> ioTaskItems) throws Exception {
+	
+	public static void sendIOCmds(Task task, Integer robotId, List<AGVIOTaskItem> ioTaskItems) throws Exception {
 		//获取第a个元素
 		int a = 0;
 		boolean flag = false;
@@ -134,8 +130,6 @@ public class TaskPool extends Thread{
 			AGVIOTaskItem item = ioTaskItems.get(a);
 			// 0. 判断任务条目状态是否为未分配
 			if (item.getState().intValue() == IOTaskItemState.WAIT_ASSIGN) {
-				// 1. 根据item的任务id获取任务类型
-				Task task = Task.dao.findById(item.getTaskId());
 				Integer taskType = task.getType();
 				Integer boxId = 0;
 
@@ -177,11 +171,9 @@ public class TaskPool extends Thread{
 				// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
 				
 				if (!flag && boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf()) {
-					// 在架
 					// 5. 发送LS指令
 					IOHandler.sendLS(item, materialBox, robotId);
-					flag = false;
-					//-----------------------------------------------------------------------------------------------------------------------------
+					flag = true;
 				}
 			} else if (item.getState().intValue() == IOTaskItemState.LACK) {	// 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
 				// 根据物料类型号获取物料库存数量
@@ -195,44 +187,6 @@ public class TaskPool extends Thread{
 			a++;
 		} while(a != ioTaskItems.size());
 	}
-	
-	
-	/*public static void sendInventoryTaskItemCmds(int cn, List<AGVInventoryTaskItem> inventoryTaskItems) throws Exception {
-		//获取第a个元素
-		int a = 0;
-		do {
-			//获取对应item
-			AGVInventoryTaskItem item = inventoryTaskItems.get(a);
-
-			// 判断任务条目状态是否为0
-			if (item.getState().intValue() == InventoryTaskItemState.WAIT_ASSIGN) {
-
-				List<Window> windows = Window.dao.find(GET_WINDOWS_BY_TASKID, item.getTaskId());
-				Window window = null;
-				for (Window w : windows) {
-					//如果仓口未被叉车使用
-					if (!TaskItemRedisDAO.getWindowFlag(w.getId() )) {
-						window = w;
-						break;
-					}
-				}
-				//所有仓口都已被叉车使用，则不发送指令
-				if (window == null) {
-					break;
-				}
-				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-				// 判断料盒是否在架
-				if (cn > 0 && materialBox.getIsOnShelf()) {
-					
-					IOHandler.sendLS(item, materialBox, window);
-					TaskItemRedisDAO.setWindowFlag(window.getId(), true);
-					cn --;
-				}
-			}
-
-			a++;
-		} while( a != inventoryTaskItems.size());
-	}*/
 
 	
 	public static void sendInventoryTaskItemCmds(List<RobotBO> robotBOs, List<AGVInventoryTaskItem> inventoryTaskItems) throws Exception {
@@ -263,18 +217,16 @@ public class TaskPool extends Thread{
 				
 				for (RobotBO robotBO : robotBOs) {
 					Integer taskId = TaskItemRedisDAO.getRobotTask(robotBO.getId());
-					if (taskId == null || !taskId.equals(item.getTaskId()) || (IOHandler.sendNumMap.get(robotBO.getId()) != null && IOHandler.sendNumMap.get(robotBO.getId()).equals(1))) {
+					if (taskId == null || !taskId.equals(item.getTaskId()) || TaskItemRedisDAO.getRobotOrder(robotBO.getId()) != null && !TaskItemRedisDAO.getRobotOrder(robotBO.getId()).equals(IOHandler.UNDEFINED)) {
 						continue;
 					}
 					if (materialBox.getIsOnShelf()) {
 						IOHandler.sendLS(item, materialBox, window, robotBO.getId());
-						TaskItemRedisDAO.setWindowFlag(window.getId(), true);
 						break;
 					}
 				}
 				
 			}
-
 			a++;
 		} while( a != inventoryTaskItems.size());
 	}
@@ -485,24 +437,7 @@ public class TaskPool extends Thread{
 		// 如果物料实体表中有多条该物料类型的记录，且库存大于0
 		if (materialList.size() > 0) {
 			for (Material m : materialList) {
-				// 先判断该料盘是否被等待截料返库的任务条目所绑定
-				/*if (m.getRemainderQuantity() > 0 && !m.getIsInBox()) {
-					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems()) {
-						// 根据任务条目id匹配到redis中的任务条目
-						if (redisTaskItem.getId().intValue() == packingListItemId.intValue()) {
-							// 若该任务条目不需要截料，则直接跳出
-							int size = TaskLog.dao.find(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, m.getId(), packingListItemId).size();
-							if (size == 0) {
-								break;
-							}
-							// 若该任务条目需要截料，且对应的出库日志中这条料盘记录有库存，则说明该任务条目绑定了该料盘，则返回该料盒号
-							else {
-								boxId = m.getBox();
-							}
-						}
-					}
-				}
-				else */
+				
 				if (m.getProductionTime().before(productionTime) && (m.getIsInBox() || Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId, m.getBox()).size() > 0)) {
 
 					if (boxs.contains(m.getBox().intValue())) {

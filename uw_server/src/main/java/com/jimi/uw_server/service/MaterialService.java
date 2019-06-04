@@ -12,10 +12,12 @@ import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.model.BoxType;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
+import com.jimi.uw_server.model.MaterialReturnRecord;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
@@ -51,10 +53,6 @@ public class MaterialService extends SelectService{
 	private static final String GET_SPECIFIED_POSITION_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE row = ? AND col = ? AND height = ?";
 
 	private static final String GET_ENTITIES_SELECT_SQL = "SELECT material.id AS id, material.type AS type, material.box AS box, material_box.area AS boxArea, material.row AS row, material.col AS col, material.remainder_quantity AS remainderQuantity, material.production_time AS productionTimeString , material_type.no AS materialNo";
-
-	private static final String GET_ENTITIES_SELECT_NOT_AUTO_SQL = "SELECT material.id AS id, material.type AS type, material.row AS row, material.col AS col, material.remainder_quantity AS remainderQuantity, material.production_time AS productionTimeString , material_type.no AS materialNo";
-
-	private	static final String GET_ENTITIES_BY_TYPE_SQL = "FROM material join  material_type ON material_type.id = material.type WHERE material.type = ? ";
 	
 	private	static final String GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? ";
 
@@ -70,6 +68,8 @@ public class MaterialService extends SelectService{
 	
 	public static final String GET_ALL_IN_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE packing_list_item_id IN (SELECT id FROM packing_list_item WHERE material_type_id = ?) AND destination is NULL GROUP BY packing_list_item_id ORDER BY task_log.time";
 
+	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE packing_list_item_id IN (SELECT id FROM packing_list_item WHERE material_type_id = ?)";
+	
 	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
 	public static final String GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
@@ -87,8 +87,10 @@ public class MaterialService extends SelectService{
 	private static final String COUNT_MATERIAL_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ? AND is_in_box = 1";
 
 	private static final String COUNT_MATERIAL_INCLUDE_NOT_IN_BOX_SQL = "SELECT SUM(remainder_quantity) as quantity FROM material WHERE type = ?";
+	
+	private static final String COUNT_RETURN_QUANTITY = "SELECT SUM(quantity) as quantity FROM material_return_record WHERE material_type_id = ? AND wh_id = ? AND time <= ? AND enabled = 1";
 
-
+	public static MaterialService me = new MaterialService();
 	// 统计物料类型信息
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -123,8 +125,6 @@ public class MaterialService extends SelectService{
 		}
 		if (type != null && box == null) {
 			materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, type);
-			//Page<Record> tempMaterialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_NOT_AUTO_SQL, GET_ENTITIES_BY_TYPE_SQL, type);
-			//materialEntities.getList().addAll(tempMaterialEntities.getList());
 		} else if (type == null && box != null) {
 			materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, box);
 		} else if (type != null && box != null) {
@@ -328,9 +328,9 @@ public class MaterialService extends SelectService{
 
 
 	// 获取物料出入库记录
-	public Object getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize) {
+	public Object getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, String startTime, String endTime, Integer pageNo, Integer pageSize) {
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
-		recordItemList = getRecordItemList(type, materialTypeId, destination);
+		recordItemList = getRecordItemList(type, materialTypeId, destination, startTime, endTime);
 		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
 		int startIndex = (pageNo-1) * pageSize;
 		int endIndex = (pageNo-1) * pageSize + pageSize;
@@ -350,48 +350,48 @@ public class MaterialService extends SelectService{
 
 
 	// 获取物料出入库记录子方法
-	public List<RecordItem> getRecordItemList(int type, int materialTypeId, int destination) {
-		int superIssuedQuantity = 0;		// 累计超发数
+	public List<RecordItem> getRecordItemList(Integer type, Integer materialTypeId, Integer destination, String startTime, String endTime) {
+		SqlPara sqlPara = new SqlPara();
+		StringBuffer sql = new StringBuffer(GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL);
+		sqlPara.addPara(materialTypeId);
 		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
 		List<TaskLog> taskLogList = null;
 		if (type == 0) {
-			taskLogList = TaskLog.dao.find(GET_ALL_OUT_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL, materialTypeId, destination);	// 查询该物料类型的所有出入库任务日志
+			if (destination == null) {
+				sql.append(" AND destination IS NOT NULL ");
+			}else {
+				sql.append(" AND destination = ? ");
+				sqlPara.addPara(destination);
+			}
+			if (startTime != null && endTime != null) {
+				sql.append(" AND (time BETWEEN ? AND ?) ");
+				sqlPara.addPara(startTime);
+				sqlPara.addPara(endTime);
+			}
+			sql.append(" GROUP BY packing_list_item_id ORDER BY task_log.time ");
+		}else if (type == 1) {
+			if (startTime != null && endTime != null) {
+				sql.append(" AND (time BETWEEN ? AND ?) ");
+				sqlPara.addPara(startTime);
+				sqlPara.addPara(endTime);
+			}
+			sql.append(" AND destination is NULL  GROUP BY packing_list_item_id ORDER BY task_log.time ");
 		}else {
-			taskLogList = TaskLog.dao.find(GET_ALL_IN_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL, materialTypeId);	// 查询该物料类型的所有出入库任务日志
+			if (startTime != null && endTime != null) {
+				sql.append(" AND (time BETWEEN ? AND ?) ");
+				sqlPara.addPara(startTime);
+				sqlPara.addPara(endTime);
+			}
+			sql.append(" GROUP BY packing_list_item_id ORDER BY task_log.time ");
 		}
-		
+		sqlPara.setSql(sql.toString());
+		taskLogList = TaskLog.dao.find(sqlPara);
 		for (TaskLog taskLog : taskLogList) {
 			PackingListItem pItem = PackingListItem.dao.findById(taskLog.getPackingListItemId());
 			Task task = Task.dao.findById(pItem.getTaskId());
-			int planQuantity = pItem.getQuantity();
 			int actualQuantity = Integer.parseInt(taskLog.get("totalIOQuantity").toString());
-			if (task.getType() == 1 || (task.getType() == 4 && !taskLog.getIsCleared())) {
-				// 对于出库任务，计算超发数
-				
-				// 1、若超发数大于等于出库计划数，则直接进行抵扣；若此次还有出库，则再次累计超发
-				if (task.getType() == 4) {
-					superIssuedQuantity = superIssuedQuantity - actualQuantity;
-				}
-				else if (superIssuedQuantity >= planQuantity) {
-					superIssuedQuantity -= planQuantity;
-					superIssuedQuantity += actualQuantity;
-				}
-
-				// 2、若有超发记录但超发数小于出库计划数，则抵扣部分超发数
-				else if (superIssuedQuantity > 0 && superIssuedQuantity < planQuantity) {
-					// 根据公式：超发数 = 实际出库数 - （计划出库数 - 超发数）	计算出新的出库数
-					superIssuedQuantity = actualQuantity - (planQuantity - superIssuedQuantity);
-				}
-
-				// 3、否则，直接根据实际出库数和计划出库数计算超发数
-				else {
-					superIssuedQuantity += actualQuantity - planQuantity;
-				}
-
-			} else if (task.getType() == 4 && taskLog.getIsCleared() != null && taskLog.getIsCleared()) {	// 对于退料入库任务，退料后要将超发数清零
-				superIssuedQuantity = 0;
-			}
-			RecordItem ri = new RecordItem(pItem.getMaterialTypeId(), pItem.getQuantity(), task.getFileName(), task.getType(), actualQuantity, superIssuedQuantity, taskLog.getOperator(), taskLog.getTime());
+			
+			RecordItem ri = new RecordItem(pItem.getMaterialTypeId(), pItem.getQuantity(), task.getFileName(), task.getType(), actualQuantity, 0, taskLog.getOperator(), taskLog.getTime());
 			recordItemList.add(ri);
 		}
 		return recordItemList;
@@ -609,5 +609,13 @@ public class MaterialService extends SelectService{
 		return remainderQuantity;
 	}
 
+	
+	public Integer countMaterialReturnQuantity(Integer material_type_id, Integer wh_id, Date time) {
+		MaterialReturnRecord materialReturnRecord = MaterialReturnRecord.dao.findFirst(COUNT_RETURN_QUANTITY, material_type_id, wh_id, time);
+		if ( materialReturnRecord.getQuantity() == null) {
+			return 0;
+		}
+		return materialReturnRecord.getQuantity();
+	}
 
 }

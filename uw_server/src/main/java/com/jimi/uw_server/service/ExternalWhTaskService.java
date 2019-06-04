@@ -8,10 +8,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.jfinal.plugin.activerecord.Db;
@@ -50,6 +48,8 @@ public class ExternalWhTaskService {
 	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT * FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e ORDER BY e.time ASC";
 	
 	private static ExternalWhLogService externalWhLogService = ExternalWhLogService.me;
+	
+	public static final MaterialService materialService = MaterialService.me;
 	
 	
 	
@@ -395,7 +395,7 @@ public class ExternalWhTaskService {
 	}
 	
 	
-	public List<ExternalWhInfoVO> selectExternalWhInfo(Integer whId, Integer supplierId, String no, Date startTime) {
+	public List<ExternalWhInfoVO> selectExternalWhInfo(Integer whId, Integer supplierId, String no, Task task) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
 		List<ExternalWhInfoVO> externalWhInfoVOs = new ArrayList<>();
@@ -434,7 +434,8 @@ public class ExternalWhTaskService {
 			externalWhInfoVO.setSupplier(record.getStr("supplier_name"));
 			externalWhInfoVO.setWhId(record.getInt("wh_id"));
 			externalWhInfoVO.setWareHouse(record.getStr("wh_name"));
-			externalWhInfoVO.setQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), startTime));
+			externalWhInfoVO.setQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), task.getCreateTime()));
+			externalWhInfoVO.setReturnQuantity(materialService.countMaterialReturnQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), task.getStartTime()));
 			externalWhInfoVOs.add(externalWhInfoVO);
 		}
 		return externalWhInfoVOs;

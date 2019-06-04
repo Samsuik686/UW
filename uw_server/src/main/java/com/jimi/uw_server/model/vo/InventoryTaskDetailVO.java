@@ -28,6 +28,8 @@ public class InventoryTaskDetailVO {
 	
 	private Integer differentNum;
 	
+	private Integer materialreturnNum;
+	
 	private String InventoryOperatior;
 	
 	private Date inventoryTime;
@@ -138,6 +140,14 @@ public class InventoryTaskDetailVO {
 
 	public void setMaterialId(String materialId) {
 		this.materialId = materialId;
+	}
+
+	public Integer getMaterialreturnNum() {
+		return materialreturnNum;
+	}
+
+	public void setMaterialreturnNum(Integer materialreturnNum) {
+		this.materialreturnNum = materialreturnNum;
 	}
 	
 	

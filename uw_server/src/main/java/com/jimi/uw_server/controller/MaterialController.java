@@ -3,6 +3,7 @@ package com.jimi.uw_server.controller;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -115,8 +116,16 @@ public class MaterialController extends Controller {
 
 
 	// 获取物料出入库记录
-	public void getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize) {
-		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, materialTypeId, destination, pageNo, pageSize)));
+	public void getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize, String startTime, String endTime) {
+		if ((startTime != null && endTime == null) || (endTime != null && startTime == null)) {
+			throw new OperationException("开始时间和结束时间仅可同时为空或同时不为空！");
+		}
+		if (startTime != null && endTime != null) {
+			if (!isDate(startTime) || !isDate(endTime)) {
+				throw new OperationException("开始时间和结束时间的日期格式不正确！");
+			}
+		}
+		renderJson(ResultUtil.succeed(materialService.getMaterialRecords(type, materialTypeId, destination, startTime, endTime, pageNo, pageSize)));
 	}
 
 
@@ -147,6 +156,7 @@ public class MaterialController extends Controller {
 		}
 		renderNull();
 	}
+	
 
 	// 获取料盒类型信息
 	public void getBoxTypes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -193,4 +203,18 @@ public class MaterialController extends Controller {
 	}
 
 
+	/**
+	 * 判断是否符合日期格式
+	 * @param time
+	 * @return
+	 */
+	private boolean isDate(String time) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		try {
+			format.parse(time);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

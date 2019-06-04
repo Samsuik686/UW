@@ -25,6 +25,7 @@ public class MappingKit {
 		arp.addMapping("inventory_log", "id", InventoryLog.class);
 		arp.addMapping("material", "id", Material.class);
 		arp.addMapping("material_box", "id", MaterialBox.class);
+		arp.addMapping("material_return_record", "id", MaterialReturnRecord.class);
 		arp.addMapping("material_type", "id", MaterialType.class);
 		arp.addMapping("packing_list_item", "id", PackingListItem.class);
 		arp.addMapping("position_log", "id", PositionLog.class);

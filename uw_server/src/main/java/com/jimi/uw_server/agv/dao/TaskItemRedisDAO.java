@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.alibaba.druid.sql.ast.expr.SQLCaseExpr.Item;
 import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
@@ -71,7 +70,7 @@ public class TaskItemRedisDAO {
 		for (int i = 0; i < cache.llen("til_" + taskId); i++) {
 			byte[] item = cache.lindex("til_" + taskId, i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN || agvioTaskItem.getState().intValue() == IOTaskItemState.LACK)){
+			if(agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == IOTaskItemState.WAIT_ASSIGN)){
 				cache.lrem("til_" + taskId, 1, item);
 				i--;
 			}
@@ -194,6 +193,7 @@ public class TaskItemRedisDAO {
 	/**
 	 * 把redis的til内容追加到参数里然后返回
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVIOTaskItem> appendIOTaskItems(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
 		List<byte[]> items = cache.lrange("til_" + taskId, 0, -1);
 		for (byte[] item : items) {
@@ -238,6 +238,7 @@ public class TaskItemRedisDAO {
 	/**
 	 * 把redis的tilOfBuild内容追加到参数里然后返回
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVBuildTaskItem> appendBuildTaskItems(List<AGVBuildTaskItem> buildTaskItems) {
 		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
 		for (byte[] item : items) {
@@ -342,6 +343,7 @@ public class TaskItemRedisDAO {
 	/**
 	 * 判断建仓任务是否已完成
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static void isBuildFinish() {
 		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
 		if (items.size() == 0) {
@@ -364,7 +366,7 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 设置建仓任务标志位
+	 * 设置机器任务
 	 */
 	public synchronized static void setRobotTask(Integer robotId, Integer taskId) {
 		cache.set("robot_" + robotId, taskId);
@@ -374,6 +376,33 @@ public class TaskItemRedisDAO {
 	public synchronized static void delRobotTask(Integer robotId) {
 		cache.del("robot_" + robotId);
 	}
+	
+	
+/*	*//**
+	 * 获取叉车的指令
+	 */
+	public synchronized static String getRobotOrder(Integer robotId) {
+		try {
+			return cache.get("rb_order_" + robotId);
+		} catch (NullPointerException e) {
+			
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * 设置机器任务执行的指令
+	 */
+	public synchronized static void setRobotOrder(Integer robotId, String id) {
+		cache.set("rb_order_" + robotId, id);
+	}
+	
+	
+	public synchronized static void delRobotOrder(Integer robotId) {
+		cache.del("rb_order_" + robotId);
+	}
+	
 
 	
 	/**
@@ -482,6 +511,7 @@ public class TaskItemRedisDAO {
 	/**
 	 * 把redis的inventoryOfTil内容追加到参数里然后返回
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVInventoryTaskItem> appendInventoryTaskItems(List<AGVInventoryTaskItem> agvInventoryTaskItem) {
 		List<byte[]> items = cache.lrange("inventoryOfTil", 0, -1);
 		for (byte[] item : items) {

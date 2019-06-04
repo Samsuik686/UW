@@ -33,6 +33,7 @@ public class RobotInfoRedisDAO {
 	/**
 	 * 获取机器实时数据
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static List<RobotBO> check(){
 		List<RobotBO> robotBOs = new ArrayList<>();
 		List<String> robots = cache.lrange("robot", 0, -1);

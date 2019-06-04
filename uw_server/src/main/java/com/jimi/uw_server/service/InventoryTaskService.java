@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -95,6 +93,8 @@ public class InventoryTaskService {
 	
 	private static final String GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE = "SELECT * FROM external_inventory_log WHERE task_id = ? AND material_type_id = ? AND enabled = 1";
 	
+	private static final String GET_ALL_EWH_INVENTORY_LOG_BY_TASK = "SELECT * FROM external_inventory_log WHERE task_id = ?";
+	
 	private static final String GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID = "SELECT * FROM external_inventory_log WHERE task_id = ? AND enabled = 1";
 	
 	private static final String GET_UNCOVER_INVENTORY_LOG_BY_TASKID = "SELECT * FROM inventory_log WHERE task_id = ? AND enabled = 1";
@@ -103,17 +103,29 @@ public class InventoryTaskService {
 	
 	private static final String GET_INVENTORY_TASK_BY_SUPPLIERID = "SELECT * FROM task WHERE type = ? AND supplier = ? AND state != 1 AND state != 4 ORDER BY create_time DESC";
 		
-	private static final String GET_INVENTORY_TASK_INFO = "select a.material_type_id, a.`no`,a.specification,a.task_id,a.task_name,a.start_time,a.end_time,a.state, a.checked_operatior, a.checked_time, SUM(a.before_num) as before_num, SUM(a.actural_num) as actural_num, SUM(a.different_num) as different_num, a.supplier_id, a.supplier_name, a.inventory_operatior FROM (SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.checked_operatior, task.checked_time, SUM( external_inventory_log.before_num ) AS before_num, SUM( external_inventory_log.actural_num ) AS actural_num, SUM(external_inventory_log.different_num ) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier WHERE external_inventory_log.task_id = ? GROUP BY external_inventory_log.material_type_id UNION ALL SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, inventory_log.task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.checked_operatior, task.checked_time, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN task INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = task.id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? GROUP BY material.type) a GROUP BY a.material_type_id";
+	private static final String GET_EWH_INVENTORY_TASK_INFO = "SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.ewh_checked_operatior AS check_operatior, task.ewh_checked_time AS check_time, SUM(external_inventory_log.before_num ) AS before_num, SUM(external_inventory_log.actural_num ) AS actural_num, SUM( external_inventory_log.different_num ) AS different_num, SUM(external_inventory_log.material_return_num) as material_return_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier WHERE external_inventory_log.task_id = ? GROUP BY external_inventory_log.material_type_id";
 	
-	private static final String GET_INVENTORY_TASK_INFO_BY_MATERIALTYPE = "select a.material_type_id, a.`no`,a.specification,a.task_id,a.task_name,a.start_time,a.end_time,a.state, a.checked_operatior, a.checked_time, SUM(a.before_num) as before_num, SUM(a.actural_num) as actural_num, SUM(a.different_num) as different_num, a.supplier_id, a.supplier_name, a.inventory_operatior FROM (SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.checked_operatior, task.checked_time, SUM( external_inventory_log.before_num ) AS before_num, SUM( external_inventory_log.actural_num ) AS actural_num, SUM(external_inventory_log.different_num ) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier WHERE external_inventory_log.task_id = ? AND material_type.`no` like ? GROUP BY external_inventory_log.material_type_id UNION ALL SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, inventory_log.task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.checked_operatior, task.checked_time, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN task INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = task.id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND material_type.`no` like ? GROUP BY material.type) a GROUP BY a.material_type_id";
+	private static final String GET_UW_INVWNTORY_TASK_INFO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, inventory_log.task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.uw_checked_operatior AS check_operatior, task.uw_checked_time AS check_time, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN task INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = task.id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? GROUP BY material.type";
 	
+	private static final String GET_EWH_INVENTORY_TASK_INFO_BY_NO = "SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.ewh_checked_operatior AS check_operatior, task.ewh_checked_time AS check_time, SUM(external_inventory_log.before_num ) AS before_num, SUM(external_inventory_log.actural_num ) AS actural_num, SUM( external_inventory_log.different_num ) AS different_num, SUM(external_inventory_log.material_return_num) as material_return_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier WHERE external_inventory_log.task_id = ? AND material_type.`no` like ? GROUP BY external_inventory_log.material_type_id";
+	
+	private static final String GET_UW_INVWNTORY_TASK_INFO_BY_NO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, inventory_log.task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.uw_checked_operatior AS check_operatior, task.uw_checked_time AS check_time, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN task INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = task.id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND material_type.`no` like ? GROUP BY material.type";
+		
 	private static final String GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER = "SELECT * FROM task where state = 2 and type = 2 and supplier = ?";
 
 	private static final String GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER = "SELECT * FROM task where state = 1 and type = 2 and supplier = ? order by create_time desc";
 	
-	private static ExternalWhTaskService externalWhTaskService = ExternalWhTaskService.me;
+	private static final String GET_WINDOWS_BY_TASK_ID = "select * from window where bind_task_id = ?";
 	
-	private static String GET_WINDOW_BY_TASK_ID = "select * from window where bind_task_id = ?";
+	private static final String UPDATE_INVENTORY_LOG_UNCOVER = "UPDATE inventory_log SET enabled = 0 WHERE different_num = 0 AND task_id = ?";
+	
+	private static final String UPDATE_EWH_INVENTORY_LOG_UNCOVER = "UPDATE external_inventory_log SET enabled = 0 WHERE different_num = 0 AND task_id = ?";
+	
+	private static final String GET_USEFUL_TASK_BY_TYPE_SUPPLIER = "select * from task where task.type = ? and task.state < 3 and task.supplier = ?";
+	
+	private static final String UPDATE_MATERIAL_RETURN_RECORD_UNENABLED = "UPDATE material_return_record SET enabled = 0 WHERE time <= ? AND enabled = 1 AND material_type_id IN (SELECT id from material_type WHERE material_type.supplier = ? AND material_type.enabled = 1)";
+	
+	private static ExternalWhTaskService externalWhTaskService = ExternalWhTaskService.me;
 	
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 	
@@ -127,7 +139,11 @@ public class InventoryTaskService {
 		if (supplier == null) {
 			throw new OperationException("供应商不存在！");
 		}
-		Task task = new Task();
+		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplier);
+		if (task != null) {
+			throw new OperationException("该供应商已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
+		}
+		task = new Task();
 		Date date = new Date();
 		task.setFileName(getTaskName(date));
 		task.setCreateTime(date);
@@ -198,6 +214,8 @@ public class InventoryTaskService {
 			if (material != null) {
 				throw new OperationException("当前盘点的供应商存在不在料盒内的物料，请检查!");
 			}
+			task.setState(TaskState.PROCESSING);
+			task.setStartTime(new Date());
 			List<AGVInventoryTaskItem> agvInventoryTaskItems = new ArrayList<>();
 			List<MaterialBox> materialBoxs = MaterialBox.dao.find(GET_ALL_BOX_BY_SUPPLIER, task.getSupplier());
 			for (MaterialBox box : materialBoxs) {
@@ -215,23 +233,31 @@ public class InventoryTaskService {
 				inventoryLog.setEnabled(true);
 				inventoryLog.save();
 			}
-			List<ExternalWhInfoVO> externalWhInfoVOs = externalWhTaskService.selectExternalWhInfo(null, task.getSupplier(), null, task.getCreateTime());
+			List<ExternalWhInfoVO> externalWhInfoVOs = externalWhTaskService.selectExternalWhInfo(null, task.getSupplier(), null, task);
 			
 			for (ExternalWhInfoVO externalWhInfoVO : externalWhInfoVOs) {
-				if (externalWhInfoVO.getQuantity() > 0) {
-					ExternalInventoryLog externalInventoryLog = new ExternalInventoryLog();
-					externalInventoryLog.setTaskId(taskId);
-					externalInventoryLog.setWhId(externalWhInfoVO.getWhId());
-					externalInventoryLog.setMaterialTypeId(externalWhInfoVO.getMaterialTypeId());
-					externalInventoryLog.setBeforeNum(externalWhInfoVO.getQuantity());
-					externalInventoryLog.setEnabled(true);
-					externalInventoryLog.save();
+				if (externalWhInfoVO.getQuantity() == 0 && externalWhInfoVO.getReturnQuantity() == 0) {
+					continue;
 				}
+				ExternalInventoryLog externalInventoryLog = new ExternalInventoryLog();
+				externalInventoryLog.setTaskId(taskId);
+				externalInventoryLog.setWhId(externalWhInfoVO.getWhId());
+				externalInventoryLog.setMaterialTypeId(externalWhInfoVO.getMaterialTypeId());
+				externalInventoryLog.setBeforeNum(externalWhInfoVO.getQuantity());
+				externalInventoryLog.setMaterialReturnNum(externalWhInfoVO.getReturnQuantity());
+				externalInventoryLog.setEnabled(true);
+				externalInventoryLog.save();
+				
+				ExternalWhLog externalWhLog = new ExternalWhLog();
+				externalWhLog.setMaterialTypeId(externalWhInfoVO.getMaterialTypeId());
+				externalWhLog.setTaskId(taskId);
+				externalWhLog.setSourceWh(externalWhInfoVO.getWhId());
+				externalWhLog.setDestination(externalInventoryLog.getWhId());
+				externalWhLog.setQuantity(0 - externalWhInfoVO.getQuantity());
+				externalWhLog.setTime(new Date());
+				externalWhLog.save();
 			}
-			
-			
-			task.setState(TaskState.PROCESSING);
-			task.setStartTime(new Date());
+			Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), task.getSupplier());
 			task.update();
 			if (agvInventoryTaskItems.size() <= 0) {
 				 return "当前供应商在UW无人仓没有物料，无需绑定仓口！";
@@ -280,7 +306,6 @@ public class InventoryTaskService {
 				if (inventoryTaskItem.getTaskId().equals(taskId) && inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(InventoryTaskItemState.ARRIVED_WINDOW)) {
 					try {
 						IOHandler.sendSL(inventoryTaskItem, materialBox, window);
-						TaskItemRedisDAO.setWindowFlag(windowId, false);
 						TaskItemRedisDAO.updateInventoryTaskItemState(inventoryTaskItem, InventoryTaskItemState.START_BACK);
 						TaskItemRedisDAO.updateInventoryTaskIsForceFinish(inventoryTaskItem, true);
 					} catch (Exception e) {
@@ -296,6 +321,8 @@ public class InventoryTaskService {
 					Material material = Material.dao.findById(inventoryLog.getMaterialId());
 					material.setRemainderQuantity(inventoryLog.getActuralNum());
 					if (inventoryLog.getActuralNum().equals(0)) {
+						material.setRow(-1);
+						material.setCol(-1);
 						material.setIsInBox(false);
 					}
 					material.update();
@@ -308,7 +335,7 @@ public class InventoryTaskService {
 	
 	
 	/**
-	 * 盘点物料
+	 * 盘点UW物料
 	 * @param materialId
 	 * @param boxId
 	 * @param taskId
@@ -344,10 +371,12 @@ public class InventoryTaskService {
 	 */
 	public String coverEWhMaterial(Integer id, Integer taskId, User user) {
 		Task task = Task.dao.findById(taskId);
-		if (task == null || !task.getChecked()) {
-			throw new OperationException("盘点任务记录尚未审核，请先审核再平仓");
+		if (task == null || !task.getEwhChecked()) {
+			throw new OperationException("盘点任务记录尚未审核，请先审核再平仓！");
 		}
-		
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态，无法平仓！");
+		}
 		ExternalInventoryLog externalInventoryLog = ExternalInventoryLog.dao.findById(id);
 		if (externalInventoryLog == null) {
 			throw new OperationException("该盘点记录不存在，请检查参数");
@@ -356,36 +385,12 @@ public class InventoryTaskService {
 		if (externalInventoryLog.getCoverTime() != null) {
 			throw new OperationException("该盘点记录已平仓，请不要重复平仓");
 		}
-		if (externalInventoryLog.getBeforeNum().equals(externalInventoryLog.getActuralNum())) {
-			externalInventoryLog.setDifferentNum(0);
-			externalInventoryLog.setEnabled(false);
-			externalInventoryLog.setCoverOperatior(user.getUid());
-			externalInventoryLog.setCoverTime(date);
-			externalInventoryLog.update();
-		}else {
 			
-			ExternalWhLog externalWhLog = new ExternalWhLog();
-			externalWhLog.setMaterialTypeId(externalInventoryLog.getMaterialTypeId());
-			externalWhLog.setQuantity(externalInventoryLog.getDifferentNum());
-			externalWhLog.setTaskId(taskId);
-			externalWhLog.setSourceWh(externalInventoryLog.getWhId());
-			externalWhLog.setDestination(externalInventoryLog.getWhId());
-			externalWhLog.setOperatior(user.getUid());
-			externalWhLog.setTime(date);
-			externalWhLog.save();
-			
-			externalInventoryLog.setEnabled(false);
-			externalInventoryLog.setDifferentNum(0);
-			externalInventoryLog.setCoverOperatior(user.getUid());
-			externalInventoryLog.setCoverTime(date);
-			externalInventoryLog.update();
-		}
-		ExternalInventoryLog log1 = ExternalInventoryLog.dao.findFirst(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID, taskId);
-		InventoryLog log2 = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, taskId);
-		if (log1 == null && log2 == null) {
-			task.setState(TaskState.FINISHED);
-			task.update();
-		}
+		externalInventoryLog.setEnabled(false);
+		externalInventoryLog.setDifferentNum(0);
+		externalInventoryLog.setCoverOperatior(user.getUid());
+		externalInventoryLog.setCoverTime(date);
+		externalInventoryLog.update();
 		return "操作成功";
 	}
 	
@@ -399,8 +404,11 @@ public class InventoryTaskService {
 	 */
 	public String coverMaterial(Integer id, Integer taskId, User user) {
 		Task task = Task.dao.findById(taskId);
-		if (task == null || !task.getChecked()) {
+		if (task == null || !task.getUwChecked()) {
 			throw new OperationException("盘点任务记录尚未审核，请先审核再平仓！");
+		}
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态，无法平仓！");
 		}
 		InventoryLog inventoryLog = InventoryLog.dao.findById(id);
 		if (inventoryLog == null) {
@@ -414,29 +422,26 @@ public class InventoryTaskService {
 		inventoryLog.setDifferentNum(0);
 		inventoryLog.setEnabled(false);
 		inventoryLog.update();
-		ExternalInventoryLog log1 = ExternalInventoryLog.dao.findFirst(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID, taskId);
-		InventoryLog log2 = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, taskId);
-		if (log1 == null && log2 == null) {
-			task.setState(TaskState.FINISHED);
-			task.update();
-		}
 		return "操作成功";
 	}
 	
 	
 	/**
-	 * 批量平仓，根据任务ID和物料类型ID
+	 * UW仓批量平仓，根据任务ID和物料类型ID
 	 * @param materialTypeId
 	 * @param taskId
 	 * @param user
 	 * @return
 	 */
-	public String coverMaterialByTaskId(Integer materialTypeId, Integer taskId, User user) {
+	public String coverUwMaterialByTaskId(Integer materialTypeId, Integer taskId, User user) {
 		Task task = Task.dao.findById(taskId);
 		if (task == null || !task.getType().equals(TaskType.COUNT)) {
 			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
 		}
-		if (!task.getChecked()) {
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态，无法平仓！");
+		}
+		if (!task.getUwChecked()) {
 			throw new OperationException("盘点任务记录尚未审核，请先审核再平仓！");
 		}
 		List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_UNCOVER_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE, materialTypeId, taskId);
@@ -448,37 +453,37 @@ public class InventoryTaskService {
 			inventoryLog.setEnabled(false);
 			inventoryLog.update();
 		}
+		return "操作成功";
+	}
+	
+	
+	/**
+	 * 物料仓批量平仓，根据任务ID和物料类型ID
+	 * @param materialTypeId
+	 * @param taskId
+	 * @param user
+	 * @return
+	 */
+	public String coverEwhMaterialByTaskId(Integer materialTypeId, Integer taskId, User user) {
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.COUNT)) {
+			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
+		}
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态，无法平仓！");
+		}
+		if (!task.getEwhChecked()) {
+			throw new OperationException("盘点任务记录尚未审核，请先审核再平仓！");
+		}
+		Date date = new Date();
 		List<ExternalInventoryLog> externalInventoryLogs = ExternalInventoryLog.dao.find(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE, taskId, materialTypeId);
 		for (ExternalInventoryLog externalInventoryLog : externalInventoryLogs) {
-			if (externalInventoryLog.getBeforeNum().equals(externalInventoryLog.getActuralNum())) {
-				externalInventoryLog.setEnabled(false);
-				externalInventoryLog.setCoverOperatior(user.getUid());
-				externalInventoryLog.setCoverTime(date);
-				externalInventoryLog.update();
-			}else {
-				
-				ExternalWhLog externalWhLog = new ExternalWhLog();
-				externalWhLog.setMaterialTypeId(externalInventoryLog.getMaterialTypeId());
-				externalWhLog.setQuantity(externalInventoryLog.getDifferentNum());
-				externalWhLog.setTaskId(taskId);
-				externalWhLog.setSourceWh(externalInventoryLog.getWhId());
-				externalWhLog.setDestination(externalInventoryLog.getWhId());
-				externalWhLog.setOperatior(user.getUid());
-				externalWhLog.setTime(date);
-				externalWhLog.save();
-				
-				externalInventoryLog.setEnabled(false);
-				externalInventoryLog.setCoverOperatior(user.getUid());
-				externalInventoryLog.setDifferentNum(0);
-				externalInventoryLog.setCoverTime(date);
-				externalInventoryLog.update();
-			}
-		}
-		ExternalInventoryLog log1 = ExternalInventoryLog.dao.findFirst(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID, taskId);
-		InventoryLog log2 = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, taskId);
-		if (log1 == null && log2 == null) {
-			task.setState(TaskState.FINISHED);
-			task.update();
+			externalInventoryLog.setEnabled(false);
+			externalInventoryLog.setCoverOperatior(user.getUid());
+			externalInventoryLog.setDifferentNum(0);
+			externalInventoryLog.setCoverTime(date);
+			externalInventoryLog.update();
+		
 		}
 		return "操作成功";
 	}
@@ -489,16 +494,50 @@ public class InventoryTaskService {
 	 * @param taskId
 	 * @return
 	 */
-	public String checkInventoryTask(Integer taskId, User user) {
+	public String checkUwInventoryTask(Integer taskId, User user) {
 		Task task = Task.dao.findById(taskId);
 		if (task == null || !task.getType().equals(TaskType.COUNT)) {
 			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
 		}
-		List<ExternalInventoryLog> logs1 = ExternalInventoryLog.dao.find(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID, taskId);
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态，无法审核！");
+		}
+		if (task.getUwChecked()) {
+			throw new OperationException("盘点任务记录已审核，请勿重复审核！");
+		}
+		List<InventoryLog> logs = InventoryLog.dao.find(GET_UN_INVENTORY_LOG_BY_TASKID, taskId);
+		if (logs.size() > 0) {
+			throw new OperationException("UW仓盘点阶段未结束，请结束后再审核！");
+		}
+		Db.update(UPDATE_INVENTORY_LOG_UNCOVER, taskId);
 		
-		List<InventoryLog> logs2 = InventoryLog.dao.find(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, taskId);
+		task.setUwChecked(true);
+		task.setUwCheckedOperatior(user.getUid());
+		task.setUwCheckedTime(new Date());
+		task.update();
+		return "操作成功";
+	}
+	
+	
+	/**
+	 * 审核任务
+	 * @param taskId
+	 * @return
+	 */
+	public String checkEwhInventoryTask(Integer taskId, User user) {
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.COUNT)) {
+			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
+		}
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态，无法审核！");
+		}
+		if (task.getEwhChecked()) {
+			throw new OperationException("盘点任务记录已审核，请勿重复审核！");
+		}
+		List<ExternalInventoryLog> logs1 = ExternalInventoryLog.dao.find(GET_UN_EWH_INVENTORY_LOG_BY_TASKID, taskId);
 		String nos = "";
-		if ((logs1.size() > 0 || logs2.size() > 0) && task.getEndTime() == null) {
+		if (logs1.size() > 0) {
 			for (ExternalInventoryLog externalInventoryLog : logs1) {
 				if (externalInventoryLog.getActuralNum() == null) {
 					if (nos.equals("")) {
@@ -510,24 +549,11 @@ public class InventoryTaskService {
 			}
 			return "存在以下料号类型ID[" + nos + "]未盘点";
 		}
-		if (task.getChecked()) {
-			throw new OperationException("盘点任务记录已审核，请勿重复审核！");
-		}
-		for (ExternalInventoryLog externalInventoryLog : logs1) {
-			if (externalInventoryLog.getDifferentNum().equals(0)) {
-				externalInventoryLog.setEnabled(false);
-				externalInventoryLog.update();
-			}
-		}
-		for (InventoryLog inventoryLog : logs2) {
-			if (inventoryLog.getDifferentNum().equals(0)) {
-				inventoryLog.setEnabled(false);
-				inventoryLog.update();
-			}
-		}
-		task.setChecked(true);
-		task.setCheckedOperatior(user.getUid());
-		task.setCheckedTime(new Date());
+		Db.update(UPDATE_EWH_INVENTORY_LOG_UNCOVER, taskId);
+		
+		task.setEwhChecked(true);
+		task.setEwhCheckedOperatior(user.getUid());
+		task.setEwhCheckedTime(new Date());
 		task.update();
 		return "操作成功";
 	}
@@ -548,13 +574,6 @@ public class InventoryTaskService {
 			Task task = Task.dao.findById(taskId);
 			if (task == null || !task.getType().equals(TaskType.COUNT) || !task.getState().equals(TaskState.PROCESSING)) {
 				throw new OperationException("盘点任务不存在或未处于进行中状态，请检查参数是否正确！");
-			}
-			if (task.getChecked()) {
-				throw new OperationException("盘点任务已审核，无法再导入该任务的物料仓盘点数据！");
-			}
-			InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_UN_INVENTORY_LOG_BY_TASKID, taskId);
-			if (inventoryLog != null) {
-				throw new OperationException("请等待UW仓盘点完成再物料仓盘点数据！");
 			}
 			try {
 				fileReader = ExcelHelper.from(file);
@@ -606,10 +625,7 @@ public class InventoryTaskService {
 						}
 						
 						ExternalInventoryLog externalInventoryLog = ExternalInventoryLog.dao.findFirst(GET_EWH_INVENTORY_LOG_BY_TASKID_MATERIALTYPEID_WHID, taskId, destination.getId(), mType.getId());
-						/*if (externalInventoryLog == null) {
-							resultString = "导入失败，表格第" + i + "行的仓库名为" + item.getQuantity() + ",料号为"+ item.getNo() + "出错，查无此盘点物料记录，请确保系统中存在该仓库和该仓库存在该料号！";
-							return resultString;
-						}*/
+						
 						//如果没有记录就说明该物料仓这个物料一开始没有进过这个料
 						if (externalInventoryLog == null) {
 							externalInventoryLog = new ExternalInventoryLog();
@@ -620,20 +636,22 @@ public class InventoryTaskService {
 							externalInventoryLog.setActuralNum(item.getQuantity());
 							externalInventoryLog.setEnabled(true);
 							externalInventoryLog.setDifferentNum(item.getQuantity() - 0);
+							externalInventoryLog.setMaterialReturnNum(0);
 							externalInventoryLog.setInventoryOperatior(user.getUid());
 							externalInventoryLog.setInventoryTime(new Date());
 						}else {
 							externalInventoryLog.setActuralNum(item.getQuantity());
 							externalInventoryLog.setEnabled(true);
-							externalInventoryLog.setDifferentNum(item.getQuantity() - externalInventoryLog.getBeforeNum());
+							externalInventoryLog.setDifferentNum(item.getQuantity() - externalInventoryLog.getBeforeNum() + externalInventoryLog.getMaterialReturnNum());
 							externalInventoryLog.setInventoryOperatior(user.getUid());
+							externalInventoryLog.setCoverOperatior(null);
+							externalInventoryLog.setCoverTime(null);
 							externalInventoryLog.setInventoryTime(new Date());
 						}
 						externalInventoryLogs.add(externalInventoryLog);
 						i++;
 					} else {
 						break;
-					
 					}
 				}
 				
@@ -644,18 +662,18 @@ public class InventoryTaskService {
 						externalInventoryLog.update();
 					}
 				}
+				task.setEwhChecked(false);
+				task.setEwhCheckedOperatior(null);
+				task.setEwhCheckedTime(null);
+				task.update();
 				
-				ExternalInventoryLog externalInventoryLog = ExternalInventoryLog.dao.findFirst(GET_UN_EWH_INVENTORY_LOG_BY_TASKID, taskId);
-				if (externalInventoryLog == null) {
-					task.setEndTime(new Date());
-					task.update();
-				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new OperationException(e.getMessage());
 			}finally {
 				file.delete();
 			}
+			
 		}
 		return resultString;
 	}
@@ -766,13 +784,10 @@ public class InventoryTaskService {
 			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
 		}
 		if (no == null) {
-			sqlPara.setSql(GET_INVENTORY_TASK_INFO);
-			sqlPara.addPara(taskId);
+			sqlPara.setSql(GET_EWH_INVENTORY_TASK_INFO);
 			sqlPara.addPara(taskId);
 		}else {
-			sqlPara.setSql(GET_INVENTORY_TASK_INFO_BY_MATERIALTYPE);
-			sqlPara.addPara(taskId);
-			sqlPara.addPara("%" + no + "%");
+			sqlPara.setSql(GET_EWH_INVENTORY_TASK_INFO_BY_NO);
 			sqlPara.addPara(taskId);
 			sqlPara.addPara("%" + no + "%");
 		}
@@ -780,28 +795,25 @@ public class InventoryTaskService {
 
 		String[] field = null;
 		String[] head = null;
-		field = new String[] {"supplier_name", "no", "before_num", "actural_num", "different_num"};
-		head =  new String[] {"供应商", "料号", "盘前数量", "盘点数量", "盈亏"};
+		field = new String[] {"supplier_name", "no", "before_num", "actural_num", "return_num", "different_num"};
+		head =  new String[] {"供应商", "料号", "盘前数量", "盘点数量", "退料","盈亏"};
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(inventoryRecords, fileName, field, head);
 		writter.write(output, true);
 	}
 	
 	
-	public List<Record> getInventoryTaskInfo(Integer taskId, String no) {
+	public List<Record> getUwInventoryTaskInfo(Integer taskId, String no) {
 		SqlPara sqlPara = new SqlPara();
 		Task task = Task.dao.findById(taskId);
 		if (task == null || !task.getType().equals(TaskType.COUNT)) {
 			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
 		}
-		if (no == null) {
-			sqlPara.setSql(GET_INVENTORY_TASK_INFO);
-			sqlPara.addPara(taskId);
+		if (no == null || no.equals("")) {
+			sqlPara.setSql(GET_UW_INVWNTORY_TASK_INFO);
 			sqlPara.addPara(taskId);
 		}else {
-			sqlPara.setSql(GET_INVENTORY_TASK_INFO_BY_MATERIALTYPE);
-			sqlPara.addPara(taskId);
-			sqlPara.addPara("%" + no + "%");
+			sqlPara.setSql(GET_UW_INVWNTORY_TASK_INFO_BY_NO);
 			sqlPara.addPara(taskId);
 			sqlPara.addPara("%" + no + "%");
 		}
@@ -811,11 +823,28 @@ public class InventoryTaskService {
 	}
 	
 	
-	public List<InventoryTaskDetailVO> getInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
+	public List<Record> getEwhInventoryTaskInfo(Integer taskId, String no) {
+		SqlPara sqlPara = new SqlPara();
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.COUNT)) {
+			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
+		}
+		if (no == null) {
+			sqlPara.setSql(GET_EWH_INVENTORY_TASK_INFO);
+			sqlPara.addPara(taskId);
+		}else {
+			sqlPara.setSql(GET_EWH_INVENTORY_TASK_INFO_BY_NO);
+			sqlPara.addPara(taskId);
+			sqlPara.addPara("%" + no + "%");
+		}
+		List<Record> inventoryRecords =Db.find(sqlPara);
+		return inventoryRecords; 
+	}
+	
+	
+	public List<InventoryTaskDetailVO> getUwInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
 		List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE, materialTypeId, taskId );
-		
-		List<ExternalInventoryLog> externalInventoryLogs = ExternalInventoryLog.dao.find(GET_EWH_INVENTORY_LOG_BY_TASKID_MATERIALTYPEID, taskId, materialTypeId);
-		
+				
 		List<InventoryTaskDetailVO> details = new ArrayList<>();
 		for (InventoryLog inventoryLog : inventoryLogs) {
 			InventoryTaskDetailVO inventoryTaskDetail = new InventoryTaskDetailVO();
@@ -835,6 +864,16 @@ public class InventoryTaskService {
 			details.add(inventoryTaskDetail);
 		}
 		
+		return details;
+	}
+	
+	
+	public List<InventoryTaskDetailVO> getEwhInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
+		
+		List<ExternalInventoryLog> externalInventoryLogs = ExternalInventoryLog.dao.find(GET_EWH_INVENTORY_LOG_BY_TASKID_MATERIALTYPEID, taskId, materialTypeId);
+		
+		List<InventoryTaskDetailVO> details = new ArrayList<>();
+		
 		for (ExternalInventoryLog externalInventoryLog : externalInventoryLogs) {
 			InventoryTaskDetailVO inventoryTaskDetail = new InventoryTaskDetailVO();
 			inventoryTaskDetail.setId(externalInventoryLog.getId());
@@ -843,6 +882,7 @@ public class InventoryTaskService {
 			inventoryTaskDetail.setBeforeNum(externalInventoryLog.getBeforeNum());
 			inventoryTaskDetail.setAtrualNum(externalInventoryLog.getActuralNum());
 			inventoryTaskDetail.setDifferentNum(externalInventoryLog.getDifferentNum());
+			inventoryTaskDetail.setMaterialreturnNum(externalInventoryLog.getMaterialReturnNum());
 			inventoryTaskDetail.setInventoryOperatior(externalInventoryLog.getInventoryOperatior());
 			inventoryTaskDetail.setInventoryTime(externalInventoryLog.getInventoryTime());
 			inventoryTaskDetail.setCoverOperatior(externalInventoryLog.getCoverOperatior());
@@ -863,20 +903,61 @@ public class InventoryTaskService {
 		if (!task.getState().equals(TaskState.PROCESSING)) {
 			throw new OperationException("盘点任务未处于进行中状态，无法完成！");
 		}
-		if (!task.getChecked()) {
-			throw new OperationException("盘点任务未审核，无法完成！");
+		if (!task.getUwChecked()) {
+			throw new OperationException("UW仓盘点任务未审核，无法完成！");
+		}
+		if (!task.getEwhChecked()) {
+			throw new OperationException("物料仓盘点任务未审核，无法完成！");
 		}
 		ExternalInventoryLog log1 = ExternalInventoryLog.dao.findFirst(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID, taskId);
 		InventoryLog log2 = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, taskId);
 		if (log1 == null && log2 == null) {
 			task.setState(TaskState.FINISHED);
-			if (task.getEndTime() == null) {
-				task.setEndTime(new Date());
-			}
+			task.setEndTime(new Date());
 			task.update();
 		}else {
 			throw new OperationException("盘点任务存在未平仓的盘点条目，无法完成！");
 		}
+		List<ExternalInventoryLog> externalInventoryLogs = ExternalInventoryLog.dao.find(GET_ALL_EWH_INVENTORY_LOG_BY_TASK, taskId);
+		for (ExternalInventoryLog externalInventoryLog : externalInventoryLogs) {
+			ExternalWhLog externalWhLog = new ExternalWhLog();
+			externalWhLog.setMaterialTypeId(externalInventoryLog.getMaterialTypeId());
+			externalWhLog.setTaskId(taskId);
+			externalWhLog.setSourceWh(externalInventoryLog.getWhId());
+			externalWhLog.setDestination(externalInventoryLog.getWhId());
+			externalWhLog.setQuantity(externalInventoryLog.getActuralNum());
+			externalWhLog.setOperatior(externalInventoryLog.getCoverOperatior());
+			externalWhLog.setTime(new Date());
+			externalWhLog.save();
+		}
+		return "操作成功！";
+	}
+	
+	
+	public String editEwhInventoryLog(Integer id, Integer acturanlNum, Integer returnNum , User user) {
+		ExternalInventoryLog externalInventoryLog = ExternalInventoryLog.dao.findById(id);
+		
+		if (externalInventoryLog == null) {
+			throw new OperationException("该盘点记录不存在，请检查！");
+		}
+		Task task = Task.dao.findById(externalInventoryLog.getTaskId());
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("该盘点任务不处于进行中状态，无法修改，请检查！");
+		}
+		externalInventoryLog.setActuralNum(acturanlNum);
+		externalInventoryLog.setMaterialReturnNum(returnNum);
+		externalInventoryLog.setDifferentNum(acturanlNum - externalInventoryLog.getBeforeNum()  + returnNum);
+		externalInventoryLog.setInventoryOperatior(user.getUid());
+		externalInventoryLog.setInventoryTime(new Date());
+		externalInventoryLog.setCoverOperatior(null);
+		externalInventoryLog.setCoverTime(null);
+		externalInventoryLog.setEnabled(true);
+		externalInventoryLog.update();
+		
+		task.setEwhChecked(false);
+		task.setEwhCheckedOperatior(null);
+		task.setEwhCheckedTime(null);
+		task.update();
 		return "操作成功！";
 	}
 	
@@ -887,7 +968,7 @@ public class InventoryTaskService {
 		if (task == null || !task.getState().equals(TaskState.PROCESSING)) {
 			throw new OperationException("盘点任务并未处于进行状态，无法指定叉车");
 		}
-		Window window = Window.dao.findFirst(GET_WINDOW_BY_TASK_ID, taskId);
+		Window window = Window.dao.findFirst(GET_WINDOWS_BY_TASK_ID, taskId);
 		if (window == null) {
 			throw new OperationException("盘点任务的UW仓盘点工作已结束，无法指定叉车");
 		}
@@ -930,7 +1011,6 @@ public class InventoryTaskService {
 				}
 			}
 		}
-		
 		return "操作成功";
 	}
 

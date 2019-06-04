@@ -24,6 +24,8 @@ public class ExternalWhInfoVO {
 	
 	private Integer whId;
 	
+	private Integer returnQuantity;
+	
 	public String getWareHouse() {
 		return wareHouse;
 	}
@@ -86,6 +88,13 @@ public class ExternalWhInfoVO {
 
 	public void setWhId(Integer whId) {
 		this.whId = whId;
+	}
+
+	public Integer getReturnQuantity() {
+		return returnQuantity;
+	}
+	public void setReturnQuantity(Integer returnQuantity) {
+		this.returnQuantity = returnQuantity;
 	}
 	
 	
