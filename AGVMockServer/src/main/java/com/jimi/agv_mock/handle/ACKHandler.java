@@ -30,7 +30,7 @@ public class ACKHandler {
 		AGVBaseCmd baseCmd = JSON.parseObject(message, AGVBaseCmd.class);
 		//判断是否已经ack过
 		for (Integer cmdid : MockMainSocket.getReceiveNotAckCmdidSet()) {
-			if(baseCmd.getCmdid() == cmdid) {
+			if(baseCmd.getCmdid().intValue() == cmdid.intValue()) {
 				return false;
 			}
 		}

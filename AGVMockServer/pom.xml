@@ -5,7 +5,7 @@
 	<groupId>cc.darhao</groupId>
 	<artifactId>AGVMockServer</artifactId>
 	<packaging>war</packaging>
-	<version>1.1.0</version>
+	<version>1.3.0</version>
 	<name>WsTest Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>

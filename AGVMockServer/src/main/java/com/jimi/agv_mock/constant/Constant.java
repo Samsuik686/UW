@@ -12,7 +12,7 @@ public class Constant {
 	/**
 	 * 叉车数组
 	 */
-	public static final int[] ROBOT_IDS = new int[] {2222, 3333, 4444, 1111};
+	public static final int[] ROBOT_IDS = new int[] {1111};
 	/**
 	 * 叉车实时信息发送周期
 	 */
@@ -32,15 +32,15 @@ public class Constant {
 	/**
 	 * 从收到任务到开始执行的间隔时间
 	 */
-	public static final int START_CMD_DELAY = 5000;
+	public static final int START_CMD_DELAY = 100;
 	/**
 	 * 从开始执行到第一动作完成的间隔时间
 	 */
-	public static final int FIRST_ACTION_DELAY = 9000;
+	public static final int FIRST_ACTION_DELAY = 150;
 	/**
 	 * 第一动作完成到第二动作完成的间隔时间
 	 */
-	public static final int SECOND_ACTION_DELAY = 9000;
+	public static final int SECOND_ACTION_DELAY = 150;
 	/**
 	 * 间隔时间的随机浮动百分比
 	 */
@@ -74,4 +74,6 @@ public class Constant {
 	 */
 	public static final int ACK_FLOATING_PERCENTAGE = 20;
 	
+	//固定仓口为1
+	public static final boolean CONST_WINDOW_1 = true;  
 }

@@ -65,6 +65,9 @@ public class TaskDisturber {
 
 
 	private int getWindowId() {
+		if(Constant.CONST_WINDOW_1) {
+			return 1;
+		}
 		String missionGroupId = excutor.getMoveCmd().getMissiongroups().get(0).getMissiongroupid();
 		int taskId = Integer.parseInt(missionGroupId.split(":")[1]);
 		int windowId = TaskDAO.getWindowId(taskId);
