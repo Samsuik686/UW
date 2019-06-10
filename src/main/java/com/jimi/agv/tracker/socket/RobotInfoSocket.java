@@ -9,8 +9,9 @@ import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
-import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
+
+import com.jimi.agv.tracker.handler.RobotInfoHandler;
 
 /**
  * 实时接收机器信息的类
@@ -21,13 +22,8 @@ import javax.websocket.WebSocketContainer;
 @ClientEndpoint
 public class RobotInfoSocket{
 	
-	public static void init(String uri) {
-		try {
-			//连接AGV服务器
-			connect(uri);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public static void init(String uri) throws Exception {
+		connect(uri);
 	}
 
 
@@ -45,13 +41,13 @@ public class RobotInfoSocket{
 	
 	@OnError
 	public void onError(Throwable t) {
-		System.out.println("RobotInfoSocket has errors :" + t.getMessage());
+		t.printStackTrace();
 	}
 
 	
 	@OnMessage
-	public void onMessage(String message ,Session session) {
-		//TODO:1.1版本编写获取机器信息
+	public void onMessage(String message) {
+		RobotInfoHandler.handle(message);
 	}
 
 

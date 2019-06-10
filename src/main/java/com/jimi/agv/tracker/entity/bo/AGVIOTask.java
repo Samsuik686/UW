@@ -51,6 +51,41 @@ public class AGVIOTask {
 	}
 
 
+	public AGVIOTaskItem getItemByKey(String key) {
+		for (AGVIOTaskItem item : items) {
+			if(item.getKey().equals(key)) {
+				return item;
+			}
+		}
+		return null;
+	}
+	
+	
+	public AGVIOTaskItem getExecutingItem() {
+		for (AGVIOTaskItem item : items) {
+			if(item.getState() > AGVIOTaskItem.NOT_START && item.getState() < AGVIOTaskItem.FINISHED) {
+				return item;
+			}
+		}
+		return null;
+	}
+
+
+	public String getReport() {
+		System.out.println("正在生成告请稍等...");
+		StringBuffer sb = new StringBuffer();
+		sb.append("报告时间：" + DateUtil.yyyyMMddHHmmss(new Date()) + "\n");
+		int windowX = PropUtil.getInt(Constant.CONFIG_NAME, Constant.WINDOW_X_STRING);
+		int windowY = PropUtil.getInt(Constant.CONFIG_NAME, Constant.WINDOW_Y_STRING);
+		sb.append("仓口坐标：[" + windowX + "," + windowY + "]\n");
+		for (AGVIOTaskItem item : items) {
+			sb.append(item.getReport());
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+
 	private void showEnd() {
 		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 		System.out.println("日志时间：" + DateUtil.HHmmss(new Date()));
@@ -60,36 +95,12 @@ public class AGVIOTask {
 	}
 
 
-	public AGVIOTaskItem getItemByKey(String key) {
-		for (AGVIOTaskItem item : items) {
-			if(item.getKey().equals(key)) {
-				return item;
-			}
-		}
-		return null;
-	}
-
 	private void showProcess(AGVIOTaskItem item) {
 		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 		System.out.println("日志时间：" + DateUtil.HHmmss(new Date()));
 		System.out.println("任务总进度：" + items.indexOf(item) + "/" + items.size());
-		System.out.println("即将执行任务条目：" + item.getPosistionString());
+		System.out.println("即将执行任务条目：" + item.getTargetString());
 		System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-	}
-
-
-	public String getConsumeReport() {
-		System.out.println("正在生成 [耗时报告] 请稍等...");
-		StringBuffer sb = new StringBuffer();
-		sb.append("报告时间：" + DateUtil.yyyyMMddHHmmss(new Date()) + "\n");
-		int windowX = PropUtil.getInt(Constant.CONFIG_NAME, Constant.WINDOW_X_STRING);
-		int windowY = PropUtil.getInt(Constant.CONFIG_NAME, Constant.WINDOW_Y_STRING);
-		sb.append("仓口坐标：[" + windowX + "," + windowY + "]\n");
-		for (AGVIOTaskItem item : items) {
-			sb.append(item.getConsumeReport());
-			sb.append("\n");
-		}
-		return sb.toString();
 	}
 	
 }

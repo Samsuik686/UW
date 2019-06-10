@@ -70,7 +70,7 @@ public class AGVMainSocket {
 	
 	@OnError
 	public void onError(Throwable t) {
-		System.out.println("AGVMainSocket has errors :" + t.getMessage());
+		t.printStackTrace();
 	}
 
 	

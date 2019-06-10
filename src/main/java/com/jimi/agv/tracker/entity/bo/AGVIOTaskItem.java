@@ -1,6 +1,8 @@
 package com.jimi.agv.tracker.entity.bo;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import cc.darhao.dautils.api.DateUtil;
 import cc.darhao.dautils.api.UuidUtil;
@@ -28,6 +30,10 @@ public class AGVIOTaskItem {
 	private Date returnTime;
 	private Date finishTime;
 	
+	private List<Position> gotTrails;
+	private List<Position> transportTrails;
+	private List<Position> returnTrails;
+	
 	private int targetX;
 	private int targetY;
 	private int targetZ;
@@ -38,22 +44,34 @@ public class AGVIOTaskItem {
 		this.targetX = targetX;
 		this.targetY = targetY;
 		this.targetZ = targetZ;
+		gotTrails = new ArrayList<>();
+		transportTrails = new ArrayList<>();
+		returnTrails = new ArrayList<>();
 		state = NOT_START;
 		key = UuidUtil.get32UUID();
 	}
 	
 
-	public String getConsumeReport() {
+	public String getReport() {
 		StringBuffer sb = new StringBuffer();
-		sb.append(getPosistionString() + "\n");
+		sb.append(getTargetString() + "\n");
 		sb.append("开始->取盒耗时："+ (((gotTime.getTime() - startTime.getTime()) / 1000)) + "\n");
+		for (Position position : gotTrails) {
+			sb.append(position.toString()+"\n");
+		}
 		sb.append("取盒->到站耗时："+ (((arriveTime.getTime() - gotTime.getTime()) / 1000)) + "\n");
+		for (Position position : transportTrails) {
+			sb.append(position.toString()+"\n");
+		}
 		sb.append("到站->送回耗时："+ (((finishTime.getTime() - returnTime.getTime()) / 1000)) + "\n");
+		for (Position position : returnTrails) {
+			sb.append(position.toString()+"\n");
+		}
 		return sb.toString();
 	}
 	
 	
-	public String getPosistionString() {
+	public String getTargetString() {
 		return "[ " + targetX + ", " + targetY + ", " + targetZ + " ]";
 	}
 	
@@ -94,7 +112,24 @@ public class AGVIOTaskItem {
 
 	
 	private void showState(String message) {
-		System.out.println(DateUtil.HHmmss(new Date()) + " - 条目动态：" + getPosistionString() + " - " + message);
+		System.out.println(DateUtil.HHmmss(new Date()) + " - 条目动态：" + getTargetString() + " - " + message);
+	}
+	
+	
+	public void addTrail(Position trail) {
+		switch (state) {
+		case STARTED:
+			gotTrails.add(trail);
+			break;
+		case GOTTEN:
+			transportTrails.add(trail);
+			break;
+		case RETURNING:
+			returnTrails.add(trail);
+			break;
+		default:
+			break;
+		}
 	}
 
 	

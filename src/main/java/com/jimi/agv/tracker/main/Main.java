@@ -8,6 +8,7 @@ import com.jimi.agv.tracker.constant.Constant;
 import com.jimi.agv.tracker.entity.bo.AGVIOTask;
 import com.jimi.agv.tracker.handler.SwitchHandler;
 import com.jimi.agv.tracker.socket.AGVMainSocket;
+import com.jimi.agv.tracker.socket.RobotInfoSocket;
 import com.jimi.agv.tracker.util.PropUtil;
 
 import cc.darhao.dautils.api.TextFileUtil;
@@ -31,6 +32,7 @@ public class Main {
 
 	private static void connectServer() throws Exception {
 		AGVMainSocket.init(PropUtil.getString(Constant.CONFIG_NAME, Constant.MAIN_WS_STRING));
+		RobotInfoSocket.init(PropUtil.getString(Constant.CONFIG_NAME, Constant.ROBOT_WS_STRING));
 	}
 
 
@@ -66,9 +68,10 @@ public class Main {
 
 
 	private static void askForSaveReport() throws IOException {
-		System.out.println("请输入 [耗时报告] 文件导出的路径和文件名，按下回车开始生成报告（支持相对路径）：");
-		TextFileUtil.writeToFile(getNotExistFilePath(), task.getConsumeReport());
+		System.out.println("请输入报告文件导出的路径和文件名，按下回车开始生成报告（支持相对路径）：");
+		TextFileUtil.writeToFile(getNotExistFilePath(), task.getReport());
 		System.out.println("已生成完毕");
+		task = null;
 	}
 	
 	
