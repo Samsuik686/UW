@@ -22,7 +22,9 @@ import com.jimi.uw_server.constant.IOTaskItemState;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class TaskItemRedisDAO {
-
+	
+	public static final String UNDEFINED = "undefined";
+	
 	private static Cache cache = Redis.use();
 	
 	
@@ -367,7 +369,7 @@ public class TaskItemRedisDAO {
 	
 	/**
 	 * 设置机器任务
-	 */
+	 *//*
 	public synchronized static void setRobotTask(Integer robotId, Integer taskId) {
 		cache.set("robot_" + robotId, taskId);
 	}
@@ -375,7 +377,7 @@ public class TaskItemRedisDAO {
 	
 	public synchronized static void delRobotTask(Integer robotId) {
 		cache.del("robot_" + robotId);
-	}
+	}*/
 	
 	
 /*	*//**
@@ -539,7 +541,7 @@ public class TaskItemRedisDAO {
 	
 	/**
 	 * 盘点任务绑定仓口状态
-	 */
+	 *//*
 	public synchronized static boolean getWindowFlag(Integer windowId) {
 		try {
 			return cache.get("Window_"+windowId);
@@ -550,19 +552,48 @@ public class TaskItemRedisDAO {
 	}
 	
 	
+	*//**
+	 * 设置盘点任务绑定仓口状态
+	 *//*
+	public synchronized static void setWindowFlag(Integer windowId, Boolean flag) {
+		cache.set("Window_"+windowId, flag);
+	}
+	
+	
+	*//**
+	 * 删除盘点任务绑定仓口状态
+	 *//*
+	public synchronized static void delWindowFlag(Integer windowId) {
+		cache.del("Window_"+windowId);
+	}*/
+	
+	
+	/**
+	 * 盘点任务绑定仓口状态
+	 */
+	public synchronized static String getWindowTaskInfo(Integer windowId, Integer taskId) {
+		try {
+			return cache.get("Window_"+windowId + "_" + taskId);
+		} catch (NullPointerException e) {
+			cache.set("Window_"+windowId + "_" + taskId, UNDEFINED);
+			return null;
+		}
+	}
+	
+	
 	/**
 	 * 设置盘点任务绑定仓口状态
 	 */
-	public synchronized static void setWindowFlag(Integer windowId, Boolean flag) {
-		cache.set("Window_"+windowId, flag);
+	public synchronized static void setWindowTaskInfo(Integer windowId, Integer taskId, String robots) {
+		cache.set("Window_"+windowId + "_" + taskId, robots);
 	}
 	
 	
 	/**
 	 * 删除盘点任务绑定仓口状态
 	 */
-	public synchronized static void delWindowFlag(Integer windowId) {
-		cache.del("Window_"+windowId);
+	public synchronized static void delWindowTaskInfo(Integer windowId, Integer taskId) {
+		cache.del("Window_"+windowId + "_" + taskId);
 	}
 
 }

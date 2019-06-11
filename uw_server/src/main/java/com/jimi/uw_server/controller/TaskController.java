@@ -2,7 +2,6 @@ package com.jimi.uw_server.controller;
 
 import java.io.File;
 import java.util.Date;
-import java.util.List;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
@@ -12,7 +11,6 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.service.TaskService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
@@ -117,7 +115,7 @@ public class TaskController extends Controller {
 			if (id ==null || type == null) {
 				throw new ParameterException("任务id或任务类型不能为空！");
 			}
-			renderJson(ResultUtil.succeed(taskService.check(id, type, pageSize, pageNo)));
+            renderJson(ResultUtil.succeed(taskService.getIOTaskDetail(id, type, pageSize, pageNo)));
 		}
 
 	// 查询指定类型的仓口
@@ -272,7 +270,7 @@ public class TaskController extends Controller {
 		if (windowId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		List<RobotBO> result  = taskService.getWindowRobots(windowId);
+		String result  = taskService.getWindowRobots(windowId);
 		renderJson(ResultUtil.succeed(result));
 	}
 }

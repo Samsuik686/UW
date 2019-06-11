@@ -124,8 +124,7 @@ public class RobotService extends SelectService {
 							}
 						}
 
-						// 更新任务条目状态为已分配回库
-						TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
+						
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 						materialBox.setStatus(state);
@@ -153,7 +152,8 @@ public class RobotService extends SelectService {
 								TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, item.getRobotId());
 								resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 							}
-
+							// 更新任务条目状态为已分配回库
+							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
 							// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
 							if (task.getType() == TaskType.OUT) {
 								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater, user, cutFlag);
@@ -173,7 +173,8 @@ public class RobotService extends SelectService {
 								TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, item.getRobotId());
 								resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 							}
-
+							// 更新任务条目状态为已分配回库
+							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
 							// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
 							if (task.getType() == TaskType.OUT) {
 								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater, user, cutFlag);

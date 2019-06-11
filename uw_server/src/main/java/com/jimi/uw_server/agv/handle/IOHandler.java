@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
-import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -20,7 +19,6 @@ import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
-import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.service.TaskService;
 
@@ -86,7 +84,6 @@ public class IOHandler {
 			if (TaskItemRedisDAO.getRobotOrder(item.getRobotId()) != null && TaskItemRedisDAO.getRobotOrder(item.getRobotId()).equals(item.getGroupId())) {
 				TaskItemRedisDAO.setRobotOrder(item.getRobotId(), UNDEFINED);
 			}
-			TaskItemRedisDAO.setWindowFlag(window.getId(), false);
 		}
 		
 	}
@@ -110,7 +107,6 @@ public class IOHandler {
 				setMaterialBoxIsOnShelf(materialBox, false);
 				//更新任务条目状态为已分配***
 				TaskItemRedisDAO.updateInventoryTaskItemWindow(item, window.getId());
-				TaskItemRedisDAO.setWindowFlag(window.getId(), true);
 				TaskItemRedisDAO.updateInventoryTaskItemState(item, InventoryTaskItemState.ASSIGNED);
 			}
 		}
@@ -325,17 +321,10 @@ public class IOHandler {
 			List<Window> windows = Window.dao.find(GET_WINDOW_BY_TASK_ID, taskId);
 			// 将仓口解绑(作废任务时，如果还有任务条目没跑完就不会解绑仓口，因此不管任务状态是为进行中还是作废，这里都需要解绑仓口)
 			synchronized (Lock.ROBOT_TASK_REDIS_LOCK) {
-				List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
-				for (RobotBO robotBO : robotBOs) {
-					Integer taskId2 = TaskItemRedisDAO.getRobotTask(robotBO.getId());
-					if (taskId2 != null && taskId2.equals(taskId)) {
-						TaskItemRedisDAO.delRobotTask(robotBO.getId());
-					}
+				for (Window window : windows) {
+					TaskItemRedisDAO.delWindowTaskInfo(window.getId(), taskId);
+					window.setBindTaskId(null).update();
 				}
-			}
-			for (Window window : windows) {
-				TaskItemRedisDAO.delWindowFlag(window.getId());;
-				window.setBindTaskId(null).update();
 			}
 			
 		}

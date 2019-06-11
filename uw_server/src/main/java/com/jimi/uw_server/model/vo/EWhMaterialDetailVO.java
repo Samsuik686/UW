@@ -42,6 +42,7 @@ public class EWhMaterialDetailVO {
 	
 	private Date time;
 	
+	private Integer returnNum;
 	
 	public Integer getId() {
 		return id;
@@ -184,6 +185,16 @@ public class EWhMaterialDetailVO {
 	}
 
 
+	public Integer getReturnNum() {
+		return returnNum;
+	}
+
+
+	public void setReturnNum(Integer returnNum) {
+		this.returnNum = returnNum;
+	}
+
+
 	public static List<EWhMaterialDetailVO> fillList(List<Record> records){
 		
 		List<EWhMaterialDetailVO> eWhMaterialDetails = new ArrayList<EWhMaterialDetailVO>();
@@ -202,6 +213,7 @@ public class EWhMaterialDetailVO {
 			eWhMaterialDetail.setTaskName(record.getStr("task_name"));
 			eWhMaterialDetail.setTaskType(record.getInt("task_type"));
 			eWhMaterialDetail.setNo(record.getStr("no"));
+			eWhMaterialDetail.setReturnNum(record.getInt("return_num"));
 			switch (record.getInt("task_type")) {
 			case 0:
 				eWhMaterialDetail.setTaskTypeString("入库");

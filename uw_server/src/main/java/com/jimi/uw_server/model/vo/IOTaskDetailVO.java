@@ -33,13 +33,19 @@ public class IOTaskDetailVO extends TaskLog {
 		}
 		this.set("deductQuantity", deductQuantity);
 		int lackNum = planQuantity - actualQuantity + deductQuantity;
-		if (lackNum > 0) {
-			this.set("itemStatus", "欠料");
-			this.set("lackNum", (0-lackNum));
+		if (finishTime != null) {
+			if (lackNum > 0) {
+				this.set("itemStatus", "欠料");
+				this.set("lackNum", (0-lackNum));
+			}else {
+				this.set("itemStatus", "正常");
+				this.set("lackNum", null);
+			}
 		}else {
-			this.set("itemStatus", "正常");
+			this.set("itemStatus", "未发料");
 			this.set("lackNum", null);
 		}
+		
 	}
 
 	public List<?> getDetails() {

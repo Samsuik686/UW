@@ -12,10 +12,8 @@ import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
-import com.jimi.uw_server.model.ExternalInventoryLog;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
 import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
 import com.jimi.uw_server.service.InventoryTaskService;
@@ -396,6 +394,47 @@ public class InventoryTaskController extends Controller {
 	}
 	
 	
+	/**
+	 * 一键平仓UW
+	 * @param materialTypeId
+	 * @param taskId
+	 * @param user
+	 * @return
+	 */
+	@Log("一键平UW仓，任务ID{taskId}")
+	public void coverUwMaterialOneKey(Integer taskId) {
+		if ( taskId == null ) {
+			throw new ParameterException("参数不能为空！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = inventoryTaskService.coverUwMaterialOneKey(taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	/**
+	 * 物料仓一键批量平仓
+	 * @param materialTypeId
+	 * @param taskId
+	 * @param user
+	 * @return
+	 */
+	@Log("一键平物料仓，任务ID{taskId}")
+	public void coverEwhMaterialOneKey(Integer taskId) {
+		if ( taskId == null ) {
+			throw new ParameterException("参数不能为空！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = inventoryTaskService.coverEwhMaterialOneKey(taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	
 	@Log("导出盘点报表")
 	public void exportEWhReport(Integer taskId, String no) {
 		if (taskId == null) {
@@ -405,7 +444,7 @@ public class InventoryTaskController extends Controller {
 		if (fileName == null) {
 			throw new OperationException("任务不存在，导出失败！");
 		}
-		fileName = fileName + ".xlsx";
+		fileName = fileName + "物料仓_.xlsx";
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
@@ -414,7 +453,7 @@ public class InventoryTaskController extends Controller {
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			inventoryTaskService.exportInventoryTask(taskId, no, fileName, output);
+			inventoryTaskService.exportEwhInventoryTask(taskId, no, fileName, output);
 			
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
@@ -431,24 +470,59 @@ public class InventoryTaskController extends Controller {
 	}
 	
 	
-	@Log("设置盘点任务叉车，任务ID{taskId}， 叉车{robots}")
-	public void setTaskRobots(Integer taskId, String robots) {
+	@Log("导出UW仓盘点报表 {taskId},料号{no}")
+	public void exportUwReport(Integer taskId, String no) {
 		if (taskId == null) {
+			throw new ParameterException("参数不能为空");
+		}
+		String fileName = inventoryTaskService.getInventoryTaskName(taskId);
+		if (fileName == null) {
+			throw new OperationException("任务不存在，导出失败！");
+		}
+		fileName = fileName + "_UW.xlsx";
+		OutputStream output = null;
+		try {
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			inventoryTaskService.exportUwInventoryTask(taskId, no, fileName, output);
+			
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
+		}
+		renderNull();
+	}
+	
+	
+	@Log("设置盘点任务叉车，仓口ID{windowId}， 叉车{robots}")
+	public void setWindowRobots(Integer windowId, String robots) {
+		if (windowId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
 		if (robots == null) {
 			robots = "";
 		}
-		String result  = inventoryTaskService.setTaskRobots(taskId, robots);
+		String result  = inventoryTaskService.setWindowRobots(windowId, robots);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 	
-	public void getWindowRobots(Integer taskId) {
-		if (taskId == null) {
+	public void getWindowRobots(Integer windowId) {
+		if (windowId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		List<RobotBO> result  = inventoryTaskService.getWindowRobots(taskId);
+		String result  = inventoryTaskService.getWindowRobots(windowId);
 		renderJson(ResultUtil.succeed(result));
 	}
 }
