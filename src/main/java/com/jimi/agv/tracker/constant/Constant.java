@@ -6,9 +6,13 @@ public class Constant {
 	
 	public static final String ROBOT_ID_STRING = "robotId";
 	
-	public static final String WINDOW_X_STRING = "windowX";
+	public static final String OUT_TO_DB = "outToDb";
 	
-	public static final String WINDOW_Y_STRING = "windowY";
+	public static final String DB_URL = "dbUrl";
+	
+	public static final String DB_USER = "dbUser";
+	
+	public static final String DB_PASSWORD = "dbPassword";
 	
 	public static final String MAIN_WS_STRING = "mainWs";
 	

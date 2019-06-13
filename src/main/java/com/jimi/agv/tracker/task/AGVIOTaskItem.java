@@ -1,8 +1,11 @@
-package com.jimi.agv.tracker.entity.bo;
+package com.jimi.agv.tracker.task;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import com.jimi.agv.tracker.entity.bo.Position;
+import com.jimi.agv.tracker.reporter.Reporter;
 
 import cc.darhao.dautils.api.DateUtil;
 import cc.darhao.dautils.api.UuidUtil;
@@ -13,7 +16,9 @@ import cc.darhao.dautils.api.UuidUtil;
  * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
-public class AGVIOTaskItem {
+public abstract class AGVIOTaskItem {
+	
+	private Reporter reporter;
 
 	private String key;
 	
@@ -34,89 +39,61 @@ public class AGVIOTaskItem {
 	private List<Position> transportTrails;
 	private List<Position> returnTrails;
 	
-	private int targetX;
-	private int targetY;
-	private int targetZ;
-
 	private int state;
 
-	public AGVIOTaskItem(int targetX, int targetY, int targetZ) {
-		this.targetX = targetX;
-		this.targetY = targetY;
-		this.targetZ = targetZ;
+	protected AGVIOTaskItem() {
 		gotTrails = new ArrayList<>();
 		transportTrails = new ArrayList<>();
 		returnTrails = new ArrayList<>();
 		state = NOT_START;
 		key = UuidUtil.get32UUID();
 	}
-	
 
-	public String getReport() {
-		StringBuffer sb = new StringBuffer();
-		sb.append(getTargetString() + "\n");
-		sb.append("开始->取盒耗时："+ (((gotTime.getTime() - startTime.getTime()) / 1000)) + "\n");
-		for (Position position : gotTrails) {
-			sb.append(position.toString()+"\n");
-		}
-		sb.append("取盒->到站耗时："+ (((arriveTime.getTime() - gotTime.getTime()) / 1000)) + "\n");
-		for (Position position : transportTrails) {
-			sb.append(position.toString()+"\n");
-		}
-		sb.append("到站->送回耗时："+ (((finishTime.getTime() - returnTime.getTime()) / 1000)) + "\n");
-		for (Position position : returnTrails) {
-			sb.append(position.toString()+"\n");
-		}
-		return sb.toString();
-	}
+
+	public abstract String getDescription();
 	
 	
-	public String getTargetString() {
-		return "[ " + targetX + ", " + targetY + ", " + targetZ + " ]";
-	}
-	
-	
-	public void start() {
+	public final void start() {
 		state = AGVIOTaskItem.STARTED;
 		startTime = new Date();
 		showState("开始执行");
 	}
 	
 
-	public void got() {
+	public final void got() {
 		state = AGVIOTaskItem.GOTTEN;
 		gotTime = new Date();
 		showState("已拿到盒子");
 	}
 	
 	
-	public void arrive() {
+	public final void arrive() {
 		state = AGVIOTaskItem.ARRIVED;
 		arriveTime = new Date();
 		showState("已到达仓口");
 	}
 	
 	
-	public void reTurn() {
+	public final void reTurn() {
 		state = AGVIOTaskItem.RETURNING;
 		returnTime = new Date();
 		showState("开始送回盒子");
 	}
 	
 	
-	public void finish() {
+	public final void finish() {
 		state = AGVIOTaskItem.FINISHED;
 		finishTime = new Date();
 		showState("已送回盒子");
 	}
 
 	
-	private void showState(String message) {
-		System.out.println(DateUtil.HHmmss(new Date()) + " - 条目动态：" + getTargetString() + " - " + message);
+	private final void showState(String message) {
+		System.out.println(DateUtil.HHmmss(new Date()) + " - 条目动态：" + getDescription() + " - " + message);
 	}
 	
 	
-	public void addTrail(Position trail) {
+	public final void addTrail(Position trail) {
 		switch (state) {
 		case STARTED:
 			gotTrails.add(trail);
@@ -133,44 +110,52 @@ public class AGVIOTaskItem {
 	}
 
 	
-	public int getState() {
+	public final int getState() {
 		return state;
 	}
-	
-	public int getTargetZ() {
-		return targetZ;
-	}
 
-	public int getTargetY() {
-		return targetY;
-	}
-
-	public int getTargetX() {
-		return targetX;
-	}
-
-	public String getKey() {
+	public final String getKey() {
 		return key;
 	}
 
-	public Date getStartTime() {
+	public final Date getStartTime() {
 		return startTime;
 	}
 
-	public Date getGotTime() {
+	public final Date getGotTime() {
 		return gotTime;
 	}
 
-	public Date getArriveTime() {
+	public final Date getArriveTime() {
 		return arriveTime;
 	}
 
-	public Date getReturnTime() {
+	public final Date getReturnTime() {
 		return returnTime;
 	}
 
-	public Date getFinishTime() {
+	public final Date getFinishTime() {
 		return finishTime;
 	}
 
+	public final Reporter getReporter() {
+		return reporter;
+	}
+	
+	public final List<Position> getGotTrails() {
+		return gotTrails;
+	}
+
+	public final List<Position> getTransportTrails() {
+		return transportTrails;
+	}
+
+	public final List<Position> getReturnTrails() {
+		return returnTrails;
+	}
+
+	public final void setReporter(Reporter reporter) {
+		this.reporter = reporter;
+	}
+	
 }

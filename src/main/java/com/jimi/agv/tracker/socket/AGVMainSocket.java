@@ -108,14 +108,20 @@ public class AGVMainSocket {
 	/**
 	 * 使用websocket发送一条消息到AGV服务器
 	 */
-	public static void sendMessage(AGVBaseCmd message) throws Exception {
-		send(message);
-		sendCmdidAckMap.put(message.getCmdid(), false);
-		Thread.sleep(5000);
-		while (!sendCmdidAckMap.get(message.getCmdid())) {
-			send(message);
-			Thread.sleep(5000);
-		}
+	public static void sendMessage(AGVBaseCmd message) {
+		new Thread(()-> {
+			try {
+				send(message);
+				sendCmdidAckMap.put(message.getCmdid(), false);
+				Thread.sleep(5000);
+				while (!sendCmdidAckMap.get(message.getCmdid())) {
+					send(message);
+					Thread.sleep(5000);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} 
+		}).start();
 	}
 	
 	
