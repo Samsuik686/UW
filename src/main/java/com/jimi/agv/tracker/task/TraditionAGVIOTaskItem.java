@@ -1,6 +1,6 @@
 package com.jimi.agv.tracker.task;
 
-import com.jimi.agv.tracker.reporter.TraditionBodyReporter;
+import com.jimi.agv.tracker.task.reporter.TraditionBodyReporter;
 
 /**
  * 传统模式任务条目

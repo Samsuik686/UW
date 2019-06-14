@@ -1,10 +1,9 @@
-package com.jimi.agv.tracker.handler;
+package com.jimi.agv.tracker.socket.handler;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.fastjson.JSON;
-import com.jimi.agv.tracker.constant.Constant;
 import com.jimi.agv.tracker.entity.bo.AGVMissionGroup;
 import com.jimi.agv.tracker.entity.cmd.AGVMoveCmd;
 import com.jimi.agv.tracker.entity.cmd.AGVStatusCmd;
@@ -13,7 +12,6 @@ import com.jimi.agv.tracker.socket.AGVMainSocket;
 import com.jimi.agv.tracker.task.CushionAGVIOTaskItem;
 import com.jimi.agv.tracker.task.TraditionAGVIOTaskItem;
 import com.jimi.agv.tracker.util.IdCounter;
-import com.jimi.agv.tracker.util.PropUtil;
 
 /**
  * 出入库LS、SL命令处理器
@@ -27,7 +25,7 @@ public class IOHandler {
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getKey());
-		group.setRobotid(PropUtil.getInt(Constant.CONFIG_NAME, Constant.ROBOT_ID_STRING));
+		group.setRobotid(item.getRobotId());
 		group.setStartx(item.getWindowX());
 		group.setStarty(item.getWindowY());
 		group.setEndx(item.getTargetX());
@@ -45,7 +43,7 @@ public class IOHandler {
 	public static void sendLS(TraditionAGVIOTaskItem item) throws Exception {
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(item.getKey());
-		group.setRobotid(PropUtil.getInt(Constant.CONFIG_NAME, Constant.ROBOT_ID_STRING));
+		group.setRobotid(item.getRobotId());
 		group.setStartx(item.getTargetX());
 		group.setStarty(item.getTargetY());
 		group.setStartz(item.getTargetZ());

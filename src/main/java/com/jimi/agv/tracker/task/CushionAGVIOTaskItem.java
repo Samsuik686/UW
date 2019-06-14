@@ -1,6 +1,6 @@
 package com.jimi.agv.tracker.task;
 
-import com.jimi.agv.tracker.reporter.CushionBodyReporter;
+import com.jimi.agv.tracker.task.reporter.CushionBodyReporter;
 
 /**
  * 缓冲模式任务条目

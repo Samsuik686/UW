@@ -1,4 +1,4 @@
-package com.jimi.agv.tracker.reporter;
+package com.jimi.agv.tracker.task.reporter;
 
 import com.jimi.agv.tracker.entity.bo.Position;
 import com.jimi.agv.tracker.entity.model.TraditionBody;
@@ -21,6 +21,7 @@ public class TraditionBodyReporter implements Reporter{
 	public String getReport() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(item.getDescription() + "\n");
+		sb.append("执行叉车:" + item.getRobotId() + "\n");
 		sb.append("开始->取盒耗时："+ (((item.getGotTime().getTime() - item.getStartTime().getTime()) / 1000)) + "\n");
 		for (Position position : item.getGotTrails()) {
 			sb.append(position.toString()+"\n");

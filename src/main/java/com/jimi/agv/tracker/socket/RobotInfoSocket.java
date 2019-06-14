@@ -11,7 +11,7 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.WebSocketContainer;
 
-import com.jimi.agv.tracker.handler.RobotInfoHandler;
+import com.jimi.agv.tracker.socket.handler.RobotInfoHandler;
 
 /**
  * 实时接收机器信息的类

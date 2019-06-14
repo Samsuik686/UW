@@ -10,7 +10,6 @@ import com.jfinal.plugin.activerecord.dialect.MysqlDialect;
 import com.jfinal.plugin.druid.DruidPlugin;
 import com.jimi.agv.tracker.constant.Constant;
 import com.jimi.agv.tracker.entity.model.MysqlMappingKit;
-import com.jimi.agv.tracker.handler.SwitchHandler;
 import com.jimi.agv.tracker.socket.AGVMainSocket;
 import com.jimi.agv.tracker.socket.RobotInfoSocket;
 import com.jimi.agv.tracker.task.AGVIOTask;
@@ -68,10 +67,11 @@ public class Main {
 
 	private static void showMe() {
 		System.out.println("==================================");
-		System.out.println("欢迎使用 - AGV Tracker 1.3.0 - 轨迹采集器 by Darhao");
+		System.out.println("欢迎使用 - AGV Tracker 1.4.0 - 轨迹采集器 by Darhao");
 		System.out.println("1.1.0更新日志：1.报告输出仓口坐标 2.去掉\"秒\"");
 		System.out.println("1.2.0更新日志：1.现在可以输出 [轨迹报告] 了");
 		System.out.println("1.3.0更新日志：1.增加缓冲模式 2.报告支持输出到数据库了哦");
+		System.out.println("1.4.0更新日志：1.现在可以支持多叉车同时启动噜~");
 		System.out.println("==================================");
 	}
 
@@ -110,8 +110,7 @@ public class Main {
 
 
 	private static void startTask() throws Exception {
-		task.executeNextItem();
-		SwitchHandler.sendAllStart();
+		task.getController().start();
 	}
 
 
@@ -150,7 +149,7 @@ public class Main {
 			filePath = scanner.next();
 			if(new File(filePath).exists()) {
 				System.err.println("警告：文件已存在，确认覆盖吗？（Y/N）");
-				if(scanner.nextLine().equalsIgnoreCase("Y")){
+				if(scanner.next().equalsIgnoreCase("Y")){
 					break;
 				}else {
 					System.out.println("请重新输入新路径和文件名：");

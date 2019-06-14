@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import com.jimi.agv.tracker.controller.TraditionController;
-import com.jimi.agv.tracker.reporter.TraditionHeadReporter;
+import com.jimi.agv.tracker.task.controller.TraditionController;
+import com.jimi.agv.tracker.task.reporter.TraditionHeadReporter;
 
 /**
  * 传统任务
@@ -33,7 +33,7 @@ public class TraditionAGVIOTask extends AGVIOTask{
 		reader.close();
 		
 		setReporter(new TraditionHeadReporter(this));
-		setController(new TraditionController());
+		setController(new TraditionController(this));
 	}
 	
 

@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import com.jimi.agv.tracker.controller.CushionController;
-import com.jimi.agv.tracker.reporter.CushionHeadReporter;
+import com.jimi.agv.tracker.task.controller.CushionController;
+import com.jimi.agv.tracker.task.reporter.CushionHeadReporter;
 
 /**
  * 缓冲任务
@@ -27,7 +27,7 @@ public class CushionAGVIOTask extends AGVIOTask{
 		}
 		reader.close();
 		setReporter(new CushionHeadReporter(this));
-		setController(new CushionController());
+		setController(new CushionController(this));
 	}
 	
 }

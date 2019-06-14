@@ -1,4 +1,4 @@
-package com.jimi.agv.tracker.reporter;
+package com.jimi.agv.tracker.task.reporter;
 
 /**
  * 数据报告器接口

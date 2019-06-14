@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.jimi.agv.tracker.entity.bo.Position;
-import com.jimi.agv.tracker.reporter.Reporter;
+import com.jimi.agv.tracker.task.reporter.Reporter;
 
 import cc.darhao.dautils.api.DateUtil;
 import cc.darhao.dautils.api.UuidUtil;
@@ -22,6 +22,9 @@ public abstract class AGVIOTaskItem {
 
 	private String key;
 	
+	private int robotId;
+	
+	public static final int WAIT_ASSIGN = -1;
 	public static final int NOT_START = 0;
 	public static final int STARTED = 1;
 	public static final int GOTTEN = 2;
@@ -29,6 +32,7 @@ public abstract class AGVIOTaskItem {
 	public static final int RETURNING = 4;
 	public static final int FINISHED = 5;
 
+	private Date assignTime;
 	private Date startTime;
 	private Date gotTime;
 	private Date arriveTime;
@@ -45,12 +49,20 @@ public abstract class AGVIOTaskItem {
 		gotTrails = new ArrayList<>();
 		transportTrails = new ArrayList<>();
 		returnTrails = new ArrayList<>();
-		state = NOT_START;
+		state = WAIT_ASSIGN;
 		key = UuidUtil.get32UUID();
+		robotId = 0;
 	}
 
 
 	public abstract String getDescription();
+	
+	
+	public final void assign() {
+		state = AGVIOTaskItem.NOT_START;
+		assignTime = new Date();
+		showState("指令已发送");
+	}
 	
 	
 	public final void start() {
@@ -84,12 +96,16 @@ public abstract class AGVIOTaskItem {
 	public final void finish() {
 		state = AGVIOTaskItem.FINISHED;
 		finishTime = new Date();
-		showState("已送回盒子");
+		showState("执行完毕");
 	}
 
 	
 	private final void showState(String message) {
-		System.out.println(DateUtil.HHmmss(new Date()) + " - 条目动态：" + getDescription() + " - " + message);
+		String robotInfo = "";
+		if(robotId != 0) {
+			robotInfo = "叉车" + robotId;
+		}
+		System.out.println(DateUtil.HHmmss(new Date()) + " - 条目动态：" + getDescription() + " - " + robotInfo + message);
 	}
 	
 	
@@ -117,6 +133,11 @@ public abstract class AGVIOTaskItem {
 	public final String getKey() {
 		return key;
 	}
+
+	public final Date getAssignTime() {
+		return assignTime;
+	}
+
 
 	public final Date getStartTime() {
 		return startTime;
@@ -156,6 +177,14 @@ public abstract class AGVIOTaskItem {
 
 	public final void setReporter(Reporter reporter) {
 		this.reporter = reporter;
+	}
+
+	public final void setRobotId(int robotId) {
+		this.robotId = robotId;
+	}
+
+	public final int getRobotId() {
+		return robotId;
 	}
 	
 }

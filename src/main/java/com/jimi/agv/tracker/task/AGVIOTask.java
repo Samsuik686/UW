@@ -1,13 +1,10 @@
 package com.jimi.agv.tracker.task;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import com.jimi.agv.tracker.controller.Controller;
-import com.jimi.agv.tracker.reporter.Reporter;
-
-import cc.darhao.dautils.api.DateUtil;
+import com.jimi.agv.tracker.task.controller.Controller;
+import com.jimi.agv.tracker.task.reporter.Reporter;
 
 public abstract class AGVIOTask {
 
@@ -28,16 +25,15 @@ public abstract class AGVIOTask {
 	}
 	
 	
-	public void executeNextItem() throws Exception {
+	public int countFinishItem() {
+		int num = 0;
 		for (AGVIOTaskItem item : items) {
-			if(item.getState() == AGVIOTaskItem.NOT_START) {
-				showProcess(item);
-				controller.sendIOCmd(item);
-				return;
+			if(item.getState() == AGVIOTaskItem.FINISHED) {
+				num++;
 			}
 		}
-		showEnd();
-	}
+		return num;
+	} 
 
 
 	public final AGVIOTaskItem getItemByKey(String key) {
@@ -50,9 +46,9 @@ public abstract class AGVIOTask {
 	}
 	
 	
-	public final AGVIOTaskItem getExecutingItem() {
+	public final AGVIOTaskItem getExecutingItemByRobotId(int robotId) {
 		for (AGVIOTaskItem item : items) {
-			if(item.getState() > AGVIOTaskItem.NOT_START && item.getState() < AGVIOTaskItem.FINISHED) {
+			if(item.getState() > AGVIOTaskItem.NOT_START && item.getState() < AGVIOTaskItem.FINISHED && item.getRobotId() == robotId) {
 				return item;
 			}
 		}
@@ -60,24 +56,6 @@ public abstract class AGVIOTask {
 	}
 
 
-	private final void showEnd() {
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-		System.out.println("日志时间：" + DateUtil.HHmmss(new Date()));
-		System.out.println("任务总进度：" + items.size() + "/" + items.size());
-		System.out.println("所有任务条目即将完成");
-		System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-	}
-
-
-	private final void showProcess(AGVIOTaskItem item) {
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-		System.out.println("日志时间：" + DateUtil.HHmmss(new Date()));
-		System.out.println("任务总进度：" + items.indexOf(item) + "/" + items.size());
-		System.out.println("即将执行任务条目：" + item.getDescription());
-		System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-	}
-	
-	
 	public final Controller getController() {
 		return controller;
 	}
