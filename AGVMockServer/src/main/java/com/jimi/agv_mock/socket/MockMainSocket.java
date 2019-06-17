@@ -58,10 +58,14 @@ public class MockMainSocket implements UncaughtExceptionHandler{
 	
 	
 	static{
+    	TaskDAO.init();
+	}
+	
+	
+	private void initSession() {
 		sendCmdidAckMap = new HashMap<>();
     	receiveNotAckCmdidSet = new HashSet<>();
     	windows = new HashMap<>();
-    	TaskDAO.init();
     	taskPool = new TaskPool();
     	taskPool.start();
 	}
@@ -69,6 +73,7 @@ public class MockMainSocket implements UncaughtExceptionHandler{
 	
     @OnOpen
     public void onOpen(Session session){
+    	initSession();
     	MockMainSocket.session = session;
     	send("AGV 服务当前为Mock模式,服务器类型叉车服务");
     }

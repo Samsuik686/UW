@@ -99,7 +99,7 @@ public class TaskPool extends Thread{
 		//如果取得Robot则出列
 		if(robot != null) {
 			LSTasks.poll();
-			TaskExcutor excutor = new TaskExcutor(getAFreeRobot(), task);
+			TaskExcutor excutor = new TaskExcutor(robot, task);
 			excutor.start();
 		}
 	}
@@ -124,7 +124,7 @@ public class TaskPool extends Thread{
 		//如果取得Robot则出列
 		if(robot != null) {
 			LLTasks.poll();
-			TaskExcutor excutor = new TaskExcutor(getAFreeRobot(), task);
+			TaskExcutor excutor = new TaskExcutor(robot, task);
 			excutor.start();
 		}
 	}
