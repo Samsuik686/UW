@@ -440,7 +440,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		String fileName = inventoryTaskService.getInventoryTaskName(taskId);
+		String fileName = inventoryTaskService.getTaskName(taskId);
 		if (fileName == null) {
 			throw new OperationException("任务不存在，导出失败！");
 		}
@@ -475,7 +475,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		String fileName = inventoryTaskService.getInventoryTaskName(taskId);
+		String fileName = inventoryTaskService.getTaskName(taskId);
 		if (fileName == null) {
 			throw new OperationException("任务不存在，导出失败！");
 		}

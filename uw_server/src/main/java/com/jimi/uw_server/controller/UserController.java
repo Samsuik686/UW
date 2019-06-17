@@ -2,7 +2,6 @@ package com.jimi.uw_server.controller;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
@@ -22,8 +21,6 @@ public class UserController extends Controller {
 
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
-	public static final String IS_BUILD = "isBuild";
-
 
 	// 登录
 	@Log("用户名为{uid}的用户请求登录")
@@ -39,7 +36,6 @@ public class UserController extends Controller {
 		}
 		tokenId = TokenBox.createTokenId();
 		user.put(TokenBox.TOKEN_ID_KEY_NAME, tokenId);
-		user.put(IS_BUILD, TaskItemRedisDAO.getIsBuildAssign());
 		TokenBox.put(tokenId, SESSION_KEY_LOGIN_USER, user);
 		renderJson(ResultUtil.succeed(user));
 	}

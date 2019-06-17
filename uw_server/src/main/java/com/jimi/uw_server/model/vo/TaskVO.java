@@ -22,7 +22,7 @@ public class TaskVO extends Task{
 	private String supplierName;
 
 
-	public TaskVO(Integer id, Integer state, Integer type, String fileName, Date createTime, Integer priority, Integer supplier) {
+	public TaskVO(Integer id, Integer state, Integer type, String fileName, Date createTime, Integer priority, Integer supplier, String remarks) {
 		this.setId(id);
 		this.setState(state);
 		this.setStateString(state);
@@ -35,6 +35,7 @@ public class TaskVO extends Task{
 		this.setSupplierName(supplier);
 		this.set("supplierName", getSupplierName());
 		this.set("createTimeString", createTime);
+		this.set("remarks", remarks);
 		this.setPriority(priority);
 	}
 

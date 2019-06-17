@@ -31,7 +31,6 @@ public class RobotInfoSocket{
 	
 	private static String uri;
 	
-	
 	public static void init(String uri) {
 		try {
 			//连接AGV服务器
@@ -47,25 +46,14 @@ public class RobotInfoSocket{
 	@OnOpen
 	public void onOpen(Session userSession) {
 		System.out.println("RobotInfoSocket is Running Now...");
-		try {
-		} catch (Exception e) {
-			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
-			e.printStackTrace();
-		}
 	}
 
 
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
-		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getCloseCode());	// CLOSED_ABNORMALLY
-		try {
-			Thread.sleep(1800000);
-			//重新连接
-			connect(uri);
-		} catch (Exception e) {
-			ErrorLogWritter.save(e.getClass().getSimpleName()+ ":" +e.getMessage());
-			e.printStackTrace();
-		}
+		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getCloseCode() + " | " + reason.getCloseCode().getCode());	// CLOSED_ABNORMALLY
+		RobotInfoRedisDAO.delete();
+		connect(uri);
 	}
 
 	
@@ -101,9 +89,19 @@ public class RobotInfoSocket{
 	}
 
 
-	private static void connect(String uri) throws Exception {
+	private static void connect(String uri) {
 		WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-		container.connectToServer(new RobotInfoSocket(), new URI(uri));
+		Boolean flag = true;
+		while(flag) {
+			try {
+				Thread.sleep(3000);
+				container.connectToServer(new RobotInfoSocket(), new URI(uri));
+				flag = false;
+			} catch (Exception e) {
+				ErrorLogWritter.save(e.getClass().getSimpleName()+ ":" +e.getMessage());
+				e.printStackTrace();
+			} 
+		}
 	}
 
 }

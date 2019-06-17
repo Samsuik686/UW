@@ -186,8 +186,12 @@ public class SelectService {
 
 		}else {
 			try {
+				
 				return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
+				System.out.println(resultSet);
+				System.out.println(sql.toString());
+				System.out.println(questionValues);
 				throw new OperationException("请勿输入非法字符，如“!”或“$”");
 			}
 		}

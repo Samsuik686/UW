@@ -31,16 +31,16 @@ public class ExternalWhController extends Controller{
 	
 	private static ExternalWhTaskService externalWhTaskService = Enhancer.enhance(ExternalWhTaskService.class);
 	
-	@Log("导入物料仓任务，供应商ID为{supplierId}，源物料仓ID为{souceWhId}，目的物料仓ID为{destinationwhId}")
-	public void importTask(UploadFile file, Integer supplierId, Integer sourceWhId, Integer destinationwhId) {
+	@Log("导入物料仓任务，供应商ID为{supplierId}，源物料仓ID为{souceWhId}，目的物料仓ID为{destinationwhId}, 备注{remarks}")
+	public void importTask(UploadFile file, Integer supplierId, Integer sourceWhId, Integer destinationwhId, String remarks) {
 		
-		if (file == null || supplierId == null || sourceWhId == null || destinationwhId == null) {
+		if (file == null || supplierId == null || sourceWhId == null || destinationwhId == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = externalWhTaskService.importTask(file.getFile(), supplierId, sourceWhId, destinationwhId, user);
+		String result = externalWhTaskService.importTask(file.getFile(), supplierId, sourceWhId, destinationwhId, user, remarks);
 		if (result.equals("导入成功")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -49,8 +49,8 @@ public class ExternalWhController extends Controller{
 	}
 	
 	
-	@Log("导入物料仓损耗任务，供应商ID为{supplierId}，物料仓ID为{whId}")
-	public void importWastageTask(UploadFile file, Integer supplierId, Integer whId) {
+	@Log("导入物料仓损耗任务，供应商ID为{supplierId}，物料仓ID为{whId}, 备注{remarks}")
+	public void importWastageTask(UploadFile file, Integer supplierId, Integer whId, String remarks) {
 		
 		if (file == null || supplierId == null || whId == null) {
 			throw new ParameterException("参数不能为空");
@@ -58,7 +58,7 @@ public class ExternalWhController extends Controller{
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = externalWhTaskService.importWastageTask(file.getFile(), supplierId, whId, user);
+		String result = externalWhTaskService.importWastageTask(file.getFile(), supplierId, whId, user, remarks);
 		if (result.equals("导入成功")) {
 			renderJson(ResultUtil.succeed());
 		}else {
@@ -74,15 +74,15 @@ public class ExternalWhController extends Controller{
 	 * @param user
 	 * @return
 	 */
-	@Log("添加物料仓损耗记录，物料类型ID为{materialTypeId}，物料仓ID为{whId}，数量为{quantity}")
-	public void addWorstageLog(Integer materialTypeId, Integer whId, Integer quantity) {
+	@Log("添加物料仓损耗记录，物料类型ID为{materialTypeId}，物料仓ID为{whId}，数量为{quantity}, 备注{remarks}")
+	public void addWorstageLog(Integer materialTypeId, Integer whId, Integer quantity, String remarks) {
 		if (materialTypeId == null || whId == null || quantity == null) {
 			throw new ParameterException("参数不能为空");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = externalWhTaskService.addWorstageLog(materialTypeId, whId, quantity, user);
+		String result = externalWhTaskService.addWorstageLog(materialTypeId, whId, quantity, user, remarks);
 		if (result.equals("操作成功")) {
 			renderJson(ResultUtil.succeed());
 		}else {

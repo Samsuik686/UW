@@ -17,7 +17,6 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
-import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -26,9 +25,7 @@ import com.jimi.uw_server.agv.handle.ACKHandler;
 import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOHandler;
-import com.jimi.uw_server.agv.thread.TaskPool;
 import com.jimi.uw_server.model.SocketLog;
-import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;
 
 /**
@@ -40,13 +37,9 @@ import com.jimi.uw_server.util.ErrorLogWritter;
 @ClientEndpoint
 public class AGVMainSocket {
 	
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-	
 	private static Session session;
 	
 	private static String uri;
-	
-	private TaskPool taskPool;
 	
 	/**
 	 * 发送的CMDID与是否被ACK的关系映射
@@ -62,12 +55,6 @@ public class AGVMainSocket {
 		//初始化
 		sendCmdidAckMap = new HashMap<>();
 		receiveNotAckCmdidSet = new HashSet<>();
-		TaskItemRedisDAO.setPauseAssign(0);
-		if (materialService.isMaterialBoxEmpty()) {
-			TaskItemRedisDAO.setBuildAssign(true);
-		} else {
-			TaskItemRedisDAO.setBuildAssign(false);
-		}
 		//连接AGV服务器
 		AGVMainSocket.uri = uri;
 		connect(AGVMainSocket.uri);
@@ -78,28 +65,15 @@ public class AGVMainSocket {
 	public void onOpen(Session userSession) {
 		System.out.println("AGVMainSocket is Running Now...");
 		session = userSession;
-		try {
-			taskPool = new TaskPool();
-			taskPool.start();
-		} catch (Exception e) {
-			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
-			e.printStackTrace();
-		}
+		TaskItemRedisDAO.setAgvWebSocketStatus(true);
 	}
 
 
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
 		ErrorLogWritter.save("AGVMainSocket was Stopped because :" + reason.getCloseCode());
-		taskPool.interrupt();
-		try {
-			Thread.sleep(1800000);
-			//重新连接
-			connect(AGVMainSocket.uri);
-		} catch (Exception e) {
-			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
-			e.printStackTrace();
-		}
+		TaskItemRedisDAO.setAgvWebSocketStatus(false);
+		connect(AGVMainSocket.uri);
 	}
 
 	
@@ -171,9 +145,20 @@ public class AGVMainSocket {
 	}
 
 
-	private static void connect(String uri) throws Exception {
+	private static void connect(String uri) {
 		WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-		container.connectToServer(new AGVMainSocket(), new URI(uri));
+		Boolean flag = true;
+		while(flag) {
+			try {
+				Thread.sleep(3000);
+				container.connectToServer(new AGVMainSocket(), new URI(uri));
+				flag = false;
+			} catch (Exception e) {
+				ErrorLogWritter.save(e.getClass().getSimpleName()+ ":" +e.getMessage());
+				e.printStackTrace();
+			} 
+		}
+		
 	}
 
 

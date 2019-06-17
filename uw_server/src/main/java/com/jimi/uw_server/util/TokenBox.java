@@ -54,6 +54,7 @@ public class TokenBox {
 				} catch (InterruptedException e) {
 				}
 			});
+			timeoutThread.setName("TokenBoxTimeOutThread");
 			timeoutThread.start();
 		}
 		System.out.println("TokenBox is Running Now...");

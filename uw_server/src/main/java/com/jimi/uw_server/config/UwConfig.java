@@ -18,6 +18,7 @@ import com.jfinal.plugin.redis.RedisPlugin;
 import com.jfinal.template.Engine;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
+import com.jimi.uw_server.agv.thread.TaskPool;
 import com.jimi.uw_server.controller.BuildController;
 import com.jimi.uw_server.controller.DestinationController;
 import com.jimi.uw_server.controller.ExternalWhController;
@@ -122,6 +123,10 @@ public class UwConfig extends JFinalConfig {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("d_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("d_robotInfoURI"));
 			}
+			TaskPool taskPool = new TaskPool();
+			taskPool.setName("TaskPoolThread");
+			taskPool.start();
+			
 			System.out.println("Uw Server is Running now...");
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
@@ -133,6 +138,7 @@ public class UwConfig extends JFinalConfig {
 	@Override
 	public void beforeJFinalStop() {
 		TokenBox.stop();
+		
 	}
 	
 	

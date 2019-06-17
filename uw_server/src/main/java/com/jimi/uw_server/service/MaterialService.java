@@ -3,7 +3,9 @@ package com.jimi.uw_server.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -52,13 +54,13 @@ public class MaterialService extends SelectService{
 
 	private static final String GET_SPECIFIED_POSITION_MATERIAL_BOX_SQL = "SELECT * FROM material_box WHERE row = ? AND col = ? AND height = ?";
 
-	private static final String GET_ENTITIES_SELECT_SQL = "SELECT material.id AS id, material.type AS type, material.box AS box, material_box.area AS boxArea, material.row AS row, material.col AS col, material.remainder_quantity AS remainderQuantity, material.production_time AS productionTimeString , material_type.no AS materialNo";
+	private static final String GET_ENTITIES_SELECT_SQL = "SELECT material.id AS id, material.type AS type, material.box AS box, material_box.area AS boxArea, material.row AS row, material.col AS col, material.remainder_quantity AS remainderQuantity, material.production_time AS productionTimeString , material_type.no AS materialNo, material.store_time AS store_time ";
 	
-	private	static final String GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? ";
+	private	static final String GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? AND material.remainder_quantity > 0";
 
-	private	static final String GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.box = ?";
+	private	static final String GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.box = ? AND material.remainder_quantity > 0";
 
-	private	static final String GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? and material.box = ?";
+	private	static final String GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL = "FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? and material.box = ? AND material.remainder_quantity > 0";
 
 	private static final String GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
@@ -90,7 +92,11 @@ public class MaterialService extends SelectService{
 	
 	private static final String COUNT_RETURN_QUANTITY = "SELECT SUM(quantity) as quantity FROM material_return_record WHERE material_type_id = ? AND wh_id = ? AND time <= ? AND enabled = 1";
 
+	private static final String GET_OVERDUE_MATERIAL = "SELECT a.* FROM (SELECT DISTINCT material_type.* FROM material_type INNER JOIN material ON material_type.id = material.type WHERE material_type.enabled = 1 AND material.remainder_quantity > 0 AND material.store_time < ?) a ";
+	
 	public static MaterialService me = new MaterialService();
+	
+	
 	// 统计物料类型信息
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -116,6 +122,39 @@ public class MaterialService extends SelectService{
 	}
 
 
+	// 统计物料类型信息
+		public Object getOverdueMaterial(Integer pageNo, Integer pageSize, Integer day) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.add(Calendar.DATE, 0 - day);
+			Date date = calendar.getTime();
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			String dateString = df.format(date);
+			SqlPara sqlPara = new SqlPara();
+			sqlPara.setSql(GET_OVERDUE_MATERIAL);
+			sqlPara.addPara(dateString);
+			Page<Record> result = null;
+			if (pageNo != null && pageSize != null) {
+				result = Db.paginate(pageNo, pageSize, sqlPara);
+			}else {
+				result = Db.paginate(1, PropKit.use("properties.ini").getInt("defaultPageSize"), sqlPara);
+			}
+			
+			List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
+			for (Record res : result.getList()) {
+				MaterialTypeVO m = new MaterialTypeVO(res.get("id"), res.get("no"), res.get("specification"), res.get("supplier"), res.get("thickness"), res.get("radius"), res.get("enabled"));
+				materialTypeVOs.add(m);
+			}
+
+			PagePaginate pagePaginate = new PagePaginate();
+			pagePaginate.setPageSize(pageSize);
+			pagePaginate.setPageNumber(pageNo);
+			pagePaginate.setTotalRow(result.getTotalRow());
+			pagePaginate.setList(materialTypeVOs);
+
+			return pagePaginate;
+		}
+	
+	
 	// 获取物料详情
 	public Page<Record> getEntities(Integer type, Integer box, Integer pageNo, Integer pageSize) {
 		Page<Record> materialEntities = new Page<Record>();
@@ -450,7 +489,7 @@ public class MaterialService extends SelectService{
 		boxType.save();
 		return resultString;
 	}
-
+	
 
 	// 删除料盒类型
 	public String deleteBoxType(Integer id, Boolean enabled) {
@@ -549,14 +588,14 @@ public class MaterialService extends SelectService{
 		}
 		return resultString;
 	}
-
+	
+	
 	public void deleteTempFile(File file) {
 		//清空upload目录下的文件
 		if (file.exists()) {
 			file.delete();
 		}
 	}
-
 
 
 	/**

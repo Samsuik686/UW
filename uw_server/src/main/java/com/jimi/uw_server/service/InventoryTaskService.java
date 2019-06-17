@@ -1086,11 +1086,11 @@ public class InventoryTaskService {
 					String[] rbTempArr = rbTemp.split(",");
 					for (String rbTempStr : rbTempArr) {
 						for (String robotStr : robotArr) {
-							if (rbTempStr.equals(robotStr)) {
+							if (rbTempStr.trim().equals(robotStr.trim())) {
 								if (!result.equals("")) {
 									result += "，";
 								}
-								robotTempList.add(robotStr);
+								robotTempList.add(robotStr.trim());
 								result += "叉车" + rbTempStr + "已被仓口" + windowTemp.getId() + "使用，请前往对应仓口解绑";
 
 							}
@@ -1101,7 +1101,7 @@ public class InventoryTaskService {
 			}
 			List<String> robotArrList = new ArrayList<>();
 			for (String robotStr : robotArr) {
-				robotArrList.add(robotStr);
+				robotArrList.add(robotStr.trim());
 			}
 			if (robotTempList.size() == 0) {
 				TaskItemRedisDAO.setWindowTaskInfo(windowId, window.getBindTaskId(), robots);
@@ -1163,7 +1163,7 @@ public class InventoryTaskService {
 		return tasks;
 	}
 	
-	public String getInventoryTaskName(Integer id) {
+	public String getTaskName(Integer id) {
 		Task task = Task.dao.findById(id);
 		if (task != null) {
 			return task.getFileName();

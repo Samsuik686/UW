@@ -72,6 +72,15 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 		return get("production_time");
 	}
 
+	public M setStoreTime(java.util.Date storeTime) {
+		set("store_time", storeTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getStoreTime() {
+		return get("store_time");
+	}
+
 	public M setIsInBox(java.lang.Boolean isInBox) {
 		set("is_in_box", isInBox);
 		return (M)this;

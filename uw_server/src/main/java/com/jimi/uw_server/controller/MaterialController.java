@@ -13,6 +13,7 @@ import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ResultUtil;
@@ -33,6 +34,22 @@ public class MaterialController extends Controller {
 		renderJson(ResultUtil.succeed(materialService.count(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
+	
+	// 统计超过期限的物料类型信息
+		public void getOverdueMaterial(Integer pageNo, Integer pageSize, Integer day) {
+			if ((pageNo != null && pageSize == null) || (pageNo == null && pageSize != null)) {
+				throw new ParameterException("页码和页数只能同时为空或同时不为空！");
+			}
+			if (pageNo != null && pageSize != null && (pageNo <= 0 || pageSize <= 0 )) {
+				throw new ParameterException("页码和页数必须为正整数！");
+			}
+			if (day == null || day < 0) {
+				throw new ParameterException("天数必须为非负整数！");
+			}
+			renderJson(ResultUtil.succeed(materialService.getOverdueMaterial(pageNo, pageSize, day)));
+	}
+		
+		
 	// 获取物料实体
 	public void getEntities(Integer type, Integer box, Integer pageNo, Integer pageSize) {
 		renderJson(ResultUtil.succeed(materialService.getEntities(type, box, pageNo, pageSize)));

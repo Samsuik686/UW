@@ -134,10 +134,7 @@ public class RobotService extends SelectService {
 						}
 						materialBox.update();
 						if (materialBox != null && materialBox.getType().equals(1)) {
-							if (!isLater) {
-								taskService.finishItem(id, true);
-								item.setIsForceFinish(true);
-							}
+							
 							
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 							AGVIOTaskItem sameBoxItem = getSameBoxItem(item);
@@ -154,15 +151,16 @@ public class RobotService extends SelectService {
 							}
 							// 更新任务条目状态为已分配回库
 							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);
+							if (!isLater) {
+								taskService.finishItem(id, true);
+								item.setIsForceFinish(true);
+							}
 							// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
 							if (task.getType() == TaskType.OUT) {
 								taskService.updateOutQuantityAndMaterialInfo(item, materialOutputRecords, isLater, user, cutFlag);
 							}
 						}else if (materialBox != null && materialBox.getType().equals(2)) {
-							if (!isLater) {
-								taskService.finishItem(id, true);
-								item.setIsForceFinish(true);
-							}
+							
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 							AGVIOTaskItem sameBoxItem = getSameBoxItem(item);
 							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
@@ -172,6 +170,10 @@ public class RobotService extends SelectService {
 								// 更新任务条目绑定的叉车id
 								TaskItemRedisDAO.updateIOTaskItemRobot(sameBoxItem, item.getRobotId());
 								resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
+							}
+							if (!isLater) {
+								taskService.finishItem(id, true);
+								item.setIsForceFinish(true);
 							}
 							// 更新任务条目状态为已分配回库
 							TaskItemRedisDAO.updateIOTaskItemState(item, IOTaskItemState.START_BACK);

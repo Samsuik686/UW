@@ -31,6 +31,14 @@ public class RobotInfoRedisDAO {
 	
 	
 	/**
+	 * 更新机器实时数据到Redis
+	 */
+	public synchronized static void delete() {
+		cache.del("robot");
+	}
+	
+	
+	/**
 	 * 获取机器实时数据
 	 */
 	@SuppressWarnings("unchecked")

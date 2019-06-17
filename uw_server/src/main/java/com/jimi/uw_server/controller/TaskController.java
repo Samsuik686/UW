@@ -1,7 +1,11 @@
 package com.jimi.uw_server.controller;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Date;
+
+import javax.servlet.http.HttpServletResponse;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
@@ -29,8 +33,8 @@ public class TaskController extends Controller {
 
 	// 创建出入库/退料任务
 	@Log("创建任务类型为{type}的任务，供应商编号为{supplier}")
-	public void create(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId) throws Exception {
-		if (file ==null || type == null || supplier ==null) {
+	public void create(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks) throws Exception {
+		if (file ==null || type == null || supplier ==null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
 		}
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
@@ -38,7 +42,7 @@ public class TaskController extends Controller {
 			file = getFile();
 			String fileName = file.getFileName();
 			String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
-			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplier, destination, isInventoryApply, inventoryTaskId);
+			String resultString = taskService.createIOTask(type, fileName, fullFileName, supplier, destination, isInventoryApply, inventoryTaskId, remarks);
 
 			if(resultString.equals("添加成功！")) {
 				renderJson(ResultUtil.succeed());
@@ -111,12 +115,12 @@ public class TaskController extends Controller {
 	}
 	
 	// 查看任务详情
-		public void getIOTaskDetails(Integer id, Integer type, Integer pageSize, Integer pageNo) {
-			if (id ==null || type == null) {
-				throw new ParameterException("任务id或任务类型不能为空！");
-			}
-            renderJson(ResultUtil.succeed(taskService.getIOTaskDetail(id, type, pageSize, pageNo)));
+	public void getIOTaskDetails(Integer id, Integer type, Integer pageSize, Integer pageNo) {
+		if (id ==null || type == null) {
+			throw new ParameterException("任务id或任务类型不能为空！");
 		}
+        renderJson(ResultUtil.succeed(taskService.getIOTaskDetail(id, type, pageSize, pageNo)));
+	}
 
 	// 查询指定类型的仓口
 	public void getWindows(int type) {
@@ -272,5 +276,41 @@ public class TaskController extends Controller {
 		}
 		String result  = taskService.getWindowRobots(windowId);
 		renderJson(ResultUtil.succeed(result));
+	}
+	
+	@Log("编辑任务备注，任务ID{taskId}，备注{remarks}")
+	public void editTaskRemarks(Integer taskId, String remarks) {
+		if (taskId == null || remarks == null || remarks.equals("")) {
+			throw new ParameterException("参数不能为空！");
+		}
+		String result  = taskService.editTaskRemarks(taskId, remarks);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	@Log("导出任务未完成条目报表, 任务ID{id}， 任务类型{type}")
+	public void exportUnfinishTaskDetails(Integer id, Integer type) {
+		OutputStream output = null;
+		try {
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
+			String fileName = "作废任务_" + taskService.getTaskName(id);
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			taskService.exportUnfinishTaskDetails(id, type, fileName, output);
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
+		}
+		renderNull();
 	}
 }

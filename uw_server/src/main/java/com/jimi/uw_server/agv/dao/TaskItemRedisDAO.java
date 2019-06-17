@@ -29,27 +29,6 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 是否已经停止分配任务
-	 */
-	public synchronized static int isPauseAssign() {
-		try {
-			return cache.get("pause");
-		} catch (NullPointerException e) {
-			cache.set("pause", 0);
-			return isPauseAssign();
-		}
-	}
-	
-	
-	/**
-	 * 设置停止分配任务标志位
-	 */
-	public synchronized static void setPauseAssign(int pause) {
-		cache.set("pause", pause);
-	}
-	
-	
-	/**
 	 * 添加出入库任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务优先级轮流排序<br>
 	 */
 	public synchronized static void addIOTaskItem(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
@@ -319,39 +298,6 @@ public class TaskItemRedisDAO {
 			}
 		}
 	}
-
-
-	/**
-	 * 是否需要建仓
-	 */
-	public synchronized static boolean getIsBuildAssign() {
-		try {
-			return cache.get("build");
-		} catch (NullPointerException e) {
-			cache.set("build", false);
-			return getIsBuildAssign();
-		}
-	}
-	
-	
-	/**
-	 * 设置建仓任务标志位
-	 */
-	public synchronized static void setBuildAssign(boolean build) {
-		cache.set("build", build);
-	}
-
-
-	/**
-	 * 判断建仓任务是否已完成
-	 */
-	@SuppressWarnings("unchecked")
-	public synchronized static void isBuildFinish() {
-		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
-		if (items.size() == 0) {
-			setBuildAssign(false);
-		}
-	}
 	
 	
 	/**
@@ -368,16 +314,22 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 设置机器任务
-	 *//*
-	public synchronized static void setRobotTask(Integer robotId, Integer taskId) {
-		cache.set("robot_" + robotId, taskId);
+	 * 设置agvWebSocket运行状态
+	 */
+	public synchronized static void setAgvWebSocketStatus(Boolean flag) {
+		cache.set("agvWebSocketStatus", flag);
 	}
 	
 	
-	public synchronized static void delRobotTask(Integer robotId) {
-		cache.del("robot_" + robotId);
-	}*/
+	public synchronized static Boolean getAgvWebSocketStatus() {
+		Boolean flag = cache.get("agvWebSocketStatus");
+		System.err.println(flag);
+		if (flag == null) {
+			flag = true;
+			cache.set("agvWebSocketStatus", true);
+		}
+		return flag;
+	}
 	
 	
 /*	*//**
@@ -585,6 +537,7 @@ public class TaskItemRedisDAO {
 	 * 设置盘点任务绑定仓口状态
 	 */
 	public synchronized static void setWindowTaskInfo(Integer windowId, Integer taskId, String robots) {
+		cache.del("Window_"+windowId + "_" + taskId);
 		cache.set("Window_"+windowId + "_" + taskId, robots);
 	}
 	
