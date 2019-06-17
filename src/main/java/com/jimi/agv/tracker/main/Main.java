@@ -67,11 +67,12 @@ public class Main {
 
 	private static void showMe() {
 		System.out.println("==================================");
-		System.out.println("欢迎使用 - AGV Tracker 1.4.0 - 轨迹采集器 by Darhao");
+		System.out.println("欢迎使用 - AGV Tracker 1.4.1 - 轨迹采集器 by Darhao");
 		System.out.println("1.1.0更新日志：1.报告输出仓口坐标 2.去掉\"秒\"");
 		System.out.println("1.2.0更新日志：1.现在可以输出 [轨迹报告] 了");
 		System.out.println("1.3.0更新日志：1.增加缓冲模式 2.报告支持输出到数据库了哦");
 		System.out.println("1.4.0更新日志：1.现在可以支持多叉车同时启动噜~");
+		System.out.println("  >> 1.4.1修复日志：1.修复了正在充电且电量大于60的叉车无法调度的问题");
 		System.out.println("==================================");
 	}
 

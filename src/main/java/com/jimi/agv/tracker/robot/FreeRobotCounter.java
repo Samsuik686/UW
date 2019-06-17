@@ -12,6 +12,9 @@ import com.jimi.agv.tracker.entity.cmd.AGVRobotInfoCmd;
 public class FreeRobotCounter {
 
 	private static final int FREE = 0;
+	private static final int CHARGING = 4;
+	private static final int POWER_THRESHOLD = 60;
+	
 	
 	private static FreeRobotCounter me;
 	
@@ -29,7 +32,7 @@ public class FreeRobotCounter {
 	public synchronized void update(AGVRobotInfoCmd cmd) {
 		int num = 0;
 		for (AGVRobot robot : cmd.getRobotarray()) {
-			if(robot.getStatus() == FREE) {
+			if(robot.getStatus().intValue() == FREE || (robot.getStatus().intValue() == CHARGING && robot.getBatteryPower().intValue() >= POWER_THRESHOLD)) {
 				num++;
 			}
 		}
