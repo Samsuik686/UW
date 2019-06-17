@@ -3,12 +3,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.jimi.agv</groupId>
-	<artifactId>tracker</artifactId>
-	<version>1.4.0</version>
+	<groupId>com.jimi.agv.boxiterator</groupId>
+	<artifactId>client</artifactId>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
-	<name>tracker</name>
+	<name>boxiterator</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -25,11 +25,11 @@
 	</repositories>
 
 	<dependencies>
-	
+
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.35</version>
+			<groupId>cc.darhao</groupId>
+			<artifactId>pasta</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 
 		<dependency>
@@ -63,18 +63,6 @@
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
 			<version>1.2.47</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.jfinal</groupId>
-			<artifactId>jfinal-java8</artifactId>
-			<version>3.4</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>druid</artifactId>
-			<version>1.1.9</version>
 		</dependency>
 
 	</dependencies>
@@ -121,7 +109,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.jimi.agv.tracker.main.Main</mainClass>
+									<mainClass>com.jimi.agv.boxiterator.client.main.Main</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

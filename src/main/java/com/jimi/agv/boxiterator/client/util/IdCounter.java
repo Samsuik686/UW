@@ -1,4 +1,4 @@
-package com.jimi.agv.tracker.util;
+package com.jimi.agv.boxiterator.client.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
