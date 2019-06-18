@@ -21,6 +21,7 @@ export const exportReportUrl = url + '/manage/material/exportMaterialReport';
 export const getMaterialRecordsUrl = url + '/manage/material/getMaterialRecords';
 export const importReportUrl = url + '/manage/material/import';
 export const deleteByIdsUrl = url + '/manage/material/deleteByIds';
+export const getOverdueMaterialUrl = url + '/manage/material/getOverdueMaterial';
 
 //log
 export const logsUrl = url + '/log/select';
@@ -55,6 +56,8 @@ export const taskImportInRecordsUrl = url + '/task/importInRecords';
 export const taskImportOutRecordsUrl = url + '/task/importOutRecords';
 export const setWindowRobotsUrl = url + '/task/setWindowRobots';
 export const getWindowRobotsUrl = url + '/task/getWindowRobots';
+export const editTaskRemarksUrl = url + '/task/editTaskRemarks';
+export const exportUnfinishTaskDetailsUrl = url + '/task/exportUnfinishTaskDetails';
 
 //robot manage
 export const robotSelectUrl = url + '/manage/robot/select';
@@ -131,3 +134,15 @@ export const getUwInventoryTaskInfoUrl = url + '/task/inventory/getUwInventoryTa
 //查询物料仓盘点任务
 export const getEwhInventoryTaskInfoUrl = url + '/task/inventory/getEwhInventoryTaskInfo';
 
+//导出UW仓盘点报表
+export const exportUwReportUrl = url + '/task/inventory/exportUwReport';
+
+//一键平UW仓
+export const coverUwMaterialOneKeyUrl = url + '/task/inventory/coverUwMaterialOneKey';
+//一键平物料仓
+export const coverEwhMaterialOneKeyUrl = url + '/task/inventory/coverEwhMaterialOneKey';
+
+//设置盘点任务叉车
+export const setWindowRobotsInventoryUrl = url + '/task/inventory/setWindowRobots';
+//获取盘点仓口叉车
+export const getWindowRobotsInventoryUrl = url + '/task/inventory/getWindowRobots';

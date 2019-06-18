@@ -445,6 +445,7 @@
             };
             axiosPost(options).then(response => {
               if (response.data.result === 200) {
+                this.fetchData(this.currentWindowId);
                 this.successAudioPlay();
                 this.isTipsShow = true;
                 this.tipsComponentMsg = true;

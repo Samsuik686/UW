@@ -97,7 +97,7 @@
           axiosPost(options).then(res => {
             this.isPending = false;
             if (res.data.result === 200) {
-              this.$alertSuccess('设置成功');
+              this.$alertSuccess(res.data.data);
               this.getTaskRobots();
               this.closeSelectRobotsPanel();
             } else {

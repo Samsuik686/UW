@@ -44,6 +44,10 @@
                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                class="d-none" ref="taskUpload" @change="uploadFile">
       </div>
+      <div class="form-row">
+        <label for="type-remarks" class="col-form-label">备注:</label>
+        <textarea class="form-control" id="type-remarks" autocomplete="false" v-model.trim="remarks"></textarea>
+      </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
         <a class="btn btn-secondary col mr-1 text-white" @click="closeUploadPanel">取消</a>
@@ -82,7 +86,8 @@
         tip:'目的地',
         isInventoryApply:false,
         inventoryTaskId:'',
-        inventoryTasks:[]
+        inventoryTasks:[],
+        remarks:''
       }
     },
     created() {
@@ -128,9 +133,10 @@
             this.setLoading(true);
             let formData = new FormData();
             if (this.taskType < 2 || this.taskType == 4 || this.taskType == 11) {
-              if (this.thisFile !== "" && this.supplier !== "") {
+              if (this.thisFile !== "" && this.supplier !== "" && this.remarks !== "") {
                 formData.append('file', this.thisFile);
                 formData.append('supplier', this.supplier);
+                formData.append('remarks',this.remarks);
                 formData.append('destination', this.destination);
               } else {
                 this.$alertWarning("内容不可为空");
@@ -182,7 +188,7 @@
               this.setLoading(false);
             })
           } else {
-            this.$alertWarning("选项不能为空");
+            this.$alertWarning("类型不能为空");
           }
         }
       },

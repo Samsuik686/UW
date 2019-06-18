@@ -67,6 +67,10 @@
                 taskNowItems.actualQuantity)}}</p>
             </div>
           </div>
+          <div class="card-body row">
+            <span class="col-form-label">已扫料盘: </span>
+            <p class="card-text form-control">{{taskNowItems.details.length}}</p>
+          </div>
         </div>
         <div class="card bg-light col-3">
           <div class="border-light row ml-auto mr-auto mt-4">
@@ -374,6 +378,7 @@
             };
             axiosPost(options).then(response => {
               if (response.data.result === 200) {
+                this.fetchData(this.currentWindowId);
                 this.successAudioPlay();
                 this.isTipsShow = true;
                 this.tipsComponentMsg = true;

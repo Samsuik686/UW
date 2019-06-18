@@ -1,6 +1,6 @@
 <template>
   <div class="add-panel">
-    <div class="form-row justify-content-end">
+    <div class="form-row justify-content-end add-panel-box">
       <div class="add-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
@@ -60,7 +60,7 @@
           {title: '盘点时间', field: 'inventoryTime', colStyle: {width: '120px'}},
           {title: '平仓人', field: 'coverOperatior', colStyle: {width: '90px'}},
           {title: '平仓时间', field: 'coverTime', colStyle: {width: '120px'}},
-          {title: '操作', tdComp: 'ClosePosition', colStyle: {'width': '80px'}}
+          {title: '操作', tdComp: 'ClosePosition', colStyle: {'width': '90px'}}
         ],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -157,10 +157,14 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 101;
   }
+  .add-panel-box{
+    width:95%;
+    display:flex;
+  }
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;
-    max-width: 1200px;
+    width:90%;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;

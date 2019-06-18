@@ -10,7 +10,7 @@
         <a href="#" class="btn btn-secondary ml-3 mr-4" @click="initForm">清空条件</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="thisFetch">查询</a>
+        <button class="btn btn-primary ml-3 mr-4" @click="thisFetch" :disabled="isOverdueMaterialCheck === true">查询</button>
       </div>
       <div class="form-group row align-items-end">
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">新增物料</a>
@@ -139,6 +139,13 @@
         isExporting:false
       }
     },
+    watch:{
+      isOverdueMaterialCheck:function(val){
+        if(val === true){
+          this.initForm();
+        }
+      }
+    },
     mounted: function () {
       this.initForm();
       eventBus.$on('closeAddPanel', () => {
@@ -151,7 +158,7 @@
     },
     computed: {
       ...mapGetters([
-        'tableRouterApi'
+        'tableRouterApi','isOverdueMaterialCheck'
       ]),
     },
     methods: {

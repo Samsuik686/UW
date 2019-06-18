@@ -1,0 +1,106 @@
+<template>
+  <div class="edit-panel">
+    <div class="edit-panel-container form-row flex-column justify-content-between">
+      <div class="form-row">
+        <div class="form-group mb-0">
+          <h3>修改备注：</h3>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-row col pl-2 pr-2">
+          <label for="remarks" class="col-form-label">备注:</label>
+          <textarea id="remarks" class="form-control" v-model.trim="remarks" autocomplete="off"></textarea>
+        </div>
+      </div>
+      <div class="dropdown-divider"></div>
+      <div class="form-row justify-content-around">
+        <button class="btn btn-secondary col mr-1 text-white" @click="closeEditPanel">取消</button>
+        <button class="btn btn-primary col ml-1 text-white" @click="submitUpdate">提交</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import eventBus from '@/utils/eventBus';
+  import {editTaskRemarksUrl} from "../../../../../config/globalUrl";
+  import {axiosPost} from "../../../../../utils/fetchData";
+  import {errHandler} from "../../../../../utils/errorHandler";
+
+  export default {
+    name: "EditRemarks",
+    props: ['editData'],
+    data() {
+      return {
+        remarks:'',
+        taskId:'',
+        isPending: false
+      }
+    },
+    mounted() {
+      this.remarks = this.editData.remarks;
+      this.taskId = this.editData.taskId;
+    },
+    methods: {
+      closeEditPanel: function () {
+        eventBus.$emit('closeEditRemarksPanel');
+      },
+      submitUpdate: function () {
+        if(this.remarks === ''){
+          this.$alertWarning('备注不能为空');
+          return;
+        }
+        if(!this.isPending){
+          this.isPending = true;
+          let options = {
+            url:editTaskRemarksUrl,
+            data:{
+              taskId:this.taskId,
+              remarks:this.remarks
+            }
+          };
+          axiosPost(options).then(res => {
+            this.isPending = false;
+            if(res.data.result === 200){
+              this.$alertSuccess(res.data.data);
+              this.closeEditPanel();
+              eventBus.$emit('remarkRefresh');
+            }else{
+              errHandler(res.data);
+            }
+          }).catch(err => {
+            this.isPending = false;
+            console.log(err);
+            this.$alertDanger('请求超时，请刷新重试');
+          })
+        }
+      }
+    }
+  }
+</script>
+
+<style scoped>
+  .edit-panel {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 101;
+  }
+
+  .edit-panel-container {
+    background: #ffffff;
+    width:500px;
+    min-height: 220px;
+    max-width: 600px;
+    z-index: 102;
+    border-radius: 10px;
+    box-shadow: 3px 3px 20px 1px #bbb;
+    padding: 30px 60px 10px 60px;
+  }
+</style>

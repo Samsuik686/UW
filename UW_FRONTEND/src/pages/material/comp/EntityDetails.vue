@@ -1,6 +1,6 @@
 <template>
   <div class="add-panel">
-    <div class="form-row justify-content-end">
+    <div class="form-row justify-content-end add-panel-box">
       <div class="add-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
@@ -45,7 +45,7 @@
           {title: '盒内行号', field: 'row', colStyle: {width: '90px'}},
           {title: '盒内列号', field: 'col', colStyle: {width: '90px'}},
           {title: '剩余数量', field: 'remainderQuantity', colStyle: {width: '90px'}},
-          {title: '生产日期', field: 'productionTimeString', colStyle: {width: '160px'}},
+          {title: '入库日期', field: 'store_time', colStyle: {width: '160px'}},
         ],
         total: 0,
         query: {"limit": 20, "offset": 0},
@@ -147,11 +147,14 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 101;
   }
-
+  .add-panel-box{
+    width:95%;
+    display:flex;
+  }
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;
-    max-width: 1200px;
+    width:90%;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;

@@ -1,26 +1,27 @@
 <template>
-<div class="edit-panel">
-  <div class="edit-panel-container form-row flex-column justify-content-between">
-    <div class="form-row">
-      <div class="form-group mb-0">
-        <h3>填写损耗数量：</h3>
+  <div class="edit-panel">
+    <div class="edit-panel-container form-row flex-column justify-content-between">
+      <div class="form-row">
+        <div class="form-group mb-0">
+          <h3>填写损耗数量：</h3>
+        </div>
       </div>
-    </div>
-    <div class="form-row">
+
       <div class="form-row col pl-2 pr-2">
         <label for="quantity" class="col-form-label">数量:</label>
         <input type="text" id="quantity" class="form-control" v-model="quantity" autocomplete="off">
-        <span class="form-span col"></span>
       </div>
-
-    </div>
-    <div class="dropdown-divider"></div>
-    <div class="form-row justify-content-around">
-      <button class="btn btn-secondary col mr-1 text-white" @click="closeEditPanel">取消</button>
-      <button class="btn btn-primary col ml-1 text-white" @click="submitUpdate">提交</button>
+      <div class="form-row col pl-2 pr-2">
+        <label for="remarks" class="col-form-label">备注:</label>
+        <textarea id="remarks" class="form-control" v-model.trim="remarks" autocomplete="off"></textarea>
+      </div>
+      <div class="dropdown-divider"></div>
+      <div class="form-row justify-content-around">
+        <button class="btn btn-secondary col mr-1 text-white" @click="closeEditPanel">取消</button>
+        <button class="btn btn-primary col ml-1 text-white" @click="submitUpdate">提交</button>
+      </div>
     </div>
   </div>
-</div>
 </template>
 
 <script>
@@ -31,12 +32,13 @@
 
   export default {
     name: "EditWastage",
-    props:{
-      row:Object
+    props: {
+      row: Object
     },
     data() {
       return {
-        quantity:'',
+        quantity: '',
+        remarks: '',
         isPending: false
       }
     },
@@ -45,7 +47,7 @@
         eventBus.$emit('closeEditPanel');
       },
       submitUpdate: function () {
-        if(this.quantity === ''){
+        if (this.quantity === '' || this.remarks === '') {
           this.$alertWarning('内容不能为空');
           return;
         }
@@ -57,11 +59,12 @@
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url:externalWhAddWorstageLogUrl ,
-            data:{
-              materialTypeId:this.row.materialTypeId,
-              whId:this.row.whId,
-              quantity:this.quantity
+            url: externalWhAddWorstageLogUrl,
+            data: {
+              materialTypeId: this.row.materialTypeId,
+              whId: this.row.whId,
+              quantity: this.quantity,
+              remarks: this.remarks
             }
           };
           axiosPost(options).then(response => {
@@ -109,18 +112,11 @@
   .edit-panel-container {
     background: #ffffff;
     min-height: 220px;
+    width:500px;
     max-width: 600px;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
-  }
-
-  .form-span {
-    display: block;
-    height: 20px;
-    line-height: 20px;
-    font-size: 10px;
-    color: darkred;
   }
 </style>

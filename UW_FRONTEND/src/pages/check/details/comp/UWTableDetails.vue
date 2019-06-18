@@ -4,8 +4,9 @@
       v-bind="$data"
     ></datatable>
     <div class="form-group row check-btn">
-      <div class="btn btn-primary" @click="checkInventoryData">审核盘点数据</div>
-      <!--<div class="btn btn-primary ml-3 mr-4" @click="exportCheckReport">导出盘点报表</div>-->
+      <div class="btn btn-primary" @click="coverUwMaterial">一键平仓</div>
+      <div class="btn btn-primary ml-3" @click="checkInventoryData">审核盘点数据</div>
+      <div class="btn btn-primary ml-3" @click="exportCheckReport">导出盘点报表</div>
     </div>
     <check-details v-if="isShow" :row="row"></check-details>
     <upload-check-task v-if="isUploadCheck" :taskId = "taskId"></upload-check-task>
@@ -17,8 +18,8 @@
   import CheckDetails from './subscomp/CheckUWDetails'
   import eventBus from "../../../../utils/eventBus";
   import {
-    checkInventoryTaskUrl,
-    exportEWhReportInventoryUrl,
+    checkInventoryTaskUrl, coverUwMaterialOneKeyUrl,
+    exportEWhReportInventoryUrl, exportUwReportUrl,
     getInventoryTaskInfoUrl, getUwInventoryTaskInfoUrl
   } from "../../../../config/globalUrl";
   import {axiosPost, downloadFile} from "../../../../utils/fetchData";
@@ -261,7 +262,7 @@
             no:this.no,
             '#TOKEN#': this.$store.state.token
           };
-          downloadFile(exportEWhReportInventoryUrl, data);
+          downloadFile(exportUwReportUrl, data);
           let count = 0;
           let mark = setInterval(() => {
             count++;
@@ -274,6 +275,37 @@
           this.$alertSuccess('请求成功，请等待下载');
         } else {
           this.$alertInfo('请稍后再试')
+        }
+      },
+      coverUwMaterial:function(){
+        if(this.taskId === ''){
+          this.$alertWarning('请先选择盘点任务');
+          return;
+        }
+        if(!this.isPending){
+          this.isPending = true;
+          this.setLoading(true);
+          let options = {
+            url:coverUwMaterialOneKeyUrl,
+            data:{
+              taskId:this.taskId
+            }
+          };
+          axiosPost(options).then(res => {
+            this.isPending = false;
+            this.setLoading(false);
+            if(res.data.result === 200){
+                this.$alertSuccess(res.data.data);
+                this.getCheckData();
+            }else{
+              errHandler(res.data);
+            }
+          }).catch(err => {
+            console.log(err);
+            this.$alertDanger('连接超时，请刷新重试');
+            this.isPending = false;
+            this.setLoading(false);
+          })
         }
       }
     }

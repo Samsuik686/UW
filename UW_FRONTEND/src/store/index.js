@@ -58,7 +58,11 @@ const state = {
   isRefresh:false,
   isScanner:false,
   focusInput:'',
-  unInventoryData:[]
+  unInventoryData:[],
+
+  //是否查询即将过期的。。。
+  isOverdueMaterialCheck:false
+
 };
 
 const store = new Vuex.Store({

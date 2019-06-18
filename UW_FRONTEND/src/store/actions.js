@@ -79,3 +79,6 @@ export const setUnInventoryData = ({commit},unInventoryData) => {
 export const setFocusInput = ({commit},focusInput) => {
   commit('setFocusInput',focusInput);
 };
+export const setIsOverdueMaterialCheck = ({commit},isOverdueMaterialCheck) => {
+  commit('setIsOverdueMaterialCheck',isOverdueMaterialCheck);
+};

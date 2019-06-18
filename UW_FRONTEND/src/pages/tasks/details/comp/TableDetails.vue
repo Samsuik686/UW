@@ -125,7 +125,8 @@
           {field: 'priority', title: '优先级', colStyle: {'width': '50px'}},
           {field: 'fileName', title: '文件名', colStyle: {'width': '120px'}},
           {field: 'createTimeString', title: '创建时间', colStyle: {'width': '100px'}},
-          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '70px'}}
+          {field: 'remarks', title: '备注', colStyle: {'width': '80px'}},
+          {title: '操作', tdComp: 'OperationOptions', colStyle: {'width': '120px'}}
         ];
         this.total = 0;
         this.query = {"limit": 20, "offset": 0}
@@ -137,6 +138,7 @@
             this.setLoading(false);
             this.isPending = false;
             if (response.data.result === 200) {
+              this.data = [];
               let data = response.data.data.list;
               data.map((item) => {
                 if(item.type !== 2){

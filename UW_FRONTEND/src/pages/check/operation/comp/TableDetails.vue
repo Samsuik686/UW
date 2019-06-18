@@ -1,5 +1,11 @@
 <template>
   <div class="main-details mt-1 mb-3">
+    <video controls="controls" id="sAudio" hidden>
+      <source src="./../../../../assets/005-System05.ogg" type="video/ogg">
+    </video>
+    <video controls="controls" id="fAudio" hidden>
+      <source src="./../../../../assets/141-Burst01.ogg" type="video/ogg">
+    </video>
     <input type="text" title="scanner" id="scanner-check" v-model="scanText"
            @blur="confirmSetFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
     <datatable
@@ -118,6 +124,7 @@
         //判断扫描的条码格式
         let result = handleScanText(scanText);
         if (result !== '') {
+          this.failAudioPlay();
           this.$alertWarning(result);
           return;
         }
@@ -131,6 +138,11 @@
         for(let i=0;i<checkData.length;i++){
           let item = checkData[i];
           if(item.materialId === materialId){
+            if(item.checkQuantity !== '' && Number(item.checkQuantity) === Number(quantity)){
+              this.failAudioPlay();
+              this.$alertWarning('料盘'+item.materialId+'重复扫描');
+              return;
+            }
             isExit = true;
             item.checkQuantity = quantity;
             item.isHighLight = true;
@@ -140,12 +152,14 @@
         }
         //确认扫描成功
         if(isExit === true){
+          this.successAudioPlay();
           this.setCheckWindowData({
             id: this.checkWindowId,
             data: checkData
           });
           this.setIsScanner(true);
         }else{
+          this.failAudioPlay();
           this.$alertWarning('找不到对应料盘');
         }
       },
@@ -219,18 +233,17 @@
         })
       },
       backInventoryBox: function () {
-        let list = this.checkWindowData[this.checkWindowId];
-        for (let i = 0; i < list.length; i++) {
-          if (list[i].checkQuantity === '') {
-            this.$alertWarning('当前有料盘未进行盘点');
-            return;
-          }
-        }
+        let list = JSON.parse(JSON.stringify(this.checkWindowData[this.checkWindowId]));
         for (let i = 0; i < list.length; i++) {
           let row = this.data[i];
           let obj = list[i];
+          console.log(row,obj);
+          if (obj.checkQuantity === '') {
+            this.$alertWarning('料盘号为'+list[i].materialId+'未填写盘点数量');
+            return;
+          }
           if(Number(row.storeNum) !== Number(obj.checkQuantity) && obj.isConfirm !== true){
-            this.$alertWarning('当前有料盘未进行盘点');
+            this.$alertWarning('料盘号为'+list[i].materialId+'未点击确定，打印新条码');
             return;
           }
         }
@@ -299,6 +312,24 @@
         clearTimeout(this.myTimeOut);
         this.myTimeOut = null;
       },
+      // 扫描成功提示
+      successAudioPlay: function () {
+        let audio = document.getElementById('sAudio');
+        if (audio !== null) {
+          if (audio.paused) {
+            audio.play();
+          }
+        }
+      },
+      // 扫描失败提示
+      failAudioPlay: function () {
+        let audio = document.getElementById('fAudio');
+        if (audio !== null) {
+          if (audio.paused) {
+            audio.play();
+          }
+        }
+      }
     }
   }
 </script>

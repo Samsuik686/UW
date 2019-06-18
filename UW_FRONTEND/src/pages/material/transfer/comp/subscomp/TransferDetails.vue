@@ -1,6 +1,6 @@
 <template>
   <div class="add-panel">
-    <div class="form-row justify-content-end">
+    <div class="form-row justify-content-end  add-panel-box">
       <div class="add-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
@@ -71,7 +71,10 @@
       this.fetchData(options);
       eventBus.$on('refresh',() => {
         this.dataFilter();
-      })
+      });
+      eventBus.$on('remarkRefresh',() => {
+        this.dataFilter();
+      });
     },
     methods: {
       ...mapActions(['setLoading']),
@@ -79,13 +82,15 @@
         this.data = [];
         this.total = 0;
         this.columns = [
-          {title: '序号', field: 'showId', colStyle: {width: '70px'}},
+          {title: '序号', field: 'showId', colStyle: {width: '60px'}},
           {title: '任务', field: 'taskName', colStyle: {width: '140px'}},
-          {title: '类型', field: 'taskTypeString', colStyle: {width: '100px'}},
-          {title: '来源地', field: 'sourceWhName', colStyle: {width: '120px'}},
-          {title: '目的地', field: 'destinationName', colStyle: {width: '120px'}},
-          {title: '数量', field: 'quantity', colStyle: {width: '90px'}},
-          {title: '日期', field: 'time', colStyle: {width: '160px'}},
+          {title: '类型', field: 'taskTypeString', colStyle: {width: '80px'}},
+          {title: '来源地', field: 'sourceWhName', colStyle: {width: '100px'}},
+          {title: '目的地', field: 'destinationName', colStyle: {width: '100px'}},
+          {title: '数量', field: 'quantity', colStyle: {width: '70px'}},
+          {title: '调拨多出数量', field: 'returnNum', colStyle: {width: '70px'}},
+          {title: '日期', field: 'time', colStyle: {width: '120px'}},
+          {title: '备注', field: 'remarks', colStyle: {width: '100px'}},
           {title: '操作', tdComp: 'DeleteDetailsItem', colStyle: {'width': '80px'}}
         ]
       },
@@ -151,26 +156,28 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height:100%;
     width: 100%;
     left: 0;
     top: 0;
     background: rgba(0, 0, 0, 0.1);
     z-index: 101;
   }
-
+  .add-panel-box{
+    width:95%;
+    display:flex;
+  }
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;
-    max-width: 1200px;
+    width:95%;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;
     padding: 30px 60px 10px 60px;
   }
-
   #cancel-btn {
-    height: 100%;
+    height:100%;
     cursor: pointer;
   }
 </style>

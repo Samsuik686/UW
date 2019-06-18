@@ -2,7 +2,7 @@ export const handleScanText = function(text){
    /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
   let tempArray = text.split("@");
   if(!judgeNumber(tempArray[1])){
-    return '二维码格式错误，数量必须为正整数';
+    return '二维码格式错误，数量必须为非负整数';
   }
   if(!judgeTime(tempArray[7])){
     return '二维码格式错误，生产日期格式不对';
@@ -11,7 +11,7 @@ export const handleScanText = function(text){
 };
 //判断是否为正整数
 export const judgeNumber = function isNumber(num) {
-  let reg = /^[1-9]*[1-9][0-9]*$/;
+  let reg =  /^\+?(0|[1-9][0-9]*)$/;
   return reg.test(num);
 };
 

@@ -45,7 +45,7 @@
       },
       timeout: {
         type: Number,
-        default: 3000
+        default: 10000
       },
       eventBus: {
         default: null

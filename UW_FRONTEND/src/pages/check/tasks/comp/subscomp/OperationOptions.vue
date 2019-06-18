@@ -3,9 +3,9 @@
     <div class="btn pl-1 pr-1" title="状态" @click="isEditing = true">
       <icon name="menu" scale="1.8"></icon>
     </div>
-    <div class="btn pl-1 pr-1" title="分配叉车" @click="isSelecting = true">
+    <!--<div class="btn pl-1 pr-1" title="分配叉车" @click="isSelecting = true">
       <icon name="edit" scale="1.8"></icon>
-    </div>
+    </div>-->
     <div v-if="isEditing" class="edit-window">
       <edit-status :editData="row"></edit-status>
     </div>

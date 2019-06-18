@@ -7,8 +7,9 @@
       v-bind="$data"
     ></datatable>
     <div class="form-group row check-btn">
-      <div class="btn btn-primary" @click="checkInventoryData">审核盘点数据</div>
-      <div class="btn btn-primary ml-3 mr-4" @click="exportCheckReport">导出盘点报表</div>
+      <div class="btn btn-primary" @click="coverEwhMaterial">一键平仓</div>
+      <div class="btn btn-primary ml-3" @click="checkInventoryData">审核盘点数据</div>
+      <div class="btn btn-primary ml-3" @click="exportCheckReport">导出盘点报表</div>
     </div>
     <check-details v-if="isShow" :row="row"></check-details>
     <upload-check-task v-if="isUploadCheck" :taskId = "taskId"></upload-check-task>
@@ -20,7 +21,7 @@
   import CheckDetails from './subscomp/CheckTransferDetails'
   import eventBus from "../../../../utils/eventBus";
   import {
-    checkEwhInventoryTaskUrl,
+    checkEwhInventoryTaskUrl, coverEwhMaterialOneKeyUrl,
     exportEWhReportInventoryUrl, getEwhInventoryTaskInfoUrl,
   } from "../../../../config/globalUrl";
   import {axiosPost, downloadFile} from "../../../../utils/fetchData";
@@ -276,6 +277,37 @@
           this.$alertSuccess('请求成功，请等待下载');
         } else {
           this.$alertInfo('请稍后再试')
+        }
+      },
+      coverEwhMaterial:function(){
+        if(this.taskId === ''){
+          this.$alertWarning('请先选择盘点任务');
+          return;
+        }
+        if(!this.isPending){
+          this.isPending = true;
+          this.setLoading(true);
+          let options = {
+            url:coverEwhMaterialOneKeyUrl,
+            data:{
+              taskId:this.taskId
+            }
+          };
+          axiosPost(options).then(res => {
+            this.isPending = false;
+            this.setLoading(false);
+            if(res.data.result === 200){
+              this.$alertSuccess(res.data.data);
+              this.getCheckData();
+            }else{
+              errHandler(res.data);
+            }
+          }).catch(err => {
+            console.log(err);
+            this.$alertDanger('连接超时，请刷新重试');
+            this.isPending = false;
+            this.setLoading(false);
+          })
         }
       }
     }

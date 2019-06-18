@@ -9,6 +9,12 @@
     <div class="btn pl-1 pr-1" title="状态" @click="isEditing = true">
       <icon name="menu" scale="1.8"></icon>
     </div>
+    <div class="btn pl-1 pr-1" title="修改备注" @click="isEditRemarks = true">
+      <icon name="edit" scale="1.8"></icon>
+    </div>
+    <div class="btn pl-1 pr-1" title="导出报表" v-if="row.state === 4" @click="exportUnfinishTaskDetails">
+      <icon name="download" scale="1.8"></icon>
+    </div>
     <div v-if="isEditing" class="edit-window">
       <edit-status :editData="row"/>
     </div>
@@ -17,6 +23,9 @@
     </div>
     <div v-if="isUpload" class="edit-window">
       <manual-out :editData="row"/>
+    </div>
+    <div v-if="isEditRemarks" class="edit-window">
+      <edit-remarks :editData="row"/>
     </div>
   </div>
 </template>
@@ -27,11 +36,15 @@
   import {mapActions} from 'vuex'
   import SetPriority from "./SetPriority";
   import ManualOut from "./ManualOut";
+  import EditRemarks from './EditRemarks';
+  import {downloadFile} from "../../../../../utils/fetchData";
+  import {exportUnfinishTaskDetailsUrl} from "../../../../../config/globalUrl";
 
   export default {
     name: "OperationOptions",
     props: ['row'],
     components: {
+      EditRemarks,
       ManualOut,
       SetPriority,
       EditStatus
@@ -40,7 +53,9 @@
       return {
         isEditing: false,
         isSetting:false,
-        isUpload:false
+        isUpload:false,
+        isEditRemarks:false,
+        isPending:false
       }
     },
     mounted() {
@@ -52,6 +67,9 @@
       });
       eventBus.$on('closeManualUploadPanel', () => {
         this.isUpload = false;
+      });
+      eventBus.$on('closeEditRemarksPanel', () => {
+        this.isEditRemarks = false;
       });
     },
     methods: {
@@ -72,6 +90,29 @@
         }else{
           this.$alertWarning("该状态不能设置优先级");
         }
+      },
+      exportUnfinishTaskDetails:function(){
+        if (!this.isPending) {
+          this.isPending = true;
+          let data = {
+            id:this.row.id,
+            type:this.row.type,
+            '#TOKEN#': this.$store.state.token
+          };
+          downloadFile(exportUnfinishTaskDetailsUrl, data);
+          let count = 0;
+          let mark = setInterval(() => {
+            count++;
+            if (count > 9) {
+              count = 0;
+              clearInterval(mark);
+              this.isPending = false
+            }
+          }, 1000);
+          this.$alertSuccess('请求成功，请等待下载');
+        } else {
+          this.$alertInfo('请稍后再试')
+        }
       }
     }
   }
@@ -80,13 +121,5 @@
 <style scoped>
   .edit-window {
     z-index: 100;
-  }
-
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity .5s;
-  }
-
-  .fade-enter, .fade-leave-to {
-    opacity: 0;
   }
 </style>

@@ -48,6 +48,7 @@
   import eventBus from "../../../../../utils/eventBus";
   import {errHandler} from "../../../../../utils/errorHandler";
   import {mapActions} from 'vuex'
+  import Qs from 'qs'
   export default {
     name: "EditStatus",
     props: {
@@ -129,30 +130,62 @@
                   windows = windows + ','+item;
                 }
               });
-              options.data.windows = windows
+              options.data.windows = windows;
+              this.startTask(options);
+            }else{
+              axiosPost(options).then(res => {
+                this.isPending = false;
+                this.setLoading(false);
+                if (res.data.result === 200) {
+                  this.$alertSuccess(res.data.data);
+                  this.windowShow = '';
+                  this.taskId = '';
+                  this.windowArr = [];
+                  let tempUrl = this.$route.fullPath;
+                  this.$router.push('/_empty');
+                  this.$router.replace(tempUrl);
+                } else {
+                  errHandler(res.data)
+                }
+              }).catch(err => {
+                this.isPending = false;
+                this.setLoading(false);
+                console.log(err);
+                this.$alertDanger('连接超时，请刷新重试');
+              })
             }
-            axiosPost(options).then(res => {
-              this.isPending = false;
-              this.setLoading(false);
-              if (res.data.result === 200) {
-                this.$alertSuccess(res.data.data);
-                this.windowShow = '';
-                this.taskId = '';
-                this.windowArr = [];
-                let tempUrl = this.$route.fullPath;
-                this.$router.push('/_empty');
-                this.$router.replace(tempUrl);
-              } else {
-                errHandler(res.data)
-              }
-            }).catch(err => {
-              this.isPending = false;
-              this.setLoading(false);
-              console.log(err);
-              this.$alertDanger('连接超时，请刷新重试');
-            })
           }
         }
+      },
+      startTask:function(options){
+        this.$axios({
+          method: 'post',
+          url:options.url,
+          timeout: 600000,
+          headers: {
+            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          },
+          data: Qs.stringify(options.data)
+        }).then(res => {
+          this.isPending = false;
+          this.setLoading(false);
+          if (res.data.result === 200) {
+            this.$alertSuccess(res.data.data);
+            this.windowShow = '';
+            this.taskId = '';
+            this.windowArr = [];
+            let tempUrl = this.$route.fullPath;
+            this.$router.push('/_empty');
+            this.$router.replace(tempUrl);
+          } else {
+            errHandler(res.data)
+          }
+        }).catch(err => {
+          this.isPending = false;
+          this.setLoading(false);
+          console.log(err);
+          this.$alertDanger('连接超时，请刷新重试');
+        })
       }
     }
   }

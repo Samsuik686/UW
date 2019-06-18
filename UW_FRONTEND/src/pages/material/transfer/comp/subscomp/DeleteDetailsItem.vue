@@ -1,9 +1,14 @@
 <template>
   <div class="user-options form-row">
+    <div class="btn pl-1 pr-1" title="修改备注" @click="isEditRemarks = true">
+      <icon name="edit" scale="1.8"></icon>
+    </div>
     <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)" v-if="row.taskType === 6">
       <icon name="cancel" scale="1.8"></icon>
     </div>
-
+    <div v-if="isEditRemarks" class="edit-window">
+      <edit-remarks :editData="row"/>
+    </div>
     <div v-if="isDeleting" id="delete-window">
       <div class="delete-panel">
         <div class="delete-panel-container form-row flex-column justify-content-between">
@@ -34,16 +39,26 @@
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
   import eventBus from "../../../../../utils/eventBus";
+  import EditRemarks from './EditRemarks'
 
   export default {
     name: "DeleteDetails",
     props: ['row'],
+    components:{
+      EditRemarks
+    },
     data() {
       return {
         isDeleting:false,
+        isEditRemarks:false,
         logId:'',
         isPending: false
       }
+    },
+    mounted(){
+      eventBus.$on('closeEditRemarksPanel', () => {
+        this.isEditRemarks = false;
+      });
     },
     methods:{
       showWarning: function (val) {

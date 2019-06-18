@@ -69,3 +69,6 @@ export const setUnInventoryData = (state,unInventoryData) => {
 export const setFocusInput = (state,focusInput) => {
   state.focusInput = focusInput;
 };
+export const setIsOverdueMaterialCheck = (state,isOverdueMaterialCheck) => {
+  state.isOverdueMaterialCheck = isOverdueMaterialCheck;
+};

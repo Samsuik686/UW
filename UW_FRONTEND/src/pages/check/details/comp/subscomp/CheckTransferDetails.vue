@@ -1,6 +1,6 @@
 <template>
   <div class="add-panel">
-    <div class="form-row justify-content-end">
+    <div class="form-row justify-content-end add-panel-box">
       <div class="add-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
@@ -153,10 +153,14 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 101;
   }
+  .add-panel-box{
+    width:95%;
+    display:flex;
+  }
   .add-panel-container {
     background: #ffffff;
     min-height: 220px;
-    max-width: 1200px;
+    max-width:90%;
     z-index: 102;
     border-radius: 10px;
     box-shadow: 3px 3px 20px 1px #bbb;

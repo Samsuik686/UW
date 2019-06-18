@@ -175,6 +175,11 @@
           this.isSelectRobot = false;
           this.robotsShow = '';
         }
+      },
+      isSelectRobot:function(val){
+        if(val === true){
+          this.getWindowRobots();
+        }
       }
     },
     methods: {
@@ -278,7 +283,7 @@
           axiosPost(options).then(res => {
             this.isPending = false;
             if (res.data.result === 200) {
-              this.$alertSuccess('设置成功');
+              this.$alertSuccess(res.data.data);
               this.isSelectRobot = false;
               this.getWindowRobots();
             } else {
@@ -307,18 +312,14 @@
           axiosPost(options).then(res => {
             this.isPending = false;
             if (res.data.result === 200) {
-              this.selectRobots = res.data.data;
-              let robotsShow = '';
-              this.checkBoxRobots = [];
-              this.selectRobots.map((item, index) => {
-                this.checkBoxRobots.push(item.id);
-                if (index === 0) {
-                  robotsShow = robotsShow + item.id;
-                } else {
-                  robotsShow = robotsShow + ',' + item.id;
-                }
-              });
-              this.robotsShow = robotsShow;
+              this.robotsShow = res.data.data;
+              if(this.robotsShow !== undefined && this.robotsShow !== null){
+                this.checkBoxRobots = this.robotsShow.split(',');
+                this.selectRobots = this.checkBoxRobots;
+              }else{
+                this.checkBoxRobots = [];
+                this.selectRobots = [];
+              }
             } else {
               errHandler(res.data);
             }

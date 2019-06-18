@@ -3,7 +3,7 @@
     <div class="add-panel-container form-row flex-column justify-content-between">
       <div class="form-row">
         <div class="form-group mb-0">
-          <h3>导入物料仓物料表：</h3>
+          <h3>导入物料仓损耗表：</h3>
         </div>
       </div>
       <div class="form-row">
@@ -27,6 +27,10 @@
                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                  class="d-none" ref="taskUpload" @change="uploadFile">
         </div>
+      </div>
+      <div class="form-row">
+        <label for="type-remarks" class="col-form-label">备注:</label>
+        <textarea class="form-control" id="type-remarks" autocomplete="false" v-model.trim="remarks"></textarea>
       </div>
       <div class="dropdown-divider"></div>
       <div class="form-row justify-content-around">
@@ -57,7 +61,8 @@
         thisFile: '',
         supplierId: '',
         whId:'',
-        destinations:[]
+        destinations:[],
+        remarks:''
       }
     },
     created(){
@@ -85,10 +90,11 @@
           this.isPending = true;
           this.setLoading(true);
           let formData = new FormData();
-          if (this.thisFile !== "" && this.supplierId!== "" && this.whId !== '') {
+          if (this.thisFile !== "" && this.supplierId!== "" && this.whId !== '' && this.remarks !== '') {
             formData.append('file', this.thisFile);
             formData.append('supplierId', this.supplierId);
             formData.append('whId', this.whId);
+            formData.append('remarks',this.remarks);
           } else {
             this.$alertWarning("内容不可为空");
             this.isPending = false;
