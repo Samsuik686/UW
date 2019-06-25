@@ -6,5 +6,5 @@ window.g = {
   PREVIEW_ITEMS_INTERVAL: [],
   API_URL: '/uw_server',
   LOCAL_URL: 'http://10.10.11.90:8080/uw_server',
-  PRINTER_URL:'http://192.168.2.9:8080/eps_server/task/printBarcode'
+  PRINTER_URL:'http://10.10.11.90:8080/eps_server/task/printBarcode'
 };

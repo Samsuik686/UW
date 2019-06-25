@@ -146,3 +146,27 @@ export const coverEwhMaterialOneKeyUrl = url + '/task/inventory/coverEwhMaterial
 export const setWindowRobotsInventoryUrl = url + '/task/inventory/setWindowRobots';
 //获取盘点仓口叉车
 export const getWindowRobotsInventoryUrl = url + '/task/inventory/getWindowRobots';
+
+//sample task
+//创建抽检任务
+export const createSampleTaskUrl = url + '/task/sampleTask/createSampleTask';
+//开始抽检任务
+export const startSampleTaskUrl = url + '/task/sampleTask/start';
+//抽检回库
+export const backBoxSampleTaskUrl = url + '/task/sampleTask/backBox';
+//异常出库
+export const outSingularSampleTaskUrl = url + '/task/sampleTask/outSingular';
+//抽检出库
+export const outRegularSampleTaskUrl = url + '/task/sampleTask/outRegular';
+//获取仓口数据
+export const getPackingSampleMaterialInfoUrl = url + '/task/sampleTask/getPackingSampleMaterialInfo';
+//获取详情
+export const  getSampleTaskDetailsUrl = url + '/task/sampleTask/getSampleTaskDetials';
+//查询所有抽检任务
+export const  selectSampleTasksUrl = url + '/task/sampleTask/select';
+//设置仓口叉车
+export const setWindowRobotsSampleTaskUrl = url + '/task/sampleTask/setWindowRobots';
+//获取仓口叉车
+export const getWindowRobotsSampleTaskUrl = url + '/task/sampleTask/getWindowRobots';
+//作废任务
+export const cancelSampleTaskUrl = url + '/task/sampleTask/cancel';

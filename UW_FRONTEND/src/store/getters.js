@@ -63,3 +63,9 @@ export const focusInput = (state) => {
 export const isOverdueMaterialCheck = (state) => {
   return state.isOverdueMaterialCheck;
 };
+export  const spotWindowId = (state) => {
+  return state.spotWindowId;
+};
+export  const spotMaterialId = (state) => {
+  return state.spotMaterialId;
+};

@@ -72,3 +72,9 @@ export const setFocusInput = (state,focusInput) => {
 export const setIsOverdueMaterialCheck = (state,isOverdueMaterialCheck) => {
   state.isOverdueMaterialCheck = isOverdueMaterialCheck;
 };
+export const setSpotWindowId = (state,spotWindowId) => {
+  state.spotWindowId = spotWindowId;
+};
+export const setSpotMaterialId = (state,spotMaterialId) => {
+  state.spotMaterialId = spotMaterialId;
+};

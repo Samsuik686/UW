@@ -11,13 +11,13 @@
         <a href="#" class="btn btn-primary ml-3 mr-4" @click="thisFetch">查询</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">导入物料仓物料表</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isAdding = !isAdding">导入调拨单</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isWastageAdding = !isWastageAdding">导入物料仓物料损耗表</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="isWastageAdding = !isWastageAdding">导入损耗单</a>
       </div>
       <div class="form-group row align-items-end">
-        <a href="#" class="btn btn-primary ml-3 mr-4" @click="exportEWhReport">导出物料仓库存报表</a>
+        <a href="#" class="btn btn-primary ml-3 mr-4" @click="exportEWhReport">导出库存报表</a>
       </div>
       <transition name="fade" v-if="isAdding">
         <add-transfer :suppliers="suppliers"></add-transfer>

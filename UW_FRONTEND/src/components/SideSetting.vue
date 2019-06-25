@@ -39,6 +39,12 @@
         </div>
         <span>盘点</span>
       </div>
+      <div class="icon-container" :class="activeItem === 'spot' ? 'icon-active' : ''" @click="initData('spot')">
+        <div class="setting-icon">
+          <icon name="spot-check" scale="1.8" style="color: #fff;"></icon>
+        </div>
+        <span>抽检</span>
+      </div>
       <div class="mt-auto w-100">
         <div class="icon-container " :class="activeItem === 'config' ? 'icon-active' : ''"
              @click="initData('config')">

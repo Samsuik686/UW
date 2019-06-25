@@ -111,7 +111,7 @@
 
   .edit-panel-container {
     background: #ffffff;
-    min-height: 220px;
+    min-height:330px;
     width:500px;
     max-width: 600px;
     z-index: 102;

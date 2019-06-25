@@ -185,7 +185,11 @@
         </div>
       </div>
     </div>
-    <cut-now v-if="isCutting" :item="taskNowItems" :currentWindowId="currentWindowId" :isForceFinish="taskNowItems.isForceFinish"
+    <cut-now v-if="isCutting"
+             :item="taskNowItems"
+             :currentWindowId="currentWindowId"
+             :isForceFinish="taskNowItems.isForceFinish"
+             @setRobotArrive="setRobotArrive"
              :messageTip="tipsMessage"></cut-now>
   </div>
 </template>
@@ -280,7 +284,8 @@
         isHide:false,
         //料盒状态
         state:1,
-        stateText:'料盒已空'
+        stateText:'料盒已空',
+        isRobotArrive:false
       }
     },
     mounted() {
@@ -354,6 +359,10 @@
             if(response.data === undefined){return}
             if (response.data.result === 200) {
               if (response.data.data) {
+                if(!this.isRobotArrive){
+                  this.isRobotArrive = true;
+                  this.textToSpeak('叉车已到站');
+                }
                 this.taskNowItems = response.data.data;
                 this.compareArr();
                 let isForceFinish = this.taskNowItems.isForceFinish;
@@ -451,6 +460,8 @@
                 this.tipsComponentMsg = true;
                 setTimeout(() => {
                   this.isTipsShow = false;
+                  this.textToSpeak('已扫'+this.taskNowItems.details.length+'盘还剩'
+                    +(this.taskNowItems.reelNum - this.taskNowItems.details.length)+'盘');
                 }, 3000)
               } else {
                 this.failAudioPlay();
@@ -483,6 +494,7 @@
           };
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
+              this.isRobotArrive = false;
               this.materialOutRecords = [];
               this.setEditMaterials();
               this.isTipsShow = true;
@@ -723,6 +735,17 @@
         }else{
           this.materialOutRecords = [];
         }
+      },
+      //文字转语音提示
+      textToSpeak:function(text){
+        let synth = window.speechSynthesis;
+        let utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.volume = 1;
+        utterThis.pitch = 2;
+        synth.speak(utterThis);
+      },
+      setRobotArrive:function(){
+        this.isRobotArrive = false;
       }
     }
   }

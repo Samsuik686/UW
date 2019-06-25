@@ -61,8 +61,11 @@ const state = {
   unInventoryData:[],
 
   //是否查询即将过期的。。。
-  isOverdueMaterialCheck:false
+  isOverdueMaterialCheck:false,
 
+  //抽检
+  spotWindowId:'',
+  spotMaterialId:''
 };
 
 const store = new Vuex.Store({

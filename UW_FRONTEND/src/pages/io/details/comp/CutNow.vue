@@ -301,6 +301,7 @@
           axiosPost(options).then(res => {
             if (res.data.result === 200) {
               this.$alertSuccess("操作成功");
+              this.$emit('setRobotArrive',true);
             } else {
               this.$alertWarning(res.data.data)
             }
