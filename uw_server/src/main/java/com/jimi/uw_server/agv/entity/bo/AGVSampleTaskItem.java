@@ -2,7 +2,6 @@ package com.jimi.uw_server.agv.entity.bo;
 
 import java.io.Serializable;
 
-import com.jimi.uw_server.model.PackingListItem;
 
 /**
  * AGV出入库任务条目 <br>
@@ -11,15 +10,9 @@ import com.jimi.uw_server.model.PackingListItem;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 @SuppressWarnings("serial")
-public class AGVIOTaskItem implements Serializable {
-
-	private Integer id;
+public class AGVSampleTaskItem implements Serializable {
 
 	private Integer taskId;
-
-	private Integer materialTypeId;
-
-	private Integer quantity;
 
 	private Integer robotId;
 
@@ -37,27 +30,15 @@ public class AGVIOTaskItem implements Serializable {
 
 	private Integer windowId;
 	
-	/**
-	 * 任务优先级，取值范围：1-9；数值越大，优先级越高
-	 */
-	private Integer priority;
-
-	private Boolean isCut;
+	public AGVSampleTaskItem() {}
 	
-	public AGVIOTaskItem() {}
-
-	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
-		this.id = packingListItem.getId();
-		this.taskId = packingListItem.getTaskId();
-		this.materialTypeId = packingListItem.getMaterialTypeId();
-		this.quantity = packingListItem.getQuantity();
+	public AGVSampleTaskItem(Integer taskId, Integer boxId) {
 		this.robotId = 0;
-		this.state = state;
-		this.boxId = 0;
+		this.state = 0;
+		this.boxId = boxId;
 		this.windowId = 0;
+		this.taskId = taskId;
 		this.isForceFinish = false;
-		this.priority = priority;
-		this.isCut = false;
 	}
 
 	public Integer getRobotId() {
@@ -76,14 +57,6 @@ public class AGVIOTaskItem implements Serializable {
 		this.state = state;
 	}
 
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
 	public Integer getTaskId() {
 		return taskId;
 	}
@@ -92,21 +65,6 @@ public class AGVIOTaskItem implements Serializable {
 		this.taskId = taskId;
 	}
 
-	public Integer getMaterialTypeId() {
-		return materialTypeId;
-	}
-
-	public void setMaterialTypeId(Integer materialTypeId) {
-		this.materialTypeId = materialTypeId;
-	}
-
-	public Integer getQuantity() {
-		return quantity;
-	}
-
-	public void setQuantity(Integer quantity) {
-		this.quantity = quantity;
-	}
 
 	public Integer getBoxId() {
 		return boxId;
@@ -124,25 +82,11 @@ public class AGVIOTaskItem implements Serializable {
 		this.isForceFinish = isForceFinish;
 	}
 
-	public Integer getPriority() {
-		return priority;
-	}
-
-	public void setPriority(Integer priority) {
-		this.priority = priority;
-	}
 
 	public String getGroupId() {
-		return boxId + ":" + taskId;
+		return boxId + "#" + taskId;
 	}
 
-	public Boolean getIsCut() {
-		return isCut;
-	}
-
-	public void setIsCut(Boolean isCut) {
-		this.isCut = isCut;
-	}
 
 	public Integer getWindowId() {
 		return windowId;
@@ -151,7 +95,5 @@ public class AGVIOTaskItem implements Serializable {
 	public void setWindowId(Integer windowId) {
 		this.windowId = windowId;
 	}
-
-	
 
 }

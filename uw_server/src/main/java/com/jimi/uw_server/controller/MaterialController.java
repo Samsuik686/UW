@@ -134,6 +134,12 @@ public class MaterialController extends Controller {
 
 	// 获取物料出入库记录
 	public void getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize, String startTime, String endTime) {
+		if (pageNo == null || pageSize == 0) {
+			throw new OperationException("页码和页容量不能为空！");
+		}
+		if (pageNo <= 0 || pageSize <= 0) {
+			throw new OperationException("页码和页容量必须为正整数！");
+		}
 		if ((startTime != null && endTime == null) || (endTime != null && startTime == null)) {
 			throw new OperationException("开始时间和结束时间仅可同时为空或同时不为空！");
 		}

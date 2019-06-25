@@ -3,6 +3,7 @@ package com.jimi.uw_server.model.vo;
 import java.util.Date;
 import java.util.List;
 
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
 
 /** 
@@ -21,7 +22,7 @@ public class IOTaskDetailVO extends TaskLog {
 	
 	private String status;
 
-	public IOTaskDetailVO(Integer packingListItemId, String materialNo, Integer planQuantity, Integer actualQuantity, Integer deductQuantity,Date finishTime) {
+	public IOTaskDetailVO(Integer packingListItemId, String materialNo, Integer planQuantity, Integer actualQuantity, Integer deductQuantity,Date finishTime, Integer type) {
 		this.set("id", packingListItemId);
 		this.set("materialNo", materialNo);
 		this.set("planQuantity", planQuantity);
@@ -42,7 +43,11 @@ public class IOTaskDetailVO extends TaskLog {
 				this.set("lackNum", null);
 			}
 		}else {
-			this.set("itemStatus", "未发料");
+			if (type == TaskType.IN || type == TaskType.SEND_BACK) {
+				this.set("itemStatus", "未入库");
+			}else {
+				this.set("itemStatus", "未发料");
+			}
 			this.set("lackNum", null);
 		}
 		

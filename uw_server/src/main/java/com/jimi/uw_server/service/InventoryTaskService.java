@@ -145,7 +145,7 @@ public class InventoryTaskService {
 		if (supplier == null) {
 			throw new OperationException("供应商不存在！");
 		}
-		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplier);
+		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplierId);
 		if (task != null) {
 			throw new OperationException("该供应商已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
 		}
@@ -164,6 +164,7 @@ public class InventoryTaskService {
 	/**
 	 * 开始盘点任务
 	 * @param taskId
+	 * 
 	 * @return
 	 */
 	public String startInventoryTask(Integer taskId, String windows) {
@@ -178,7 +179,7 @@ public class InventoryTaskService {
 		}
 		String[] windowArr = windows.split(",");
 		List<Window> wList = new ArrayList<>();
-		synchronized (Lock.INVENTORY_WINDOW_LOCK) {
+		synchronized (Lock.WINDOW_LOCK) {
 		
 			for (String w : windowArr) {
 				Integer windowId = 0;
@@ -189,7 +190,7 @@ public class InventoryTaskService {
 				}
 				Window window = Window.dao.findById(windowId);
 				if (window.getBindTaskId() != null) {
-						throw new OperationException("仓口" + windowId + "已经被其他任务绑定");
+					throw new OperationException("仓口" + windowId + "已经被其他任务绑定");
 				}
 				wList.add(window);
 			}

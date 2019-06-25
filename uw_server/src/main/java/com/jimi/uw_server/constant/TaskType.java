@@ -21,5 +21,7 @@ public class TaskType {
 	public static final int EXTERNAL_IN_OUT = 5;		//外仓出入库
 	
 	public static final int WASTAGE = 6; 				//损耗
+	
+	public static final int SAMPLE = 7;
 
 }

@@ -90,4 +90,13 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 		return get("is_in_box");
 	}
 
+	public M setIsRepeated(java.lang.Boolean isRepeated) {
+		set("is_repeated", isRepeated);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getIsRepeated() {
+		return get("is_repeated");
+	}
+
 }

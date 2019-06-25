@@ -63,6 +63,33 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 		return getInt("priority");
 	}
 
+	public M setCreateTime(java.util.Date createTime) {
+		set("create_time", createTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getCreateTime() {
+		return get("create_time");
+	}
+
+	public M setSupplier(java.lang.Integer supplier) {
+		set("supplier", supplier);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSupplier() {
+		return getInt("supplier");
+	}
+
+	public M setDestination(java.lang.Integer destination) {
+		set("destination", destination);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getDestination() {
+		return getInt("destination");
+	}
+
 	public M setStartTime(java.util.Date startTime) {
 		set("start_time", startTime);
 		return (M)this;
@@ -133,33 +160,6 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 	
 	public java.lang.Boolean getEwhChecked() {
 		return get("ewh_checked");
-	}
-
-	public M setCreateTime(java.util.Date createTime) {
-		set("create_time", createTime);
-		return (M)this;
-	}
-	
-	public java.util.Date getCreateTime() {
-		return get("create_time");
-	}
-
-	public M setSupplier(java.lang.Integer supplier) {
-		set("supplier", supplier);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getSupplier() {
-		return getInt("supplier");
-	}
-
-	public M setDestination(java.lang.Integer destination) {
-		set("destination", destination);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getDestination() {
-		return getInt("destination");
 	}
 
 	public M setIsInventoryApply(java.lang.Boolean isInventoryApply) {

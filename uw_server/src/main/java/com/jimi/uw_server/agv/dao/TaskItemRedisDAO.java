@@ -10,6 +10,7 @@ import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
+import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.comparator.PriorityComparator;
 import com.jimi.uw_server.constant.IOTaskItemState;
 
@@ -161,6 +162,21 @@ public class TaskItemRedisDAO {
 		}
 	}
 
+	
+	/**
+	 *  填写指定出入库任务条目的仓口
+	 */
+	public synchronized static void updateIOTaskItemWindow(AGVIOTaskItem taskItem, int windowId) {
+		for (int i = 0; i < cache.llen("til_" + taskItem.getTaskId()); i++) {
+			byte[] item = cache.lindex("til_" + taskItem.getTaskId(), i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			if(agvioTaskItem.getGroupId().equals(taskItem.getGroupId())){
+				agvioTaskItem.setWindowId(windowId);;
+				cache.lset("inventoryOfTil", i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				break;
+			}
+		}
+	}
 
 	/**
 	 * 返回出入库任务条目列表的副本
@@ -323,7 +339,6 @@ public class TaskItemRedisDAO {
 	
 	public synchronized static Boolean getAgvWebSocketStatus() {
 		Boolean flag = cache.get("agvWebSocketStatus");
-		System.err.println(flag);
 		if (flag == null) {
 			flag = true;
 			cache.set("agvWebSocketStatus", true);
@@ -492,36 +507,154 @@ public class TaskItemRedisDAO {
 
 	
 	/**
-	 * 盘点任务绑定仓口状态
-	 *//*
-	public synchronized static boolean getWindowFlag(Integer windowId) {
-		try {
-			return cache.get("Window_"+windowId);
-		} catch (NullPointerException e) {
-			cache.set("Window_"+windowId, false);
-			return false;
+	 * 添加抽检任务条目，该方法会把新的任务条目插入到现有的任务列表当中<br>
+	 */
+	public synchronized static void addSampleTaskItem(List<AGVSampleTaskItem> agvSampleTaskItems) {
+		appendSampleTaskItems(agvSampleTaskItems);
+		List<byte[]> items = new ArrayList<>();
+		for (AGVSampleTaskItem item : agvSampleTaskItems) {
+			items.add(Json.getJson().toJson(item).getBytes());
+		}
+		Collections.reverse(agvSampleTaskItems);
+		cache.del("sampleOfTil");
+		cache.lpush("sampleOfTil", items.toArray());
+	}
+	
+	
+	
+	/**
+	 * 删除指定任务id的抽检条目<br>
+	 */
+	public static void removeSampleTaskItemByTaskId(int taskId) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItem.getTaskId().intValue() == taskId){
+				cache.lrem("sampleOfTil", 1, item);
+				i--;
+			}
+		}
+	}
+
+
+	/**
+	 * 删除指定的抽检任务条目<br>
+	 */
+	public static void removeSampleTaskItemById(Integer taskId, Integer boxId) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItem.getGroupId().equals(taskId + "#" + boxId)){
+				cache.lrem("sampleOfTil", 1, item);
+				i--;
+			}
+		}
+	}
+
+
+	/**
+	 * 更新抽检任务条目执行状态<br>
+	 */
+	public synchronized static void updateSampleTaskItemState(AGVSampleTaskItem taskItem, int state) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItem.getGroupId().equals(taskItem.getGroupId())){
+				agvSampleTaskItem.setState(state);
+				cache.lset("sampleOfTil", i, Json.getJson().toJson(agvSampleTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
+	 * 更新抽检任务条目为已完成<br>
+	 */
+	public synchronized static void updateSampleTaskIsForceFinish(AGVSampleTaskItem taskItem, boolean isForceFinish) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItem.getGroupId().equals(taskItem.getGroupId())){
+				agvSampleTaskItem.setIsForceFinish(isForceFinish);
+				cache.lset("sampleOfTil", i, Json.getJson().toJson(agvSampleTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
+	 *  填写指定抽检任务条目的执行机器
+	 */
+	public synchronized static void updateSampleTaskItemRobot(AGVSampleTaskItem taskItem, int robotid) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItem.getGroupId().equals(taskItem.getGroupId())){
+				agvSampleTaskItem.setRobotId(robotid);
+				cache.lset("sampleOfTil", i, Json.getJson().toJson(agvSampleTaskItem).getBytes());
+				break;
+			}
+		}
+	}
+
+
+	/**
+	 * 返回抽检任务条目列表的副本
+	 */
+	public synchronized static List<AGVSampleTaskItem> getSampleTaskItems() {
+		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
+		return appendSampleTaskItems(agvSampleTaskItems);
+	}
+
+
+	/**
+	 * 把redis的inventoryOfTil内容追加到参数里然后返回
+	 */
+	@SuppressWarnings("unchecked")
+	public synchronized static List<AGVSampleTaskItem> appendSampleTaskItems(List<AGVSampleTaskItem> agvSampleTaskItems) {
+		List<byte[]> items = cache.lrange("sampleOfTil", 0, -1);
+		for (byte[] item : items) {
+			agvSampleTaskItems.add(Json.getJson().parse(new String(item), AGVSampleTaskItem.class));
+		}
+		return agvSampleTaskItems;
+	} 
+
+	
+	/**
+	 *  填写指定抽检任务条目的仓口
+	 */
+	public synchronized static void updateSampleTaskItemWindow(AGVSampleTaskItem taskItem, int windowId) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItems = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItems.getGroupId().equals(taskItem.getGroupId())){
+				agvSampleTaskItems.setWindowId(windowId);;
+				cache.lset("sampleOfTil", i, Json.getJson().toJson(agvSampleTaskItems).getBytes());
+				break;
+			}
 		}
 	}
 	
 	
-	*//**
-	 * 设置盘点任务绑定仓口状态
-	 *//*
-	public synchronized static void setWindowFlag(Integer windowId, Boolean flag) {
-		cache.set("Window_"+windowId, flag);
+	/**
+	 * 删除指定任务id的未分配的条目<br>
+	 */
+	public synchronized static void removeUnAssignedSampleTaskItemByTaskId(int taskId) {
+		for (int i = 0; i < cache.llen("sampleOfTil"); i++) {
+			byte[] item = cache.lindex("sampleOfTil", i);
+			AGVSampleTaskItem agvSampleTaskItems = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			if(agvSampleTaskItems.getTaskId().intValue() == taskId && (agvSampleTaskItems.getState().intValue() == IOTaskItemState.WAIT_ASSIGN)){
+				cache.lrem("sampleOfTil" + taskId, 1, item);
+				i--;
+			}
+		}
 	}
 	
 	
-	*//**
-	 * 删除盘点任务绑定仓口状态
-	 *//*
-	public synchronized static void delWindowFlag(Integer windowId) {
-		cache.del("Window_"+windowId);
-	}*/
-	
-	
 	/**
-	 * 盘点任务绑定仓口状态
+	 * 任务绑定仓口状态
 	 */
 	public synchronized static String getWindowTaskInfo(Integer windowId, Integer taskId) {
 		try {
@@ -534,7 +667,7 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 设置盘点任务绑定仓口状态
+	 * 设置任务绑定仓口状态
 	 */
 	public synchronized static void setWindowTaskInfo(Integer windowId, Integer taskId, String robots) {
 		cache.del("Window_"+windowId + "_" + taskId);
@@ -543,7 +676,7 @@ public class TaskItemRedisDAO {
 	
 	
 	/**
-	 * 删除盘点任务绑定仓口状态
+	 * 删除任务绑定仓口状态
 	 */
 	public synchronized static void delWindowTaskInfo(Integer windowId, Integer taskId) {
 		cache.del("Window_"+windowId + "_" + taskId);

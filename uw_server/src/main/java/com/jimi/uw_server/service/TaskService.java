@@ -6,12 +6,14 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -93,14 +95,6 @@ public class TaskService {
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	private static final String GET_PACKING_LIST_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity  AS remainderQuantity FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
-	
-	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE `bind_task_id` IS NULL";
-
-	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 0)";
-
-	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1)";
-
-	private static final String GET_RETURN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 4)";
 
 	private static final String GET_TASK_IN_REDIS_SQL = "SELECT * FROM task WHERE id = ?";
 
@@ -132,6 +126,8 @@ public class TaskService {
 	
 	private static final String GET_COUNT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 2)";
 
+	private static final String GET_SAMPLE_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 7)";
+	
 	private static final String GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER = "SELECT * FROM task where state = 2 and type = 2 and supplier = ?";
 
 	private static final String GET_TASKLOG_BY_PACKINGITEMID = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND quantity > 0";
@@ -142,11 +138,21 @@ public class TaskService {
 
 	private static final String GET_WORKING_WINDOWS = "SELECT * FROM window WHERE bind_task_id IS NOT NULL";
 	
+	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE `bind_task_id` IS NULL";
+
+	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 0)";
+
+	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1)";
+
+	private static final String GET_RETURN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 4)";
+	
+	private static final String GET_WINDOW_BY_TASK = "SELECT id FROM window WHERE bind_task_id = ?";
+	
 	private static final String GET_TASK_BY_TYPE_STATE_SUPPLIER = "select * from task where task.type = ? and task.state = ? and task.supplier = ?";
 	
-	private static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME = "select * from material where box = ? and store_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY store_time asc";
+	private static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME = "select * from material where box = ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
 	
-	private static final String GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME = "select * from material where box != ? and store_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY store_time asc";
+	private static final String GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME = "select * from material where box != ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
 	
 	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, String fullFileName, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks) throws Exception {
@@ -161,7 +167,7 @@ public class TaskService {
 			return resultString;
 		}
 
-		Map<Integer, Integer> taskDetailsMap = new HashMap<>();
+		Map<Integer, Integer> taskDetailsMap = new LinkedHashMap<>();
 		ExcelHelper fileReader = ExcelHelper.from(file);
 		List<PackingListItemBO> items = fileReader.unfill(PackingListItemBO.class, 2);
 		// 如果套料单表头不对或者表格中没有有效的任务记录
@@ -379,7 +385,7 @@ public class TaskService {
 				// 更新任务状态为作废
 				task.setState(TaskState.CANCELED).update();
 				for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
-						IOHandler.clearTil(item.getGroupId().toString());
+						IOHandler.clearIoTil(item.getGroupId().toString());
 						break;
 				}
 				return true;
@@ -411,7 +417,7 @@ public class TaskService {
 				if (externalWhLog != null) {
 					deductQuantity = externalWhLog.getQuantity();
 				}
-				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), actualQuantity, deductQuantity, packingListItem.get("PackingListItem_FinishTime"));
+				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), actualQuantity, deductQuantity, packingListItem.get("PackingListItem_FinishTime"), type);
 				io.setDetails(taskLog);
 				ioTaskDetailVOs.add(io);
 			}
@@ -491,7 +497,7 @@ public class TaskService {
 					actualQuantity += tl.getQuantity();
 				}
 				Task task = Task.dao.findById(packingListItem.getInt("PackingListItem_TaskId"));
-				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), actualQuantity, 0, packingListItem.get("PackingListItem_FinishTime"));
+				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), actualQuantity, 0, packingListItem.get("PackingListItem_FinishTime"), type);
 				int uwStoreNum = materialService.countAndReturnRemainderQuantityByMaterialTypeId(packingListItem.getInt("MaterialType_Id"));
 				Integer whStoreNum = 0;
 				if (task.getIsInventoryApply() != null && task.getIsInventoryApply()) {
@@ -554,6 +560,10 @@ public class TaskService {
 				break;
 			case 4:
 				windowIds = Window.dao.find(GET_COUNT_TASK_WINDOWS_SQL);
+				break;
+			case 5:
+				windowIds = Window.dao.find(GET_SAMPLE_TASK_WINDOWS_SQL);
+				break;
 			default:
 				break;
 		}
@@ -564,9 +574,9 @@ public class TaskService {
 	// 查询所有任务
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		if (filter == null) {
-			filter = "task.type!=5#&#task.type!=6#&#task.type!=2";
+			filter = "task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7";
 		}else {
-			filter = filter +  "#&#task.type!=5#&#task.type!=6#&#task.type!=2";
+			filter = filter +  "#&#task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7";
 		}
 		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
@@ -866,7 +876,8 @@ public class TaskService {
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
 			}
-			if(Material.dao.find(GET_MATERIAL_BY_ID_SQL, materialId).size() != 0) {
+			Material material = Material.dao.findById(materialId);
+			if(material != null && !material.getIsRepeated()) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
 			}
 			
@@ -884,24 +895,41 @@ public class TaskService {
 					throw new OperationException("当前料盒已满，请停止扫码！");
 				}
 			}
-			Material material = new Material();
-			material.setId(materialId);
-			material.setType(packingListItem.getMaterialTypeId());
-			material.setBox(boxId);
-			material.setRow(0);
-			material.setCol(0);
-			material.setRemainderQuantity(quantity);
-			material.setProductionTime(productionTime);
-			try {
-				material.setStoreTime(getDateTime());
-			} catch (ParseException e) {
-				e.printStackTrace();
-				throw new OperationException("入库日期转化失败,入库失败！");
-			}
-			material.setIsInBox(true);
-			material.save();
-
 			Task task = Task.dao.findById(packingListItem.getTaskId());
+			if (material != null) {
+				material.setBox(boxId);
+				material.setRow(0);
+				material.setCol(0);
+				material.setRemainderQuantity(quantity);
+				material.setProductionTime(productionTime);
+				material.setIsRepeated(false);
+				try {
+					material.setStoreTime(getDateTime());
+				} catch (ParseException e) {
+					e.printStackTrace();
+					throw new OperationException("入库日期转化失败,入库失败！");
+				}
+				material.setIsInBox(true);
+				material.update();
+			}else {
+				material = new Material();
+				material.setId(materialId);
+				material.setType(packingListItem.getMaterialTypeId());
+				material.setBox(boxId);
+				material.setRow(0);
+				material.setCol(0);
+				material.setRemainderQuantity(quantity);
+				material.setProductionTime(productionTime);
+				try {
+					material.setStoreTime(getDateTime());
+				} catch (ParseException e) {
+					e.printStackTrace();
+					throw new OperationException("入库日期转化失败,入库失败！");
+				}
+				material.setIsInBox(true);
+				material.save();
+			}
+			
 
 			// 写入一条入库任务日志
 			TaskLog taskLog = new TaskLog();
@@ -949,14 +977,14 @@ public class TaskService {
 					}
 				}
 			}
-			Material materialTemp1 = Material.dao.findFirst(GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getBox(), material.getStoreTime());
+			Material materialTemp1 = Material.dao.findFirst(GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getBox(), material.getType(), material.getProductionTime());
 			if (materialTemp1 != null) {
-				Material materialTemp2 = Material.dao.findFirst(GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME, material.getBox(), materialTemp1.getStoreTime());
+				Material materialTemp2 = Material.dao.findFirst(GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME, material.getBox(), material.getType() , materialTemp1.getProductionTime());
 				if (materialTemp2 != null) {
 					throw new OperationException("最旧料盘不在当前料盒，请点击'稍后再见'取其他料盒！");
 				}
 			}else {
-				Material materialTemp2 = Material.dao.findFirst(GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME, material.getBox(), material.getStoreTime());
+				Material materialTemp2 = Material.dao.findFirst(GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME, material.getBox() , material.getType(), material.getProductionTime());
 				if (materialTemp2 != null) {
 					throw new OperationException("最旧料盘不在当前料盒，请点击'稍后再见'取其他料盒！");
 				}
@@ -1429,18 +1457,68 @@ public class TaskService {
 	}
 
 
-	// 设置优先级
-	public boolean setPriority(Integer id, Integer priority) {
-		Task task = Task.dao.findById(id);
-		task.setPriority(priority);
-		return task.update();
-	}
+	/*public String setTaskWindow(Integer taskId, String windowIds) {
+		String result = "";
+		Task task = Task.dao.findById(taskId);
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("任务未处于进行中状态，无法指定仓口！");
+		}
+		String[] windowIdArr = windowIds.split(",");
+		List<Integer> windowIdList = new ArrayList<>();
+		for (String windowId : windowIdArr) {
+			windowIdList.add(Integer.valueOf(windowId.trim()));
+		}
+		List<Window> windows = Window.dao.find(GET_WINDOW_BY_TASK, task.getId());
+		//需解绑的仓口
+		Set<Integer> unBindWindows = new HashSet<>();
+		if (!windows.isEmpty()) {
+			for (AGVIOTaskItem agvioTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+				if (agvioTaskItem.getState().equals(IOTaskItemState.ASSIGNED) || agvioTaskItem.getState().equals(IOTaskItemState.ARRIVED_WINDOW)) {
+					if (!windowIdList.contains(agvioTaskItem.getWindowId())) {
+						if (!result.equals("")) {
+							result += ",";
+						}
+						result = "[仓口" + agvioTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑该仓口]";
+						unBindWindows.add(agvioTaskItem.getWindowId());
+					}
+				}
+			}
+		}
+		
+		for (Window window : windows) {
+			if (windowIdList.contains(window.getId())) {
+				windowIdList.remove(window.getId());
+			}
+			for (Integer unBindWindowId : unBindWindows) {
+				if (window.getId().equals(unBindWindowId)) {
+					windows.remove(window);
+				}
+			}
+		}
+		for (Window window : windows) {
+			window.setBindTaskId(null);
+			window.save();
+		}
+		for (Integer windowId : windowIdList) {
+			Window window = Window.dao.findById(windowId);
+			if (window.getBindTaskId() != null) {
+				if (!result.equals("")) {
+					result += ",";
+				}
+				Task task2 = Task.dao.findById(window.getBindTaskId());
+				result = "[仓口" + windowId + "已被任务" + task2.getFileName() +"，无法解绑该仓口]";
+			}
+			
+		}
+		return result;
+	}*/
+
 	
 	@Log("设置仓口{windowId}所绑定的叉车{robots}")
 	public String setWindowRobots(Integer windowId, String robots) {
 		Window window = Window.dao.findById(windowId);
 		if (window == null || window.getBindTaskId() == null) {
-			throw new OperationException("当前仓库无任务运行！");
+			throw new OperationException("当前仓口无任务运行！");
 		}
 		List<String> robotTempList =  new ArrayList<>();
 		String result = "";
@@ -1545,5 +1623,13 @@ public class TaskService {
 			return task.getFileName();
 		}
 		return null;
+	}
+	
+	
+	// 设置优先级
+	public boolean setPriority(Integer id, Integer priority) {
+		Task task = Task.dao.findById(id);
+		task.setPriority(priority);
+		return task.update();
 	}
 }

@@ -55,6 +55,9 @@ public class TaskLogVO extends TaskLog {
 		case TaskType.SEND_BACK:
 			this.taskTypeString = "调拨入库";
 			break;
+		case TaskType.SAMPLE:
+			this.taskTypeString = "抽检";
+			break;
 		default:
 			this.taskTypeString = "错误类型";
 			break;

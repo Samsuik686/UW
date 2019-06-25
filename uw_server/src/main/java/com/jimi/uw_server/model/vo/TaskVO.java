@@ -54,6 +54,8 @@ public class TaskVO extends Task{
 			this.typeString = "位置优化";
 		} else if (type == 4) {
 			this.typeString = "调拨入库";
+		}else if (type == 7) {
+			this.typeString = "抽检";
 		}
 	}
 

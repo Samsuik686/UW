@@ -115,6 +115,12 @@ public class ExternalWhTaskService {
 					}
 					externalWhLog.setMaterialTypeId(mType.getId());
 					externalWhLog.setQuantity(item.getQuantity());
+					if (sourceHwId == 0) {
+						int storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId);
+						if (storeNum + item.getQuantity() < 0) {
+							externalWhLog.setQuantity(0 - storeNum);
+						}
+					}
 					externalWhLog.setSourceWh(sourceHwId);
 					externalWhLog.setDestination(destinationHwId);
 					externalWhLog.setOperatior(user.getUid());
