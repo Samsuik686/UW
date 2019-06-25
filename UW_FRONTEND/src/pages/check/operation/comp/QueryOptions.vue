@@ -215,10 +215,11 @@
             this.isPending = false;
             if (res.data.result === 200) {
               this.robotsShow = res.data.data;
-              if(this.robotsShow !== undefined && this.robotsShow !== null){
+              if(this.robotsShow !== 'undefined' && this.robotsShow !== null){
                 this.checkBoxRobots = this.robotsShow.split(',');
                 this.selectRobots = this.checkBoxRobots;
               }else{
+                this.robotsShow = '';
                 this.checkBoxRobots = [];
                 this.selectRobots = [];
               }

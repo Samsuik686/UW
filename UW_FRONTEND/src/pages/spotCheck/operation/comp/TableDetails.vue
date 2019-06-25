@@ -12,7 +12,7 @@
       v-bind="$data"
     ></datatable>
     <div class="form-group row align-items-end return-btn">
-      <button class="btn btn-primary ml-3 mr-4" @click="backSampleBox" :disabled="isDisabled">叉车回库</button>
+      <button class="btn btn-primary ml-3 mr-4" @click="backSampleBox" :disabled="groupId === ''">叉车回库</button>
     </div>
   </div>
 </template>
@@ -50,7 +50,6 @@
         //是否启用定时器
         isTimeOut: false,
         scanText: '',
-        isDisabled: false
       }
     },
     components: {
@@ -64,18 +63,19 @@
       this.clearCheckTimeOut();
     },
     mounted() {
+      this.setFocus();
       if (this.spotWindowId !== '') {
         this.setCheckTimeOut();
       }
       eventBus.$on('refreshSampleInfo', () => {
-        this.getSampleBox(this.spotWindowId);
+        this.setCheckTimeOut();
       });
     },
     watch: {
       spotWindowId: function (val) {
         if (val !== '') {
-          this.clearCheckTimeOut();
-          this.getSampleBox(val);
+          this.groupId = '';
+          this.setCheckTimeOut();
         }
       }
     },
@@ -83,7 +83,7 @@
       ...mapGetters(['spotWindowId'])
     },
     methods: {
-      ...mapActions(['setLoading','setSpotMaterialId']),
+      ...mapActions(['setLoading', 'setSpotMaterialId']),
       init: function () {
         this.columns = [
           {field: 'showId', title: '序号', colStyle: {'width': '60px'}},
@@ -108,9 +108,10 @@
             this.setSpotMaterialId('');
             if (response.data.result === 200) {
               if (response.data.data !== null) {
-                this.isDisabled = false;
-                this.clearCheckTimeOut();
                 this.data = response.data.data.list;
+                if (this.data.length !== 0) {
+                  this.clearCheckTimeOut();
+                }
                 this.groupId = response.data.data.groupId;
                 this.data.map((item, index) => {
                   item.showId = index + 1 + this.query.offset;
@@ -118,15 +119,14 @@
                 });
               } else {
                 this.data = [];
-                this.setCheckTimeOut();
               }
             } else {
               errHandler(response.data);
             }
           })
             .catch(err => {
-              this.isPending = false;
               console.log(err);
+              this.isPending = false;
               this.$alertDanger('请求超时，请刷新重试');
               this.setLoading(false)
             })
@@ -135,7 +135,6 @@
       //获取该盘点任务料盘信息
       getSampleBox: function (id) {
         if (!id) {
-          this.$alertWarning('请选择仓口');
           return;
         }
         let options = {
@@ -153,6 +152,7 @@
         }
         this.isTimeOut = true;
         let that = this;
+        this.getSampleBox(this.spotWindowId);
         this.myTimeOut = setInterval(function () {
           that.getSampleBox(that.spotWindowId);
         }, 1000);
@@ -165,6 +165,9 @@
       },
       //叉车回库
       backSampleBox: function () {
+        if (this.groupId === '') {
+          return;
+        }
         if (!this.isPending) {
           this.isPending = true;
           let options = {
@@ -177,9 +180,8 @@
             this.isPending = false;
             if (response.data.result === 200) {
               this.$alertSuccess('叉车回库成功');
-              this.isDisabled = true;
               this.init();
-              this.getSampleBox(this.spotWindowId);
+              this.setCheckTimeOut();
             } else {
               errHandler(response.data);
             }
@@ -210,7 +212,7 @@
         let tempArray = scanText.split("@");
         let materialId = tempArray[2];
         this.data.map((item) => {
-          if(materialId === item.materialId){
+          if (materialId === item.materialId) {
             this.setSpotMaterialId(materialId);
           }
         })
