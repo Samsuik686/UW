@@ -26,6 +26,7 @@ import com.jimi.uw_server.controller.InventoryTaskController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.MaterialController;
 import com.jimi.uw_server.controller.RobotController;
+import com.jimi.uw_server.controller.SampleTaskController;
 import com.jimi.uw_server.controller.SupplierController;
 import com.jimi.uw_server.controller.TaskController;
 import com.jimi.uw_server.controller.UserController;
@@ -66,34 +67,7 @@ public class UwConfig extends JFinalConfig {
 		me.addGlobalServiceInterceptor(new Tx());
 	}
 
-	@Override
-	public void configPlugin(Plugins me) {
-		PropKit.use("properties.ini");
-		//判断是否是生产环境
-		DruidPlugin dp = null;
-		RedisPlugin rp = null;
-		if(isProductionEnvironment()) {
-			dp = new DruidPlugin(PropKit.get("p_url"), PropKit.get("p_user"), PropKit.get("p_password"));
-			rp = new RedisPlugin("uw", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
-			System.out.println("System is in production envrionment");
-		} else if(isTestEnvironment()) {
-			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
-			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
-			System.out.println("System is in test envrionment");
-		} else {
-			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
-			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
-		}
-		me.add(dp);
-		me.add(rp);
-		//配置ORM
-	    ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
-	    arp.setDialect(new MysqlDialect());	// 用什么数据库，就设置什么Dialect
-	    arp.setShowSql(false);
-	    MappingKit.mapping(arp);
-	    me.add(arp);
-	}
+	
 
 	@Override
 	public void configRoute(Routes me) {
@@ -107,6 +81,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manage/destination", DestinationController.class);
 		me.add("/manage/externalWh", ExternalWhController.class);
 		me.add("/task/inventory", InventoryTaskController.class);
+		me.add("/task/sampleTask", SampleTaskController.class);
 	}
 
 	@Override
@@ -142,6 +117,35 @@ public class UwConfig extends JFinalConfig {
 	}
 	
 	
+	@Override
+	public void configPlugin(Plugins me) {
+		PropKit.use("properties.ini");
+		//判断是否是生产环境
+		DruidPlugin dp = null;
+		RedisPlugin rp = null;
+		if(isProductionEnvironment()) {
+			dp = new DruidPlugin(PropKit.get("p_url"), PropKit.get("p_user"), PropKit.get("p_password"));
+			rp = new RedisPlugin("uw", PropKit.get("p_redisIp"), PropKit.get("p_redisPassword"));
+			System.out.println("System is in production envrionment");
+		} else if(isTestEnvironment()) {
+			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
+			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
+			System.out.println("System is in test envrionment");
+		} else {
+			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), PropKit.get("d_redisPassword"));
+			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
+		}
+		me.add(dp);
+		me.add(rp);
+		//配置ORM
+	    ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
+	    arp.setDialect(new MysqlDialect());	// 用什么数据库，就设置什么Dialect
+	    arp.setShowSql(false);
+	    MappingKit.mapping(arp);
+	    me.add(arp);
+	}
+
 	public static boolean isProductionEnvironment() {
 		File[] roots = File.listRoots();
         for (int i=0; i < roots.length; i++) {

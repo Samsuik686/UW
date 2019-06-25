@@ -20,23 +20,17 @@ public class RecordItem {
 
 	private Integer actualQuantity;
 
-	/**
-	 * 累计超发数
-	 */
-	private Integer superIssuedQuantity;
-
 	private String operator;
 
 	private Date ioTime;
 
 
-	public RecordItem(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, Integer superIssuedQuantity, String operator, Date ioTime) {
+	public RecordItem(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, String operator, Date ioTime) {
 		this.materialTypeId = materialTypeId;
 		this.fileName = fileName;
 		this.setTaskType(type);
 		this.planQuantity = planQuantity;
 		this.actualQuantity = actualQuantity;
-		this.superIssuedQuantity = superIssuedQuantity;
 		this.operator = operator;
 		this.ioTime = ioTime;
 	}
@@ -68,6 +62,8 @@ public class RecordItem {
 			this.taskType = "出库";
 		} else if (type == 4) {
 			this.taskType = "退料";
+		}else if (type == 7) {
+			this.taskType = "抽检";
 		}
 	}
 
@@ -85,14 +81,6 @@ public class RecordItem {
 
 	public void setActualQuantity(Integer actualQuantity) {
 		this.actualQuantity = actualQuantity;
-	}
-
-	public Integer getSuperIssuedQuantity() {
-		return superIssuedQuantity;
-	}
-
-	public void setSuperIssuedQuantity(Integer superIssuedQuantity) {
-		this.superIssuedQuantity = superIssuedQuantity;
 	}
 
 	public String getOperator() {

@@ -70,7 +70,7 @@ public class MaterialService extends SelectService{
 	
 	public static final String GET_ALL_IN_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE packing_list_item_id IN (SELECT id FROM packing_list_item WHERE material_type_id = ?) AND destination is NULL GROUP BY packing_list_item_id ORDER BY task_log.time";
 
-	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT *,SUM(quantity) AS totalIOQuantity FROM task_log WHERE packing_list_item_id IN (SELECT id FROM packing_list_item WHERE material_type_id = ?)";
+	public static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT a.* FROM((SELECT task.id, task.file_name, task.type, task.destination AS destination, packing_list_item.material_type_id, packing_list_item.quantity AS plan_quantity, SUM(task_log.quantity) AS quantity, task_log.operator, task_log.time FROM task_log INNER JOIN packing_list_item INNER JOIN task ON packing_list_item.task_id = task.id AND task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.material_type_id = ? GROUP BY task.id, packing_list_item.material_type_id) union ALL (SELECT task.id, task.file_name, task.type, NULL AS destination, sample_task_item.material_type_id, NULL AS plan_quantity, SUM(sample_singular_record.quantity) AS quantity, sample_singular_record.operator, sample_singular_record.time FROM sample_singular_record INNER JOIN sample_task_item INNER JOIN task ON task.id = sample_task_item.task_id AND sample_task_item.id = sample_singular_record.sample_task_item_id WHERE sample_task_item.material_type_id = ? GROUP BY task.id, sample_task_item.material_type_id)) a";
 	
 	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
@@ -368,72 +368,60 @@ public class MaterialService extends SelectService{
 
 	// 获取物料出入库记录
 	public Object getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, String startTime, String endTime, Integer pageNo, Integer pageSize) {
-		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
-		recordItemList = getRecordItemList(type, materialTypeId, destination, startTime, endTime);
-		List<RecordItem> recordItemSubList = new ArrayList<RecordItem>();	// 用于存放物料出入库记录的子集，以实现分页查询
-		int startIndex = (pageNo-1) * pageSize;
-		int endIndex = (pageNo-1) * pageSize + pageSize;
-		if (startIndex < recordItemList.size()) {
-			if (endIndex >= recordItemList.size()) {
-				endIndex = recordItemList.size();
-			}
-			recordItemSubList = recordItemList.subList(startIndex, endIndex);
-		}
+		Page<Record> page = getRecordItemList(type, materialTypeId, destination, startTime, endTime, pageNo, pageSize);
 		PagePaginate pagePaginate = new PagePaginate();
-		pagePaginate.setPageSize(pageSize);
-		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(recordItemList.size());
-		pagePaginate.setList(recordItemSubList);
+		pagePaginate.setPageSize(page.getPageSize());
+		pagePaginate.setPageNumber(page.getPageNumber());
+		pagePaginate.setTotalRow(page.getTotalRow());
+		pagePaginate.setTotalPage(page.getTotalPage());
+		List<RecordItem> recordItems = new ArrayList<>();
+		for (Record record : page.getList()) {
+			RecordItem recordItem = new RecordItem(record.getInt("material_type_id"), record.getInt("plan_quantity"), record.getStr("file_name"), record.getInt("type"), record.getInt("quantity"),  record.getStr("operator"), record.getDate("time"));
+			recordItems.add(recordItem);
+		}
+		pagePaginate.setList(recordItems);
 		return pagePaginate;
 	}
 
 
 	// 获取物料出入库记录子方法
-	public List<RecordItem> getRecordItemList(Integer type, Integer materialTypeId, Integer destination, String startTime, String endTime) {
+	public Page<Record> getRecordItemList(Integer type, Integer materialTypeId, Integer destination, String startTime, String endTime, Integer pageNo, Integer pageSize) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer(GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL);
 		sqlPara.addPara(materialTypeId);
-		List<RecordItem> recordItemList = new ArrayList<RecordItem>();	// 用于存放完整的物料出入库记录
-		List<TaskLog> taskLogList = null;
+		sqlPara.addPara(materialTypeId);
 		if (type == 0) {
 			if (destination == null) {
-				sql.append(" AND destination IS NOT NULL ");
+				sql.append(" WHERE (a.type = 1 OR a.type = 7) ");
 			}else {
-				sql.append(" AND destination = ? ");
+				sql.append(" WHERE (destination = ? AND a.type = 1) ");
 				sqlPara.addPara(destination);
 			}
 			if (startTime != null && endTime != null) {
-				sql.append(" AND (time BETWEEN ? AND ?) ");
+				sql.append(" AND (a.time BETWEEN ? AND ?) ");
 				sqlPara.addPara(startTime);
 				sqlPara.addPara(endTime);
 			}
-			sql.append(" GROUP BY packing_list_item_id ORDER BY task_log.time ");
+			sql.append(" ORDER BY a.time ");
 		}else if (type == 1) {
+			sql.append(" WHERE (a.type = 0 OR a.type = 4) ");
 			if (startTime != null && endTime != null) {
-				sql.append(" AND (time BETWEEN ? AND ?) ");
+				sql.append(" AND (a.time BETWEEN ? AND ?) ");
 				sqlPara.addPara(startTime);
 				sqlPara.addPara(endTime);
 			}
-			sql.append(" AND destination is NULL  GROUP BY packing_list_item_id ORDER BY task_log.time ");
+			sql.append(" ORDER BY a.time ");
 		}else {
 			if (startTime != null && endTime != null) {
-				sql.append(" AND (time BETWEEN ? AND ?) ");
+				sql.append(" WHERE (a.time BETWEEN ? AND ?) ");
 				sqlPara.addPara(startTime);
 				sqlPara.addPara(endTime);
 			}
-			sql.append(" GROUP BY packing_list_item_id ORDER BY task_log.time ");
+			sql.append(" ORDER BY a.time ");
 		}
 		sqlPara.setSql(sql.toString());
-		taskLogList = TaskLog.dao.find(sqlPara);
-		for (TaskLog taskLog : taskLogList) {
-			PackingListItem pItem = PackingListItem.dao.findById(taskLog.getPackingListItemId());
-			Task task = Task.dao.findById(pItem.getTaskId());
-			int actualQuantity = Integer.parseInt(taskLog.get("totalIOQuantity").toString());
-			
-			RecordItem ri = new RecordItem(pItem.getMaterialTypeId(), pItem.getQuantity(), task.getFileName(), task.getType(), actualQuantity, 0, taskLog.getOperator(), taskLog.getTime());
-			recordItemList.add(ri);
-		}
-		return recordItemList;
+		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);
+		return page;
 	}
 
 

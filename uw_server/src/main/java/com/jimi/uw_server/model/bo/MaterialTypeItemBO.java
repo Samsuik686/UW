@@ -22,7 +22,7 @@ public class MaterialTypeItemBO {
 	@Excel(col=3, head="厚度")
 	private Integer thickness;
 	
-	@Excel(col=4, head="半径")
+	@Excel(col=4, head="直径")
 	private Integer radius;
 
 	public String getNo() {

@@ -172,7 +172,7 @@ public class ExceptionHandler {
 					break;
 				}
 			}
-			IOHandler.clearTil(groupid);
+			IOHandler.clearIoTil(groupid);
 		}  else if (groupid.contains("@")) {	// missiongroupid 包含“@”表示为盘点任务
 			for(AGVInventoryTaskItem item1 : TaskItemRedisDAO.getInventoryTaskItems()) {
 				if(item1.getGroupId().equals(groupid)) {
