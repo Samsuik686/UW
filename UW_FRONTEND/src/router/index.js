@@ -28,7 +28,9 @@ import UWDetailsModule from '../pages/check/details/UWDetailsModule'
 import TransferDetailsModule from '../pages/check/details/TransferDetailsModule'
 import TasksModule from '../pages/check/tasks/TasksModule'
 import OperationModule from '../pages/check/operation/OperationModule'
-
+import SpotCheckMain from '../pages/spotCheck/SpotCheckMain'
+import SpotTaskModule from '../pages/spotCheck/tasks/TasksModule'
+import SpotOperationModule from '../pages/spotCheck/operation/OperationModule'
 Vue.use(Router);
 
 const router = new Router({
@@ -163,6 +165,21 @@ const router = new Router({
             {
               path:'transferDetails',
               component:TransferDetailsModule
+            }
+          ]
+        },
+        {
+          path:'spot',
+          name:'SpotCheckMain',
+          component:SpotCheckMain,
+          children:[
+            {
+              path:'tasks',
+              component:SpotTaskModule
+            },
+            {
+              path:'operation',
+              component:SpotOperationModule
             }
           ]
         }

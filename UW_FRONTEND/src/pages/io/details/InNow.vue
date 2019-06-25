@@ -245,7 +245,8 @@
         patchAutoFinishStack: 0,
         deleteMaterialId: "",
         state:1,
-        stateText:'料盒已满'
+        stateText:'料盒已满',
+        isRobotArrive:false
       }
     },
     mounted() {
@@ -305,6 +306,10 @@
         axiosPost(options).then(response => {
           if (response.data.result === 200) {
             if (response.data.data) {
+              if(!this.isRobotArrive){
+                this.isRobotArrive = true;
+                this.textToSpeak('叉车已到站');
+              }
               this.taskNowItems = response.data.data;
               this.tipsMessage = ""
             } else {
@@ -384,6 +389,7 @@
                 this.tipsComponentMsg = true;
                 setTimeout(() => {
                   this.isTipsShow = false;
+                  this.textToSpeak('已扫'+this.taskNowItems.details.length+'盘');
                 }, 3000)
               } else {
                 this.failAudioPlay();
@@ -413,6 +419,7 @@
           };
           axiosPost(options).then(response => {
             if (response.data.result === 200) {
+              this.isRobotArrive = false;
               this.isTipsShow = true;
               this.tipsComponentMsg = true;
               setTimeout(() => {
@@ -536,6 +543,14 @@
         }else{
           this.state = 2;
         }
+      },
+      //文字转语音提示
+      textToSpeak:function(text){
+        let synth = window.speechSynthesis;
+        let utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.volume = 1;
+        utterThis.pitch = 2;
+        synth.speak(utterThis);
       }
     }
   }

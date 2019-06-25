@@ -82,3 +82,9 @@ export const setFocusInput = ({commit},focusInput) => {
 export const setIsOverdueMaterialCheck = ({commit},isOverdueMaterialCheck) => {
   commit('setIsOverdueMaterialCheck',isOverdueMaterialCheck);
 };
+export const setSpotWindowId = ({commit},spotWindowId) => {
+  commit('setSpotWindowId',spotWindowId);
+};
+export const setSpotMaterialId = ({commit},spotMaterialId) => {
+  commit('setSpotMaterialId',spotMaterialId);
+};
