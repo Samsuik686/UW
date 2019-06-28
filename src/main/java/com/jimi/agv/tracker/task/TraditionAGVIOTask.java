@@ -25,7 +25,7 @@ public class TraditionAGVIOTask extends AGVIOTask{
 		this.windowY = windowY;
 		
 		BufferedReader reader = new BufferedReader(new FileReader(new File(taskFilePath)));
-		setWeight(Integer.parseInt(reader.readLine()));
+		setPriority(Integer.parseInt(reader.readLine()));
 		
 		String item = null;
 		while((item = reader.readLine()) != null) {

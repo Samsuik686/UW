@@ -22,7 +22,7 @@ public class CushionHeadReporter implements Reporter{
 	@Override
 	public String getReport() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("任务模式：缓冲模式");
+		sb.append("任务模式：缓冲模式\n");
 		sb.append("报告时间：" + DateUtil.yyyyMMddHHmmss(new Date()) + "\n");
 		for (AGVIOTaskItem item : task.getItems()) {
 			sb.append(item.getReporter().getReport());

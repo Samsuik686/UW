@@ -18,14 +18,14 @@ public class CushionAGVIOTask extends AGVIOTask{
 
 	public CushionAGVIOTask(String taskFilePath) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(new File(taskFilePath)));
-		setWeight(Integer.parseInt(reader.readLine()));
+		setPriority(Integer.parseInt(reader.readLine()));
 		
 		String item = null;
 		while((item = reader.readLine()) != null) {
 			String[] sourceTargetPair = item.replaceAll("\\*", "").split("\\s");
 			String[] source = sourceTargetPair[0].split(",");
 			String[] target = sourceTargetPair[1].split(",");
-			getItems().add(new CushionAGVIOTaskItem(Integer.parseInt(source[0]), Integer.parseInt(source[1]), Integer.parseInt(source[2]), Integer.parseInt(target[0]), Integer.parseInt(target[1]), Integer.parseInt(target[2]), item.contains("*")));
+			getItems().add(new CushionAGVIOTaskItem(Integer.parseInt(source[0]), Integer.parseInt(source[1]), Integer.parseInt(source[2]), Integer.parseInt(target[0]), Integer.parseInt(target[1]), Integer.parseInt(target[2])));
 		}
 		reader.close();
 		setReporter(new CushionHeadReporter(this));

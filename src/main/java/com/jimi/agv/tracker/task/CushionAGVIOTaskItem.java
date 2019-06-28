@@ -18,10 +18,8 @@ public class CushionAGVIOTaskItem extends AGVIOTaskItem{
 	private int targetY;
 	private int targetZ;
 	
-	private boolean isTopPriority;
 
-
-	protected CushionAGVIOTaskItem(int sourceX, int sourceY, int sourceZ, int targetX, int targetY, int targetZ, boolean isTopPriority) {
+	protected CushionAGVIOTaskItem(int sourceX, int sourceY, int sourceZ, int targetX, int targetY, int targetZ) {
 		this.sourceX = sourceX;
 		this.sourceY = sourceY;
 		this.sourceZ = sourceZ;
@@ -60,10 +58,6 @@ public class CushionAGVIOTaskItem extends AGVIOTaskItem{
 
 	public int getSourceZ() {
 		return sourceZ;
-	}
-	
-	public boolean isTopPriority() {
-		return isTopPriority;
 	}
 	
 }

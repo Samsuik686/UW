@@ -14,7 +14,7 @@ public abstract class AGVIOTask {
 	
 	private List<AGVIOTaskItem> items = new ArrayList<>();
 	
-	private int weight;
+	private int priority;//值越大，优先级越大
 	
 	
 	public final boolean isFinish() {
@@ -83,13 +83,13 @@ public abstract class AGVIOTask {
 	}
 
 
-	public int getWeight() {
-		return weight;
+	public int getPriority() {
+		return priority;
 	}
 
 
-	protected void setWeight(int weight) {
-		this.weight = weight;
+	public void setPriority(int priority) {
+		this.priority = priority;
 	}
 	
 }

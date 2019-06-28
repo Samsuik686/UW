@@ -50,7 +50,7 @@ public class IOHandler {
 		group.setStartz(item.getTargetZ());
 		group.setEndx(item.getWindowX());
 		group.setEndy(item.getWindowY());
-		group.setPriority("10");
+		group.setPriority("5");
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		groups.add(group);
 		AGVMoveCmd cmd = new AGVMoveCmd();
@@ -71,7 +71,7 @@ public class IOHandler {
 		group.setEndx(item.getTargetX());
 		group.setEndy(item.getTargetY());
 		group.setEndz(item.getTargetZ());
-		group.setPriority(item.isTopPriority() ? "5" : "10");
+		group.setPriority("5");
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		groups.add(group);
 		AGVMoveCmd cmd = new AGVMoveCmd();

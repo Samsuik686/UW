@@ -2,7 +2,9 @@ package com.jimi.agv.tracker.main;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -73,13 +75,13 @@ public class Main {
 		System.out.println("1.3.0更新日志：1.增加缓冲模式 2.报告支持输出到数据库了哦");
 		System.out.println("1.4.0更新日志：1.现在可以支持多叉车同时启动噜~");
 		System.out.println("  >> 1.4.1修复日志：1.修复了正在充电且电量大于60的叉车无法调度的问题");
-		System.out.println("1.5.1更新日志：1.支持多任务导入，并按权重分配");
+		System.out.println("1.5.0更新日志：1.支持多任务导入，并按优先级顺序安排指令发送");
 		System.out.println("==================================");
 	}
 
 	
 	private static void askForInitTask() throws Exception {
-		taskPool = new AGVIOTaskPool();
+		List<AGVIOTask> tasks = new ArrayList<>();
 		System.out.println("请输入方括号内的编号以选择任务模式：[1]传统模式 [*]缓冲模式");
 		if(scanner.next().equals("1")) {
 			do {
@@ -96,7 +98,7 @@ public class Main {
 				}
 				System.out.println("请输入 [传统模式] 任务单文件路径和文件名，按下回车开始执行任务（支持相对路径）：");
 				try {
-					taskPool.add(new TraditionAGVIOTask(getExistFilePath(), x, y));
+					tasks.add(new TraditionAGVIOTask(getExistFilePath(), x, y));
 				} catch (Exception e) {
 					System.err.println("错误：解析任务失败，请检查格式");
 					throw e;
@@ -107,7 +109,7 @@ public class Main {
 			do {
 				System.out.println("请输入 [缓冲模式] 任务单文件路径和文件名，按下回车开始执行任务（支持相对路径）：");
 				try {
-					taskPool.add(new CushionAGVIOTask(getExistFilePath()));
+					tasks.add(new CushionAGVIOTask(getExistFilePath()));
 				} catch (Exception e) {
 					System.err.println("错误：解析任务失败，请检查格式");
 					throw e;
@@ -115,6 +117,7 @@ public class Main {
 				System.out.print("是否继续导入任务单？(Y/N)：");
 			}while(scanner.next().equalsIgnoreCase("Y"));
 		}
+		taskPool = new AGVIOTaskPool(tasks);
 	}
 
 
@@ -151,9 +154,12 @@ public class Main {
 			System.out.println("请输入报告文件导出的路径和文件名，按下回车开始生成报告（支持相对路径）：");
 			String path = getNotExistFilePath();
 			System.out.println("正在生成报告文件，请稍候...");
+			StringBuffer sb = new StringBuffer();
 			for(AGVIOTask task : taskPool.getTasks()) {
-				TextFileUtil.writeToFile(path, task.getReporter().getReport());
+				sb.append("=====================任务分割线=====================\n");
+				sb.append(task.getReporter().getReport() + "\n");
 			}
+			TextFileUtil.writeToFile(path, sb.toString());
 			System.out.println("###报告文件生成完毕###");
 		}
 	}
