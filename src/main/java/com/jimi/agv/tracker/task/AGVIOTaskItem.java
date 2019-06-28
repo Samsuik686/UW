@@ -44,6 +44,7 @@ public abstract class AGVIOTaskItem {
 	private List<Position> returnTrails;
 	
 	private int state;
+	
 
 	protected AGVIOTaskItem() {
 		gotTrails = new ArrayList<>();

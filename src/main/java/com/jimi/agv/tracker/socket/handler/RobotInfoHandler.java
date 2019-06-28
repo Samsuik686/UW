@@ -30,8 +30,8 @@ public class RobotInfoHandler {
 
 	private static void addTrails(AGVRobotInfoCmd cmd) {
 		for (AGVRobot robot : cmd.getRobotarray()) {
-			if(Main.getTask() != null) {
-				AGVIOTaskItem executingItem = Main.getTask().getExecutingItemByRobotId(robot.getRobotid());
+			if(Main.getTaskPool() != null) {
+				AGVIOTaskItem executingItem = Main.getTaskPool().getExecutingItemByRobotId(robot.getRobotid());
 				if(executingItem != null) {
 					executingItem.addTrail(new Position(robot.getPosX(), robot.getPosY()));
 				}

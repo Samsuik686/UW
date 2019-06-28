@@ -14,6 +14,8 @@ public abstract class AGVIOTask {
 	
 	private List<AGVIOTaskItem> items = new ArrayList<>();
 	
+	private int weight;
+	
 	
 	public final boolean isFinish() {
 		for (AGVIOTaskItem item : items) {
@@ -78,6 +80,16 @@ public abstract class AGVIOTask {
 
 	public final List<AGVIOTaskItem> getItems() {
 		return items;
+	}
+
+
+	public int getWeight() {
+		return weight;
+	}
+
+
+	protected void setWeight(int weight) {
+		this.weight = weight;
 	}
 	
 }

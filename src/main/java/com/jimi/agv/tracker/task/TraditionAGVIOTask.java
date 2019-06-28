@@ -25,6 +25,8 @@ public class TraditionAGVIOTask extends AGVIOTask{
 		this.windowY = windowY;
 		
 		BufferedReader reader = new BufferedReader(new FileReader(new File(taskFilePath)));
+		setWeight(Integer.parseInt(reader.readLine()));
+		
 		String item = null;
 		while((item = reader.readLine()) != null) {
 			String[] position = item.split(",");
@@ -33,7 +35,7 @@ public class TraditionAGVIOTask extends AGVIOTask{
 		reader.close();
 		
 		setReporter(new TraditionHeadReporter(this));
-		setController(new TraditionController(this));
+		setController(new TraditionController());
 	}
 	
 

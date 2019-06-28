@@ -88,7 +88,7 @@ public class SpaceManager {
 	/**
 	 * 置满指定货位
 	 */
-	public void fill(int x, int y, int z) {
+	public synchronized void fill(int x, int y, int z) {
 		Space space = getSpaceByXYZ(x, y, z);
 		if(space == null) {
 			throw new NullPointerException("不存在该货位：[" + x + "," + y + "," + z + "]");
@@ -103,7 +103,7 @@ public class SpaceManager {
 	/**
 	 * 置空指定货位
 	 */
-	public void empty(int x, int y, int z) {
+	public synchronized void empty(int x, int y, int z) {
 		Space space = getSpaceByXYZ(x, y, z);
 		if(space == null) {
 			throw new NullPointerException("不存在该货位：[" + x + "," + y + "," + z + "]");
@@ -115,7 +115,7 @@ public class SpaceManager {
 	}
 	
 	
-	private Space getSpaceByXYZ(int x, int y, int z) {
+	private synchronized Space getSpaceByXYZ(int x, int y, int z) {
 		Space temp = new Space(x, y, z);
 		for (Space space : spaces) {
 			if(space.equals(temp)) {

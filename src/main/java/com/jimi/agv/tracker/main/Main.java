@@ -13,6 +13,7 @@ import com.jimi.agv.tracker.entity.model.MysqlMappingKit;
 import com.jimi.agv.tracker.socket.AGVMainSocket;
 import com.jimi.agv.tracker.socket.RobotInfoSocket;
 import com.jimi.agv.tracker.task.AGVIOTask;
+import com.jimi.agv.tracker.task.AGVIOTaskPool;
 import com.jimi.agv.tracker.task.CushionAGVIOTask;
 import com.jimi.agv.tracker.task.TraditionAGVIOTask;
 import com.jimi.agv.tracker.util.PropUtil;
@@ -21,7 +22,7 @@ import cc.darhao.dautils.api.TextFileUtil;
 
 public class Main {
 	
-	private static AGVIOTask task;
+	private static AGVIOTaskPool taskPool;
 	
 	private static Scanner scanner = new Scanner(System.in);
 	
@@ -35,13 +36,12 @@ public class Main {
 				showMe();
 				askForInitTask();
 				startTask();
-				waitForTaskFinish();
 				callReporter();
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.err.println("检测到异常：系统已重启");
 			}
-			clearTask();
+			clearTasks();
 		}
 	}
 
@@ -67,51 +67,62 @@ public class Main {
 
 	private static void showMe() {
 		System.out.println("==================================");
-		System.out.println("欢迎使用 - AGV Tracker 1.4.1 - 轨迹采集器 by Darhao");
+		System.out.println("欢迎使用 - AGV Tracker 1.5.0 - 轨迹采集器 by Darhao");
 		System.out.println("1.1.0更新日志：1.报告输出仓口坐标 2.去掉\"秒\"");
 		System.out.println("1.2.0更新日志：1.现在可以输出 [轨迹报告] 了");
 		System.out.println("1.3.0更新日志：1.增加缓冲模式 2.报告支持输出到数据库了哦");
 		System.out.println("1.4.0更新日志：1.现在可以支持多叉车同时启动噜~");
 		System.out.println("  >> 1.4.1修复日志：1.修复了正在充电且电量大于60的叉车无法调度的问题");
+		System.out.println("1.5.1更新日志：1.支持多任务导入，并按权重分配");
 		System.out.println("==================================");
 	}
 
 	
 	private static void askForInitTask() throws Exception {
+		taskPool = new AGVIOTaskPool();
 		System.out.println("请输入方括号内的编号以选择任务模式：[1]传统模式 [*]缓冲模式");
 		if(scanner.next().equals("1")) {
-			int x = 0, y = 0;
-			try {
-				System.out.println("请输入仓口坐标X：");
-				x = scanner.nextInt();
-				System.out.println("请输入仓口坐标Y：");
-				y = scanner.nextInt();
-			} catch (InputMismatchException e) {
-				System.err.println("错误：无法识别整数");
-				scanner.next();
-				throw e;
-			}
-			System.out.println("请输入 [传统模式] 任务单文件路径和文件名，按下回车开始执行任务（支持相对路径）：");
-			try {
-				task = new TraditionAGVIOTask(getExistFilePath(), x, y);
-			} catch (Exception e) {
-				System.err.println("错误：解析任务失败，请检查格式");
-				throw e;
-			}
+			do {
+				int x = 0, y = 0;
+				try {
+					System.out.println("请输入仓口坐标X：");
+					x = scanner.nextInt();
+					System.out.println("请输入仓口坐标Y：");
+					y = scanner.nextInt();
+				} catch (InputMismatchException e) {
+					System.err.println("错误：无法识别整数");
+					scanner.next();
+					throw e;
+				}
+				System.out.println("请输入 [传统模式] 任务单文件路径和文件名，按下回车开始执行任务（支持相对路径）：");
+				try {
+					taskPool.add(new TraditionAGVIOTask(getExistFilePath(), x, y));
+				} catch (Exception e) {
+					System.err.println("错误：解析任务失败，请检查格式");
+					throw e;
+				}
+				System.out.print("是否继续导入任务单？(Y/N)：");
+			}while(scanner.next().equalsIgnoreCase("Y"));
 		}else {
-			System.out.println("请输入 [缓冲模式] 任务单文件路径和文件名，按下回车开始执行任务（支持相对路径）：");
-			try {
-				task = new CushionAGVIOTask(getExistFilePath());
-			} catch (Exception e) {
-				System.err.println("错误：解析任务失败，请检查格式");
-				throw e;
-			}
+			do {
+				System.out.println("请输入 [缓冲模式] 任务单文件路径和文件名，按下回车开始执行任务（支持相对路径）：");
+				try {
+					taskPool.add(new CushionAGVIOTask(getExistFilePath()));
+				} catch (Exception e) {
+					System.err.println("错误：解析任务失败，请检查格式");
+					throw e;
+				}
+				System.out.print("是否继续导入任务单？(Y/N)：");
+			}while(scanner.next().equalsIgnoreCase("Y"));
 		}
 	}
 
 
 	private static void startTask() throws Exception {
-		task.getController().start();
+		if(taskPool.getTasks().size() == 0) {
+			throw new IllegalArgumentException("错误：任务单数目为0");
+		}
+		taskPool.start();
 	}
 
 
@@ -132,13 +143,17 @@ public class Main {
 	private static void callReporter() throws IOException {
 		if(PropUtil.getBoolean(Constant.CONFIG_NAME, Constant.OUT_TO_DB)) {
 			System.out.println("正在将报告数据写入数据库，请稍候...");
-			task.getReporter().saveToDb();
+			for(AGVIOTask task : taskPool.getTasks()) {
+				task.getReporter().saveToDb();
+			}
 			System.out.println("###数据写入完毕###");
 		}else {
 			System.out.println("请输入报告文件导出的路径和文件名，按下回车开始生成报告（支持相对路径）：");
 			String path = getNotExistFilePath();
 			System.out.println("正在生成报告文件，请稍候...");
-			TextFileUtil.writeToFile(path, task.getReporter().getReport());
+			for(AGVIOTask task : taskPool.getTasks()) {
+				TextFileUtil.writeToFile(path, task.getReporter().getReport());
+			}
 			System.out.println("###报告文件生成完毕###");
 		}
 	}
@@ -163,27 +178,13 @@ public class Main {
 	}
 
 
-	private static void clearTask() {
-		task = null;
+	private static void clearTasks() {
+		taskPool = null;
 	}
 	
-	
-	private static void waitForTaskFinish() throws InterruptedException {
-		synchronized (task) {
-			task.wait();
-		}
-	}
-	
-	
-	public static void notifyForTaskFinish() {
-		synchronized (task) {
-			task.notify();
-		}
-	}
 
-
-	public static AGVIOTask getTask() {
-		return task;
+	public static AGVIOTaskPool getTaskPool() {
+		return taskPool;
 	}
 
 }
