@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import com.jimi.agv_mock.constant.Constant;
 import com.jimi.agv_mock.entity.bo.AGVRobot;
 import com.jimi.agv_mock.entity.cmd.AGVMoveCmd;
+import com.jimi.agv_mock.entity.comparator.AGVMoveCmdPriorityComparator;
 import com.jimi.agv_mock.socket.MockRobotInfoSocket;
 
 /**
@@ -26,9 +27,9 @@ public class TaskPool extends Thread{
 	private Queue<AGVMoveCmd> LLTasks;
 	
 	public TaskPool() {
-		LSTasks = new LinkedBlockingQueue<>();
+		LSTasks = new PriorityBlockingQueue<>(11, new AGVMoveCmdPriorityComparator());
 		SLTasks = new ArrayList<>();
-		LLTasks = new LinkedBlockingQueue<>();
+		LLTasks = new PriorityBlockingQueue<>(11, new AGVMoveCmdPriorityComparator());
 	}
 	
 	
