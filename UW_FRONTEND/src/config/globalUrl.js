@@ -70,6 +70,7 @@ export const robotCallUrl = url + '/manage/robot/call';
 export const supplierAddUrl = url + '/manage/supplier/add';
 export const supplierUpdateUrl = url + '/manage/supplier/update';
 export const supplierSelectUrl = url + '/manage/supplier/getSuppliers';
+export const supplierChangeNameUrl = url + '/manage/supplier/changeName';
 
 //destination manage
 export const destinationAddUrl = url + '/manage/destination/add';

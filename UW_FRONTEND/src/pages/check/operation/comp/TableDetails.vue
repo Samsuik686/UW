@@ -237,7 +237,6 @@
         for (let i = 0; i < list.length; i++) {
           let row = this.data[i];
           let obj = list[i];
-          console.log(row,obj);
           if (obj.checkQuantity === '') {
             this.$alertWarning('料盘号为'+list[i].materialId+'未填写盘点数量');
             return;

@@ -3,7 +3,12 @@
     <div class="btn pl-1 pr-1" title="删除" @click="showWarning(row)">
       <icon name="cancel" scale="1.8"></icon>
     </div>
-
+    <div class="btn pl-1 pr-1" title="修改供应商名" @click="isEditing = true">
+      <icon name="edit" scale="1.8"></icon>
+    </div>
+    <transition name="fade" v-if="isEditing">
+      <change-name :edit-data="row"></change-name>
+    </transition>
     <div v-if="isDeleting" id="delete-window">
       <div class="delete-panel">
         <div class="delete-panel-container form-row flex-column justify-content-between">
@@ -32,13 +37,21 @@
   import {supplierUpdateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
-
+  import ChangeName from "./ChangeName";
+  import eventBus from '@/utils/eventBus';
   export default {
     name: "OperationOptions",
+    components: {ChangeName},
     props: ['row'],
+    mounted(){
+      eventBus.$on('closeEditPanel',() => {
+        this.isEditing = false;
+      });
+    },
     data() {
       return {
         isDeleting:false,
+        isEditing:false,
         rowData: {},
         isPending: false
       }

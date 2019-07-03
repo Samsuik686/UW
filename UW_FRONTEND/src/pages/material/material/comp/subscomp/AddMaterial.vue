@@ -20,8 +20,8 @@
         </div>
         <div class="form-row col-4 pl-2 pr-2">
           <label for="material-supplier" class="col-form-label">供应商:</label>
-          <select id="material-supplier" v-model="thisData.supplier" class="custom-select">
-            <option  v-for="item in suppliers">{{item.name}}</option>
+          <select id="material-supplier" v-model="thisData.supplierId" class="custom-select">
+            <option  v-for="item in suppliers" :value="item.id">{{item.name}}</option>
           </select>
           <span class="form-span col"></span>
         </div>
@@ -61,7 +61,7 @@
         thisData: {
           no: '',
           specification: '',
-          supplier:'',
+          supplierId:'',
           thickness:'',
           radius:''
         },

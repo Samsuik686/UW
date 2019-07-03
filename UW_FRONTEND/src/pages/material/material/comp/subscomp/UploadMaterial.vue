@@ -8,8 +8,8 @@
       </div>
       <div class="form-row">
         <label for="type-supplier" class="col-form-label">供应商:</label>
-        <select id="type-supplier" v-model="supplierName" class="custom-select">
-          <option  v-for="item in suppliers" :value="item.name" :key="item.id">{{item.name}}</option>
+        <select id="type-supplier" v-model="supplierId" class="custom-select">
+          <option  v-for="item in suppliers" :value="item.id" :key="item.id">{{item.name}}</option>
         </select>
       </div>
       <div class="form-row">
@@ -48,7 +48,7 @@
         fileName: '',
         isPending: false,
         thisFile: '',
-        supplierName: ''
+        supplierId: ''
       }
     },
     methods: {
@@ -73,9 +73,9 @@
           this.isPending = true;
           this.setLoading(true);
           let formData = new FormData();
-          if (this.thisFile !== "" && this.supplierName !== "") {
+          if (this.thisFile !== "" && this.supplierId !== "") {
             formData.append('file', this.thisFile);
-            formData.append('supplierName', this.supplierName);
+            formData.append('supplierId', this.supplierId);
           } else {
             this.$alertWarning("内容不可为空");
             this.isPending = false;

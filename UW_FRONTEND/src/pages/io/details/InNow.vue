@@ -388,8 +388,10 @@
                 this.isTipsShow = true;
                 this.tipsComponentMsg = true;
                 setTimeout(() => {
-                  this.isTipsShow = false;
                   this.textToSpeak('已扫'+this.taskNowItems.details.length+'盘');
+                },1000);
+                setTimeout(() => {
+                  this.isTipsShow = false;
                 }, 3000)
               } else {
                 this.failAudioPlay();
