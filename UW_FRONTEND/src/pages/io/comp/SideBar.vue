@@ -31,18 +31,6 @@
         </div>
       </div>
     </nav>
-   <!-- <div class="m-2 mt-auto" v-if="$route.path === '/io/preview'">
-      <div class="row ml-auto mr-auto mt-4">
-        <img src="static/img/toIOQRcode.png" class="img-style">
-      </div>
-      <span class=" mt-auto">* 扫描此二维码或点击侧边栏以跳转到仓口入库页面</span>
-    </div>
-    <div class="m-2 mt-auto" v-else-if="$route.path === '/io/innow' || $route.path === '/io/return'">
-      <div class="row ml-auto mr-auto mt-4">
-        <img src="static/img/toCallQRCode.png" class="img-style">
-      </div>
-      <span class=" mt-auto">* 扫描此二维码或点击侧边栏以跳转到任务预览页面</span>
-    </div>-->
   </div>
 </template>
 

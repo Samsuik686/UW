@@ -4,10 +4,62 @@
       <div class="add-panel-container">
         <div class="form-row">
           <div class="form-group mb-0">
-            <h3>详情：</h3>
+            <h5>详情：</h5>
           </div>
-          <datatable v-bind="$data" style="width:100%"/>
         </div>
+        <el-table
+          :data="sampleTaskDetails"
+          style="width:100%;margin-bottom:40px;">
+          <el-table-column type="expand">
+            <template slot-scope="props">
+              <el-table
+                border
+                :data="props.row.list"
+                style="width:100%">
+                <el-table-column
+                  prop="materialId"
+                  label="料盘号">
+                </el-table-column>
+                <el-table-column
+                  prop="quantity"
+                  label="数量">
+                </el-table-column>
+                <el-table-column
+                  prop="isSingularString"
+                  label="异常出库">
+                </el-table-column>
+                <el-table-column
+                  prop="operator"
+                  label="操作员">
+                </el-table-column>
+                <el-table-column
+                  prop="time"
+                  label="出库时间">
+                </el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="no"
+            label="料号">
+          </el-table-column>
+          <el-table-column
+            prop="storeQuantity"
+            label="库存数">
+          </el-table-column>
+          <el-table-column
+            prop="scanQuantity"
+            label="扫描总数">
+          </el-table-column>
+          <el-table-column
+            prop="singularOutQuantity"
+            label="异常出库数">
+          </el-table-column>
+          <el-table-column
+            prop="regularOutQuantity"
+            label="抽检出库数">
+          </el-table-column>
+        </el-table>
       </div>
       <div id="cancel-btn" class="ml-2 mt-1" @click="closePanel">
         <icon name="cancel" scale="4" style="color: #fff;"></icon>
@@ -28,106 +80,55 @@
     },
     data() {
       return {
-        fixHeaderAndSetBodyMaxHeight: 450,
-        tblStyle: {
-          'word-break': 'break-all',
-          'table-layout': 'fixed',
-          'white-space': 'pre-wrap'
-        },
-        HeaderSettings: false,
-        pageSizeOptions: [20, 40, 80],
-        data: [],
-        columns: [
-          {title: 'ID', field: 'id', colStyle: {width: '80px'}},
-          {title: '料号', field: 'no', colStyle: {width: '120px'}},
-          {title: '料盘号', field: 'materialId', colStyle: {width: '120px'}},
-          {title: '数量', field: 'quantity', colStyle: {width: '90px'}},
-          {title: '状态', field: 'isSingularString', colStyle: {width: '120px'}},
-          {title: '操作员', field: 'operator', colStyle: {width: '90px'}},
-          {title: '出库时间', field: 'time', colStyle: {width: '120px'}}
-        ],
-        total: 0,
-        query: {"limit": 20, "offset": 0},
+        sampleTaskDetails:[],
         isPending: false
       }
     },
-    watch: {
-      query: {
-        handler(query) {
-          this.setLoading(true);
-          this.dataFilter(query);
-        },
-        deep: true
-      }
-    },
     mounted() {
-      let options = {
-        url: getSampleTaskDetailsUrl,
-        data: {
-          taskId:this.row.id,
-          pageNo: 1,
-          pageSize: 20
-        }
-      };
-      this.fetchData(options);
+      this.fetchData();
     },
     methods: {
       ...mapActions(['setLoading']),
-      init: function () {
-        this.data = [];
-        this.total = 0;
-      },
-      fetchData: function (options) {
-        if (!this.isPending) {
-          this.isPending = true;
-          axiosPost(options).then(response => {
-            this.isPending = false;
-            if (response.data.result === 200) {
-              if (response.data.data.list !== null) {
-                this.data = response.data.data.list;
-                this.total = response.data.data.totalRow;
-              } else {
-                this.init()
-              }
-            } else if (response.data.result === 501) {
-              this.$alertWarning(response.data.data)
-            } else {
-              errHandler(response.data)
-            }
-            this.setLoading(false)
-          })
-            .catch(err => {
-              if (JSON.stringify(err) !== '{}'){
-                this.isPending = false;
-                this.$alertDanger('请求超时，请刷新重试');
-                this.setLoading(false)
-              }
-            })
-        } else {
-          this.setLoading(false)
-        }
-      },
-      closePanel: function () {
-        this.$emit('closePanel',true);
-      },
-      dataFilter: function () {
+      fetchData: function () {
         let options = {
           url: getSampleTaskDetailsUrl,
           data: {
             taskId:this.row.id
           }
         };
-        options.data.pageNo = this.query.offset / this.query.limit + 1;
-        options.data.pageSize = this.query.limit;
-        this.fetchData(options);
-      }
+        if (!this.isPending) {
+          this.isPending = true;
+          this.setLoading(true);
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              if(response.data.data.length > 0){
+                this.sampleTaskDetails = response.data.data;
+              }else{
+                this.sampleTaskDetails = [];
+              }
+            } else {
+              errHandler(response.data)
+            }
+            this.setLoading(false)
+          }).catch(err => {
+            this.isPending = false;
+            console.log(err);
+            this.$alertDanger('请求超时，请刷新重试');
+            this.setLoading(false)
+          })
+        }
+      },
+      closePanel: function () {
+        this.$emit('closePanel',true);
+      },
     }
   }
 </script>
 
 <style scoped>
   .add-panel {
-    position: fixed;
+    position:fixed;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,6 +138,7 @@
     top: 0;
     background: rgba(0, 0, 0, 0.1);
     z-index: 101;
+    overflow-y:auto;
   }
   .add-panel-box{
     width:95%;

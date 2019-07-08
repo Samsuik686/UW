@@ -98,8 +98,8 @@
       submitUpdate: function () {
         if (!this.isPending) {
           this.isPending = true;
-          this.setLoading(true);
           if (this.thisState > 0 && (this.thisState !== this.originState)) {
+            this.setLoading(true);
             let statusUrl;
             switch (this.thisState) {
               case '2':

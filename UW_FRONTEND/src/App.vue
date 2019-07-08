@@ -32,6 +32,7 @@
         permanent: false,
         text: '',
         timeout: 3000,
+
       }
     },
     mounted: function () {
@@ -67,5 +68,17 @@
   }
   *::-webkit-scrollbar-track {
     background:#fff;
+  }
+  .demo-table-expand .el-form-item .el-form-item__label {
+    color: #70798b;
+    margin-right:20px;
+  }
+  .el-collapse-item__header{
+    font-size:15px;
+    font-weight:bold;
+    color:#767676;
+  }
+  .el-dialog__wrapper{
+    z-index:9999!important;
   }
 </style>

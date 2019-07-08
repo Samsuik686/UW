@@ -8,6 +8,7 @@
 </template>
 
 <script>
+  import StartPause from './subscomp/StartPause'
   import {mapActions} from 'vuex'
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
@@ -41,10 +42,14 @@
         this.row = row;
         this.isShow = true;
       });
+      eventBus.$on('refreshTask',() => {
+        this.dataFilter();
+      });
     },
     components:{
       EntityDetails,
-      OperationOptions
+      OperationOptions,
+      StartPause
     },
     created() {
       this.init();
@@ -91,6 +96,7 @@
       init: function () {
         this.data = [];
         this.columns = [
+          {title: '启动/暂停', tdComp: 'StartPause', colStyle: {'width':'80px'}},
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
           {field: 'fileName', title: '任务名', colStyle: {'width': '120px'}},
           {field: 'stateString', title: '状态', colStyle: {'width': '80px'}},

@@ -2,6 +2,8 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import Vuex from 'vuex'
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
 import App from './App'
 import router from './router'
 import axios from './config/http'
@@ -17,7 +19,7 @@ Vue.prototype.$alertDanger = alertDanger;
 Vue.prototype.$alertInfo = alertInfo;
 Vue.prototype.$alertSuccess = alertSuccess;
 Vue.prototype.$alertWarning = alertWarning;
-
+Vue.use(ElementUI);
 Vue.component('icon', Icon);
 Vue.use(Datatable, {locale});
 Vue.prototype.$axios = axios;

@@ -6,7 +6,7 @@
         <div class="side-bar">
           <side-bar/>
         </div>
-        <div class="col router-style mt-3 mb-3" style="margin-left: 255px;">
+        <div class="col router-style mt-3 mb-3" style="margin-left:250px;">
           <router-view/>
         </div>
       </div>
@@ -16,7 +16,7 @@
 
 <script>
   import Loading from '../../components/Loading'
-  import SideBar from './details/comp/SideBar'
+  import SideBar from './comp/SideBar'
   import store from '../../store'
 
   export default {

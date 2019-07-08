@@ -53,7 +53,7 @@
           {title: '料盘唯一码', field: 'materialId', colStyle: {width: '110px'}},
           {title: '盘前库存', field: 'beforeNum', colStyle: {width: '80px'}},
           {title: '盘点数量', field: 'atrualNum', colStyle: {width: '80px'}},
-          {title: '退料盈亏', field: 'materialreturnNum', colStyle: {width: '80px'}},
+          {title: '调拨入库盈亏', field: 'materialreturnNum', colStyle: {width: '80px'}},
           {title: '盘盈/盘亏', field: 'differentNum', colStyle: {width: '80px'}},
           {title: '盘点人', field: 'inventoryOperatior', colStyle: {width: '90px'}},
           {title: '盘点时间', field: 'inventoryTime', colStyle: {width: '120px'}},

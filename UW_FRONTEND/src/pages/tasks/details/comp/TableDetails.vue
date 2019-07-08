@@ -22,6 +22,7 @@
 </template>
 
 <script>
+  import eventBus from "../../../../utils/eventBus";
   import {axiosPost} from "../../../../utils/fetchData";
   import {mapGetters, mapActions} from 'vuex'
   import {taskSelectUrl} from "../../../../config/globalUrl";
@@ -29,12 +30,14 @@
   import OperationOptions from "./subscomp/OperationOptions";
   import EntityDetails from './EntityDetails'
   import EntityDetails2 from './EntityDetails2'
+  import StartPause from './subscomp/StartPause'
   export default {
     name: "Details",
     components: {
       OperationOptions,
       EntityDetails,
-      EntityDetails2
+      EntityDetails2,
+      StartPause
     },
     data() {
       return {
@@ -109,12 +112,16 @@
       }
     },
     mounted: function () {
+      eventBus.$on('refreshTask',() => {
+        this.dataFilter();
+      });
     },
     methods: {
       ...mapActions(['setTableRouter', 'setLoading']),
       init: function () {
         this.data = [];
         this.columns = [
+          {title: '启动/暂停', tdComp: 'StartPause', colStyle: {'width':'80px'}},
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
           {field: 'id', title: '序号', visible: false},
           {field: 'state', title: '状态', visible: false},

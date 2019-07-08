@@ -7,12 +7,15 @@
       v-bind="$data"
     ></datatable>
     <div class="form-group row check-btn">
-      <div class="btn btn-primary" @click="coverEwhMaterial">一键平仓</div>
-      <div class="btn btn-primary ml-3" @click="checkInventoryData">审核盘点数据</div>
+      <div class="btn btn-primary" @click="checkInventoryData">审核盘点数据</div>
+      <div class="btn btn-primary ml-3" @click="coverEwhMaterial">一键平仓</div>
       <div class="btn btn-primary ml-3" @click="exportCheckReport">导出盘点报表</div>
     </div>
     <check-details v-if="isShow" :row="row"></check-details>
     <upload-check-task v-if="isUploadCheck" :taskId = "taskId"></upload-check-task>
+    <div id="finish-window" v-if="isFinishTask">
+      <finish-task :taskId = "taskId"></finish-task>
+    </div>
   </div>
 </template>
 
@@ -29,6 +32,7 @@
   import UploadCheckTask from './subscomp/UploadCheckTask'
   import OperationOptions from './subscomp/OperationOptions'
   import MaterialHighLight from './subscomp/MaterialHighLight'
+  import FinishTask from "./subscomp/FinishTask";
   export default {
     name: "TableDetails",
     created() {
@@ -38,7 +42,8 @@
       CheckDetails,
       UploadCheckTask,
       OperationOptions,
-      MaterialHighLight
+      MaterialHighLight,
+      FinishTask
     },
     mounted() {
       eventBus.$on('showCheckDetails', row => {
@@ -51,6 +56,9 @@
       });
       eventBus.$on('closeUploadPanel',() => {
         this.isUploadCheck = false;
+      });
+      eventBus.$on('closeFinishTask',() => {
+        this.isFinishTask = false;
       });
     },
     data() {
@@ -74,7 +82,8 @@
         row: {},
         taskId: '',
         no: '',
-        isUploadCheck:false
+        isUploadCheck:false,
+        isFinishTask:false
       }
     },
     watch: {
@@ -299,6 +308,7 @@
             if(res.data.result === 200){
               this.$alertSuccess(res.data.data);
               this.getCheckData();
+              this.isFinishTask = true;
             }else{
               errHandler(res.data);
             }
@@ -328,5 +338,8 @@
     position: absolute;
     bottom: 0;
     right:40px;
+  }
+  #finish-window {
+    z-index: 100;
   }
 </style>

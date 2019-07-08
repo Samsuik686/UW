@@ -1,45 +1,78 @@
 <template>
-  <div>
+  <div class="call-robot">
+    <el-form :inline="true" class="demo-form-inline" size="medium">
+      <el-form-item label="出入库类型">
+        <el-select v-model="windowType" placeholder="出入库类型">
+          <el-option label="入库" value="1"></el-option>
+          <el-option label="截料入库" value="2"></el-option>
+          <el-option label="调拨入库" value="3"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="仓口">
+        <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0">
+          <el-option value="" :label="windowsList.length === 0 ? '无非空闲仓口':'请选择'"></el-option>
+          <el-option v-for="item in windowsList" :value="item.id" :label="item.id" :key="item.id"></el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
     <video controls="controls" id="sAudio" hidden>
       <source src="./../../../assets/005-System05.ogg" type="video/ogg">
     </video>
     <video controls="controls" id="fAudio" hidden>
       <source src="./../../../assets/141-Burst01.ogg" type="video/ogg">
     </video>
-    <options/>
     <input type="text" title="scanner" id="call-check" v-model.trim="scanText"
            @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
   </div>
 </template>
 
 <script>
-  import Options from './comp/QueryOptions'
-  import {mapGetters} from 'vuex'
+  import {robotCallUrl, taskWindowsUrl} from "../../../config/globalUrl";
   import {axiosPost} from "../../../utils/fetchData";
-  import {robotCallUrl} from "../../../config/globalUrl";
-  import {errHandler} from "../../../utils/errorHandler";
   import {handleScanText} from "../../../utils/scan";
+  import {errHandler} from "../../../utils/errorHandler";
 
   export default {
     name: "CallRobot",
-    components: {
-      Options
-    },
-    data() {
-      return {
-        scanText: '',
-        isPending: false
+    data(){
+      return{
+        windowType: '1',
+        windowsList: [],
+        thisWindow: '',
+        scanText:'',
+        isPending:false
       }
     },
-    mounted() {
+    mounted(){
+      this.setPreset();
       this.setFocus();
     },
-    computed: {
-      ...mapGetters([
-        'currentWindowId'
-      ]),
+    watch:{
+      windowType:function(val){
+        if(val !== ''){
+          this.setPreset();
+        }
+      }
     },
-    methods: {
+    methods:{
+      setPreset: function () {
+        let options = {
+          url: taskWindowsUrl,
+          data: {
+            type: this.windowType
+          }
+        };
+        axiosPost(options).then(response => {
+          if (response.data.result === 200) {
+            this.windowsList = response.data.data;
+            if (this.windowsList.length > 0) {
+              this.thisWindow = this.windowsList[0].id
+            }else{
+              this.thisWindow = '';
+            }
+          }
+        });
+      },
       setFocus: function () {
         if (this.$route.path === '/io/call') {
           document.getElementById('call-check').focus();
@@ -58,18 +91,18 @@
         }
 
         //仓口为空
-        if(this.currentWindowId === ''){
+        if(this.thisWindow === ''){
           this.$alertWarning('未选择仓口');
           return;
         }
 
-        if (this.isPending === false) {
+        if (!this.isPending) {
           this.isPending = true;
           let tempArray = scanText.split("@");
           let options = {
             url: robotCallUrl,
             data: {
-              id: this.currentWindowId,
+              id: this.thisWindow,
               no: tempArray[0],
               supplierName:tempArray[4]
             }
@@ -115,7 +148,20 @@
 </script>
 
 <style scoped>
- #call-check {
+  .call-robot {
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ebebeb;
+    border-radius: 3px;
+    transition: .2s;
+    padding: 30px 30px 0 30px;
+  }
+
+  .call-robot:hover {
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
+  }
+  #call-check {
     opacity: 0;
     height: 0;
     line-height: 0;

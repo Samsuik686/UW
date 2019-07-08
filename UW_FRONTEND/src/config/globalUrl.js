@@ -58,7 +58,8 @@ export const setWindowRobotsUrl = url + '/task/setWindowRobots';
 export const getWindowRobotsUrl = url + '/task/getWindowRobots';
 export const editTaskRemarksUrl = url + '/task/editTaskRemarks';
 export const exportUnfinishTaskDetailsUrl = url + '/task/exportUnfinishTaskDetails';
-
+export const modifyOutQuantityUrl = url + '/task/modifyOutQuantity';
+export const switchTaskUrl = url + '/task/switchTask';
 //robot manage
 export const robotSelectUrl = url + '/manage/robot/select';
 export const robotSwitchUrl = url + '/manage/robot/switch';
@@ -70,7 +71,7 @@ export const robotCallUrl = url + '/manage/robot/call';
 export const supplierAddUrl = url + '/manage/supplier/add';
 export const supplierUpdateUrl = url + '/manage/supplier/update';
 export const supplierSelectUrl = url + '/manage/supplier/getSuppliers';
-
+export const supplierChangeNameUrl = url + '/manage/supplier/changeName';
 //destination manage
 export const destinationAddUrl = url + '/manage/destination/add';
 export const destinationDeleteUrl = url + '/manage/destination/delete';
@@ -98,6 +99,7 @@ export const  getInventoryTaskUrl = url + '/task/inventory/getInventoryTask';
 export const  importEWhInventoryRecordUrl = url + '/task/inventory/importEWhInventoryRecord';
 export const getUnStartInventoryTaskUrl = url + '/task/inventory/getUnStartInventoryTask';
 export const exportEWhReportInventoryUrl = url + '/task/inventory/exportEWhReport';
+
 //一键平仓
 export const coverMaterialByTaskIdUrl = url + '/task/inventory/coverMaterialByTaskId';
 //平UW仓
@@ -170,3 +172,7 @@ export const setWindowRobotsSampleTaskUrl = url + '/task/sampleTask/setWindowRob
 export const getWindowRobotsSampleTaskUrl = url + '/task/sampleTask/getWindowRobots';
 //作废任务
 export const cancelSampleTaskUrl = url + '/task/sampleTask/cancel';
+//扫描料盘
+export const scanMaterialUrl = url + '/task/sampleTask/scanMaterial';
+//抽检报表导出
+export const exportSampleTaskInfoUrl = url + '/task/sampleTask/exportSampleTaskInfo';

@@ -2,155 +2,153 @@
   <div class="form-group" style="margin-bottom:0">
     <label>
       <input type="text"
+             :id="row.materialId"
              class="form-control"
              :class="{highLight:isHighLight}"
              autocomplete="off"
-             v-model="inputVal"
-             @click="setFocus"
+             v-model.trim="inputVal"
+             @click="setActiveMaterialId"
              ref="myInput"
+             @keyup.enter="cancelConfirm"
              @blur="cancelFocus">
     </label>
   </div>
 </template>
 
 <script>
-  import {mapGetters, mapActions} from 'vuex'
+  import {mapGetters,mapActions} from 'vuex'
   import eventBus from "../../../../../utils/eventBus";
+  import {inventoryMaterialUrl} from "../../../../../config/globalUrl";
+  import {axiosPost} from "../../../../../utils/fetchData";
+  import {errHandler} from "../../../../../utils/errorHandler";
 
   export default {
     name: "SetCheckQuantity",
     props: {
-      row: Object
+      row: Object,
+      activeName:String,
+      activeMaterialId:String,
+      activeQuantity:Number,
+      boxId:Number,
+      taskId:Number,
+      isScanner:Boolean
     },
     data() {
       return {
         inputVal: '',
         isHighLight: false,
-        index: ''
+        isPending:false
+      }
+    },
+    watch:{
+      activeMaterialId:function(val){
+        if(val === this.row.materialId && this.boxId === Number(this.activeName)){
+          this.isHighLight = true;
+          if(this.activeQuantity !== -1){
+            this.inputVal = this.activeQuantity;
+            eventBus.$emit('setActiveQuantity',true);
+          }else{
+            this.inputVal = this.row.actualNum;
+          }
+          if(this.isScanner === false){
+            this.setFocus();
+          }else{
+            this.checkQuantity();
+          }
+        }else{
+          this.isHighLight = false;
+          //this.inputVal = this.row.actualNum;
+          this.$refs.myInput.blur();
+        }
       }
     },
     computed: {
-      ...mapGetters(['checkWindowId', 'checkWindowData', 'isRefresh', 'isScanner','focusInput']),
+      ...mapGetters([
+        'printMaterialIdArr'
+      ]),
     },
-    mounted() {
-      if (this.checkWindowData.hasOwnProperty(this.checkWindowId)) {
-        this.setCheckData(this.checkWindowId);
-      }
-    },
-    watch: {
-      inputVal: function (val) {
-        let data = JSON.parse(JSON.stringify(this.checkWindowData[this.checkWindowId]));
-        if (this.index !== '' && data.length > 0) {
-          if(data[this.index].checkQuantity !== val){
-            data[this.index].isConfirm = false;
-          }
-          data[this.index].checkQuantity = val;
-          eventBus.$emit('refreshConfirm');
-          this.setCheckWindowData({
-            id: this.checkWindowId,
-            data: data
-          })
-        }
-      },
-      isHighLight: function (val) {
-        let data = JSON.parse(JSON.stringify(this.checkWindowData[this.checkWindowId]));
-        if (this.index !== '' && data.length > 0) {
-          data[this.index].isHighLight = val;
-          if (val === true) {
-            data.map((item, index) => {
-              if (index !== this.index) {
-                item.isHighLight = false;
-              }
-            })
-          }
-          this.setCheckWindowData({
-            id: this.checkWindowId,
-            data: data
-          })
-        }
-      },
-      isRefresh: function (val) {
-        //仓口改变，重新初始化
-        if (val === true) {
-          this.setCheckData(this.checkWindowId);
-        }
-      },
-      isScanner: function (val) {
-        //扫描
-        if (val === true) {
-          this.getScannerState();
-        }
-      },
-      focusInput:function(val){
-        if(val !== this.row.materialId){
-          this.isHighLight = false;
-        }
-      }
+    mounted(){
+      this.inputVal = this.row.actualNum;
+      //根据返回值刷新界面
+      eventBus.$on('changeInputVal',() => {
+        this.inputVal = this.row.actualNum;
+      });
     },
     methods: {
-      ...mapActions(['setCheckWindowData', 'setIsScanner','setFocusInput']),
+      ...mapActions(['setPrintMaterialIdArr','setLoading']),
       setFocus: function () {
-        eventBus.$emit('setIsInput', true);
-        this.setFocusInput(this.row.materialId);
-        this.isHighLight = true;
+        eventBus.$emit('setIsInputFocus',true);
+        eventBus.$emit('setDisabledMaterialId',this.row.materialId);
         this.$refs.myInput.focus();
       },
+      setActiveMaterialId:function(){
+        eventBus.$emit('setActiveMaterialId',this.row.materialId);
+      },
       cancelFocus: function () {
-        this.isHighLight = false;
-        eventBus.$emit('setIsInput', false);
-      },
-      //初始化
-      setCheckData: function (val) {
-        //获取当前窗口的数据
-        let data = JSON.parse(JSON.stringify(this.checkWindowData[val]));
-        //匹配
-        for (let i = 0; i < data.length; i++) {
-          let obj = data[i];
-          if (obj.materialId === this.row.materialId) {
-            this.inputVal = obj.checkQuantity;
-            this.isHighLight = obj.isHighLight;
-            this.index = i;
-            break;
-          }
+        eventBus.$emit('setIsInputFocus',false);
+        eventBus.$emit('setDisabledMaterialId','');
+        if(this.inputVal === ''){
+          this.inputVal = this.row.actualNum;
+          return;
         }
-        if(this.index !== ''){
-          data[this.index].isHighLight = false;
+        if(Number(this.inputVal) === Number(this.row.actualNum) && this.row.actualNum !== null){
+          return;
         }
-        this.setCheckWindowData({
-          id: this.checkWindowId,
-          data: data
-        })
+        this.checkQuantity();
       },
-      //获取扫描状态，判断是否扫描
-      getScannerState: function () {
-        let that = this;
-        setTimeout(function(){
-          that.setIsScanner(false);
-        },0);
-        //获取当前窗口的数据
-        let data = JSON.parse(JSON.stringify(this.checkWindowData[this.checkWindowId]));
-        //匹配
-        for (let i = 0; i < data.length; i++) {
-          let obj = data[i];
-          if (obj.materialId === this.row.materialId) {
-            if(obj.isScanner === true){
-              this.inputVal = obj.checkQuantity;
-              this.isHighLight = obj.isHighLight;
-              this.index = i;
-            }else{
-              this.isHighLight = false;
+      checkQuantity:function(){
+        if(this.inputVal === '' || this.inputVal === null){
+          return;
+        }
+        if(!this.isNumber(this.inputVal)){
+          this.$alertWarning('盘点数量必须为非负整数');
+          this.inputVal =  this.row.actualNum;
+          return;
+        }
+        if (!this.isPending) {
+          this.isPending = true;
+          let options = {
+            url: inventoryMaterialUrl,
+            data: {
+              materialId: this.row.materialId,
+              boxId: this.boxId,
+              taskId: this.taskId,
+              acturalNum: this.inputVal
             }
-            break;
+          };
+          axiosPost(options).then(response => {
+            this.isPending = false;
+            if (response.data.result === 200) {
+              this.cancelPrintArr(this.row.materialId);
+              eventBus.$emit('refreshCheckTask',true);
+            } else {
+              errHandler(response.data);
+            }
+          }).catch(err => {
+            this.$alertDanger('连接超时，请刷新重试');
+            console.log(err);
+            this.isPending = false;
+            this.setLoading(false);
+          })
+        }
+      },
+      isNumber: function (num) {
+        let val = num;
+        let reg = /^\+?(0|[1-9][0-9]*)$/;
+        if (val !== "") {
+          return reg.test(val);
+        }
+      },
+      cancelPrintArr:function (materialId) {
+        let arr = [];
+        for(let i=0;i<this.printMaterialIdArr.length;i++){
+          if(this.printMaterialIdArr[i] !== materialId){
+            arr.push(this.printMaterialIdArr[i]);
           }
         }
-        if(this.index !== ''){
-          data[this.index].isScanner = false;
-        }
-        this.setCheckWindowData({
-          id: this.checkWindowId,
-          data: data
-        })
-      }
+        this.setPrintMaterialIdArr(arr);
+      },
+      cancelConfirm:function(){}
     }
   }
 </script>

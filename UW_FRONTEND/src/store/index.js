@@ -65,7 +65,13 @@ const state = {
 
   //抽检
   spotWindowId:'',
-  spotMaterialId:''
+  spotMaterialId:'',
+
+  //出入库-是否扫描到操作完成二维码
+  scanFinishBoxId:'',
+  //出入库-是否扫描截料入库二维码
+  scanCutBoxId: '',
+  printMaterialIdArr:[]
 };
 
 const store = new Vuex.Store({

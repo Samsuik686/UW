@@ -78,3 +78,12 @@ export const setSpotWindowId = (state,spotWindowId) => {
 export const setSpotMaterialId = (state,spotMaterialId) => {
   state.spotMaterialId = spotMaterialId;
 };
+export const setScanFinishBoxId = (state,scanFinishBoxId) => {
+  state.scanFinishBoxId = scanFinishBoxId;
+};
+export const setScanCutBoxId = (state,scanCutBoxId) => {
+  state.scanCutBoxId = scanCutBoxId;
+};
+export const setPrintMaterialIdArr = (state,printMaterialIdArr) => {
+  state.printMaterialIdArr = printMaterialIdArr;
+};

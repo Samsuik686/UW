@@ -88,3 +88,12 @@ export const setSpotWindowId = ({commit},spotWindowId) => {
 export const setSpotMaterialId = ({commit},spotMaterialId) => {
   commit('setSpotMaterialId',spotMaterialId);
 };
+export const setScanFinishBoxId= ({commit},scanFinishBoxId) => {
+  commit('setScanFinishBoxId',scanFinishBoxId);
+};
+export const setScanCutBoxId= ({commit},scanCutBoxId) => {
+  commit('setScanCutBoxId',scanCutBoxId);
+};
+export const setPrintMaterialIdArr= ({commit},printMaterialIdArr) => {
+  commit('setPrintMaterialIdArr',printMaterialIdArr);
+};

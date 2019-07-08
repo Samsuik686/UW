@@ -7,11 +7,13 @@
 </template>
 
 <script>
+  import eventBus from "../../../../utils/eventBus";
   import {mapActions} from 'vuex'
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
   import {selectAllInventoryTaskUrl} from "../../../../config/globalUrl";
   import OperationOptions from './subscomp/OperationOptions'
+  import StartPause from './subscomp/StartPause'
   export default {
     name: "TableDetails",
     data() {
@@ -33,7 +35,8 @@
       }
     },
     components:{
-      OperationOptions
+      OperationOptions,
+      StartPause
     },
     created() {
       this.init();
@@ -73,11 +76,17 @@
         deep: true
       }
     },
+    mounted: function () {
+      eventBus.$on('refreshTask',() => {
+        this.dataFilter();
+      });
+    },
     methods: {
       ...mapActions(['setLoading']),
       init: function () {
         this.data = [];
         this.columns = [
+          {title: '启动/暂停', tdComp: 'StartPause', colStyle: {'width':'80px'}},
           {field: 'showId', title: '序号', colStyle: {'width': '70px'}},
           {field: 'taskName', title: '任务名', colStyle: {'width': '120px'}},
           {field: 'stateString', title: '状态', colStyle: {'width': '80px'}},

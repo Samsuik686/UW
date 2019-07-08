@@ -19,10 +19,10 @@ import Login from '../pages/user/Login'
 import ConfigMain from '../pages/config/ConfigMain'
 import UserConfig from '../pages/user/UserConfig'
 import IoMain from '../pages/io/IoMain'
-import OutNow from '../pages/io/details/OutNow'
-import InNow from '../pages/io/details/InNow'
-import IoPreview from '../pages/io/details/IoPreview'
-import CallRobot from '../pages/io/details/CallRobot'
+import OutNow from '../pages/io/outNow/OutNow'
+import InNow from '../pages/io/inNow/InNow'
+import IoPreview from '../pages/io/ioPreview/IoPreview'
+import CallRobot from '../pages/io/callRobot/CallRobot'
 import CheckMain from '../pages/check/CheckMain'
 import UWDetailsModule from '../pages/check/details/UWDetailsModule'
 import TransferDetailsModule from '../pages/check/details/TransferDetailsModule'
@@ -39,7 +39,6 @@ const router = new Router({
     {
       path: '/_empty'
     },
-
     {
       path: '/',
       component: Main,
