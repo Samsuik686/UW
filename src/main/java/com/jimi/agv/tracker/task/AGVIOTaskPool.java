@@ -43,10 +43,8 @@ public class AGVIOTaskPool {
 
 	private boolean isFinish() {
 		for (AGVIOTask task : tasks) {
-			for (AGVIOTaskItem item : task.getItems()) {
-				if(item.getState() != AGVIOTaskItem.FINISHED) {
-					return false;
-				}
+			if(!task.isFinish()) {
+				return false;
 			}
 		}
 		return true;

@@ -76,6 +76,7 @@ public class Main {
 		System.out.println("1.4.0更新日志：1.现在可以支持多叉车同时启动噜~");
 		System.out.println("  >> 1.4.1修复日志：1.修复了正在充电且电量大于60的叉车无法调度的问题");
 		System.out.println("1.5.0更新日志：1.支持多任务导入，并按优先级顺序安排指令发送");
+		System.out.println("1.6.0更新日志：1.增加时间节点报告字段 2.增加执行叉车字段");
 		System.out.println("==================================");
 	}
 

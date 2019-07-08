@@ -26,6 +26,15 @@ public abstract class BaseTraditionBody<M extends BaseTraditionBody<M>> extends 
 	public java.lang.Long getTraditionHead() {
 		return getLong("tradition_head");
 	}
+	
+	public M setRobotId(java.lang.Integer robotId) {
+		set("robot_id", robotId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getRobotId() {
+		return getInt("robot_id");
+	}
 
 	public M setTargetPosition(java.lang.String targetPosition) {
 		set("target_position", targetPosition);
@@ -34,6 +43,60 @@ public abstract class BaseTraditionBody<M extends BaseTraditionBody<M>> extends 
 	
 	public java.lang.String getTargetPosition() {
 		return getStr("target_position");
+	}
+
+	public M setAssignTime(java.util.Date assignTime) {
+		set("assign_time", assignTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getAssignTime() {
+		return get("assign_time");
+	}
+
+	public M setStartTime(java.util.Date startTime) {
+		set("start_time", startTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getStartTime() {
+		return get("start_time");
+	}
+
+	public M setGotTime(java.util.Date gotTime) {
+		set("got_time", gotTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getGotTime() {
+		return get("got_time");
+	}
+
+	public M setArriveTime(java.util.Date arriveTime) {
+		set("arrive_time", arriveTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getArriveTime() {
+		return get("arrive_time");
+	}
+
+	public M setReturnTime(java.util.Date returnTime) {
+		set("return_time", returnTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getReturnTime() {
+		return get("return_time");
+	}
+
+	public M setFinishTime(java.util.Date finishTime) {
+		set("finish_time", finishTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getFinishTime() {
+		return get("finish_time");
 	}
 
 	public M setGotConsumeTime(java.lang.Integer gotConsumeTime) {

@@ -5,6 +5,8 @@ import com.jimi.agv.tracker.entity.model.CushionBody;
 import com.jimi.agv.tracker.task.AGVIOTaskItem;
 import com.jimi.agv.tracker.task.CushionAGVIOTaskItem;
 
+import cc.darhao.dautils.api.DateUtil;
+
 public class CushionBodyReporter implements Reporter{
 
 	private CushionAGVIOTaskItem item;
@@ -22,6 +24,10 @@ public class CushionBodyReporter implements Reporter{
 		StringBuffer sb = new StringBuffer();
 		sb.append(item.getDescription() + "\n");
 		sb.append("执行叉车:" + item.getRobotId() + "\n");
+		sb.append("指派时间：" + DateUtil.HHmmss(item.getAssignTime()) + "\n");
+		sb.append("开始时间：" + DateUtil.HHmmss(item.getStartTime()) + "\n");
+		sb.append("取盒时间：" + DateUtil.HHmmss(item.getGotTime()) + "\n");
+		sb.append("完成时间：" + DateUtil.HHmmss(item.getFinishTime()) + "\n");
 		sb.append("开始->取盒耗时："+ (((item.getGotTime().getTime() - item.getStartTime().getTime()) / 1000)) + "\n");
 		for (Position position : item.getGotTrails()) {
 			sb.append(position.toString()+"\n");
@@ -38,6 +44,11 @@ public class CushionBodyReporter implements Reporter{
 	public void saveToDb() {
 		CushionBody cushionBody = new CushionBody();
 		cushionBody.setCushionHead(headId);
+		cushionBody.setRobotId(item.getRobotId());
+		cushionBody.setAssignTime(item.getAssignTime());
+		cushionBody.setStartTime(item.getStartTime());
+		cushionBody.setGotTime(item.getGotTime());
+		cushionBody.setFinishTime(item.getFinishTime());
 		cushionBody.setSourcePosition("[" + item.getSourceX() + "," + item.getSourceY() + "," + item.getSourceZ() + "]");
 		cushionBody.setTargetPosition("[" + item.getTargetX() + "," + item.getTargetY() + "," + item.getTargetZ() + "]");
 		cushionBody.setGotConsumeTime((int) ((item.getGotTime().getTime() - item.getStartTime().getTime()) / 1000));
