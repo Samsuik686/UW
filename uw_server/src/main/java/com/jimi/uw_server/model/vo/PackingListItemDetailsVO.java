@@ -10,6 +10,8 @@ import java.util.Date;
 
 public class PackingListItemDetailsVO {
 
+	private Integer taskLogId;
+	
 	private String materialId;
 
 	private Integer quantity;
@@ -21,7 +23,8 @@ public class PackingListItemDetailsVO {
 	private Date productionTime;
 
 
-	public PackingListItemDetailsVO(String materialId, Integer ioQuantity, Integer remainderQuantity, Date productionTime, Boolean isInBox) {
+	public PackingListItemDetailsVO(Integer taskLogId, String materialId, Integer ioQuantity, Integer remainderQuantity, Date productionTime, Boolean isInBox) {
+		this.setTaskLogId(taskLogId);
 		this.setMaterialId(materialId);
 		this.setQuantity(ioQuantity);
 		this.setRemainderQuantity(remainderQuantity);
@@ -29,6 +32,22 @@ public class PackingListItemDetailsVO {
 		this.setIsInBoxString(isInBox);
 		this.getIsInBoxString();
 	}
+
+	
+	public Integer getTaskLogId() {
+		return taskLogId;
+	}
+
+	
+	public void setTaskLogId(Integer taskLogId) {
+		this.taskLogId = taskLogId;
+	}
+
+	
+	public void setIsInBoxString(String isInBoxString) {
+		this.isInBoxString = isInBoxString;
+	}
+	
 
 	public String getIsInBoxString() {
 		return isInBoxString;

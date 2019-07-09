@@ -2,36 +2,21 @@ package com.jimi.uw_server.agv.entity.bo;
 
 import java.io.Serializable;
 
+import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
+
 /**
  * 
  * @author trjie
  * @createTime 2019年5月16日  上午9:38:15
  */
 @SuppressWarnings("serial")
-public class AGVInventoryTaskItem  implements Serializable  {
+public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable  {
 
-		private Integer taskId;
-
-		private Integer robotId;
-
-		private Integer boxId;
-
-		/**
-		 * -1：不可分配  0：未分配  1：已分配拣料  2：已拣料到站  3：已分配回库  4：已回库完成
-		 */
-		private Integer state;
-
-		/**
-		 * false：出入库数量尚未满足实际需求	true：出入库数量已满足实际需求
-		 */
-		private Boolean isForceFinish;
 
 		/**
 		 * 任务优先级，取值范围：1-9；数值越大，优先级越高
 		 */
 		private Integer priority;
-
-		private Integer windowId;
 
 		public AGVInventoryTaskItem() {}
 
@@ -43,6 +28,7 @@ public class AGVInventoryTaskItem  implements Serializable  {
 			this.isForceFinish = false;
 			this.priority = priority;
 			this.windowId = windowId;
+			this.goodsLocationId = 0;
 		}
 
 		public Integer getRobotId() {

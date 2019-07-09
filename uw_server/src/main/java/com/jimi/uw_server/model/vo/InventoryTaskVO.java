@@ -39,6 +39,7 @@ public class InventoryTaskVO {
 	
 	private Date createTime;
 	
+	private Boolean status;
 	public String getTypeString() {
 		return typeString;
 	}
@@ -163,6 +164,16 @@ public class InventoryTaskVO {
 
 	public void setType(Integer type) {
 		this.type = type;
+	}
+
+	
+	public Boolean getStatus() {
+		return status;
+	}
+
+	
+	public void setStatus(Boolean status) {
+		this.status = status;
 	}
 	
 	

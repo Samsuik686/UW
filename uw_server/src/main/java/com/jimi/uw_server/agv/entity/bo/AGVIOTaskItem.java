@@ -2,6 +2,7 @@ package com.jimi.uw_server.agv.entity.bo;
 
 import java.io.Serializable;
 
+import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
 import com.jimi.uw_server.model.PackingListItem;
 
 /**
@@ -11,31 +12,14 @@ import com.jimi.uw_server.model.PackingListItem;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 @SuppressWarnings("serial")
-public class AGVIOTaskItem implements Serializable {
+public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 
 	private Integer id;
-
-	private Integer taskId;
 
 	private Integer materialTypeId;
 
 	private Integer quantity;
 
-	private Integer robotId;
-
-	private Integer boxId;
-
-	/**
-	 * -1：不可分配  0：未分配  1：已分配拣料  2：已拣料到站  3：已分配回库  4：已回库完成
-	 */
-	private Integer state;
-
-	/**
-	 * false：出入库数量尚未满足实际需求	true：出入库数量已满足实际需求
-	 */
-	private Boolean isForceFinish;
-
-	private Integer windowId;
 	
 	/**
 	 * 任务优先级，取值范围：1-9；数值越大，优先级越高
@@ -55,6 +39,7 @@ public class AGVIOTaskItem implements Serializable {
 		this.state = state;
 		this.boxId = 0;
 		this.windowId = 0;
+		this.goodsLocationId = 0;
 		this.isForceFinish = false;
 		this.priority = priority;
 		this.isCut = false;
@@ -132,9 +117,6 @@ public class AGVIOTaskItem implements Serializable {
 		this.priority = priority;
 	}
 
-	public String getGroupId() {
-		return boxId + ":" + taskId;
-	}
 
 	public Boolean getIsCut() {
 		return isCut;
@@ -152,6 +134,8 @@ public class AGVIOTaskItem implements Serializable {
 		this.windowId = windowId;
 	}
 
-	
+	public String getGroupId() {
+		return this.id + ":" + this.boxId + ":" + this.taskId;
+	}
 
 }

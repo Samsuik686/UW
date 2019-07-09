@@ -251,7 +251,7 @@ public class InventoryTaskController extends Controller {
 		if (windowId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		PackingInventoryInfoVO result = inventoryTaskService.getPackingInventory(windowId);
+		List<PackingInventoryInfoVO> result = inventoryTaskService.getPackingInventory(windowId);
 		renderJson(ResultUtil.succeed(result));
 	}
 	
@@ -505,24 +505,4 @@ public class InventoryTaskController extends Controller {
 	}
 	
 	
-	@Log("设置盘点任务叉车，仓口ID{windowId}， 叉车{robots}")
-	public void setWindowRobots(Integer windowId, String robots) {
-		if (windowId == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		if (robots == null) {
-			robots = "";
-		}
-		String result  = inventoryTaskService.setWindowRobots(windowId, robots);
-		renderJson(ResultUtil.succeed(result));
-	}
-
-	
-	public void getWindowRobots(Integer windowId) {
-		if (windowId == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		String result  = inventoryTaskService.getWindowRobots(windowId);
-		renderJson(ResultUtil.succeed(result));
-	}
 }

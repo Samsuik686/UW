@@ -20,11 +20,14 @@ import javax.websocket.WebSocketContainer;
 import com.jfinal.json.Json;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 import com.jimi.uw_server.agv.handle.ACKHandler;
 import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
-import com.jimi.uw_server.agv.handle.IOHandler;
+import com.jimi.uw_server.agv.handle.IOTaskHandler;
+import com.jimi.uw_server.agv.handle.InvTaskHandler;
+import com.jimi.uw_server.agv.handle.SamTaskHandler;
 import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.util.ErrorLogWritter;
 
@@ -50,6 +53,11 @@ public class AGVMainSocket {
 	 */
 	private static Set<Integer> receiveNotAckCmdidSet;
 	
+	private static IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
+	
+	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
+	
+	private static SamTaskHandler samTaskHandler = SamTaskHandler.getInstance();
 	
 	public static void init(String uri) throws Exception {
 		//初始化
@@ -89,17 +97,23 @@ public class AGVMainSocket {
 				if(ACKHandler.handleNOTACK(message)) {
 					//判断是否是status指令
 					if(message.contains("\"cmdcode\":\"status\"")) {
-						IOHandler.handleStatus(message);
-						BuildHandler.handleStatus(message);
-					}
-
-					//判断是否是loadexception指令
-					if(message.contains("\"cmdcode\":\"loadexception\"")) {
+						//转换成实体类
+						AGVStatusCmd statusCmd = Json.getJson().parse(message, AGVStatusCmd.class);
+						// missiongroupid 包含“:”表示为出入库任务
+						if (statusCmd.getMissiongroupid().contains(":")) {
+							//判断是否是开始执行任务
+							ioTaskHandler.handleStatus(statusCmd);
+						}else if (statusCmd.getMissiongroupid().contains("@")) {
+							invTaskHandler.handleStatus(statusCmd);
+						}else if (statusCmd.getMissiongroupid().contains("#")) {
+							//抽检任务
+							samTaskHandler.handleStatus(statusCmd);
+						}else {
+							BuildHandler.handleStatus(message);
+						}
+					}else if(message.contains("\"cmdcode\":\"loadexception\"")) {//判断是否是loadexception指令
 						ExceptionHandler.handleLoadException(message);
-					}
-
-					//判断是否是agv_del_mission指令
-					if(message.contains("\"cmdcode\":\"agv_del_mission\"")) {
+					}else if(message.contains("\"cmdcode\":\"agv_del_mission\"")) {//判断是否是agv_del_mission指令
 						ExceptionHandler.handleDelMissionException(message);
 					}
 				}

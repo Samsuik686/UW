@@ -1,8 +1,9 @@
 package com.jimi.uw_server.model.vo;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.jfinal.plugin.activerecord.Record;
 
@@ -22,19 +23,15 @@ public class SampleTaskDetialsVO {
 	
 	private String no;
 	
-	private String materialId;
+	private Integer storeQuantity;
 	
-	private String operator;
+	private Integer scanQuantity;
 	
-	private Integer quantity;
+	private Integer regularOutQuantity;
 	
-	private Boolean isSingular;
+	private Integer singularOutQuantity;
 	
-	private Date time;
-	
-	private String isSingularString;
-
-	private Integer id;
+	private List<SampleTaskOutMaterialInfoVO> list;
 	
 	public Integer getTaskId() {
 		return taskId;
@@ -68,84 +65,100 @@ public class SampleTaskDetialsVO {
 		this.no = no;
 	}
 
-	public String getMaterialId() {
-		return materialId;
-	}
+	
 
-	public void setMaterialId(String materialId) {
-		this.materialId = materialId;
-	}
-
-	public String getOperator() {
-		return operator;
-	}
-
-	public void setOperator(String operator) {
-		this.operator = operator;
-	}
-
-	public Integer getQuantity() {
-		return quantity;
-	}
-
-	public void setQuantity(Integer quantity) {
-		this.quantity = quantity;
-	}
-
-	public Boolean getIsSingular() {
-		return isSingular;
-	}
-
-	public void setIsSingular(Boolean isSingular) {
-		this.isSingular = isSingular;
-		if (isSingular == null){
-			this.isSingularString = "正常";
-		}else if (isSingular) {
-			this.isSingularString = "异常出库";
-		}else {
-			this.isSingularString = "抽检出库";
-		}
-	}
-
-	public Date getTime() {
-		return time;
-	}
-
-	public void setTime(Date time) {
-		this.time = time;
-	}
-
-	public String getIsSingularString() {
-		return isSingularString;
-	}
-
-	public void setIsSingularString(String isSingularString) {
-		this.isSingularString = isSingularString;
+	
+	public List<SampleTaskOutMaterialInfoVO> getList() {
+		return list;
 	}
 	
-	public Integer getId() {
-		return id;
+	
+	public Integer getStoreQuantity() {
+		return storeQuantity;
 	}
 
-	public void setId(Integer id) {
-		this.id = id;
+	
+	public void setStoreQuantity(Integer storeQuantity) {
+		this.storeQuantity = storeQuantity;
 	}
 
+	public Integer getScanQuantity() {
+		return scanQuantity;
+	}
+
+	
+	public void setScanQuantity(Integer scanQuantity) {
+		this.scanQuantity = scanQuantity;
+	}
+
+	
+	public Integer getRegularOutQuantity() {
+		return regularOutQuantity;
+	}
+
+	
+	public void setRegularOutQuantity(Integer regularOutQuantity) {
+		this.regularOutQuantity = regularOutQuantity;
+	}
+
+	
+	public Integer getSingularOutQuantity() {
+		return singularOutQuantity;
+	}
+
+	
+	public void setSingularOutQuantity(Integer singularOutQuantity) {
+		this.singularOutQuantity = singularOutQuantity;
+	}
+
+	public void setList(List<SampleTaskOutMaterialInfoVO> list) {
+		this.list = list;
+	}
+
+	
 	public static List<SampleTaskDetialsVO> fillList(List<Record> records){
 		List<SampleTaskDetialsVO> sampleTaskDetialsVOs = new ArrayList<>();
+		Map<Integer, List<SampleTaskOutMaterialInfoVO>> map = new LinkedHashMap<Integer, List<SampleTaskOutMaterialInfoVO>>();
 		for (Record record : records) {
 			SampleTaskDetialsVO sampleTaskDetialsVO = new SampleTaskDetialsVO();
-			sampleTaskDetialsVO.setId(record.getInt("id"));
-			sampleTaskDetialsVO.setTaskId(record.getInt("task_id"));
-			sampleTaskDetialsVO.setMaterialTypeId(record.getInt("material_type_id"));
-			sampleTaskDetialsVO.setSampleTaskItemId(record.getInt("sample_task_item_id"));
-			sampleTaskDetialsVO.setMaterialId(record.getStr("material_id"));
-			sampleTaskDetialsVO.setNo(record.getStr("no"));
-			sampleTaskDetialsVO.setQuantity(record.getInt("quantity"));
-			sampleTaskDetialsVO.setOperator(record.getStr("operator"));
-			sampleTaskDetialsVO.setTime(record.getDate("time"));
-			sampleTaskDetialsVO.setIsSingular(record.getBoolean("is_singular"));
-			sampleTaskDetialsVOs.add(sampleTaskDetialsVO);
+			if (map.get(record.get("sample_task_item_id")) == null) {
+				sampleTaskDetialsVO.setTaskId(record.getInt("task_id"));
+				sampleTaskDetialsVO.setMaterialTypeId(record.getInt("material_type_id"));
+				sampleTaskDetialsVO.setSampleTaskItemId(record.getInt("sample_task_item_id"));
+				sampleTaskDetialsVO.setNo(record.getStr("no"));
+				sampleTaskDetialsVO.setStoreQuantity(record.getInt("store_quantity"));
+				sampleTaskDetialsVO.setScanQuantity(record.getInt("scan_quantity"));
+				sampleTaskDetialsVO.setRegularOutQuantity(record.getInt("regular_out_quantity"));
+				sampleTaskDetialsVO.setSingularOutQuantity(record.getInt("singular_out_quantity"));
+				sampleTaskDetialsVOs.add(sampleTaskDetialsVO);
+				List<SampleTaskOutMaterialInfoVO> infoVOs = new ArrayList<>();
+				if (record.getStr("id") != null) {
+					SampleTaskOutMaterialInfoVO infoVO = new SampleTaskOutMaterialInfoVO(); 
+					infoVO.setMaterialId(record.getStr("material_id"));
+					infoVO.setId(record.getInt("id"));
+					infoVO.setQuantity(record.getInt("quantity"));
+					infoVO.setOperator(record.getStr("operator"));
+					infoVO.setTime(record.getDate("time"));
+					infoVO.setIsSingular(record.getBoolean("is_singular"));
+					infoVOs.add(infoVO);
+				}
+				map.put(record.getInt("sample_task_item_id"), infoVOs);
+			}else {
+				if (record.getStr("id") != null) {
+					List<SampleTaskOutMaterialInfoVO> infoVOs = map.get(record.get("sample_task_item_id"));
+					SampleTaskOutMaterialInfoVO infoVO = new SampleTaskOutMaterialInfoVO(); 
+					infoVO.setMaterialId(record.getStr("material_id"));
+					infoVO.setId(record.getInt("id"));
+					infoVO.setQuantity(record.getInt("quantity"));
+					infoVO.setOperator(record.getStr("operator"));
+					infoVO.setTime(record.getDate("time"));
+					infoVO.setIsSingular(record.getBoolean("is_singular"));
+					infoVOs.add(infoVO);
+				}
+			}
+		}
+		for (SampleTaskDetialsVO sampleTaskDetialsVO : sampleTaskDetialsVOs) {
+			sampleTaskDetialsVO.setList(map.get(sampleTaskDetialsVO.getSampleTaskItemId()));
 		}
 		return sampleTaskDetialsVOs;
 	}

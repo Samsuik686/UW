@@ -23,6 +23,8 @@ public class AGVMissionGroup {
 	private Integer robotid;
 	
 	private String missiongroupid;
+	
+	private String priority;
 
 	public Integer getStartx() {
 		return startx;
@@ -86,6 +88,16 @@ public class AGVMissionGroup {
 
 	public void setMissiongroupid(String missiongroupid) {
 		this.missiongroupid = missiongroupid;
+	}
+
+	
+	public String getPriority() {
+		return priority;
+	}
+
+	
+	public void setPriority(String priority) {
+		this.priority = priority;
 	}
 	
 	

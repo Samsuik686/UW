@@ -46,5 +46,14 @@ public class SupplierController extends Controller {
 		renderJson(ResultUtil.succeed(supplierService.getSuppliers(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
+	
+	// 更新供应商的曾用名
+		@Log("更改供应商{id}，名字为{name}")
+		public void changeName(Integer id, String name) {
+			if (id == null || name == null) {
+				throw new OperationException("参数不能为空");
+			}
+			renderJson(ResultUtil.succeed(supplierService.changeName(id, name)));
+		}
 
 }

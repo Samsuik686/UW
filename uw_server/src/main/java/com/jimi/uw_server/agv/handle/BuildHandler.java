@@ -12,7 +12,7 @@ import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.constant.BuildTaskItemState;
-import com.jimi.uw_server.constant.IOTaskItemState;
+import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.service.MaterialService;
 
@@ -33,7 +33,7 @@ public class BuildHandler {
 		//发送LL>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 		//更新任务条目状态为1
-		TaskItemRedisDAO.updateBuildTaskItemState(item, IOTaskItemState.ASSIGNED);
+		TaskItemRedisDAO.updateBuildTaskItemState(item, TaskItemState.ASSIGNED);
 	}
 
 

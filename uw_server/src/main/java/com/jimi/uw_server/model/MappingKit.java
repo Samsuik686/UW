@@ -22,6 +22,8 @@ public class MappingKit {
 		arp.addMapping("error_log", "id", ErrorLog.class);
 		arp.addMapping("external_inventory_log", "id", ExternalInventoryLog.class);
 		arp.addMapping("external_wh_log", "id", ExternalWhLog.class);
+		arp.addMapping("former_supplier", "id", FormerSupplier.class);
+		arp.addMapping("goods_location", "id", GoodsLocation.class);
 		arp.addMapping("inventory_log", "id", InventoryLog.class);
 		arp.addMapping("material", "id", Material.class);
 		arp.addMapping("material_box", "id", MaterialBox.class);
@@ -31,6 +33,7 @@ public class MappingKit {
 		arp.addMapping("position_log", "id", PositionLog.class);
 		arp.addMapping("sample_singular_record", "id", SampleSingularRecord.class);
 		arp.addMapping("sample_task_item", "id", SampleTaskItem.class);
+		arp.addMapping("sample_task_material_record", "id", SampleTaskMaterialRecord.class);
 		arp.addMapping("socket_log", "id", SocketLog.class);
 		arp.addMapping("supplier", "id", Supplier.class);
 		arp.addMapping("task", "id", Task.class);

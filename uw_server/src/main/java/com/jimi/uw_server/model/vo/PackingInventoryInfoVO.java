@@ -2,6 +2,8 @@ package com.jimi.uw_server.model.vo;
 
 import java.util.List;
 
+import com.jimi.uw_server.model.GoodsLocation;
+
 /**
  * 
  * @author trjie
@@ -16,7 +18,38 @@ public class PackingInventoryInfoVO {
 	
 	private Integer windowId;
 	
+	private String goodsLocationName;
+	
+	private Integer goodsLocationId;
+	
 	private List<MaterialInfoVO> list;
+
+	
+	public PackingInventoryInfoVO(GoodsLocation goodsLocation, List<MaterialInfoVO> list) {
+		this.setGoodsLocationId(goodsLocation.getId());
+		this.setGoodsLocationName(goodsLocation.getName());
+		this.setWindowId(goodsLocation.getWindowId());
+		this.setList(list);
+	}
+	
+	public String getGoodsLocationName() {
+		return goodsLocationName;
+	}
+
+	
+	public void setGoodsLocationName(String goodsLocationName) {
+		this.goodsLocationName = goodsLocationName;
+	}
+
+	
+	public Integer getGoodsLocationId() {
+		return goodsLocationId;
+	}
+
+	
+	public void setGoodsLocationId(Integer goodsLocationId) {
+		this.goodsLocationId = goodsLocationId;
+	}
 
 	public Integer getTaskId() {
 		return taskId;

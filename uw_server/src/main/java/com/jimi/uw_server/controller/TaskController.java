@@ -221,14 +221,17 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(taskService.deleteMaterialRecord(packListItemId, materialId)));
 	}
 
-
-	// 完成任务条目
-	@Log("id号为{packListItemId}的任务条目出入库数量与计划数量不相符，叉车回库后，该任务条目的完成状态为{isFinish}(true表示已完成，false表示未完成)")
-	public void finishItem(Integer packListItemId, Boolean isFinish) {
-		if (packListItemId ==null || isFinish == null) {
+	
+	@Log("修改任务条目{packListItemId}的出库记录{taskLogId}，料盘码{materialId}的出库数量为{quantity}")
+	public void modifyOutQuantity(Integer taskLogId, Integer packListItemId, String materialId, Integer quantity) {
+		
+		if (taskLogId == null || packListItemId == null || quantity == null || materialId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.finishItem(packListItemId, isFinish)));
+		if (quantity <= 0) {
+			throw new ParameterException("数量必须为正整数！");
+		}
+		renderJson(ResultUtil.succeed(taskService.modifyOutQuantity(taskLogId, packListItemId, materialId, quantity)));
 	}
 
 
@@ -256,27 +259,6 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(taskService.setPriority(id, priority)));
 	}
 
-	
-	@Log("设置仓口{windowId}的叉车为{robots}")
-	public void setWindowRobots(Integer windowId, String robots) {
-		if (windowId == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		if (robots == null) {
-			robots = "";
-		}
-		String result  = taskService.setWindowRobots(windowId, robots);
-		renderJson(ResultUtil.succeed(result));
-	}
-	
-	
-	public void getWindowRobots(Integer windowId) {
-		if (windowId == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		String result  = taskService.getWindowRobots(windowId);
-		renderJson(ResultUtil.succeed(result));
-	}
 	
 	@Log("编辑任务备注，任务ID{taskId}，备注{remarks}")
 	public void editTaskRemarks(Integer taskId, String remarks) {
@@ -312,5 +294,14 @@ public class TaskController extends Controller {
 			}
 		}
 		renderNull();
+	}
+	
+	@Log("开始/暂停任务{taskId}，Flag{flag}")
+	public void switchTask(Integer taskId, Boolean flag) {
+		if (taskId == null || flag == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		taskService.switchTask(taskId, flag);
+		renderJson(ResultUtil.succeed());
 	}
 }

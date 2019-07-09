@@ -45,13 +45,13 @@ public class RobotController extends Controller {
 
 	// 令叉车回库，并更新库存
 	@Log("发送SL(回库)指令给叉车，该叉车目前绑定的任务条目为{id}")
-	public void back(Integer id, String materialOutputRecords, Boolean isLater, Integer state) throws Exception {
+	public void back(Integer id, Boolean isLater, Integer state) throws Exception {
 		if (id == null || isLater == null || state == null){
 			throw new OperationException("参数不能为空");
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String resultString = robotService.back(id, materialOutputRecords, isLater, state, user);
+		String resultString = robotService.back(id, isLater, state, user);
 		if (resultString.equals("已成功发送回库指令！")) {
 			renderJson(ResultUtil.succeed());
 		} else if (resultString.equals("料盒中还有其他需要出库的物料，叉车暂时不回库！")) {

@@ -72,4 +72,13 @@ public abstract class BaseSampleSingularRecord<M extends BaseSampleSingularRecor
 		return getStr("operator");
 	}
 
+	public M setBoxId(java.lang.Integer boxId) {
+		set("box_id", boxId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getBoxId() {
+		return getInt("box_id");
+	}
+
 }

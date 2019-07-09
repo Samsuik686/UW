@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,9 +22,10 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
-import com.jimi.uw_server.agv.handle.IOHandler;
+import com.jimi.uw_server.agv.handle.InvTaskHandler;
 import com.jimi.uw_server.annotation.Log;
-import com.jimi.uw_server.constant.InventoryTaskItemState;
+import com.jimi.uw_server.constant.SQL;
+import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
@@ -31,6 +33,7 @@ import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.ExternalInventoryLog;
 import com.jimi.uw_server.model.ExternalWhLog;
+import com.jimi.uw_server.model.GoodsLocation;
 import com.jimi.uw_server.model.InventoryLog;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
@@ -115,8 +118,6 @@ public class InventoryTaskService {
 
 	private static final String GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER = "SELECT * FROM task where state = 1 and type = 2 and supplier = ? order by create_time desc";
 	
-	private static final String GET_WINDOWS_BY_TASK_ID = "select * from window where bind_task_id = ?";
-	
 	private static final String UPDATE_INVENTORY_LOG_UNCOVER = "UPDATE inventory_log SET enabled = 0 WHERE different_num = 0 AND task_id = ?";
 	
 	private static final String UPDATE_EWH_INVENTORY_LOG_UNCOVER = "UPDATE external_inventory_log SET enabled = 0 WHERE different_num = 0 AND task_id = ?";
@@ -125,13 +126,9 @@ public class InventoryTaskService {
 	
 	private static final String UPDATE_MATERIAL_RETURN_RECORD_UNENABLED = "UPDATE material_return_record SET enabled = 0 WHERE time <= ? AND enabled = 1 AND material_type_id IN (SELECT id from material_type WHERE material_type.supplier = ? AND material_type.enabled = 1)";
 	
-	private static final String GET_NEED_COVER_EWH_INVENTORY_TASK_INFO = "SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.ewh_checked_operatior AS check_operatior, task.ewh_checked_time AS check_time, SUM(external_inventory_log.before_num ) AS before_num, SUM(external_inventory_log.actural_num ) AS actural_num, SUM( external_inventory_log.different_num ) AS different_num, SUM(external_inventory_log.material_return_num) as material_return_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier WHERE external_inventory_log.task_id = ? AND different_num > 0 GROUP BY external_inventory_log.material_type_id ORDER BY material_type.`no` DESC";
-	
-	private static final String GET_NEED_COVER_UW_INVWNTORY_TASK_INFO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, inventory_log.task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.uw_checked_operatior AS check_operatior, task.uw_checked_time AS check_time, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN task INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = task.id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND different_num > 0 GROUP BY material.type ORDER BY material_type.`no` DESC";
-	
-	private static final String GET_WORKING_WINDOWS = "SELECT * FROM window WHERE bind_task_id IS NOT NULL";
-	
 	private static ExternalWhTaskService externalWhTaskService = ExternalWhTaskService.me;
+	
+	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
 	
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 	
@@ -226,7 +223,7 @@ public class InventoryTaskService {
 			List<AGVInventoryTaskItem> agvInventoryTaskItems = new ArrayList<>();
 			List<MaterialBox> materialBoxs = MaterialBox.dao.find(GET_ALL_BOX_BY_SUPPLIER, task.getSupplier());
 			for (MaterialBox box : materialBoxs) {
-				AGVInventoryTaskItem agvInventoryTaskItem = new AGVInventoryTaskItem(taskId, box.getInt("box"), InventoryTaskItemState.WAIT_ASSIGN, 0, 0);
+				AGVInventoryTaskItem agvInventoryTaskItem = new AGVInventoryTaskItem(taskId, box.getInt("box"), TaskItemState.WAIT_ASSIGN, 0, 0);
 				agvInventoryTaskItems.add(agvInventoryTaskItem);
 			}
 			
@@ -273,7 +270,7 @@ public class InventoryTaskService {
 				window.setBindTaskId(task.getId());
 				window.update();
 			}
-			TaskItemRedisDAO.addInventoryTaskItem(agvInventoryTaskItems);
+			TaskItemRedisDAO.addInventoryTaskItem(taskId, agvInventoryTaskItems);
 		}
 		return "操作成功";
 	}
@@ -288,7 +285,7 @@ public class InventoryTaskService {
 	 * @return
 	 */
 	public String backInventoryBox(Integer taskId, Integer boxId, Integer windowId, User user) {
-		synchronized (Lock.INVENTORY_REDIS_LOCK) {
+		synchronized (Lock.INV_TASK_BACK_LOCK) {
 			
 			List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_BOX_AND_TASKID, boxId, taskId);
 			for (InventoryLog inventoryLog : inventoryLogs) {
@@ -309,12 +306,16 @@ public class InventoryTaskService {
 			if (window == null) {
 				throw new OperationException("当前盘点的仓口不存在，请检查参数是否正确!");
 			}
-			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems()) {
-				if (inventoryTaskItem.getTaskId().equals(taskId) && inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(InventoryTaskItemState.ARRIVED_WINDOW)) {
+			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
+				if ( inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
 					try {
-						IOHandler.sendSL(inventoryTaskItem, materialBox, window);
-						TaskItemRedisDAO.updateInventoryTaskItemState(inventoryTaskItem, InventoryTaskItemState.START_BACK);
-						TaskItemRedisDAO.updateInventoryTaskIsForceFinish(inventoryTaskItem, true);
+						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
+						if (goodsLocation != null) {
+							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation);
+						}else {
+							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
+						}
+						TaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
 					} catch (Exception e) {
 						e.printStackTrace();
 						throw new OperationException(e.getMessage());
@@ -578,7 +579,9 @@ public class InventoryTaskService {
 			throw new OperationException("盘点任务记录已审核，请勿重复审核！");
 		}
 		List<InventoryLog> logs = InventoryLog.dao.find(GET_UN_INVENTORY_LOG_BY_TASKID, taskId);
-		if (logs.size() > 0) {
+		
+		Window window = Window.dao.findFirst(SQL.GET_WINDOW_BY_TASKID, taskId);
+		if (logs.size() > 0 || window != null) {
 			throw new OperationException("UW仓盘点阶段未结束，请结束后再审核！");
 		}
 		Db.update(UPDATE_INVENTORY_LOG_UNCOVER, taskId);
@@ -756,45 +759,52 @@ public class InventoryTaskService {
 	 * @param windowId
 	 * @return
 	 */
-	public PackingInventoryInfoVO getPackingInventory(Integer windowId){
+	public List<PackingInventoryInfoVO> getPackingInventory(Integer windowId){
 		Window window = Window.dao.findById(windowId);
 		if (window == null || window.getBindTaskId() == null) {
 			throw new OperationException("仓口不存在任务");
 		}
 		int boxId = 0;
-		for(AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems()) {
-			if (inventoryTaskItem.getTaskId().equals(window.getBindTaskId()) && inventoryTaskItem.getWindowId().equals(windowId) && inventoryTaskItem.getState().equals(InventoryTaskItemState.ARRIVED_WINDOW)) {
+		Map<Integer, PackingInventoryInfoVO> map = new LinkedHashMap<>();
+		List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, windowId);
+		for (GoodsLocation goodsLocation : goodsLocations) {
+			map.put(goodsLocation.getId(), new PackingInventoryInfoVO(goodsLocation, new ArrayList<>()));
+		}
+		for(AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(window.getBindTaskId())) {
+			if (inventoryTaskItem.getWindowId().equals(windowId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
 				boxId = inventoryTaskItem.getBoxId();
-				break;
+				PackingInventoryInfoVO info = map.get(inventoryTaskItem.getGoodsLocationId());
+				if (info == null ) {
+					throw new OperationException("仓口 " + windowId + "没有对应货位" + inventoryTaskItem.getGoodsLocationId());
+				}
+				if (info.getBoxId() != null) {
+					throw new OperationException("仓口 " + windowId + "的货位" + inventoryTaskItem.getGoodsLocationId() + "有一个以上的到站任务条目，请检查!");
+				}
+				List<MaterialInfoVO> materialInfoVOs = info.getList();
+				List<Record> records = Db.find(GET_MATERIAL_INFO_BY_BOX, boxId);
+				for (Record record : records) {
+					MaterialInfoVO materialInfoVO = new MaterialInfoVO();
+					materialInfoVO.setMaterailTypeId(record.getInt("material_type_id"));
+					materialInfoVO.setMaterialId(record.getStr("id"));
+					materialInfoVO.setNo(record.getStr("no"));
+					materialInfoVO.setSpecification(record.getStr("specification"));
+					materialInfoVO.setStoreNum(record.getInt("quantity"));
+					materialInfoVO.setSupplierId(record.getInt("supplier_id"));
+					materialInfoVO.setSupplier(record.getStr("supplier_name"));
+					materialInfoVO.setProductionTime(record.getDate("production_time"));
+					InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, window.getBindTaskId(), record.getStr("id"));
+					if (inventoryLog != null && inventoryLog.getActuralNum() != null) {
+						materialInfoVO.setActualNum(inventoryLog.getActuralNum());
+					}
+					materialInfoVOs.add(materialInfoVO);
+				}
+				info.setBoxId(boxId);
+				info.setTaskId(window.getBindTaskId());
+				info.setWindowId(windowId);
+				info.setList(materialInfoVOs);
 			}
 		}
-		if(boxId == 0) {
-			return null;
-		}
-		List<MaterialInfoVO> materialInfoVOs = new ArrayList<>();
-		List<Record> records = Db.find(GET_MATERIAL_INFO_BY_BOX, boxId);
-		for (Record record : records) {
-			MaterialInfoVO materialInfoVO = new MaterialInfoVO();
-			materialInfoVO.setMaterailTypeId(record.getInt("material_type_id"));
-			materialInfoVO.setMaterialId(record.getStr("id"));
-			materialInfoVO.setNo(record.getStr("no"));
-			materialInfoVO.setSpecification(record.getStr("specification"));
-			materialInfoVO.setStoreNum(record.getInt("quantity"));
-			materialInfoVO.setSupplierId(record.getInt("supplier_id"));
-			materialInfoVO.setSupplier(record.getStr("supplier_name"));
-			materialInfoVO.setProductionTime(record.getDate("production_time"));
-			InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, window.getBindTaskId(), record.getStr("id"));
-			if (inventoryLog != null && inventoryLog.getActuralNum() != null) {
-				materialInfoVO.setActualNum(inventoryLog.getActuralNum());
-			}
-			materialInfoVOs.add(materialInfoVO);
-		}
-		PackingInventoryInfoVO info = new PackingInventoryInfoVO();
-		info.setBoxId(boxId);
-		info.setTaskId(window.getBindTaskId());
-		info.setWindowId(windowId);
-		info.setList(materialInfoVOs);
-		return info;
+		return new ArrayList<>(map.values());
 	}
 	
 	
@@ -819,9 +829,11 @@ public class InventoryTaskService {
 		else {
 			filter += "#&#task.type="+TaskType.COUNT;
 		}
-		Page<Record> page = selectService.select(tables, refers, pageNo, pageSize, "task.state", null, filter);
+		Boolean status;
+		Page<Record> page = selectService.select(tables, refers, pageNo, pageSize, null, "task.state ASC, task.create_time", filter);
 		List<InventoryTaskVO> taskVOs = new ArrayList<>();
 		for (Record record : page.getList()) {
+			
 			InventoryTaskVO taskVO = new InventoryTaskVO();
 			taskVO.setTaskId(record.getInt("Task_Id"));
 			taskVO.setType(record.getInt("Task_Type"));
@@ -836,6 +848,12 @@ public class InventoryTaskService {
 			taskVO.setCheckedTime(record.getDate("Task_CreateTime"));
 			taskVO.setSupplierId(record.getInt("Task_Supplier"));
 			taskVO.setSupplierName(record.getStr("Supplier_Name"));
+			status  = false;
+			if (record.getInt("Task_State").equals(TaskState.PROCESSING)) {
+				status = TaskItemRedisDAO.getTaskStatus(record.getInt("Task_Id"));
+			}
+			
+			taskVO.setStatus(status);
 			taskVOs.add(taskVO);
 		}
 		PagePaginate pagePaginate = new PagePaginate();
@@ -1058,93 +1076,6 @@ public class InventoryTaskService {
 		task.setEwhCheckedTime(null);
 		task.update();
 		return "操作成功！";
-	}
-	
-	
-	
-	public String setWindowRobots(Integer windowId, String robots) {
-		Window window = Window.dao.findById(windowId);
-		Task task = Task.dao.findById(window.getBindTaskId());
-		if (task == null || !task.getState().equals(TaskState.PROCESSING)) {
-			throw new OperationException("盘点任务并未处于进行状态，无法指定叉车");
-		}
-		String result = "";
-		Window inventoryWindow = Window.dao.findFirst(GET_WINDOWS_BY_TASK_ID, task.getId());
-		if (inventoryWindow == null) {
-			throw new OperationException("盘点任务的UW仓盘点工作已结束，无法指定叉车");
-		}
-		List<String> robotTempList =  new ArrayList<>();
-		if (robots != null && !robots.trim().equals("")) {
-			String[] robotArr = robots.split(",");
-			List<Window> windows = Window.dao.find(GET_WORKING_WINDOWS);
-			//查找冲突的叉车
-			for (Window windowTemp : windows) {
-				if (windowTemp.getId().equals(window.getId())) {
-					continue;
-				}
-				String rbTemp = TaskItemRedisDAO.getWindowTaskInfo(windowTemp.getId(), windowTemp.getBindTaskId());
-				if (rbTemp != null && !rbTemp.equals(IOHandler.UNDEFINED) && !rbTemp.trim().equals("")) {
-					String[] rbTempArr = rbTemp.split(",");
-					for (String rbTempStr : rbTempArr) {
-						for (String robotStr : robotArr) {
-							if (rbTempStr.trim().equals(robotStr.trim())) {
-								if (!result.equals("")) {
-									result += "，";
-								}
-								robotTempList.add(robotStr.trim());
-								result += "叉车" + rbTempStr + "已被仓口" + windowTemp.getId() + "使用，请前往对应仓口解绑";
-
-							}
-						}
-					}
-				}
-				
-			}
-			List<String> robotArrList = new ArrayList<>();
-			for (String robotStr : robotArr) {
-				robotArrList.add(robotStr.trim());
-			}
-			if (robotTempList.size() == 0) {
-				TaskItemRedisDAO.setWindowTaskInfo(windowId, window.getBindTaskId(), robots);
-			}else {
-				for (String sameRobot : robotTempList) {
-					if (robotArrList.contains(sameRobot)) {
-						robotArrList.remove(sameRobot);
-					}
-				}
-				String insertRobots = "";
-				for (String string : robotArrList) {
-					if (!insertRobots.equals("")) {
-						insertRobots += ",";
-					}
-					insertRobots += string;
-				}
-				if (!insertRobots.equals("")) {
-					TaskItemRedisDAO.setWindowTaskInfo(windowId, window.getBindTaskId(), insertRobots);
-				}
-			}
-				
-			
-		}else {
-			TaskItemRedisDAO.delWindowTaskInfo(windowId, window.getBindTaskId());
-		}
-		if (!result.equals("")) {
-			return result;
-		}
-		return "操作成功";
-	}
-
-	
-	public String getWindowRobots(Integer windowId) {
-		String result = "undefined";
-		Window window = Window.dao.findById(windowId);
-		Task task = Task.dao.findById(window.getBindTaskId());
-		if (task != null) {
-			synchronized (Lock.ROBOT_TASK_REDIS_LOCK) {
-				result = TaskItemRedisDAO.getWindowTaskInfo(windowId, window.getBindTaskId());
-			}
-		}
-		return result;
 	}
 	
 	

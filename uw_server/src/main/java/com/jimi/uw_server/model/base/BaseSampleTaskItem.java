@@ -36,4 +36,40 @@ public abstract class BaseSampleTaskItem<M extends BaseSampleTaskItem<M>> extend
 		return getInt("material_type_id");
 	}
 
+	public M setStoreQuantity(java.lang.Integer storeQuantity) {
+		set("store_quantity", storeQuantity);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getStoreQuantity() {
+		return getInt("store_quantity");
+	}
+
+	public M setScanQuantity(java.lang.Integer scanQuantity) {
+		set("scan_quantity", scanQuantity);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getScanQuantity() {
+		return getInt("scan_quantity");
+	}
+
+	public M setSingularOutQuantity(java.lang.Integer singularOutQuantity) {
+		set("singular_out_quantity", singularOutQuantity);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSingularOutQuantity() {
+		return getInt("singular_out_quantity");
+	}
+
+	public M setRegularOutQuantity(java.lang.Integer regularOutQuantity) {
+		set("regular_out_quantity", regularOutQuantity);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getRegularOutQuantity() {
+		return getInt("regular_out_quantity");
+	}
+
 }

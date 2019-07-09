@@ -1,12 +1,10 @@
 package com.jimi.uw_server.model.vo;
 
 import java.util.List;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.Supplier;
-import com.jfinal.aop.Enhancer;
+
+import com.jimi.uw_server.model.GoodsLocation;
+import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.service.MaterialService;
 
 /**
  * 仓口停泊条目表示层
@@ -14,22 +12,24 @@ import com.jimi.uw_server.service.MaterialService;
  * @createTime 2018年7月23日 下午4:04:25
  */
 
-public class WindowParkingListItemVO extends TaskLog {
+public class WindowParkingListItemVO {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+	private List<PackingListItemDetailsVO> details;
 
-	private List<?> details;
-
-	private String supplierName;
-
-	private Integer remainderQuantity;
+	private Integer id;
 	
-	private Integer storeQuantity;
+	private String fileName;
+	
+	private Integer materialTypeId;
+	
+	private Integer planQuantity;
+	
+	private Integer actualQuantity;
+	
+	private String supplierName;
+	
+	private Integer uwStoreQuantity;
 
 	private String typeString;
 
@@ -37,70 +37,168 @@ public class WindowParkingListItemVO extends TaskLog {
 	
 	private Integer reelNum;
 	
-	public WindowParkingListItemVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Integer materialTypeId, Boolean isForceFinish, Integer storeQuantity) {
-		this.set("id", packingListItemId);
-		this.set("fileName", fileName);
-		this.setTypeString(type);
-		this.set("type", getTypeString());
-		this.set("materialNo", materialNo);
-		this.set("planQuantity", planQuantity);
-		this.set("actualQuantity", actualQuantity);
-		this.setSupplierName(materialTypeId);
-		this.set("supplierName", getSupplierName());
-		this.setRemainderQuantity(materialTypeId);
-		this.set("remainderQuantity", getRemainderQuantity());
-		this.set("isForceFinish", isForceFinish);
-		this.setSpecification(materialTypeId);
-		this.set("specification", getSpecification());
-		this.set("storeQuantity", storeQuantity);
-	}
+	private Boolean isForceFinish;
+	
+	private Integer eWhStoreQuantity;
+	
+	private String materialNo;
 
-	public List<?> getDetails() {
+	private Integer windowId;
+	
+	private Integer goodsLocationId;
+	
+	private String goodsLocationName;
+	
+	private Integer BoxId;
+	
+	public WindowParkingListItemVO(GoodsLocation goodsLocation) {
+		this.setGoodsLocationId(goodsLocation.getId());
+		this.setGoodsLocationName(goodsLocation.getName());
+		this.setWindowId(goodsLocation.getWindowId());;
+	}
+	
+	public List<PackingListItemDetailsVO> getDetails() {
 		return details;
 	}
 
-	public void setDetails(List<?> details) {
-		this.set("details", details);
+	
+	public void setDetails(List<PackingListItemDetailsVO> details) {
+		this.details = details;
 	}
 
+	
+	public Integer getId() {
+		return id;
+	}
+
+	
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	
+	public String getFileName() {
+		return fileName;
+	}
+
+	
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	
+	public Integer getMaterialTypeId() {
+		return materialTypeId;
+	}
+
+	
+	public void setMaterialTypeId(Integer materialTypeId) {
+		this.materialTypeId = materialTypeId;
+	}
+
+	
+	public Integer getPlanQuantity() {
+		return planQuantity;
+	}
+
+	
+	public void setPlanQuantity(Integer planQuantity) {
+		this.planQuantity = planQuantity;
+	}
+
+	
+	public Integer getActualQuantity() {
+		return actualQuantity;
+	}
+
+	
+	public void setActualQuantity(Integer actualQuantity) {
+		this.actualQuantity = actualQuantity;
+	}
+
+	
 	public String getSupplierName() {
 		return supplierName;
 	}
 
-	public void setSupplierName(Integer materialTypeId) {
-		// 获取物料类型
-		MaterialType m = MaterialType.dao.findById(materialTypeId);
-		// 根据物料类型获取供应商信息
-		Supplier s = Supplier.dao.findById(m.getSupplier());
-		this.supplierName = s.getName();
+	
+	public void setSupplierName(String supplierName) {
+		this.supplierName = supplierName;
 	}
 
-	public Integer getRemainderQuantity() {
-		return remainderQuantity;
-	}
-
-	public void setRemainderQuantity(Integer materialTypeId) {
-		Integer quantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(materialTypeId);
-		this.remainderQuantity = quantity;
-	}
-
-
+	
 	public String getTypeString() {
 		return typeString;
 	}
 
-	public Integer getStoreQuantity() {
-		return storeQuantity;
+	
+	public void setTypeString(String typeString) {
+		this.typeString = typeString;
 	}
 
-	public void setStoreQuantity(Integer storeQuantity) {
-		this.storeQuantity = storeQuantity;
+	
+	public Boolean getIsForceFinish() {
+		return isForceFinish;
 	}
+
+	
+	public void setIsForceFinish(Boolean isForceFinish) {
+		this.isForceFinish = isForceFinish;
+	}
+
+	
+	public Integer geteWhStoreQuantity() {
+		return eWhStoreQuantity;
+	}
+
+	
+	public void seteWhStoreQuantity(Integer eWhStoreQuantity) {
+		this.eWhStoreQuantity = eWhStoreQuantity;
+	}
+
 	
 	public void setReelNum(Integer reelNum) {
-		this.set("reelNum", reelNum);
+		this.reelNum = reelNum;
 	}
+
+	public Integer getUwStoreQuantity() {
+		return uwStoreQuantity;
+	}
+
+	public void setUwStoreQuantity(Integer uwStoreQuantity) {
+		this.uwStoreQuantity = uwStoreQuantity;
+	}
+
+
+	public Integer getWindowId() {
+		return windowId;
+	}
+
 	
+	public void setWindowId(Integer windowId) {
+		this.windowId = windowId;
+	}
+
+	
+	public Integer getGoodsLocationId() {
+		return goodsLocationId;
+	}
+
+	
+	public void setGoodsLocationId(Integer goodsLocationId) {
+		this.goodsLocationId = goodsLocationId;
+	}
+
+	
+	public String getGoodsLocationName() {
+		return goodsLocationName;
+	}
+
+	
+	public void setGoodsLocationName(String goodsLocationName) {
+		this.goodsLocationName = goodsLocationName;
+	}
+
 	public Integer getReelNum() {
 		return reelNum;
 	}
@@ -128,15 +226,51 @@ public class WindowParkingListItemVO extends TaskLog {
 		}
 	}
 
-
 	public String getSpecification() {
 		return specification;
 	}
 
 
-	public void setSpecification(Integer materialTypeId) {
-		MaterialType m = MaterialType.dao.findById(materialTypeId);
-		this.specification = m.getSpecification();
+	public void setSpecification(String specification) {
+		this.specification = specification;
 	}
 	
+	
+	public String getMaterialNo() {
+		return materialNo;
+	}
+
+	
+	public void setMaterialNo(String materialNo) {
+		this.materialNo = materialNo;
+	}
+
+	
+	public Integer getBoxId() {
+		return BoxId;
+	}
+
+	
+	public void setBoxId(Integer boxId) {
+		BoxId = boxId;
+	}
+
+	public WindowParkingListItemVO fill(List<PackingListItemDetailsVO> details, Record record, Integer eWhStoreQuantity, Integer uwStoreQuantity, Integer actualQuantity, Integer reelNum, Boolean isForceFinish, Integer boxId) {
+		this.setMaterialTypeId(record.getInt("MaterialType_Id"));
+		this.setSpecification(record.getStr("MaterialType_Specification"));
+		this.setMaterialNo(record.getStr("MaterialType_No"));
+		this.setSupplierName(record.getStr("Supplier_Name"));
+		this.setId(record.getInt("PackingListItem_Id"));
+		this.setPlanQuantity(record.getInt("PackingListItem_Quantity"));
+		this.setTypeString(record.getInt("Task_Type"));
+		this.setFileName(record.getStr("Task_FileName"));
+		this.setActualQuantity(actualQuantity);
+		this.setIsForceFinish(isForceFinish);
+		this.setUwStoreQuantity(uwStoreQuantity);
+		this.seteWhStoreQuantity(eWhStoreQuantity);
+		this.setReelNum(reelNum);
+		this.setDetails(details);
+		this.setBoxId(boxId);
+		return this;
+	}
 }

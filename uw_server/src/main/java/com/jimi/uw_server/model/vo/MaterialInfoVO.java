@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import java.util.Date;
 
+
 /**
  * 
  * @author trjie
@@ -28,6 +29,10 @@ public class MaterialInfoVO {
 	
 	private Integer actualNum;
 
+	private Boolean isScaned;
+	
+	private Boolean isOuted;
+	
 	public String getMaterialId() {
 		return materialId;
 	}
@@ -99,6 +104,25 @@ public class MaterialInfoVO {
 	public void setActualNum(Integer actualNum) {
 		this.actualNum = actualNum;
 	}
+
 	
+	public Boolean getIsScaned() {
+		return isScaned;
+	}
+
+	
+	public void setIsScaned(Boolean isScaned) {
+		this.isScaned = isScaned;
+	}
+
+	
+	public Boolean getIsOuted() {
+		return isOuted;
+	}
+
+	
+	public void setIsOuted(Boolean isOuted) {
+		this.isOuted = isOuted;
+	}
 	
 }

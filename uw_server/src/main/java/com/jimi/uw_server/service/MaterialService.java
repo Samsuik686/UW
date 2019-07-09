@@ -9,13 +9,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.BoxState;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.BoxType;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
@@ -23,8 +24,6 @@ import com.jimi.uw_server.model.MaterialReturnRecord;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.bo.MaterialTypeItemBO;
 import com.jimi.uw_server.model.bo.RecordItem;
 import com.jimi.uw_server.model.vo.BoxTypeVO;
@@ -42,7 +41,7 @@ import com.jimi.uw_server.util.ExcelWritter;
  */
 public class MaterialService extends SelectService{
 
-	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+	private static SelectService selectService = Aop.get(SelectService.class);
 
 	private static final Object IMPORT_FILE_LOCK = new Object();
 
@@ -175,12 +174,13 @@ public class MaterialService extends SelectService{
 
 
 	// 新增物料类型
-	public String addType(String no, String specification, String supplierName, Integer thickness, Integer radius) {
+	public String addType(String no, String specification, Integer supplierId, Integer thickness, Integer radius) {
 		String resultString = "添加成功！";
-		Integer supplier;
-		Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
-		supplier = s.getId();
-		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no, supplier).size() != 0) {
+		Supplier s = Supplier.dao.findById(supplierId);
+		if (s == null) {
+			throw new OperationException("供应商不存在");
+		}
+		if(MaterialType.dao.find(GET_ENABLED_MATERIAL_TYPE_BY_NO_SQL, no, supplierId).size() != 0) {
 			resultString = "该物料类型已存在，请勿重复添加！";
 			return resultString;
 		}
@@ -191,7 +191,7 @@ public class MaterialService extends SelectService{
 		MaterialType materialType = new MaterialType();
 		materialType.setNo(no);
 		materialType.setSpecification(specification);
-		materialType.setSupplier(supplier);
+		materialType.setSupplier(supplierId);
 		materialType.setThickness(thickness);
 		materialType.setRadius(radius);
 		materialType.setEnabled(true);
@@ -227,58 +227,58 @@ public class MaterialService extends SelectService{
 
 
 	// 更新物料类型
-		public String deleteByIds(String filter) {
-			StringBuffer resultString = new StringBuffer();
-			String[] ids = filter.split(",");
-			List<String> remaindIds = new ArrayList<>();
-			List<String> bindIds = new ArrayList<>();
-			Boolean flag = true;
-			for(String id : ids) {
-				Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, Integer.valueOf(id));
-				if (m.get("quantity") != null) {
-					Integer quantity = Integer.parseInt(m.get("quantity").toString());
-					if (quantity > 0) {
-						remaindIds.add(id);
-						flag = false;
-					}
-				}
-				if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_IN_PROCESS_SQL, Integer.valueOf(id)) != null) {
-					bindIds.add(id);
+	public String deleteByIds(String filter) {
+		StringBuffer resultString = new StringBuffer();
+		String[] ids = filter.split(",");
+		List<String> remaindIds = new ArrayList<>();
+		List<String> bindIds = new ArrayList<>();
+		Boolean flag = true;
+		for(String id : ids) {
+			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, Integer.valueOf(id));
+			if (m.get("quantity") != null) {
+				Integer quantity = Integer.parseInt(m.get("quantity").toString());
+				if (quantity > 0) {
+					remaindIds.add(id);
 					flag = false;
 				}
-				if (flag.equals(true)) {
-					MaterialType materialType = MaterialType.dao.findById(id);
-					materialType.setEnabled(false);
-					materialType.update();
-				}
 			}
-			
-			if (remaindIds.size() == 0 && bindIds.size() == 0) {
-				return "删除成功";
-			}else {
-				if (remaindIds.size() > 0) {
-					resultString.append("料号ID 为  [");
-					for (String remaindId : remaindIds) {
-						resultString.append(remaindId + ",");
-					}
-					resultString.deleteCharAt(resultString.lastIndexOf(","));
-					resultString.append("] 的物料存在库存，无法删除!");
-				}
-				if (bindIds.size() > 0) {
-					if (resultString.length() != 0) {
-						resultString.append("|");
-					}
-					resultString.append("料号ID 为  [");
-					for (String bindId : bindIds) {
-						resultString.append(bindId + ",");
-					}
-					resultString.deleteCharAt(resultString.lastIndexOf(","));
-					resultString.append("] 的物料以绑定了任务，无法删除!");
-				}
-				return resultString.toString();
+			if (PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_IN_PROCESS_SQL, Integer.valueOf(id)) != null) {
+				bindIds.add(id);
+				flag = false;
 			}
-			
+			if (flag.equals(true)) {
+				MaterialType materialType = MaterialType.dao.findById(id);
+				materialType.setEnabled(false);
+				materialType.update();
+			}
 		}
+		
+		if (remaindIds.size() == 0 && bindIds.size() == 0) {
+			return "删除成功";
+		}else {
+			if (remaindIds.size() > 0) {
+				resultString.append("料号ID 为  [");
+				for (String remaindId : remaindIds) {
+					resultString.append(remaindId + ",");
+				}
+				resultString.deleteCharAt(resultString.lastIndexOf(","));
+				resultString.append("] 的物料存在库存，无法删除!");
+			}
+			if (bindIds.size() > 0) {
+				if (resultString.length() != 0) {
+					resultString.append("|");
+				}
+				resultString.append("料号ID 为  [");
+				for (String bindId : bindIds) {
+					resultString.append(bindId + ",");
+				}
+				resultString.deleteCharAt(resultString.lastIndexOf(","));
+				resultString.append("] 的物料以绑定了任务，无法删除!");
+			}
+			return resultString.toString();
+		}
+		
+	}
 		
 		
 	// 获取料盒信息
@@ -497,7 +497,7 @@ public class MaterialService extends SelectService{
 
 
 	// 导入物料类型表
-	public String importFile(String fileName, String fullFileName, String supplierName) throws Exception {
+	public String importFile(String fileName, String fullFileName, Integer supplierId) throws Exception {
 		String resultString = "导入成功！";
 		File file = new File(fullFileName);
 		// 如果文件格式不对，则提示检查文件格式
@@ -517,9 +517,10 @@ public class MaterialService extends SelectService{
 		} else {
 			synchronized(IMPORT_FILE_LOCK) {
 				// 根据供应商名获取供应商id
-				Supplier s = Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL, supplierName);
-				Integer supplier;
-				supplier = s.getId();
+				Supplier s = Supplier.dao.findById(supplierId);
+				if (s == null) {
+					throw new OperationException("供应商不存在！");
+				}
 
 				// 从电子表格第2行开始有物料记录
 				int i = 2;
@@ -541,7 +542,7 @@ public class MaterialService extends SelectService{
 						}
 
 						// 根据料号和供应商找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo(), supplier);
+						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo(), supplierId);
 						/*						
 						 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用；
 						 若存在，则跳过这些记录
@@ -557,7 +558,7 @@ public class MaterialService extends SelectService{
 							materialType.setThickness(item.getThickness());
 							materialType.setRadius(item.getRadius());
 							materialType.setEnabled(true);
-							materialType.setSupplier(supplier);
+							materialType.setSupplier(supplierId);
 							materialType.save();
 						}
 						

@@ -27,24 +27,6 @@ public abstract class BaseWindow<M extends BaseWindow<M>> extends Model<M> imple
 		return getInt("area");
 	}
 
-	public M setRow(java.lang.Integer row) {
-		set("row", row);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getRow() {
-		return getInt("row");
-	}
-
-	public M setCol(java.lang.Integer col) {
-		set("col", col);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getCol() {
-		return getInt("col");
-	}
-
 	public M setBindTaskId(java.lang.Integer bindTaskId) {
 		set("bind_task_id", bindTaskId);
 		return (M)this;

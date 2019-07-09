@@ -57,9 +57,9 @@ public class MaterialController extends Controller {
 
 
 	// 添加物料类型#
-	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商名为{supplier}，厚度为{thickness}，直径为{radius}")
-	public void addType(String no, String specification, String supplier, Integer thickness, Integer radius) {
-		String resultString = materialService.addType(no, specification, supplier, thickness, radius);
+	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商ID为{supplierId}，厚度为{thickness}，直径为{radius}")
+	public void addType(String no, String specification, Integer supplierId, Integer thickness, Integer radius) {
+		String resultString = materialService.addType(no, specification, supplierId, thickness, radius);
 		if(resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -213,11 +213,11 @@ public class MaterialController extends Controller {
 
 	// 导入物料类型表#
 	@ActionKey("/manage/material/import")
-	@Log("导入物料类型表，导入的物料对应的供应商为：{supplierName}")
-	public void importFile(UploadFile file, String supplierName) throws Exception {
+	@Log("导入物料类型表，导入的物料对应的供应商为：{supplierId}")
+	public void importFile(UploadFile file, Integer supplierId) throws Exception {
 		String fileName = file.getFileName();
 		String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
-		String resultString = materialService.importFile(fileName, fullFileName, supplierName);
+		String resultString = materialService.importFile(fileName, fullFileName, supplierId);
 		if(resultString.equals("导入成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

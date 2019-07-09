@@ -7,6 +7,8 @@ import com.jfinal.aop.Enhancer;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.model.FormerSupplier;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.SupplierVO;
@@ -29,16 +31,17 @@ public class SupplierService extends SelectService {
 
 	private static final String SET_BOX_SUPPLIER_NULL_BY_SUPPLIER = "UPDATE material_box SET material_box.supplier = null WHERE material_box.supplier = ?";
 
+	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ?";
 
 	// 添加供应商
 	public String add(String name) {
 		String resultString = "添加成功！";
-		if (Supplier.dao.find(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name).size() != 0) {
-			resultString = "该供应商已存在，请勿重复添加！";
+		if (Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name.trim()) != null || FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, name.trim()) != null) {
+			resultString = "该供应商已存在或为某供应商的曾用名，请勿重复添加！";
 			return resultString;
 		} else {
 			Supplier supplier = new Supplier();
-			supplier.setName(name);
+			supplier.setName(name.trim());
 			supplier.setEnabled(true);
 			supplier.save();
 			return resultString;
@@ -93,4 +96,25 @@ public class SupplierService extends SelectService {
 		return pagePaginate;
 	}
 
+	
+	// 更新供应商的曾用名
+	public String changeName(Integer id, String name) {
+		String resultString = "更新成功！";
+		Supplier supplier = Supplier.dao.findById(id);
+		if(!supplier.getName().equals(name.trim())) {
+		if (Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name) != null || FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, name.trim()) != null) {
+				resultString = "该供应商已存在或者为某个供应商的曾用名，请勿重复添加！";
+				throw new OperationException(resultString) ;
+			}
+		}
+		
+		String formerName = supplier.getName();
+		FormerSupplier formerSupplier = new FormerSupplier();
+		formerSupplier.setFormerName(formerName);
+		formerSupplier.setSupplierId(supplier.getId());
+		formerSupplier.save();
+		supplier.setName(name);
+		supplier.update();
+		return resultString;
+	}
 }

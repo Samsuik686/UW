@@ -1,5 +1,11 @@
 package com.jimi.uw_server.controller;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
@@ -7,8 +13,8 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.vo.PackingSampleInfoVO;
+import com.jimi.uw_server.model.vo.SampleTaskDetialsVO;
 import com.jimi.uw_server.service.SampleTaskService;
-import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
@@ -100,6 +106,15 @@ public class SampleTaskController extends Controller{
 	}
 	
 	
+	@Log("扫码料盘，料盘码：{materialId}， groupId：{groupId}")
+	public void scanMaterial(String materialId, String groupId) {
+		if (materialId == null || materialId.trim().equals("") || groupId == null || groupId.trim().equals("")) {
+			throw new OperationException("参数不能为空");
+		}
+		sampleTaskService.scanMaterial(materialId, groupId);
+		renderJson(ResultUtil.succeed());
+	}
+	
 	/**
 	 * 获取到站的物料信息
 	 * @param windowId
@@ -108,7 +123,7 @@ public class SampleTaskController extends Controller{
 		if (windowId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		PackingSampleInfoVO result = sampleTaskService.getPackingSampleMaterialInfo(windowId);
+		List<PackingSampleInfoVO> result = sampleTaskService.getPackingSampleMaterialInfo(windowId);
 		renderJson(ResultUtil.succeed(result));
 		
 	}
@@ -120,17 +135,11 @@ public class SampleTaskController extends Controller{
 	 * @param pageSize
 	 * @param pageNo
 	 */
-	public void getSampleTaskDetials(Integer taskId, Integer pageSize, Integer pageNo) {
+	public void getSampleTaskDetials(Integer taskId) {
 		if (taskId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		if (pageNo == null || pageSize == null) {
-			throw new ParameterException("参数不能为空");
-		}
-		if (pageNo <= 0 || pageSize <= 0) {
-			throw new ParameterException("页码和页容量必须大于0");
-		}
-		PagePaginate result = sampleTaskService.getSampleTaskDetials(taskId, pageSize, pageNo);
+		List<SampleTaskDetialsVO> result = sampleTaskService.getSampleTaskDetials(taskId);
 		renderJson(ResultUtil.succeed(result));
 		
 	}
@@ -141,26 +150,31 @@ public class SampleTaskController extends Controller{
 		renderJson(ResultUtil.succeed(sampleTaskService.select(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 	
-
-	@Log("设置仓口{windowId}的叉车为{robots}")
-	public void setWindowRobots(Integer windowId, String robots) {
-		if (windowId == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		if (robots == null) {
-			robots = "";
-		}
-		String result  = sampleTaskService.setWindowRobots(windowId, robots);
-		renderJson(ResultUtil.succeed(result));
-	}
 	
-	
-	public void getWindowRobots(Integer windowId) {
-		if (windowId == null) {
-			throw new ParameterException("参数不能为空！");
+	@Log("导出抽检务报表, 任务ID{taskId}")
+	public void exportSampleTaskInfo(Integer taskId, Integer type) {
+		OutputStream output = null;
+		try {
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
+			String fileName = "报表_" + sampleTaskService.getTaskName(taskId) + ".xlsx";
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			sampleTaskService.exportSampleTaskInfo(taskId, fileName, output);
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
 		}
-		String result  = sampleTaskService.getWindowRobots(windowId);
-		renderJson(ResultUtil.succeed(result));
+		renderNull();
 	}
 
 
