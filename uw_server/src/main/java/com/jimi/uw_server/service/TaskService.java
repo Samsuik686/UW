@@ -1250,8 +1250,10 @@ public class TaskService {
 		Task task = Task.dao.findById(taskId);
 		Material material = Material.dao.findById(materialId);
 		// 对于不在已到站料盒的物料，禁止对其进行操作
+		AGVIOTaskItem agvioTaskItem = null;
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
 			if (redisTaskItem.getId().intValue() == packListItemId.intValue()) {
+				agvioTaskItem = redisTaskItem;
 				if (redisTaskItem.getBoxId().intValue() != material.getBox().intValue()) {
 					throw new OperationException("时间戳为" + materialId + "的料盘不在该料盒中，禁止删除！");
 				}
@@ -1268,8 +1270,12 @@ public class TaskService {
 			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packListItemId, materialId);
 			material.setIsInBox(true);
 			material.update();
-			
-			return TaskLog.dao.deleteById(taskLog.getId());
+			TaskLog.dao.deleteById(taskLog.getId());
+			Record record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
+			if (record == null) {
+				TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, null, null, null, null, null, null, false);
+			}
+			return true;
 		}
 	}
 

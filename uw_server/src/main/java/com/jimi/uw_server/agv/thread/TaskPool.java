@@ -193,7 +193,7 @@ public class TaskPool extends Thread{
 						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 						if (remainderQuantity > 0) {
 							synchronized (Lock.IO_TASK_REDIS_LOCK) {
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, true, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, false, null);
 							}
 						}
 					}

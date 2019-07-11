@@ -27,16 +27,17 @@ public class ExceptionHandler {
 	
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 	
-	private static IOTaskHandler ioTaskHandler = Aop.get(IOTaskHandler.class);
+	private static IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 	
-	private static InvTaskHandler invTaskHandler = Aop.get(InvTaskHandler.class);
+	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
 	
-	private static SamTaskHandler samTaskHandler = Aop.get(SamTaskHandler.class);
+	private static SamTaskHandler samTaskHandler = SamTaskHandler.getInstance();
 	
 	public static void handleLoadException(String message) {
 
 		AGVLoadExceptionCmd loadExceptionCmd = Json.getJson().parse(message, AGVLoadExceptionCmd.class);
-		String missionGroupId = loadExceptionCmd.getMissiongroupid().split("_")[0];
+		RobotInfoRedisDAO.setloadException(loadExceptionCmd.getRobotid());
+		/*String missionGroupId = loadExceptionCmd.getMissiongroupid();
 		// missiongroupid 包含“:”表示为出入库任务
 		String groupid = missionGroupId.split("_")[0];
 		// missiongroupid 包含“:”表示为出入库任务
@@ -75,7 +76,7 @@ public class ExceptionHandler {
 					break;
 				}
 			}
-		}
+		}*/
 		
 
 	}
