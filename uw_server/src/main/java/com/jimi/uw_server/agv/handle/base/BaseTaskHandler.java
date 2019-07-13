@@ -81,7 +81,7 @@ public abstract class BaseTaskHandler {
 		group.setStartx(materialBox.getRow());//设置X
 		group.setStarty(materialBox.getCol());//设置Y
 		group.setStartz(materialBox.getHeight());//设置Z
-		group.setPriority("1");
+		group.setPriority("0");
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");
