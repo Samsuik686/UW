@@ -1401,11 +1401,26 @@ public class TaskService {
 				if (!taskLog.getPackingListItemId().equals(packListItemId) || !taskLog.getMaterialId().equals(material.getId())) {
 					throw new OperationException("找不到当前任务条目时间戳为" + materialId + "的料盘的出库记录，修改失败！");
 				}
-				taskLog.setQuantity(quantity).update();
+				if (!material.getBox().equals(redisTaskItem.getBoxId())  ) {
+					throw new OperationException("时间戳为" + materialId + "的料盘并未存在于当前料盒，禁止修改！");
+				}
+				List<TaskLog> taskLogs = TaskLog.dao.find(SQL.GET_OUT_MATERIAL_SQL_BY_BOX, taskLog.getPackingListItemId(), material.getBox());
+				Date date = material.getProductionTime();
+				for (TaskLog taskLog2 : taskLogs) {
+					if (date.before(taskLog2.getDate("productionTime"))) {
+						throw new OperationException("时间戳为" + materialId + "并非当前料盒出库料盘中的最新料盘，禁止修改！");
+					}
+				}
 				Record record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
+				if (record != null && !record.getStr("material_id").equals(materialId)) {
+					throw new OperationException("当前该料号已存在截料的料盘，无法再次进行截料，禁止修改！");
+				}
+				taskLog.setQuantity(quantity).update();
+				record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
 				if (record != null) {
 					TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, null, null, null, null, null, null, true);
-				}else {
+				}
+				else {
 					TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, null, null, null, null, null, null, false);
 				}
 				result = "操作成功";

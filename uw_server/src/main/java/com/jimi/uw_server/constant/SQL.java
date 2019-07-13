@@ -11,6 +11,8 @@ public class SQL {
 	//根据任务条目ID查询相应的日志和物料记录（用于停泊条目阶段，此时物料数量暂未清零）
 	public static final String GET_PACKING_LIST_ITEM_DETAILS_SQL = "SELECT task_log.id, material_id AS materialId, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity  AS remainderQuantity FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
+	public static final String GET_OUT_MATERIAL_SQL_BY_BOX = "SELECT task_log.id, material_id AS materialId, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity  AS remainderQuantity FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id AND material.box = ?";
+	
 	public static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	public static final String GET_TASKLOG_INFO_BY_TASK_LOG_ID_SQL = "SELECT material.id AS material_id, material.remainder_quantity, material.production_time, material.box, material.is_in_box, task_log.quantity FROM material INNER JOIN task_log ON material.id = task_log.material_id WHERE task_log.id = ? AND packing_list_item_id = ? AND material_id = ?";
