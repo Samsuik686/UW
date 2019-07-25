@@ -12,6 +12,7 @@ import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
+import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
@@ -100,7 +101,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.inventoryMaterial(materialId, boxId, taskId, acturalNum, user);
+		Material result = inventoryTaskService.inventoryMaterial(materialId, boxId, taskId, acturalNum, user);
 		renderJson(ResultUtil.succeed(result));
 		
 	}

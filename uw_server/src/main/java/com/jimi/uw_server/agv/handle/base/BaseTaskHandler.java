@@ -14,9 +14,9 @@ import com.jimi.uw_server.model.MaterialBox;
 
 public abstract class BaseTaskHandler {
 
-	public abstract void sendSendLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation) throws Exception;
+	public abstract void sendSendLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) throws Exception;
 	
-	public abstract void sendBackLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation) throws Exception;
+	public abstract void sendBackLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) throws Exception;
 	
 
 	/**
@@ -49,7 +49,7 @@ public abstract class BaseTaskHandler {
 	
 	protected abstract void handleFinishStatus(AGVStatusCmd statusCmd) throws Exception ;
 	
-	public AGVMoveCmd createBackLLCmd(String groupId, MaterialBox materialBox, GoodsLocation goodsLocation) {
+	public AGVMoveCmd createBackLLCmd(String groupId, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) {
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(groupId + "_B");
@@ -60,7 +60,7 @@ public abstract class BaseTaskHandler {
 		group.setEndx(materialBox.getRow());//设置X
 		group.setEndy(materialBox.getCol());//设置Y
 		group.setEndz(materialBox.getHeight());//设置Z
-		group.setPriority("0");
+		group.setPriority(String.valueOf(priority));
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");
@@ -70,7 +70,7 @@ public abstract class BaseTaskHandler {
 	}
 	
 	
-	public AGVMoveCmd createSendLLCmd(String groupId, MaterialBox materialBox, GoodsLocation goodsLocation) {
+	public AGVMoveCmd createSendLLCmd(String groupId, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) {
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		AGVMissionGroup group = new AGVMissionGroup();
 		group.setMissiongroupid(groupId + "_S");
@@ -81,7 +81,7 @@ public abstract class BaseTaskHandler {
 		group.setStartx(materialBox.getRow());//设置X
 		group.setStarty(materialBox.getCol());//设置Y
 		group.setStartz(materialBox.getHeight());//设置Z
-		group.setPriority("0");
+		group.setPriority(String.valueOf(priority));
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");

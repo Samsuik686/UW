@@ -79,6 +79,7 @@ public class MaterialController extends Controller {
 		}
 	}
 
+	
 	@Log("批量删除物料类型号为[{filter}]的物料类型")
 	public void deleteByIds(String filter) {
 		if (filter == null || filter.equals("")) {
@@ -92,6 +93,7 @@ public class MaterialController extends Controller {
 		}
 	}
 
+	
 	// 获取料盒信息
 	public void getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(materialService.getBoxes(pageNo, pageSize, ascBy, descBy, filter)));
@@ -181,6 +183,35 @@ public class MaterialController extends Controller {
 	}
 	
 
+	// 导出物料报表
+	public void exportMaterialDetialReport(Integer supplier) {
+		OutputStream output = null;
+		Supplier s = Supplier.dao.findById(supplier);
+		String supplierName = s.getName();
+		try {
+			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
+			String fileName = supplierName + "物料库存报表.xlsx";
+			HttpServletResponse response = getResponse();
+			response.reset();
+			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
+			response.setContentType("application/vnd.ms-excel");
+			output = response.getOutputStream();
+			materialService.exportMaterialDetialsReport(supplier, output);
+		} catch (Exception e) {
+			renderJson(ResultUtil.failed());
+		} finally {
+			try {
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				renderJson(ResultUtil.failed());
+			}
+		}
+		renderNull();
+	}
+	
+	
 	// 获取料盒类型信息
 	public void getBoxTypes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(materialService.getBoxTypes(pageNo, pageSize, ascBy, descBy, filter)));

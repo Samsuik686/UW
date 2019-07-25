@@ -4,17 +4,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.core.Controller;
+import com.jfinal.core.paragetter.Para;
+import com.jfinal.json.FastJson;
+import com.jfinal.kit.HttpKit;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
+import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.User;
+import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.bo.ManualTaskInfo;
 import com.jimi.uw_server.service.TaskService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
@@ -155,44 +162,21 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.in(packListItemId, materialId, quantity, productionTime, supplierName, user)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		Material material = taskService.in(packListItemId, materialId, quantity, productionTime, supplierName, user);
+		renderJson(ResultUtil.succeed(material));
 	}
 
 	
-	@Log("手工入库，任务ID为{taskId}")
-	public void importInRecords (Integer taskId, UploadFile uploadFile) {
-		if (taskId == null || uploadFile == null) {
+	/*@Log("手工出库，任务ID为{taskId}")
+	public void importOutRecords () {
+		String json = HttpKit.readData(getRequest());
+		ManualTaskInfo info = FastJson.getJson().parse(json, ManualTaskInfo.class);
+		if (info == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = taskService.importInRecords(taskId, uploadFile.getFile(), user); 
-		if (result.equals("导入成功！")) {
-			renderJson(ResultUtil.succeed(result));
-		} else {
-			renderJson(ResultUtil.failed(result));
-		}
-	}
-	
-	
-	@Log("手工出库，任务ID为{taskId}")
-	public void importOutRecords (Integer taskId, UploadFile uploadFile) {
-		if (taskId == null || uploadFile == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = taskService.importOutRecords(taskId, uploadFile.getFile(), user); 
-		if (result.equals("导入成功！")) {
-			renderJson(ResultUtil.succeed(result));
-		} else {
-			renderJson(ResultUtil.failed(result));
-		}
-	}
+		System.out.println(info);
+		renderNull();
+	}*/
 	
 	
 	// 物料出库
@@ -241,12 +225,8 @@ public class TaskController extends Controller {
 		if (packingListItemId ==null || materialId == null || quantity == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
-		String resultString = taskService.backAfterCutting(packingListItemId, materialId, quantity, supplierName);
-		if(resultString.equals("扫描成功，请将料盘放回料盒！")) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			throw new OperationException(resultString);
-		}
+		Material material = taskService.backAfterCutting(packingListItemId, materialId, quantity, supplierName);
+		renderJson(ResultUtil.succeed(material));
 	}
 
 
@@ -303,5 +283,34 @@ public class TaskController extends Controller {
 		}
 		taskService.switchTask(taskId, flag);
 		renderJson(ResultUtil.succeed());
+	}
+	
+	
+	/**
+	 * 设置任务指定的仓口
+	 * @param taskId
+	 * @param windowIds
+	 */
+	@Log("设置任务{taskId}的仓口为{windowIds}")
+	public void setTaskWindow(Integer taskId, String windowIds) {
+		
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		taskService.setTaskWindow(taskId, windowIds);
+		renderJson(ResultUtil.succeed());
+	}
+
+	
+	/**
+	 * 获取任务仓口
+	 * @param taskId
+	 */
+	public void getTaskWindow(Integer taskId) {
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		List<Window> windows = taskService.getTaskWindow(taskId);
+		renderJson(ResultUtil.succeed(windows));
 	}
 }

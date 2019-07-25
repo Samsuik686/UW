@@ -243,6 +243,10 @@ public class SampleTaskService {
 	
 	public String backBox(String groupId) {
 		synchronized (Lock.SAMPLE_TASK_REDIS_LOCK) {
+			Task task = Task.dao.findById(Integer.valueOf(groupId.split("#")[1]));
+			if (task == null) {
+				throw new OperationException("任务不存在，回库失败！");
+			}
 			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					MaterialBox materialBox = MaterialBox.dao.findById(agvSampleTaskItem.getBoxId());
@@ -253,7 +257,7 @@ public class SampleTaskService {
 					try {
 						GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvSampleTaskItem.getGoodsLocationId());
 						if (goodsLocation != null) {
-							samTaskHandler.sendBackLL(agvSampleTaskItem, materialBox, goodsLocation);
+							samTaskHandler.sendBackLL(agvSampleTaskItem, materialBox, goodsLocation, task.getPriority());
 						}else {
 							throw new OperationException("找不到目的货位，仓口：" + agvSampleTaskItem.getWindowId() + "货位：" + agvSampleTaskItem.getGoodsLocationId());
 						}
@@ -428,6 +432,8 @@ public class SampleTaskService {
 					materialInfoVO.setProductionTime(record.getDate("production_time"));
 					materialInfoVO.setActualNum(0);
 					materialInfoVO.setIsScaned(record.getBoolean("is_scaned"));
+					materialInfoVO.setCol(record.getInt("col"));
+					materialInfoVO.setRow(record.getInt("row"));
 					materialInfoVO.setIsOuted(false);
 					materialInfoVOs.add(materialInfoVO);
 					if (record.getBoolean("is_scaned")) {
@@ -450,6 +456,8 @@ public class SampleTaskService {
 					materialInfoVO.setIsScaned(true);
 					materialInfoVO.setIsOuted(true);
 					materialInfoVO.setActualNum(0);
+					materialInfoVO.setCol(record.getInt("col"));
+					materialInfoVO.setRow(record.getInt("row"));
 					materialInfoVOs.add(materialInfoVO);
 					outNum ++;
 				}

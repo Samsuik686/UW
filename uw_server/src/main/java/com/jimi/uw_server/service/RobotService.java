@@ -149,7 +149,7 @@ public class RobotService extends SelectService {
 							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && unusedcapacity <= 0)) {
 								GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
 								if (goodsLocation != null) {
-									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation);
+									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
 								}else {
 									throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
 								}
@@ -165,7 +165,7 @@ public class RobotService extends SelectService {
 							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
 								GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
 								if (goodsLocation != null) {
-									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation);
+									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
 								}else {
 									throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
 								}
@@ -355,15 +355,9 @@ public class RobotService extends SelectService {
 
 							// 若任务条目状态为已完成截料，且判断其对应的料盒是否在架，根据料盒在架情况更新其状态
 							else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
-								MaterialBox materialBox = MaterialBox.dao.findById(redisTaskItem.getBoxId());
 								// 若料盒在架，则将其状态更新为未分配拣料
-								if (materialBox.getIsOnShelf()) {
-									TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null);	
-									return resultString;
-								} else {	// 若料盒不在架，为避免 missiongroupid 重复，需要等上一个叉车任务执行完毕之后才可调用该接口发送相同 missiongroupid 的LS指令
-									resultString = "请等叉车将对应的料盒放回货架之后再进行调用！";
-									return resultString;
-								}
+								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null);	
+								return resultString;
 							}
 							// 如果该料号对应的任务条目不存在于任务队列中，则提示“该物料暂时不需要入库或截料！”
 							else {

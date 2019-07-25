@@ -3,6 +3,7 @@ package com.jimi.uw_server.model.vo;
 import java.util.List;
 
 import com.jimi.uw_server.model.GoodsLocation;
+import com.jimi.uw_server.model.Material;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.constant.TaskType;
 
@@ -50,6 +51,8 @@ public class WindowParkingListItemVO {
 	private String goodsLocationName;
 	
 	private Integer BoxId;
+	
+	private List<Material> materials;
 	
 	public WindowParkingListItemVO(GoodsLocation goodsLocation) {
 		this.setGoodsLocationId(goodsLocation.getId());
@@ -255,7 +258,7 @@ public class WindowParkingListItemVO {
 		BoxId = boxId;
 	}
 
-	public WindowParkingListItemVO fill(List<PackingListItemDetailsVO> details, Record record, Integer eWhStoreQuantity, Integer uwStoreQuantity, Integer actualQuantity, Integer reelNum, Boolean isForceFinish, Integer boxId) {
+	public WindowParkingListItemVO fill(List<PackingListItemDetailsVO> details, Record record, Integer eWhStoreQuantity, Integer uwStoreQuantity, Integer actualQuantity, Integer reelNum, Boolean isForceFinish, Integer boxId, List<Material> materials) {
 		this.setMaterialTypeId(record.getInt("MaterialType_Id"));
 		this.setSpecification(record.getStr("MaterialType_Specification"));
 		this.setMaterialNo(record.getStr("MaterialType_No"));
@@ -271,6 +274,19 @@ public class WindowParkingListItemVO {
 		this.setReelNum(reelNum);
 		this.setDetails(details);
 		this.setBoxId(boxId);
+		this.setMaterials(materials);
 		return this;
 	}
+
+	
+	public List<Material> getMaterials() {
+		return materials;
+	}
+
+	
+	public void setMaterials(List<Material> materials) {
+		this.materials = materials;
+	}
+	
+	
 }

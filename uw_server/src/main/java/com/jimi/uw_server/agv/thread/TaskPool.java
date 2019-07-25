@@ -185,7 +185,7 @@ public class TaskPool extends Thread{
 						// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
 						if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf() && !goodsLocations.isEmpty()) {
 							// 5. 发送LS指令
-							ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0));
+							ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
 							goodsLocations.remove(0);
 						}
 					} else if (item.getState().intValue() == TaskItemState.LACK) {	// 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
@@ -228,7 +228,7 @@ public class TaskPool extends Thread{
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 					if (materialBox.getIsOnShelf()) {
-						invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0));
+						invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
 						goodsLocations.remove(0);
 					}
 				}
@@ -265,7 +265,7 @@ public class TaskPool extends Thread{
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 					if (materialBox.getIsOnShelf()) {
-						samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0));
+						samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
 						goodsLocations.remove(0);
 					}
 				}
@@ -320,6 +320,7 @@ public class TaskPool extends Thread{
 		int boxRemainderCapacity = 0;
 		Set<Integer> diffTaskBoxs = new HashSet<>();
 		List<Window> windows = Window.dao.find(GET_WORKING_WINDOWS);
+		//获取其他任务分配的料盒
 		for (Window window : windows) {
 			if (window.getBindTaskId().equals(taskId)) {
 				continue;
@@ -362,7 +363,7 @@ public class TaskPool extends Thread{
 						int tempBoxId = redisTaskItem.getBoxId();
 						MaterialBox materialBox = MaterialBox.dao.findById(tempBoxId);
 						if (materialBox == null || !materialBox.getType().equals(1)) {
-							break;
+							continue;
 						}
 						int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, tempBoxId).size();
 						int unusedcapacity = materialBoxCapacity - usedcapacity;
@@ -409,6 +410,7 @@ public class TaskPool extends Thread{
 						MaterialBox materialBox = MaterialBox.dao.findById(tempBoxId);
 						if (materialBox.getType().equals(2) && materialBox.getStatus() != BoxState.FULL) {
 							boxId = tempBoxId;
+							break;
 						}
 					}
 				}

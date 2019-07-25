@@ -73,6 +73,8 @@ public class MaterialService extends SelectService{
 	
 	public static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
+	public static final String GET_MATERIAL_DETIAL_REPORT_SQL = "SELECT supplier.`name` AS supplier_name, material_type.id AS material_type_id, material_type.`no` AS `no`, material_type.specification AS specification, material_box.id AS box_id, material_box.area AS area, material_box. ROW AS X, material_box.col AS Y, material_box.height AS Z, material.id AS material_id, material.col AS col, material.`row` AS `row`, material.production_time AS production_time, material.remainder_quantity AS quantity FROM supplier INNER JOIN material_type INNER JOIN material_box INNER JOIN material ON supplier.id = material_type.supplier AND supplier.id = material_box.supplier AND material_type.id = material.type AND material.box = material_box.id WHERE material_type.supplier = ? AND material_type.enabled = 1 AND remainder_quantity > 0 ORDER BY material_type.id, material_box.id";
+	
 	public static final String GET_ENABLED_SUPPLIER_ID_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 
 	public static final String GET_BOX_TYPE_BY_CELL_WIDTH_SQL = "SELECT * FROM box_type WHERE cell_width = ?";
@@ -168,7 +170,12 @@ public class MaterialService extends SelectService{
 		} else if (type != null && box != null) {
 			materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL, type, box);
 		}
-
+		for (Record record : materialEntities.getList()) {
+			if (record.getInt("col") != -1 && record.getInt("row") != -1) {
+				record.set("col", record.getInt("col") + 1);
+				record.set("row", record.getInt("row") + 1);
+			}
+		}
 		return materialEntities;
 	}
 
@@ -434,6 +441,19 @@ public class MaterialService extends SelectService{
 		head =  new String[] {"物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};	
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(materialRecord, fileName, field, head);
+		writter.write(output, true);
+	}
+	
+	
+	// 导出物料详细报表
+	public void exportMaterialDetialsReport(Integer supplier, OutputStream output) throws IOException {
+		List<Record> materialRecord = Db.find(GET_MATERIAL_DETIAL_REPORT_SQL, supplier);
+		String[] field = null;
+		String[] head = null;
+		field = new String[] {"supplier_name", "no","material_type_id", "specification","material_id", "production_time", "quantity", "area", "box_id", "X", "Y", "Z", "row", "col"};
+		head =  new String[] {"供应商", "料号", "物料类型", "规格", "料盘唯一码", "生产日期", "数量", "料盒所在区域", "料盒号", "X", "Y", "Z", "盒内行号", "盒内列号"};	
+		ExcelWritter writter = ExcelWritter.create(true);
+		writter.fill(materialRecord, "物料库存表", field, head);
 		writter.write(output, true);
 	}
 

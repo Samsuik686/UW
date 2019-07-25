@@ -264,7 +264,6 @@ public class ExternalWhTaskService {
 		Task task = new Task();
 		task.setDestination(HwId);
 		task.setCreateTime(date);
-		task.setPriority(0);
 		task.setState(TaskState.FINISHED);
 		task.setSupplier(mType.getSupplier());
 		task.setType(TaskType.WASTAGE);

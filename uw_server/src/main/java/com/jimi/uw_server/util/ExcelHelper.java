@@ -460,6 +460,7 @@ public class ExcelHelper{
 		try {
 			for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
 				Sheet sheet = workbook.getSheetAt(i);
+				System.err.println(sheet.getLastRowNum());
 				for (int j = 0; j < sheet.getRow(sheet.getLastRowNum()).getLastCellNum(); j++) {
 					sheet.autoSizeColumn(j);
 					sheet.setColumnWidth(j, sheet.getColumnWidth(j) + 4 *256);

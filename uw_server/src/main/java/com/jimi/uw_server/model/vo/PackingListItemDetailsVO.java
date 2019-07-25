@@ -13,6 +13,12 @@ public class PackingListItemDetailsVO {
 	private Integer taskLogId;
 	
 	private String materialId;
+	
+	private Integer boxId;
+	
+	private Integer row;
+	
+	private Integer col;
 
 	private Integer quantity;
 
@@ -23,7 +29,7 @@ public class PackingListItemDetailsVO {
 	private Date productionTime;
 
 
-	public PackingListItemDetailsVO(Integer taskLogId, String materialId, Integer ioQuantity, Integer remainderQuantity, Date productionTime, Boolean isInBox) {
+	public PackingListItemDetailsVO(Integer taskLogId, String materialId, Integer ioQuantity, Integer remainderQuantity, Date productionTime, Boolean isInBox, Integer row, Integer col, Integer boxId) {
 		this.setTaskLogId(taskLogId);
 		this.setMaterialId(materialId);
 		this.setQuantity(ioQuantity);
@@ -31,6 +37,10 @@ public class PackingListItemDetailsVO {
 		this.setProductionTime(productionTime);
 		this.setIsInBoxString(isInBox);
 		this.getIsInBoxString();
+		this.setBoxId(boxId);
+		this.setCol(col);
+		this.setRow(row);
+		
 	}
 
 	
@@ -92,5 +102,36 @@ public class PackingListItemDetailsVO {
 	public void setRemainderQuantity(Integer remainderQuantity) {
 		this.remainderQuantity = remainderQuantity;
 	}
+
+	
+	public Integer getRow() {
+		return row;
+	}
+
+
+	public void setRow(Integer row) {
+		this.row = row;
+	}
+
+	
+	public Integer getCol() {
+		return col;
+	}
+
+	
+	public void setCol(Integer col) {
+		this.col = col;
+	}
+
+
+	public Integer getBoxId() {
+		return boxId;
+	}
+
+	
+	public void setBoxId(Integer boxId) {
+		this.boxId = boxId;
+	}
+
 
 }

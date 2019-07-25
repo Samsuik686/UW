@@ -1,6 +1,5 @@
 package com.jimi.uw_server.agv.handle;
 
-import com.jfinal.aop.Aop;
 import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;

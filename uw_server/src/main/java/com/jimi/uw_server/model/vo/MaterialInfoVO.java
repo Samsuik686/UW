@@ -13,6 +13,10 @@ public class MaterialInfoVO {
 
 	private String materialId;
 	
+	private Integer row;
+	
+	private Integer col;
+	
 	private String no;
 	
 	private Integer materailTypeId;
@@ -123,6 +127,26 @@ public class MaterialInfoVO {
 	
 	public void setIsOuted(Boolean isOuted) {
 		this.isOuted = isOuted;
+	}
+
+	
+	public Integer getRow() {
+		return row;
+	}
+
+	
+	public void setRow(Integer row) {
+		this.row = row;
+	}
+
+	
+	public Integer getCol() {
+		return col;
+	}
+
+	
+	public void setCol(Integer col) {
+		this.col = col;
 	}
 	
 }

@@ -1,4 +1,4 @@
-﻿# Compiled class file
+# Compiled class file
 *.class
 
 # Log file
@@ -84,3 +84,4 @@ Servers2/
 /uw_io_app/
 /Document/
 .project
+processor/

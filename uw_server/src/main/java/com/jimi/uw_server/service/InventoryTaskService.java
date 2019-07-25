@@ -51,6 +51,7 @@ import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
+import com.jimi.uw_server.util.MaterialHelper;
 
 /**
  * 
@@ -101,7 +102,7 @@ public class InventoryTaskService {
 	
 	private static final String GET_UNCOVER_INVENTORY_LOG_BY_TASKID = "SELECT * FROM inventory_log WHERE task_id = ? AND enabled = 1";
 	
-	private static final String GET_MATERIAL_INFO_BY_BOX = "SELECT material.id as id, material.type as material_type_id, material.remainder_quantity as quantity, material.production_time as production_time, material_type.`no` as `no`, material_type.specification as specification, supplier.id as supplier_id, supplier.`name` as supplier_name FROM material INNER JOIN material_type INNER JOIN supplier ON material.type = material_type.id AND supplier.id = material_type.supplier WHERE material.box = ? AND material.is_in_box = 1 AND remainder_quantity > 0";
+	private static final String GET_MATERIAL_INFO_BY_BOX = "SELECT material.id as id, material.row as row, material.col as col, material.type as material_type_id, material.remainder_quantity as quantity, material.production_time as production_time, material_type.`no` as `no`, material_type.specification as specification, supplier.id as supplier_id, supplier.`name` as supplier_name FROM material INNER JOIN material_type INNER JOIN supplier ON material.type = material_type.id AND supplier.id = material_type.supplier WHERE material.box = ? AND material.is_in_box = 1 AND remainder_quantity > 0";
 	
 	private static final String GET_INVENTORY_TASK_BY_SUPPLIERID = "SELECT * FROM task WHERE type = ? AND supplier = ? AND state != 1 AND state != 4 ORDER BY create_time DESC";
 		
@@ -285,7 +286,10 @@ public class InventoryTaskService {
 	 */
 	public String backInventoryBox(Integer taskId, Integer boxId, Integer windowId, User user) {
 		synchronized (Lock.INV_TASK_BACK_LOCK) {
-			
+			Task task = Task.dao.findById(taskId);
+			if (task == null) {
+				throw new OperationException("任务不存在，请检查参数是否正确!");
+			}
 			List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_BOX_AND_TASKID, boxId, taskId);
 			for (InventoryLog inventoryLog : inventoryLogs) {
 				if (inventoryLog.getActuralNum() == null) {
@@ -305,12 +309,13 @@ public class InventoryTaskService {
 			if (window == null) {
 				throw new OperationException("当前盘点的仓口不存在，请检查参数是否正确!");
 			}
+			
 			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
 				if ( inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
 					try {
 						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
 						if (goodsLocation != null) {
-							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation);
+							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
 						}else {
 							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
 						}
@@ -351,7 +356,7 @@ public class InventoryTaskService {
 	 * @param user
 	 * @return
 	 */
-	public String inventoryMaterial(String materialId, Integer boxId, Integer taskId, Integer acturalNum, User user) {
+	public Material inventoryMaterial(String materialId, Integer boxId, Integer taskId, Integer acturalNum, User user) {
 		InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, taskId, materialId);
 		if (inventoryLog == null) {
 			throw new OperationException("当前盘点的物料记录不存在，请检查参数是否正确!");
@@ -359,14 +364,26 @@ public class InventoryTaskService {
 		if (acturalNum < 0) {
 			throw new OperationException("料盘的实际数量需要大于或等于0!");
 		}
-		
+		Material material = Material.dao.findById(materialId);
 		//改变盘点记录
 		inventoryLog.setActuralNum(acturalNum);
 		inventoryLog.setDifferentNum(acturalNum - inventoryLog.getBeforeNum());
 		inventoryLog.setInventoryOperatior(user.getUid());
 		inventoryLog.setInventoryTime(new Date());
 		inventoryLog.update();
-		return "操作成功";
+		if (MaterialType.dao.findById(material.getType()).getRadius().equals(7)) {
+			if ((material.getRow().equals(-1) || material.getCol().equals(-1)) && acturalNum > 0) {
+				MaterialHelper.getMaterialLocation(material, true);
+				if (material.getRow().equals(-1) || material.getCol().equals(-1)) {
+					throw new OperationException("位置不明，料盒已无空余位置");
+				}
+			}
+			if (acturalNum == 0) {
+				material.setCol(-1).setRow(-1);
+				material.update();
+			}
+		}
+		return material;
 	}
 	
 	
@@ -791,6 +808,8 @@ public class InventoryTaskService {
 					materialInfoVO.setSupplierId(record.getInt("supplier_id"));
 					materialInfoVO.setSupplier(record.getStr("supplier_name"));
 					materialInfoVO.setProductionTime(record.getDate("production_time"));
+					materialInfoVO.setRow(record.getInt("row"));
+					materialInfoVO.setCol(record.getInt("col"));
 					InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, window.getBindTaskId(), record.getStr("id"));
 					if (inventoryLog != null && inventoryLog.getActuralNum() != null) {
 						materialInfoVO.setActualNum(inventoryLog.getActuralNum());
@@ -1093,6 +1112,7 @@ public class InventoryTaskService {
 		List<Task> tasks = Task.dao.find(GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER, supplierId);
 		return tasks;
 	}
+	
 	
 	public String getTaskName(Integer id) {
 		Task task = Task.dao.findById(id);

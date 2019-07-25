@@ -52,14 +52,14 @@ public class IOTaskHandler extends BaseTaskHandler{
 	}
 	
 	@Override
-	public void sendSendLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation) throws Exception {
+	public void sendSendLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) throws Exception {
 		AGVIOTaskItem agvioTaskItem = (AGVIOTaskItem) item;
 		synchronized (Lock.TASK_REDIS_LOCK) {
 			//构建SL指令，令指定robot把料送回原仓位
 			if (TaskItemRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()).equals(0)) {
 				return ;
 			}
-			AGVMoveCmd moveCmd = createSendLLCmd(agvioTaskItem.getGroupId(), materialBox, goodsLocation);
+			AGVMoveCmd moveCmd = createSendLLCmd(agvioTaskItem.getGroupId(), materialBox, goodsLocation, priority);
 			//发送取货LL>>>
 			AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 			materialBox.setIsOnShelf(false).update();
@@ -70,11 +70,11 @@ public class IOTaskHandler extends BaseTaskHandler{
 
 
 	@Override
-	public void sendBackLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation) throws Exception {
+	public void sendBackLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) throws Exception {
 		AGVIOTaskItem agvioTaskItem = (AGVIOTaskItem) item;
 		synchronized (Lock.TASK_REDIS_LOCK) {
 			//发送回库LL>>>
-			AGVMoveCmd moveCmd = createBackLLCmd(agvioTaskItem.getGroupId(), materialBox, goodsLocation);
+			AGVMoveCmd moveCmd = createBackLLCmd(agvioTaskItem.getGroupId(), materialBox, goodsLocation, priority);
 			AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 			TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK,  null, null, null, null, null, null);
 		}
