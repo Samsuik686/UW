@@ -19,13 +19,17 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <el-collapse v-model="activeName" accordion class="in-collapse" v-if="tasks.length > 0">
+      <el-collapse
+        v-model="activeName"
+        accordion
+        class="in-collapse"
+        v-if="tasks.length > 0">
         <el-collapse-item  v-for="(item,index) in tasks"
                            :key="index"
                            :title='item.materialNo === null?item.goodsLocationName+" "+"/"+" "+"无数据":item.goodsLocationName+" "+"/"+" "+item.boxId+" "+"/"+" "+item.materialNo'
                            :name="item.boxId === null?item.goodsLocationId:item.boxId">
           <div v-if="item.id !== null">
-            <cut-item-details  :taskItem="item" v-if="item.isForceFinish === true"></cut-item-details>
+            <cut-item-details  :taskItem="item" v-if="item.isForceFinish === true" :x="x" :y="y"></cut-item-details>
             <task-item-details :taskItem="item" v-else></task-item-details>
           </div>
         </el-collapse-item>
@@ -62,7 +66,9 @@
           isTimeOut: false,
           scanText:'',
           tempArr:[],
-          isBlurFocus:false
+          isBlurFocus:false,
+          x:-1,
+          y:-1
         }
       },
       components: {
@@ -143,7 +149,7 @@
                 this.tasks = response.data.data;
                 this.tasks.map((item) => {
                   item.isCut = false;
-                })
+                });
               } else {
                 this.tasks = [];
               }
@@ -291,6 +297,8 @@
             axiosPost(options).then(res => {
               if (res.data.result === 200) {
                 this.successAudioPlay();
+                this.x = res.data.data.col;
+                this.y = res.data.data.row;
                 this.$alertSuccess("操作成功，请将料盘放回料盒");
               } else {
                 this.failAudioPlay();

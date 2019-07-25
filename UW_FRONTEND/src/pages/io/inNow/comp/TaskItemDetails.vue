@@ -26,20 +26,33 @@
         <el-form-item label="已扫料盘">
           <span>{{taskItem.details.length}}</span>
         </el-form-item>
+        <el-form-item label="规格" style="width:100%">
+          <span>{{taskItem.specification}}</span>
+        </el-form-item>
       </el-form>
       <div class="item-operation">
         <div class="operation-img">
           <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
         </div>
         <span class="operation-text">* 扫描此二维码或点击按钮以完成操作</span>
-        <el-button
-          size="small"
-          @click="changeState"
-          :type="state === 2?'info':'primary'">{{stateText}}</el-button>
-        <el-button
-          size="small"
-          type="primary"
-          @click="checkOverQuantity">操作完毕</el-button>
+        <div style="display:flex;justify-content:center">
+          <el-button
+            size="small"
+            @click="changeState"
+            :type="state === 2?'info':'primary'">{{stateText}}</el-button>
+          <el-button
+            size="small"
+            type="primary"
+            @click="checkOverQuantity">操作完毕</el-button>
+        </div>
+      </div>
+      <div class="item-box">
+        <material-box
+          :x="x"
+          :y="y"
+          :id="taskItem.boxId"
+          :list="taskItem.details">
+        </material-box>
       </div>
     </div>
     <el-divider></el-divider>
@@ -70,23 +83,30 @@
       </el-table-column>
     </el-table>
     <finish-tip :task-item="taskItem" :state="state" :isFinishTip="isFinishTip" @setIsFinishTip="setIsFinishTip"></finish-tip>
+    <show-position v-if="isShowPosition" @closeShowPosition="closeShowPosition" :x="x1" :y="y1"></show-position>
   </div>
 </template>
 
 <script>
+  import ShowPosition from "./subscomp/ShowPosition";
   import {mapGetters,mapActions} from 'vuex'
   import FinishTip from './subscomp/FinishTip'
   import eventBus from "../../../../utils/eventBus";
   import {robotBackUrl, taskDeleteMaterialRecordUrl} from "../../../../config/globalUrl";
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
+  import MaterialBox from './subscomp/MaterialBox'
   export default {
     name: "TaskItemDetails",
     props:{
-      taskItem:Object
+      taskItem:Object,
+      x:Number,
+      y:Number
     },
     components:{
-      FinishTip
+      FinishTip,
+      MaterialBox,
+      ShowPosition
     },
     computed:{
       ...mapGetters(['scanFinishBoxId'])
@@ -111,7 +131,10 @@
         state:1,
         stateText:'料盒已满',
         isFinishTip:false,
-        isPending:false
+        isPending:false,
+        x1:-1,
+        y1:-1,
+        isShowPosition:false
       }
     },
     methods:{
@@ -193,6 +216,9 @@
             this.isPending = false;
             if (response.data.result === 200) {
               this.$alertSuccess("删除成功");
+              this.x1 = response.data.data.col;
+              this.y1 = response.data.data.row;
+              this.isShowPosition = true;
               eventBus.$emit('refreshTaskItem');
             } else {
               errHandler(response.data);
@@ -205,6 +231,11 @@
       },
       setIsFinishTip:function(){
         this.isFinishTip = false;
+      },
+      closeShowPosition:function(){
+        this.x1 = -1;
+        this.y1 = -1;
+        this.isShowPosition = false;
       }
     }
   }

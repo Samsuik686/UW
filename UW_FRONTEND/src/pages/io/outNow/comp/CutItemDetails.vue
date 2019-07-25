@@ -34,20 +34,33 @@
           <el-form-item label="本次缺发数量/超发数量">
             <span>{{overQuantity(taskItem.planQuantity,taskItem.actualQuantity)}}</span>
           </el-form-item>
+          <el-form-item label="规格" style="width:100%">
+            <span>{{taskItem.specification}}</span>
+          </el-form-item>
         </el-form>
         <div class="item-operation">
           <div class="operation-img">
             <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
           </div>
           <span class="operation-text">* 扫描此二维码或点击按钮以完成操作</span>
-          <el-button
-            size="small"
-            @click="changeState"
-            :type="state === 2?'info':'primary'">{{stateText}}</el-button>
-          <el-button
-            size="small"
-            type="primary"
-            @click="robotBack">操作完毕</el-button>
+          <div style="display:flex;justify-content:center">
+            <el-button
+              size="small"
+              @click="changeState"
+              :type="state === 2?'info':'primary'">{{stateText}}</el-button>
+            <el-button
+              size="small"
+              type="primary"
+              @click="robotBack">操作完毕</el-button>
+          </div>
+        </div>
+        <div class="item-box">
+          <CutMaterial-box
+            :x="x"
+            :y="y"
+            :id="taskItem.boxId"
+            :list="taskItem.details">
+          </CutMaterial-box>
         </div>
       </div>
       <el-divider></el-divider>
@@ -92,6 +105,7 @@
 </template>
 
 <script>
+  import CutMaterialBox from './subscomp/CutMaterialBox'
   import {mapGetters,mapActions} from 'vuex'
   import FinishTip from './subscomp/FinishTip'
   import {robotBackUrl} from "../../../../config/globalUrl";
@@ -100,11 +114,14 @@
   export default {
     name: "CutItemDetails",
     props:{
-      taskItem:Object
+      taskItem:Object,
+      x:Number,
+      y:Number
     },
     components:{
       EditMaterialId,
-      FinishTip
+      FinishTip,
+      CutMaterialBox
     },
     computed:{
       ...mapGetters(['scanFinishBoxId','scanCutBoxId','configData','user'])
@@ -211,7 +228,7 @@
         }).catch(err => {
           this.$alertDanger(err);
         })
-      },
+      }
     }
   }
 </script>
@@ -230,7 +247,7 @@
     display:flex;
   }
   .demo-table-expand{
-    flex:2;
+    flex:3;
     font-size: 0;
     margin-bottom:10px;
   }
@@ -245,12 +262,20 @@
   }
   .item-operation{
     flex:1;
-    margin-top:5px;
+    margin-top:-20px;
     text-align:center;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
   }
   .operation-img{
-    width:50%;
+    width:100%;
     margin:0 auto 10px;
+  }
+  .item-box{
+    flex:1;
+    display:flex;
+    justify-content:center;
   }
   .operation-text{
     display:block;

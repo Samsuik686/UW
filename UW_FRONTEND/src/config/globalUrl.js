@@ -60,6 +60,13 @@ export const editTaskRemarksUrl = url + '/task/editTaskRemarks';
 export const exportUnfinishTaskDetailsUrl = url + '/task/exportUnfinishTaskDetails';
 export const modifyOutQuantityUrl = url + '/task/modifyOutQuantity';
 export const switchTaskUrl = url + '/task/switchTask';
+
+//获取任务仓口
+export const getTaskWindowUrl = url + '/task/getTaskWindow';
+//更改任务仓口
+export const setTaskWindowUrl = url + '/task/setTaskWindow';
+
+
 //robot manage
 export const robotSelectUrl = url + '/manage/robot/select';
 export const robotSwitchUrl = url + '/manage/robot/switch';

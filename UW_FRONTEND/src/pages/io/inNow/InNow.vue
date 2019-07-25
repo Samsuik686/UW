@@ -19,12 +19,18 @@
         </el-select>
       </el-form-item>
     </el-form>
-    <el-collapse v-model="activeName" accordion class="in-collapse" v-if="tasks.length > 0">
+    <el-collapse
+      ref="collapse"
+      v-model="activeName"
+      @change="setClose"
+      accordion
+      class="in-collapse"
+      v-if="tasks.length > 0">
       <el-collapse-item  v-for="(item,index) in tasks"
                          :key="index"
                          :title='item.materialNo === null?item.goodsLocationName+" "+"/"+" "+"无数据":item.goodsLocationName+" "+"/"+" "+item.boxId+" "+"/"+" "+item.materialNo'
                          :name="item.boxId === null?item.goodsLocationId:item.boxId">
-        <task-item-details :taskItem="item" v-if="item.id !== null" :id="index"></task-item-details>
+        <task-item-details :taskItem="item" v-if="item.id !== null" :id="index" :x="x" :y="y"></task-item-details>
       </el-collapse-item>
     </el-collapse>
   </div>
@@ -51,7 +57,9 @@
         tasks:[],
         myTimeOut: '',
         isTimeOut: false,
-        scanText:''
+        scanText:'',
+        x:-1,
+        y:-1
       }
     },
     components: {
@@ -197,7 +205,7 @@
         }
 
         if(this.activeName === ''){
-          this.$alertWarning('请扫料盒码或点开你当前要操作的货位');
+          this.$alertWarning('请扫料盒码');
           return;
         }
         /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
@@ -231,6 +239,8 @@
             };
             axiosPost(options).then(response => {
               if (response.data.result === 200) {
+                this.x = response.data.data.col;
+                this.y = response.data.data.row;
                 this.fetchData(this.thisWindow);
                 this.successAudioPlay();
                 this.$alertSuccess('操作成功');
@@ -256,6 +266,10 @@
         utterThis.volume = 1;
         utterThis.pitch = 2;
         synth.speak(utterThis);
+      },
+      setClose:function(){
+        this.activeName = '';
+        this.$refs.collapse.activeNames = [];
       }
     }
   }

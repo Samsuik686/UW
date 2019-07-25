@@ -12,6 +12,7 @@ const IO_CONFIG = [
   {field: 'materialNo', title: '料号', colStyle: {'width': '120px'}},
   {field: 'planQuantity', title: '计划数量', colStyle: {'width': '90px'}},
   {field: 'actualQuantity', title: '实际数量', colStyle: {'width': '90px'}},
+  {field: 'deductQuantity', title: '抵扣数', colStyle: {'width': '90px'}},
   {field: 'lackNum', title: '欠料数量', colStyle: {'width': '90px'}},
   {field: 'finishTime', title: '完成时间', colStyle: {'width': '120px'}},
   {field: 'status', title: '状态', tdComp: 'ShowStatus', colStyle: {'width': '90px'}},

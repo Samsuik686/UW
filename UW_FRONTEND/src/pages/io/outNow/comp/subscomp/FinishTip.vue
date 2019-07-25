@@ -15,7 +15,7 @@
     <p v-else>请确定是否出库</p>
     <span slot="footer" class="dialog-footer">
       <el-button type="info" @click="cancel" size="mini">取 消</el-button>
-      <el-button type="warning" v-if="taskItem.planQuantity - taskItem.actualQuantity >= 0" size="mini" @click="delay"
+      <el-button type="warning"  size="mini" @click="delay"
                  :disabled="isHide">稍后再见</el-button>
       <el-button type="primary" size="mini" @click="submit">确认完成</el-button>
     </span>

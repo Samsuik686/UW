@@ -32,20 +32,31 @@
         <el-form-item label="料盘数">
           <span>{{taskItem.reelNum}}</span>
         </el-form-item>
+        <el-form-item label="规格" style="width:100%">
+          <span>{{taskItem.specification}}</span>
+        </el-form-item>
       </el-form>
       <div class="item-operation">
         <div class="operation-img">
           <img src="static/img/finishedQRCode.png" alt="finished" class="img-style">
         </div>
         <span class="operation-text">* 扫描此二维码或点击按钮以完成操作</span>
-        <el-button
-          size="small"
-          @click="changeState"
-          :type="state === 0?'info':'primary'">{{stateText}}</el-button>
-        <el-button
-          size="small"
-          type="primary"
-          @click="checkOverQuantity">操作完毕</el-button>
+        <div style="display:flex;justify-content:center">
+          <el-button
+            size="small"
+            @click="changeState"
+            :type="state === 0?'info':'primary'">{{stateText}}</el-button>
+          <el-button
+            size="small"
+            type="primary"
+            @click="checkOverQuantity">操作完毕</el-button>
+        </div>
+      </div>
+      <div class="item-box">
+        <material-box
+          :id="taskItem.boxId"
+          :materials="taskItem.materials">
+        </material-box>
       </div>
     </div>
 
@@ -91,6 +102,7 @@
       @setIsEditMaterial="setIsEditMaterial"
       :row="activeRow">
     </edit-material-id>
+    <show-position v-if="isShowPosition" @closeShowPosition="closeShowPosition" :x="x" :y="y"></show-position>
   </div>
 </template>
 
@@ -102,12 +114,16 @@
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
   import EditMaterialId from "./subscomp/EditMaterialId";
+  import MaterialBox from "./subscomp/MaterialBox";
+  import ShowPosition from "./subscomp/ShowPosition";
   export default {
     name: "TaskItemDetails",
     props:{
       taskItem:Object
     },
     components:{
+      ShowPosition,
+      MaterialBox,
       EditMaterialId,
       FinishTip
     },
@@ -136,7 +152,10 @@
         isFinishTip:false,
         isEditMaterial:false,
         activeRow:{},
-        isPending:false
+        isPending:false,
+        x:-1,
+        y:-1,
+        isShowPosition:false
       }
     },
     methods:{
@@ -224,6 +243,9 @@
             this.isPending = false;
             if (response.data.result === 200) {
               this.$alertSuccess("删除成功");
+              this.x = response.data.data.col;
+              this.y = response.data.data.row;
+              this.isShowPosition = true;
               eventBus.$emit('refreshTaskItem');
             } else {
               errHandler(response.data);
@@ -239,6 +261,11 @@
       },
       setIsEditMaterial:function(){
         this.isEditMaterial = false;
+      },
+      closeShowPosition:function(){
+        this.x = -1;
+        this.y = -1;
+        this.isShowPosition = false;
       }
     }
   }
@@ -257,7 +284,7 @@
     display:flex;
   }
   .demo-table-expand{
-    flex:2;
+    flex:3;
     font-size: 0;
     margin-bottom:10px;
   }
@@ -272,12 +299,20 @@
   }
   .item-operation{
     flex:1;
-    margin-top:5px;
+    margin-top:-20px;
     text-align:center;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
   }
   .operation-img{
-    width:50%;
+    width:100%;
     margin:0 auto 10px;
+  }
+  .item-box{
+    flex:1;
+    display:flex;
+    justify-content:center;
   }
   .operation-text{
     display:block;

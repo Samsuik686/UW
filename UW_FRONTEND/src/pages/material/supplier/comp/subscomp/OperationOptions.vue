@@ -34,10 +34,10 @@
 </template>
 
 <script>
-  import ChangeName from "./ChangeName";
   import {supplierUpdateUrl} from "../../../../../config/globalUrl";
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
+  import ChangeName from "./ChangeName";
   import eventBus from '@/utils/eventBus';
   export default {
     name: "OperationOptions",

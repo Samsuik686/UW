@@ -29,7 +29,6 @@
         this.changeStyle(this.row);
       },
       isScan:function(val){
-        console.log(val,this.activeMaterialId,this.row.materialId);
         if(val === true){
           if(this.activeMaterialId === this.row.materialId){
             let that = this;

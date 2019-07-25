@@ -7,6 +7,9 @@ export const handleScanText = function(text){
   if(!judgeTime(tempArray[7])){
     return '二维码格式错误，生产日期格式不对';
   }
+  if(!judgeCodeLen(tempArray[2])){
+    return '二维码格式错误，料盘唯一码过长';
+  }
   return '';
 };
 //判断是否为正整数
@@ -24,4 +27,19 @@ export const judgeTime = function isTime(time){
   }else{
     return regDate.test(time)
   }
+};
+//判断字符长度
+export const judgeCodeLen = function (str) {
+  let len = 0;
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charCodeAt(i);
+    //单字节加1
+    if ((c >= 0x0001 && c <= 0x007e) || (0xff60 <= c && c <= 0xff9f)) {
+      len++;
+    }
+    else {
+      len += 2;
+    }
+  }
+  return len <= 16;
 };

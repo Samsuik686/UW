@@ -121,6 +121,7 @@
             if (response.data.result === 200) {
               this.cancelPrintArr(this.row.materialId);
               eventBus.$emit('refreshCheckTask',true);
+              this.$emit('setXY',response.data.data.col,response.data.data.row);
             } else {
               errHandler(response.data);
             }

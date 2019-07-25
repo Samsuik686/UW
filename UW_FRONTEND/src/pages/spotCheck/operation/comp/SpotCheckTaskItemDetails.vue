@@ -1,71 +1,83 @@
 <template>
   <div class="spot-check-item-details">
-    <el-form :inline="true" class="demo-form-inline" size="medium">
-      <el-form-item label="料盒总盘数">
-        <el-input v-model="spotCheckItem.totalNum" disabled></el-input>
-      </el-form-item>
-      <el-form-item label="已扫盘数">
-        <el-input v-model="spotCheckItem.scanNum" disabled></el-input>
-      </el-form-item>
-      <el-form-item label="已出库盘数">
-        <el-input v-model="spotCheckItem.outNum" disabled></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          @click="backInventoryBox"
-          type="primary">叉车回库
-        </el-button>
-      </el-form-item>
-    </el-form>
-    <el-table
-      :data="spotCheckItem.list"
-      style="width:100%">
-      <el-table-column
-        prop="materialId"
-        label="料盘号">
-        <template slot-scope="scope">
-          <high-light
-            :spotCheckItem="spotCheckItem"
-            :isScan = "isScan"
-            :row="scope.row"
-            :activeMaterialId="activeMaterialId"
-          >
-          </high-light>
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="no"
-        label="料号">
-      </el-table-column>
-      <el-table-column
-        prop="specification"
-        label="规格">
-      </el-table-column>
-      <el-table-column
-        prop="supplier"
-        label="供应商">
-      </el-table-column>
-      <el-table-column
-        prop="storeNum"
-        label="数量">
-      </el-table-column>
-      <el-table-column
-        width="200"
-        label="操作">
-        <template slot-scope="scope">
+    <div>
+      <el-form :inline="true" class="demo-form-inline" size="medium">
+        <el-form-item label="料盒总盘数">
+          <el-input v-model="spotCheckItem.totalNum" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="已扫盘数">
+          <el-input v-model="spotCheckItem.scanNum" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="已出库盘数">
+          <el-input v-model="spotCheckItem.outNum" disabled></el-input>
+        </el-form-item>
+        <el-form-item>
           <el-button
-            size="small"
-            @click="outSingular(scope.row.materialId)"
-            type="primary">异常出库
+            @click="backInventoryBox"
+            type="primary">叉车回库
           </el-button>
-          <el-button
-            size="small"
-            @click="outRegular(scope.row.materialId)"
-            type="primary">抽检出库
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-form-item>
+      </el-form>
+      <el-table
+        :data="spotCheckItem.list"
+        style="width:100%">
+        <el-table-column
+          prop="materialId"
+          label="料盘号">
+          <template slot-scope="scope">
+            <high-light
+              :spotCheckItem="spotCheckItem"
+              :isScan = "isScan"
+              :row="scope.row"
+              :activeMaterialId="activeMaterialId"
+            >
+            </high-light>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="no"
+          label="料号">
+        </el-table-column>
+        <el-table-column
+          prop="specification"
+          label="规格">
+        </el-table-column>
+        <el-table-column
+          prop="supplier"
+          label="供应商">
+        </el-table-column>
+        <el-table-column
+          prop="storeNum"
+          label="数量">
+        </el-table-column>
+        <el-table-column
+          width="200"
+          label="操作">
+          <template slot-scope="scope">
+            <el-button
+              size="small"
+              :type="scope.row.isOuted === true?'info':'primary'"
+              :disabled="scope.row.isOuted === true"
+              @click="outSingular(scope.row.materialId)">异常出库
+            </el-button>
+            <el-button
+              size="small"
+              :type="scope.row.isOuted === true?'info':'primary'"
+              :disabled="scope.row.isOuted === true"
+              @click="outRegular(scope.row.materialId)">抽检出库
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <div class="item-box" v-if="spotCheckItem.boxId !== null">
+      <material-box
+        :x="x"
+        :y="y"
+        :list="spotCheckItem.list"
+        :id="spotCheckItem.boxId">
+      </material-box>
+    </div>
   </div>
 </template>
 
@@ -76,9 +88,30 @@
   import {errHandler} from "../../../../utils/errorHandler";
   import HighLight from "./subscomp/HighLight";
   import {mapActions} from 'vuex'
+  import MaterialBox from './subscomp/MaterialBox'
   export default {
     name: "SpotCheckTaskItemDetails",
-    components: {HighLight},
+    components: {
+      HighLight,
+      MaterialBox
+    },
+    watch:{
+      activeMaterialId:function (val) {
+        if(val !== ''){
+          for(let i =0;i<this.spotCheckItem.list.length;i++){
+            let obj = this.spotCheckItem.list[i];
+            if(obj.materialId === val){
+              this.x = obj.col;
+              this.y = obj.row;
+              return;
+            }
+          }
+        }else{
+          this.x = -1;
+          this.y = -1;
+        }
+      }
+    },
     props:{
       spotCheckItem:Object,
       activeName:String,
@@ -87,7 +120,9 @@
     },
     data() {
       return {
-        isPending:false
+        isPending:false,
+        x:-1,
+        y:-1
       }
     },
     methods: {

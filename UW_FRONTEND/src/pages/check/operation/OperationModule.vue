@@ -72,6 +72,7 @@
       this.setPreset();
       this.setFocus();
       if (this.thisWindow !== '') {
+        this.setLoading(true);
         this.fetchData(this.thisWindow);
       }
       eventBus.$on('setIsInputFocus',val => {
@@ -103,6 +104,8 @@
     watch: {
       thisWindow: function (val) {
         if (val !== '') {
+          this.activeName = '';
+          this.setLoading(true);
           this.setCheckTimeOut();
           setTimeout(function(){
             eventBus.$emit('changeInputVal',true);
@@ -152,7 +155,6 @@
         }
         if (!this.isPending) {
           this.isPending = true;
-          this.setLoading(true);
           let options = {
             url: getPackingInventoryUrl,
             data: {
@@ -170,7 +172,7 @@
               }
               this.checkTasks = response.data.data;
               this.disabledMaterialId = '';
-              this.clearCheckTimeOut();
+              //this.clearCheckTimeOut();
             } else {
               this.clearCheckTimeOut();
               if (response.data.result === 412) {

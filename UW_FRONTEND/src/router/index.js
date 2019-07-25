@@ -1,6 +1,7 @@
 /*vue-router 配置*/
 
-import Vue from 'vue'
+import
+  Vue from 'vue'
 import Router from 'vue-router'
 import store from '../store'
 import Main from '../pages/Main'

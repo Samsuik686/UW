@@ -120,6 +120,7 @@
       },
       checked:function (val) {
         this.setIsOverdueMaterialCheck(val);
+        this.query = {"limit": 20, "offset": 0};
         if(val === true){
           this.getOverdueMaterial();
         }else{

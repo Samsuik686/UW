@@ -142,6 +142,8 @@
   }
   .add-panel-box{
     width:95%;
+    max-height:95%;
+    box-sizing:border-box;
     display:flex;
   }
   .add-panel-container {

@@ -12,7 +12,6 @@
       </template>
     </notify-me>
   </div>
-
 </template>
 
 <script>
@@ -31,7 +30,7 @@
         status: '',
         permanent: false,
         text: '',
-        timeout: 3000,
+        timeout: 10000,
 
       }
     },

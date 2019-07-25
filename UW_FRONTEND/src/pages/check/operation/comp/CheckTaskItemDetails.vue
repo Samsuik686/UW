@@ -39,6 +39,7 @@
             :boxId = "boxId"
             :taskId = "taskId"
             :isScanner="isScanner"
+            @setXY="setXY"
           ></set-check-quantity>
         </template>
       </el-table-column>
@@ -53,6 +54,9 @@
         </template>
       </el-table-column>
     </el-table>
+    <div class="item-box" v-if="checkTaskItem.boxId !== null">
+      <material-box :x="x" :y="y" :id="checkTaskItem.boxId"></material-box>
+    </div>
   </div>
 </template>
 
@@ -63,9 +67,13 @@
   import {axiosPost} from "../../../../utils/fetchData";
   import {errHandler} from "../../../../utils/errorHandler";
   import {mapGetters,mapActions} from 'vuex'
+  import MaterialBox from './subscomp/MaterialBox'
   export default {
     name: "CheckTaskDetails",
-    components: {SetCheckQuantity},
+    components: {
+      SetCheckQuantity,
+      MaterialBox
+    },
     props: {
       checkTaskItem: Object,
       activeName:String,
@@ -77,9 +85,28 @@
       windowId:Number,
       isScanner:Boolean
     },
+    watch:{
+      activeMaterialId:function (val) {
+        if(val !== ''){
+          for(let i =0;i<this.checkTaskItem.list.length;i++){
+            let obj = this.checkTaskItem.list[i];
+            if(obj.materialId === val){
+              this.x = obj.col;
+              this.y = obj.row;
+              return;
+            }
+          }
+        }else{
+          this.x = -1;
+          this.y = -1;
+        }
+      }
+    },
     data() {
       return {
-        isPending:false
+        isPending:false,
+        x:-1,
+        y:-1
       }
     },
     computed: {
@@ -106,36 +133,9 @@
           }
         }
         if (Number(row.storeNum) !== Number(actualNum)) {
-          this.printBarcode(row,actualNum);
-        }
-      },
-      checkQuantity:function(row,actualNum){
-        if (!this.isPending) {
-          this.isPending = true;
-          this.setLoading(true);
-          let options = {
-            url: inventoryMaterialUrl,
-            data: {
-              materialId: row.materialId,
-              boxId: this.boxId,
-              taskId: this.taskId,
-              acturalNum: actualNum
-            }
-          };
-          axiosPost(options).then(response => {
-            this.isPending = false;
-            this.setLoading(false);
-            if (response.data.result === 200) {
-              eventBus.$emit('refreshCheckTask',true);
-            } else {
-              errHandler(response.data);
-            }
-          }).catch(err => {
-            this.$alertDanger('连接超时，请刷新重试');
-            console.log(err);
-            this.isPending = false;
-            this.setLoading(false);
-          })
+          this.handlePrintMaterialArr(row.materialId);
+          //
+          // this.printBarcode(row,actualNum);
         }
       },
       printBarcode: function (row,actualNum) {
@@ -255,6 +255,10 @@
           }
         }
         this.setPrintMaterialIdArr(arr);
+      },
+      setXY:function(x,y){
+        this.x = x;
+        this.y = y;
       }
     }
   }

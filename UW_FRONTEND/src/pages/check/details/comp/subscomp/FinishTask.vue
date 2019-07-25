@@ -49,12 +49,13 @@
               }
             };
             axiosPost(options).then(res => {
+              this.isPending = false;
               if(res.data.result === 200){
                 this.$alertSuccess('操作成功');
-                this.closeEditPanel();
               }else{
                 errHandler(res.data);
               }
+              this.closeEditPanel();
             }).catch(err => {
               console.log(err);
               this.isPending = false;
