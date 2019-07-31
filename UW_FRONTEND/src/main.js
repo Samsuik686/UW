@@ -1,36 +1,20 @@
-// The Vue build version to load with the `import` command
-// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
+import '@babel/polyfill'
 import Vue from 'vue'
-import Vuex from 'vuex'
-import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
-import App from './App'
+import './plugins/element.js'
+import App from './App.vue'
 import router from './router'
-import axios from './config/http'
 import store from './store'
-import  Icon from 'vue-svg-icon/Icon'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap/dist/js/bootstrap.bundle.min'
-import Datatable from '../static/js/datatable.min.js'
-import locale from './locale/zh-cn'
-import {alertDanger, alertInfo, alertSuccess,alertWarning} from "./utils/modal";
-
-Vue.prototype.$alertDanger = alertDanger;
+import './assets/icon/iconfont.css'
+import {alertError, alertInfo, alertSuccess,alertWarning} from "./utils/notification"
+Vue.prototype.$alertError = alertError;
 Vue.prototype.$alertInfo = alertInfo;
 Vue.prototype.$alertSuccess = alertSuccess;
 Vue.prototype.$alertWarning = alertWarning;
-Vue.use(ElementUI);
-Vue.component('icon', Icon);
-Vue.use(Datatable, {locale});
-Vue.prototype.$axios = axios;
-Vue.config.productionTip = false;
-Vue.use(Vuex);
 
-/* eslint-disable no-new */
+Vue.config.productionTip = false;
+
 new Vue({
-  el: '#app',
   router,
   store,
-  components: { App },
-  template: '<App/>'
-});
+  render: h => h(App)
+}).$mount('#app');

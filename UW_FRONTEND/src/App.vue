@@ -1,84 +1,46 @@
 <template>
-  <div id="app">
-    <router-view/>
-    <copyright/>
-    <notify-me
-      :event-bus="eventBus">
-      <template slot="content" slot-scope="{data}">
-        <div style="width: 100%; word-break: break-all; text-align: left">
-          <h4><b>{{data.title}}</b></h4>
-          <p style="margin: 0">{{data.text}}</p>
-        </div>
-      </template>
-    </notify-me>
-  </div>
-
+    <div id="app">
+        <router-view/>
+    </div>
 </template>
 
 <script>
-  import Notify from './components/Notify'
-  import eventBus from './utils/eventBus'
-  import Copyright from "./components/Copyright";
-  export default {
-    name: 'App',
-    components: {
-      Copyright,
-      'notify-me': Notify
-    },
-    data() {
-      return {
-        eventBus: eventBus,
-        status: '',
-        permanent: false,
-        text: '',
-        timeout: 3000,
-
-      }
-    },
-    mounted: function () {
-      console.log(process.env.NODE_ENV)
+    export default {
+        name: 'app'
     }
-  }
 </script>
 
-<style>
-  #app {
-  }
+<style lang="scss">
+    html, body, #app, ul, li,div{
+        margin: 0;
+        padding: 0;
+    }
 
-  body {
-    background: url("assets/background.png") repeat;
+    html, body, #app {
+        width: 100%;
+        height: 100%;
+    }
 
-  }
+    ul, li {
+        list-style: none;
+    }
 
-  html, body {
-    height: 100%;
-  }
-  .table td, .table th {
-    vertical-align: middle !important;
-  }
-
-  *::-webkit-scrollbar {
-    width:8px;
-    height:8px;
-  }
-  *::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-    background:rgba(144,147,153,.3);
-  }
-  *::-webkit-scrollbar-track {
-    background:#fff;
-  }
-  .demo-table-expand .el-form-item .el-form-item__label {
-    color: #70798b;
-    margin-right:20px;
-  }
-  .el-collapse-item__header{
-    font-size:15px;
-    font-weight:bold;
-    color:#767676;
-  }
-  .el-dialog__wrapper{
-    z-index:9999!important;
-  }
+    #app {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif, '微软雅黑';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background:#f4f3ef;
+    }
+    *::-webkit-scrollbar {
+        width:5px;
+        height:5px;
+    }
+    *::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+        background: rgba(156, 159, 165, 0.2);
+    }
+    *::-webkit-scrollbar-track {
+        background:transparent;
+    }
 </style>

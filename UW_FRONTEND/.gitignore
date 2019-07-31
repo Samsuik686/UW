@@ -1,6 +1,12 @@
 .DS_Store
-node_modules/
-/dist/
+node_modules
+/dist
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -12,10 +18,4 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
-/node_modules/
-
-/package-lock.json
-/src/components/vue-datetime/LICENSE
-/src/components/vue-datetime/README.md
-/src/components/vue-datetime/CHANGELOG.md
-/src/components/vue-datetime/package-lock.json
+*.sw?
