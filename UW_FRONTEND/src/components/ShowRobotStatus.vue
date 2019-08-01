@@ -36,8 +36,8 @@
             this.clearMyTimeOut();
         },
         mounted(){
-            this.getRobots();
-            this.setMyTimeOut();
+            //this.getRobots();
+            //this.setMyTimeOut();
         },
         methods:{
             getRobots:function(){
