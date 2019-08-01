@@ -1,0 +1,66 @@
+/*
+Write your variables here. All available variables can be
+found in element-ui/packages/theme-chalk/src/common/var.scss.
+For example, to overwrite the theme color:
+*/
+$--color-primary: #4BC0C0;
+
+/* icon font path, required */
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
+
+@import "~element-ui/packages/theme-chalk/src/index";
+
+//el-scroll
+.el-scrollbar__wrap {
+  overflow-x: hidden;
+}
+.el-select-dropdown .el-scrollbar .el-scrollbar__wrap {
+  overflow: scroll;
+}
+.el-table-filter .el-scrollbar .el-scrollbar__wrap {
+  overflow: scroll;
+}
+
+//el-menu
+.el-menu {
+  width: 100%;
+  border: none !important;
+}
+.el-menu-item [class^='el-icon-'] {
+  vertical-align: middle;
+}
+.el-menu-item:hover {
+  background-color:#4BC0C0 !important;
+  color:#fff !important;
+  i{
+    color:#fff !important;
+  }
+}
+.el-submenu__title:hover {
+  background-color:#4BC0C0 !important;
+  color:#fff !important;
+  i{
+    color:#fff !important;
+  }
+}
+.el-menu-item:hover  .el-menu-item [class^='el-icon-'] {
+  color:#fff;
+}
+.el-menu-item.is-active {
+  font-weight: bold;
+}
+.demo-table-expand .el-form-item .el-form-item__label {
+  color: #70798b;
+  margin-right:20px;
+}
+.el-collapse-item__header{
+  font-size:15px;
+  font-weight:bold;
+  color:#767676;
+}
+.highLight .el-input__inner{
+  background: rgb(225, 243, 216);
+}
+.el-collapse-item .el-collapse-item__header {
+  font-size: 16px;
+}
