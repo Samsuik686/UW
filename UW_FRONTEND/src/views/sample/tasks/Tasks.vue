@@ -158,17 +158,17 @@
         },
         watch:{
             isAdding:function (val) {
-                if(val !== false){
+                if(val === false){
                     this.select()
                 }
             },
             isEditStatus:function(val){
-                if(val !== false){
+                if(val === false){
                     this.select();
                 }
             },
             isChange:function(val){
-                if(val !== false){
+                if(val === false){
                     this.select();
                 }
             }

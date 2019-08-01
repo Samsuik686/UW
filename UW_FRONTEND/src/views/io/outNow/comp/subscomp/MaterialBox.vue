@@ -51,7 +51,7 @@
             if(obj.col === 0){
               num = obj.row + 1;
             }else{
-              num = 40 - obj.row;
+              num = 21 + obj.row;
             }
             ctx.strokeText(String(num),obj.col*this.width + this.width/2.5,obj.row*this.height + this.height/1.1);
           }

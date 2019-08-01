@@ -58,7 +58,7 @@
                             if(col === 0){
                                 num = row + 1;
                             }else{
-                                num = 40 - row;
+                                num = 21 + row;
                             }
                             ctx.strokeText(String(num),i*this.width + this.width/2.5,j*this.height + this.height/1.1);
                         }else{
