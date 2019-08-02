@@ -45,10 +45,10 @@
                     for (let j=0;j<20;j++){
                         ctx.strokeStyle = '#bababa';
                         if(i === col && row === j){
-                            ctx.fillStyle ='orange';
+                            ctx.fillStyle ='#eebcac';
                             ctx.fillRect(i*this.width,j*this.height,this.width,this.height);
                             ctx.font = "18px serif";
-                            ctx.strokeStyle = '#333';
+                            ctx.strokeStyle = '#888';
                             let num = 0;
                             if(col === 0){
                                 num = row + 1;

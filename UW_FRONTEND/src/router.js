@@ -4,67 +4,67 @@ Vue.use(Router);
 import store from './store'
 
 //登录
-const Login = () => import('./views/user/Login');
+import Login from "./views/user/Login";
 //主界面
-const Main = () => import('./views/Main');
+import Main from './views/Main';
 //建仓
-const Build = () => import('./views/build/Build');
+import Build from "./views/build/Build";
 //配置
-const Config = () => import ('./views/config/Config');
+import Config from './views/config/Config';
 //盘点主界面
-const Inventory = () => import('./views/inventory/Inventory');
+import Inventory from "./views/inventory/Inventory";
 //盘点任务
-const InventoryTasks = () => import('./views/inventory/tasks/Tasks');
+import InventoryTasks from './views/inventory/tasks/Tasks';
 //UW仓盘点操作
-const InventoryOperation = () => import('./views/inventory/operation/Operation');
+import InventoryOperation from './views/inventory/operation/Operation';
 //UW仓盘点详情
-const InventoryUwDetails = () => import('./views/inventory/uwDetails/UwDetails');
+import InventoryUwDetails from './views/inventory/uwDetails/UwDetails';
 //物料仓盘点详情
-const InventoryEwhDetails = () => import('./views/inventory/ewhDetails/EwhDetails');
+import InventoryEwhDetails from './views/inventory/ewhDetails/EwhDetails';
 //出入库主界面
-const Io = () => import('./views/io/Io');
+import Io from './views/io/Io';
 //查看仓口详情
-const IoPreview = () => import('./views/io/preview/Preview');
+import IoPreview from './views/io/preview/Preview';
 //呼叫叉车
-const IoCall = () => import('./views/io/call/Call');
+import IoCall from './views/io/call/Call';
 //入库
-const IoInNow = () => import('./views/io/inNow/InNow');
+import IoInNow from './views/io/inNow/InNow';
 //出库
-const IoOutNow = () => import('./views/io/outNow/OutNow');
+import IoOutNow from './views/io/outNow/OutNow';
 //物料主界面
-const Material = () => import('./views/material/Material');
+import Material from './views/material/Material';
 //料盒
-const MaterialBoxes = () => import('./views/material/boxes/Boxes');
+import MaterialBoxes from './views/material/boxes/Boxes';
 //供应商
-const MaterialSupplier = () => import('./views/material/supplier/Supplier');
+import MaterialSupplier from './views/material/supplier/Supplier';
 //发料目的地
-const MaterialDestination = () => import('./views/material/destination/Destination');
+import MaterialDestination from './views/material/destination/Destination';
 //UW仓物料
-const MaterialUwMaterial = () => import('./views/material/uwMaterial/UwMaterial');
+import MaterialUwMaterial from './views/material/uwMaterial/UwMaterial';
 //物料仓物料
-const MaterialEwhMaterial = () => import('./views/material/ewhMaterial/EwhMaterial');
+import MaterialEwhMaterial from './views/material/ewhMaterial/EwhMaterial';
 //叉车
-const Robot = () => import('./views/robot/Robot');
+import Robot from './views/robot/Robot';
 //任务
-const Tasks = () => import('./views/tasks/Tasks');
+import Tasks from './views/tasks/Tasks';
 //人员
-const User = () => import('./views/user/User');
+import User from './views/user/User';
 //日志
-const Logs = () => import('./views/logs/Logs');
+import Logs from './views/logs/Logs';
 //接口调用日志
-const LogsActionLog = () => import('./views/logs/actionLog/ActionLog');
+import LogsActionLog from './views/logs/actionLog/ActionLog';
 //物料位置转移日志
-const LogsPositionLog = () => import('./views/logs/positionLog/PositionLog');
+import LogsPositionLog from './views/logs/positionLog/PositionLog';
 //任务日志
-const LogsTaskLog = () => import('./views/logs/taskLog/TaskLog');
+import LogsTaskLog from './views/logs/taskLog/TaskLog';
 //抽检主界面
-const Sample = () => import('./views/sample/Sample');
+import Sample from './views/sample/Sample';
 //抽检任务
-const SampleTasks = () => import('./views/sample/tasks/Tasks');
+import SampleTasks from './views/sample/tasks/Tasks';
 //抽检操作
-const SampleOperation = () => import('./views/sample/operation/Operation');
+import SampleOperation from './views/sample/operation/Operation';
 //FAQ
-const Help = () => import('./views/help/Help');
+import Help from './views/help/Help';
 
 const router = new Router({
   mode: 'history',

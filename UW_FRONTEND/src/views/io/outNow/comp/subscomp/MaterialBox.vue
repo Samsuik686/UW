@@ -43,10 +43,10 @@
         for(let  i = 0;i<this.materials.length;i++){
           let obj = this.materials[i];
           if(obj.row !== -1 || obj.col !== -1){
-            ctx.fillStyle ='orange';
+            ctx.fillStyle ='#eebcac';
             ctx.fillRect(obj.col*this.width,obj.row*this.height,this.width,this.height);
             ctx.font = "18px serif";
-            ctx.strokeStyle = '#333';
+            ctx.strokeStyle = '#888';
             let num = 0;
             if(obj.col === 0){
               num = obj.row + 1;
