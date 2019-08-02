@@ -31,33 +31,34 @@ import com.jimi.uw_server.util.TokenBox;
 public class ActionLogInterceptor implements Interceptor {
 
 	private static final String REGEX = "\\{[a-zA-Z0-9]+\\}";
-	
+
+
 	@Override
 	public void intercept(Invocation invocation) {
 		Log log = invocation.getMethod().getAnnotation(Log.class);
 		Controller controller = invocation.getController();
 		ActionLog actionLog = new ActionLog();
-		
-		//如果存在@Log注解，则进行日志记录
-		if(log != null) {
-			//匹配参数并替换值
+
+		// 如果存在@Log注解，则进行日志记录
+		if (log != null) {
+			// 匹配参数并替换值
 			Matcher matcher = Pattern.compile(REGEX).matcher(log.value());
-			StringBuffer sb = new StringBuffer();  
-			while(matcher.find()) {
+			StringBuffer sb = new StringBuffer();
+			while (matcher.find()) {
 				String a = matcher.group();
 				a = a.substring(1, a.length() - 1);
 				String value = controller.getPara(a);
 				if (value == null) {
 					value = "null";
 				}
-				//美元符转义
-				if(value.contains("$")) {
+				// 美元符转义
+				if (value.contains("$")) {
 					value = value.replaceAll("\\$", "\\\\\\$");
 				}
 				matcher.appendReplacement(sb, value);
 			}
 			matcher.appendTail(sb);
-			//日志生成
+			// 日志生成
 			HttpServletRequest request = controller.getRequest();
 			String url = request.getRequestURL().toString();
 			String ip = request.getRemoteAddr();
@@ -68,22 +69,22 @@ public class ActionLogInterceptor implements Interceptor {
 			actionLog.setUrl(url);
 			actionLog.setAction(sb.toString());
 			User loginedUser = TokenBox.get(controller.getPara("#TOKEN#"), UserController.SESSION_KEY_LOGIN_USER);
-			if(loginedUser != null) {
+			if (loginedUser != null) {
 				actionLog.setUid(loginedUser.getUid());
 			}
-			//执行
+			// 执行
 			try {
 				invocation.invoke();
 				actionLog.setResultCode(200);
-				//插入
+				// 插入
 				actionLog.save();
 			} catch (Exception e) {
 				actionLog.setResultCode(ErrorLogInterceptor.getResultCode(e));
-				//插入
+				// 插入
 				actionLog.save();
 				throw e;
 			}
-		}else {
+		} else {
 			invocation.invoke();
 		}
 	}

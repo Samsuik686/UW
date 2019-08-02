@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import com.jimi.uw_server.model.Supplier;
 
+
 /**
  * 供应商实体类
  * @author HardyYao

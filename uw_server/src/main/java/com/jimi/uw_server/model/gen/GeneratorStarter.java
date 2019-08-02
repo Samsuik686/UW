@@ -8,6 +8,7 @@ import com.jfinal.plugin.activerecord.dialect.MysqlDialect;
 import com.jfinal.plugin.activerecord.generator.Generator;
 import com.jfinal.plugin.druid.DruidPlugin;
 
+
 public class GeneratorStarter {
 
 	/**
@@ -27,18 +28,18 @@ public class GeneratorStarter {
 		String modelPkg = PropKit.get("modelPackage");
 		// model 文件保存路径
 		String modelDir = baseModelDir + PropKit.get("modelPath");
-		
+
 		DruidPlugin druidPlugin = new DruidPlugin(url, user, password);
 		druidPlugin.start();
 		DataSource dataSource = druidPlugin.getDataSource();
-		
+
 		// 创建生成器
 		Generator generator = new Generator(dataSource, baseModelPkg, baseModelDir, modelPkg, modelDir);
 		// 设置是否生成链式 setter 方法
 		generator.setGenerateChainSetter(true);
-		//设置方言
+		// 设置方言
 		generator.setDialect(new MysqlDialect());
-		//设置Mapping名字
+		// 设置Mapping名字
 		generator.setMappingKitClassName("MappingKit");
 		// 设置是否在 Model 中生成 dao 对象
 		generator.setGenerateDaoInModel(true);

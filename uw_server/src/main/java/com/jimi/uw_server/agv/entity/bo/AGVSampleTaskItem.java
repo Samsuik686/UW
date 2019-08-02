@@ -14,9 +14,10 @@ import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
 @SuppressWarnings("serial")
 public class AGVSampleTaskItem extends BaseTaskItem implements Serializable {
 
-	
-	public AGVSampleTaskItem() {}
-	
+	public AGVSampleTaskItem() {
+	}
+
+
 	public AGVSampleTaskItem(Integer taskId, Integer boxId) {
 		this.robotId = 0;
 		this.state = 0;
@@ -28,7 +29,6 @@ public class AGVSampleTaskItem extends BaseTaskItem implements Serializable {
 	}
 
 
-	
 	public String getGroupId() {
 		return boxId + "#" + taskId;
 	}

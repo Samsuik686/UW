@@ -6,6 +6,7 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 
+
 /**
  * 任务表示层对象
  * @author HardyYao
@@ -13,10 +14,10 @@ import com.jimi.uw_server.constant.TaskType;
  */
 
 @SuppressWarnings("serial")
-public class TaskVO extends Task{
+public class TaskVO extends Task {
 
 	private String typeString;
-	
+
 	private String stateString;
 
 	private String supplierName;
@@ -40,9 +41,11 @@ public class TaskVO extends Task{
 		this.set("status", status);
 	}
 
+
 	public String getTypeString() {
 		return typeString;
 	}
+
 
 	public void setTypeString(Integer type) {
 		if (type == TaskType.IN) {
@@ -51,22 +54,25 @@ public class TaskVO extends Task{
 			this.typeString = "出库";
 		} else if (type == TaskType.COUNT) {
 			this.typeString = "盘点";
-		}  else if (type == TaskType.POSITION_OPTIZATION) {
+		} else if (type == TaskType.POSITION_OPTIZATION) {
 			this.typeString = "位置优化";
 		} else if (type == 4) {
 			this.typeString = "调拨入库";
-		}else if (type == 7) {
+		} else if (type == 7) {
 			this.typeString = "抽检";
 		}
 	}
 
+
 	public String getStateString(Integer state) {
 		return stateString;
 	}
-	
+
+
 	public String getStateString() {
 		return stateString;
 	}
+
 
 	public void setStateString(Integer state) {
 		if (state == TaskState.WAIT_REVIEW) {
@@ -75,7 +81,7 @@ public class TaskVO extends Task{
 			this.stateString = "未开始";
 		} else if (state == TaskState.PROCESSING) {
 			this.stateString = "进行中";
-		}  else if (state == TaskState.FINISHED) {
+		} else if (state == TaskState.FINISHED) {
 			this.stateString = "已完成";
 		} else if (state == TaskState.CANCELED) {
 			this.stateString = "已作废";
@@ -84,15 +90,16 @@ public class TaskVO extends Task{
 		}
 	}
 
+
 	public String getSupplierName() {
 		return supplierName;
 	}
+
 
 	public void setSupplierName(Integer supplierId) {
 		Supplier s = Supplier.dao.findById(supplierId);
 		String name = s.getName();
 		this.supplierName = name;
 	}
-
 
 }

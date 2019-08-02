@@ -17,5 +17,5 @@ public @interface Log {
 	 * 日志描述
 	 */
 	String value();
-	
+
 }

@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import com.jimi.uw_server.model.User;
 
+
 /**
  * 用户表示层对象
  * @author HardyYao
@@ -11,7 +12,7 @@ import com.jimi.uw_server.model.User;
 public class UserVO extends User {
 
 	private String enabledString;
-	
+
 	private String typeString;
 
 
@@ -57,6 +58,4 @@ public class UserVO extends User {
 		return enabledString;
 	}
 
-
 }
- 

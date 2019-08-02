@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>3.1.0</version>
+	<version>3.2.0</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -85,7 +85,8 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.35</version>
+			<version>8.0.11</version>
+			<!-- <version>5.1.35</version> -->
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->

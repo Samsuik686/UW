@@ -19,6 +19,7 @@ import com.jimi.uw_server.model.MappingKit;
 
 import cc.darhao.dautils.api.StringUtil;
 
+
 /**
  * 通用查询业务层
  * <br>
@@ -31,19 +32,19 @@ public class SelectService {
 		PropKit.use("properties.ini");
 		DruidPlugin dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
 		ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
-	    arp.setDialect(new MysqlDialect());	// 用什么数据库，就设置什么Dialect
-	    arp.setShowSql(true);
-	    MappingKit.mapping(arp);
+		arp.setDialect(new MysqlDialect()); // 用什么数据库，就设置什么Dialect
+		arp.setShowSql(true);
+		MappingKit.mapping(arp);
 		dp.start();
 		arp.start();
 		SelectService selectService = new SelectService();
 		String result = selectService.select("material", null, null, null, null, null).getList().toString();
 		System.out.println(result);
-		result = selectService.select(new String[] {"material_type","material"}, new String[] {"material.type=material_type.id"}, null, null, null, null, null).getList().toString();
+		result = selectService.select(new String[] {"material_type", "material"}, new String[] {"material.type=material_type.id"}, null, null, null, null, null).getList().toString();
 		System.out.println(result);
 	}
-	
-	
+
+
 	/**
 	 * 分页查询，支持筛选和排序
 	 * @param tables 提供可读的表名数组
@@ -55,7 +56,7 @@ public class SelectService {
 	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
 	 * @return Page对象
 	 */
-	public Page<Record> select(String[] tables, String[] refers, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter){
+	public Page<Record> select(String[] tables, String[] refers, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		StringBuffer sql = new StringBuffer();
 		List<String> questionValues = new ArrayList<>();
 		createFrom(tables, refers, sql);
@@ -63,8 +64,8 @@ public class SelectService {
 		createOrderBy(ascBy, descBy, sql);
 		return paginateAndFillWhereValues(tables, pageNo, pageSize, sql, questionValues);
 	}
-	
-	
+
+
 	/**
 	 * 分页查询，支持筛选和排序
 	 * @param table 提供可读的表名
@@ -75,36 +76,36 @@ public class SelectService {
 	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
 	 * @return Page对象
 	 */
-	public Page<Record> select(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter){
+	public Page<Record> select(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		return select(new String[] {table}, null, pageNo, pageSize, ascBy, descBy, filter);
 	}
-	
-	
+
+
 	private void createFrom(String[] tables, String[] refers, StringBuffer sql) {
-		//表名非空判断
-		if(tables == null) {
+		// 表名非空判断
+		if (tables == null) {
 			throw new ParameterException("table name must be provided");
 		}
-		//创建FROM
+		// 创建FROM
 		sql.append(" FROM ");
-		//表是否在可读范围内
+		// 表是否在可读范围内
 		String[] readabledTables = PropKit.use("properties.ini").get("readableTables").split(",");
 		int pass = 0;
 		for (String table : tables) {
 			for (String readabledTable : readabledTables) {
-				if(readabledTable.equals(table)) {
+				if (readabledTable.equals(table)) {
 					pass++;
 					sql.append(table + " JOIN ");
 					break;
 				}
 			}
 		}
-		if(pass != tables.length) {
+		if (pass != tables.length) {
 			throw new ParameterException("some tables are not readabled");
 		}
 		sql.delete(sql.lastIndexOf("JOIN"), sql.length());
-		//创建ON
-		if(refers != null) {
+		// 创建ON
+		if (refers != null) {
 			sql.append(" ON ");
 			for (String refer : refers) {
 				sql.append(refer);
@@ -114,44 +115,44 @@ public class SelectService {
 		}
 	}
 
-	
+
 	private void createWhere(String filter, List<String> questionValues, StringBuffer sql) {
-		//判断filter存在与否
-		if(filter != null) {
+		// 判断filter存在与否
+		if (filter != null) {
 			sql.append(" WHERE ");
 			String[] whereUnits = filter.split("#&#");
 			int index = 0;
-			for (String whereUnit: whereUnits) {
-				if (whereUnit.contains("like")) {	// 判断是否进行模糊查询
-					//分割键值与运算符
+			for (String whereUnit : whereUnits) {
+				if (whereUnit.contains("like")) { // 判断是否进行模糊查询
+					// 分割键值与运算符
 					String operator = "like";
 					int operatorStartIndex = whereUnit.indexOf("like");
 					String key = whereUnit.substring(0, operatorStartIndex);
 					String value = whereUnit.substring(operatorStartIndex + 4, whereUnit.length());
-					sql.append(key + " " + operator.toString() +" ? AND ");
+					sql.append(key + " " + operator.toString() + " ? AND ");
 					questionValues.add("%" + value + "%");
-					if(index == whereUnits.length - 1) {
+					if (index == whereUnits.length - 1) {
 						sql.delete(sql.lastIndexOf("AND"), sql.length());
 					}
 					index++;
 				} else {
-					//分割键值与运算符
+					// 分割键值与运算符
 					int operatorStartIndex = -1;
 					StringBuffer operator = new StringBuffer();
 					for (int i = 0; i < whereUnit.length(); i++) {
 						char c = whereUnit.charAt(i);
-						if(c == '>' || c == '<' || c == '=' || c == '!') {
+						if (c == '>' || c == '<' || c == '=' || c == '!') {
 							operator.append(c);
-							if(operatorStartIndex == -1) {
+							if (operatorStartIndex == -1) {
 								operatorStartIndex = i;
 							}
 						}
 					}
 					String key = whereUnit.substring(0, operatorStartIndex);
 					String value = whereUnit.substring(operatorStartIndex + operator.length(), whereUnit.length());
-					sql.append(key + operator.toString() +"? AND ");
+					sql.append(key + operator.toString() + "? AND ");
 					questionValues.add(value);
-					if(index == whereUnits.length - 1) {
+					if (index == whereUnits.length - 1) {
 						sql.delete(sql.lastIndexOf("AND"), sql.length());
 					}
 					index++;
@@ -162,31 +163,31 @@ public class SelectService {
 
 
 	private void createOrderBy(String ascBy, String descBy, StringBuffer sql) {
-		if(ascBy != null && descBy != null) {
+		if (ascBy != null && descBy != null) {
 			throw new ParameterException("ascBy and descBy can not be provided at the same time");
-		}else if(ascBy != null) {
+		} else if (ascBy != null) {
 			sql.append(" ORDER BY " + ascBy + " ASC ");
-		}else if(descBy != null){
+		} else if (descBy != null) {
 			sql.append(" ORDER BY " + descBy + " DESC ");
 		}
 	}
 
 
-	private Page<Record> paginateAndFillWhereValues(String[]tables, Integer pageNo, Integer pageSize, StringBuffer sql, List<String> questionValues) {
-		if((pageNo != null && pageSize == null) || (pageNo == null && pageSize != null)) {
+	private Page<Record> paginateAndFillWhereValues(String[] tables, Integer pageNo, Integer pageSize, StringBuffer sql, List<String> questionValues) {
+		if ((pageNo != null && pageSize == null) || (pageNo == null && pageSize != null)) {
 			throw new ParameterException("pageNo and pageSize must be provided at the same time");
 		}
 		String resultSet = createResultSet(tables);
-		if(pageNo == null && pageSize == null) {
+		if (pageNo == null && pageSize == null) {
 			try {
 				return Db.paginate(1, PropKit.use("properties.ini").getInt("defaultPageSize"), resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
 				throw new OperationException("请勿输入非法字符，如“!”或“$”");
 			}
 
-		}else {
+		} else {
 			try {
-				
+
 				return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
 				System.out.println(resultSet);
@@ -199,7 +200,7 @@ public class SelectService {
 
 
 	private String createResultSet(String[] tables) {
-		if(tables.length == 1) {
+		if (tables.length == 1) {
 			return "SELECT *";
 		}
 		StringBuffer sql = new StringBuffer();
@@ -217,7 +218,7 @@ public class SelectService {
 						continue;
 					}
 					Class<?>[] types = method.getParameterTypes();
-					if (types.length != 1) {	
+					if (types.length != 1) {
 						continue;
 					}
 					String attrName = methodName.substring(3);
@@ -232,5 +233,5 @@ public class SelectService {
 		sql.delete(sql.lastIndexOf(","), sql.length());
 		return sql.toString();
 	}
-	
+
 }

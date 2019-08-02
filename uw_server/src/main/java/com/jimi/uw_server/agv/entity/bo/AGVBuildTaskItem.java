@@ -9,11 +9,11 @@ package com.jimi.uw_server.agv.entity.bo;
 public class AGVBuildTaskItem {
 
 	private Integer robotId;
-	
+
 	private Integer state;
-	
+
 	private Integer boxId;
-	
+
 	private String srcPosition;
 
 
@@ -21,40 +21,49 @@ public class AGVBuildTaskItem {
 		return robotId;
 	}
 
+
 	public void setRobotId(Integer robotId) {
 		this.robotId = robotId;
 	}
+
 
 	public Integer getState() {
 		return state;
 	}
 
+
 	public void setState(Integer state) {
 		this.state = state;
 	}
+
 
 	public Integer getBoxId() {
 		return boxId;
 	}
 
+
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
 	}
+
 
 	public String getSrcPosition() {
 		return srcPosition;
 	}
 
+
 	public void setSrcPosition(String srcPosition) {
 		this.srcPosition = srcPosition;
 	}
+
 
 	public String getGroupId() {
 		return boxId.toString();
 	}
 
 
-	public AGVBuildTaskItem() {}
+	public AGVBuildTaskItem() {
+	}
 
 
 	public AGVBuildTaskItem(Integer boxId, String srcPosition) {

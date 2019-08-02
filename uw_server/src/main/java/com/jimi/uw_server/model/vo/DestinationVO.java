@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import com.jimi.uw_server.model.Destination;
 
+
 /**
  * 目的地表示层
  * @author HardyYao
@@ -35,6 +36,5 @@ public class DestinationVO extends Destination {
 			this.enabledString = "否";
 		}
 	}
-
 
 }

@@ -12,6 +12,8 @@ public class MaterialReel {
 
 	private Integer boxId;
 
+	private String operator;
+
 
 	public String getMaterialId() {
 		return materialId;
@@ -61,4 +63,15 @@ public class MaterialReel {
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
 	}
+
+
+	public String getOperator() {
+		return operator;
+	}
+
+
+	public void setOperator(String operator) {
+		this.operator = operator;
+	}
+
 }

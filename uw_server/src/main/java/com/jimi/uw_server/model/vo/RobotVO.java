@@ -4,6 +4,7 @@ import com.jimi.uw_server.model.bo.RobotBO;
 
 import cc.darhao.dautils.api.FieldUtil;
 
+
 /**
  * @author HardyYao
  * @createTime 2018年7月5日 上午11:24:32
@@ -11,7 +12,7 @@ import cc.darhao.dautils.api.FieldUtil;
 public class RobotVO extends RobotBO {
 
 	private String statusString;
-	
+
 	private String enabledString;
 
 	private String errorString;
@@ -21,7 +22,8 @@ public class RobotVO extends RobotBO {
 	private String pauseString;
 
 	private String loadExceptionString;
-	
+
+
 	public String fillStatusString(Integer status) {
 		switch (status) {
 		case 0:
@@ -40,6 +42,7 @@ public class RobotVO extends RobotBO {
 		return statusString;
 	}
 
+
 	public String fillEnabledString(Integer enabled) {
 		switch (enabled) {
 		case 0:
@@ -54,6 +57,7 @@ public class RobotVO extends RobotBO {
 		}
 		return enabledString;
 	}
+
 
 	public String fillErrorString(Integer error) {
 		switch (error) {
@@ -157,6 +161,7 @@ public class RobotVO extends RobotBO {
 		return errorString;
 	}
 
+
 	public String fillWarnString(Integer warn) {
 		switch (warn) {
 		case 0:
@@ -185,6 +190,7 @@ public class RobotVO extends RobotBO {
 		return warnString;
 	}
 
+
 	public String fillPauseString(Boolean pause) {
 		if (pause) {
 			pauseString = "已暂停";
@@ -194,6 +200,7 @@ public class RobotVO extends RobotBO {
 		return pauseString;
 	}
 
+
 	public String fillLoadExceptionString(Boolean loadException) {
 		if (loadException) {
 			loadExceptionString = "取空异常";
@@ -202,54 +209,67 @@ public class RobotVO extends RobotBO {
 		}
 		return loadExceptionString;
 	}
-	
+
+
 	public String getStatusString() {
 		return statusString;
 	}
-	
+
+
 	public void setStatusString(String statusString) {
 		this.statusString = statusString;
 	}
+
 
 	public String getEnabledString() {
 		return enabledString;
 	}
 
+
 	public void setEnabledString(String enabledString) {
 		this.enabledString = enabledString;
 	}
+
 
 	public String getErrorString() {
 		return errorString;
 	}
 
+
 	public void setErrorString(String errorString) {
 		this.errorString = errorString;
 	}
+
 
 	public String getWarnString() {
 		return warnString;
 	}
 
+
 	public void setWarnString(String warnString) {
 		this.warnString = warnString;
 	}
+
 
 	public String getPauseString() {
 		return pauseString;
 	}
 
+
 	public void setPauseString(String pauseString) {
 		this.pauseString = pauseString;
 	}
+
 
 	public String getLoadExceptionString() {
 		return loadExceptionString;
 	}
 
+
 	public void setLoadExceptionString(String loadExceptionString) {
 		this.loadExceptionString = loadExceptionString;
 	}
+
 
 	public RobotVO(RobotBO bo) {
 		FieldUtil.copy(bo, this);

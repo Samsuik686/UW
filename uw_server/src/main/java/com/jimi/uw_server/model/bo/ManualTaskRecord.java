@@ -6,11 +6,11 @@ import java.util.List;
 public class ManualTaskRecord {
 
 	private String supplierName;
-	
+
 	private String no;
-	
+
 	private Integer planQuantity;
-	
+
 	private List<MaterialReel> materialReels;
 
 

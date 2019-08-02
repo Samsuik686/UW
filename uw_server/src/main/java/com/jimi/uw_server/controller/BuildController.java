@@ -8,6 +8,7 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.service.BuildService;
 import com.jimi.uw_server.util.ResultUtil;
 
+
 /**
  * 建仓控制层
  * @author HardyYao
@@ -33,8 +34,5 @@ public class BuildController extends Controller {
 			throw new OperationException(resultString);
 		}
 	}
-
-
-
 
 }

@@ -2,6 +2,7 @@ package com.jimi.uw_server.agv.entity.cmd;
 
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 
+
 /**
  * 异常任务删除指令
  * @author HardyYao
@@ -14,17 +15,21 @@ public class AgvDelMissionExceptionCmd extends AGVBaseCmd {
 
 	private Integer robotid;
 
+
 	public String getMissiongroupid() {
 		return missiongroupid;
 	}
+
 
 	public void setMissiongroupid(String missiongroupid) {
 		this.missiongroupid = missiongroupid;
 	}
 
+
 	public Integer getRobotid() {
 		return robotid;
 	}
+
 
 	public void setRobotid(Integer robotid) {
 		this.robotid = robotid;

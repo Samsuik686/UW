@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.jimi.uw_server.model.ActionLog;
 
+
 /**
  * 接口调用日志表示层对象
  * @author HardyYao
@@ -16,6 +17,7 @@ public class ActionLogVO extends ActionLog {
 
 	private String resultString;
 
+
 	public ActionLogVO(Integer id, String ip, String uid, String action, Date time, Integer resultCode) {
 		this.setId(id);
 		this.setIp(ip);
@@ -27,9 +29,11 @@ public class ActionLogVO extends ActionLog {
 		this.set("resultString", getResultString());
 	}
 
+
 	public String getResultString() {
 		return resultString;
 	}
+
 
 	public void setResultString(Integer resultCode) {
 		switch (resultCode) {
@@ -37,7 +41,7 @@ public class ActionLogVO extends ActionLog {
 			this.resultString = "操作成功";
 			break;
 		case 401:
-			this.resultString = "权限不足";	
+			this.resultString = "权限不足";
 			break;
 		case 400:
 			this.resultString = "客户端异常";

@@ -8,10 +8,10 @@ package com.jimi.uw_server.constant;
 
 public class BoxState {
 
-	public static final Integer EMPTY = 0; //空料盒
-	
-	public static final Integer UNFULL = 1; //非慢料盒
-	
-	public static final Integer FULL = 2; //满料盒
+	public static final Integer EMPTY = 0; // 空料盒
+
+	public static final Integer UNFULL = 1; // 非慢料盒
+
+	public static final Integer FULL = 2; // 满料盒
 
 }

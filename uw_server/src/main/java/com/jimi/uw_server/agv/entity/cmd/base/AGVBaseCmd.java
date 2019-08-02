@@ -9,20 +9,27 @@ package com.jimi.uw_server.agv.entity.cmd.base;
 public class AGVBaseCmd {
 
 	protected String cmdcode;
-	
+
 	protected Integer cmdid;
-	
+
+
 	public String getCmdcode() {
 		return cmdcode;
 	}
+
+
 	public void setCmdcode(String cmdcode) {
 		this.cmdcode = cmdcode;
 	}
+
+
 	public Integer getCmdid() {
 		return cmdid;
 	}
+
+
 	public void setCmdid(Integer cmdid) {
 		this.cmdid = cmdid;
 	}
-	
+
 }

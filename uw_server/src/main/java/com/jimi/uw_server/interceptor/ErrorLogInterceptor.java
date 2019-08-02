@@ -25,21 +25,22 @@ import cc.darhao.dautils.api.ResourcesUtil;
 public class ErrorLogInterceptor implements Interceptor {
 
 	private static Logger logger;
-	
+
 	static {
-		try(InputStream inputStream = ResourcesUtil.getResourceAsStream("log4j.properties")){
+		try (InputStream inputStream = ResourcesUtil.getResourceAsStream("log4j.properties")) {
 			PropertyConfigurator.configure(inputStream);
 			logger = LogManager.getRootLogger();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
+
 	@Override
 	public void intercept(Invocation invocation) {
 		try {
 			invocation.invoke();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			int result = getResultCode(e);
 			e.printStackTrace();
 			ErrorLog errorLog = new ErrorLog();
@@ -51,7 +52,7 @@ public class ErrorLogInterceptor implements Interceptor {
 		}
 	}
 
-	
+
 	/**
 	 * 根据异常类获取返回码
 	 */
@@ -62,7 +63,7 @@ public class ErrorLogInterceptor implements Interceptor {
 			result = 401;
 			break;
 		case "ParameterException":
-			result = 400;			
+			result = 400;
 			break;
 		case "OperationException":
 			result = 412;

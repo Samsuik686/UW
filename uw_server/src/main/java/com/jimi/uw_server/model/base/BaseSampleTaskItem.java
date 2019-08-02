@@ -72,4 +72,13 @@ public abstract class BaseSampleTaskItem<M extends BaseSampleTaskItem<M>> extend
 		return getInt("regular_out_quantity");
 	}
 
+	public M setLostOutQuantity(java.lang.Integer lostOutQuantity) {
+		set("lost_out_quantity", lostOutQuantity);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getLostOutQuantity() {
+		return getInt("lost_out_quantity");
+	}
+
 }

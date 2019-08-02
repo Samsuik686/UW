@@ -20,6 +20,7 @@ import com.jimi.uw_server.agv.entity.cmd.AGVRobotInfoCmd;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.util.ErrorLogWritter;
 
+
 /**
  * 实时接收机器信息的类
  * <br>
@@ -27,13 +28,14 @@ import com.jimi.uw_server.util.ErrorLogWritter;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 @ClientEndpoint
-public class RobotInfoSocket{
-	
+public class RobotInfoSocket {
+
 	private static String uri;
-	
+
+
 	public static void init(String uri) {
 		try {
-			//连接AGV服务器
+			// 连接AGV服务器
 			RobotInfoSocket.uri = uri;
 			connect(uri);
 		} catch (Exception e) {
@@ -51,38 +53,38 @@ public class RobotInfoSocket{
 
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
-		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getCloseCode() + " | " + reason.getCloseCode().getCode());	// CLOSED_ABNORMALLY
+		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getCloseCode() + " | " + reason.getCloseCode().getCode()); // CLOSED_ABNORMALLY
 		RobotInfoRedisDAO.delete();
 		connect(uri);
 	}
 
-	
+
 	@OnMessage
-	public void onMessage(String message ,Session session) {
+	public void onMessage(String message, Session session) {
 		try {
-			//获取新的机器数据
+			// 获取新的机器数据
 			AGVRobotInfoCmd robotInfoCmd = Json.getJson().parse(message, AGVRobotInfoCmd.class);
-			
+
 			List<RobotBO> robotBOs = new ArrayList<>();
 			for (AGVRobot agvRobot : robotInfoCmd.getRobotarray()) {
 				robotBOs.add(AGVRobot.toBO(agvRobot));
 			}
-			
-			//补充取空异常数据
+
+			// 补充取空异常数据
 			List<RobotBO> robotBOs2 = RobotInfoRedisDAO.check();
 			for (RobotBO robotBO : robotBOs) {
 				for (RobotBO robotBO2 : robotBOs2) {
-					if(robotBO.getId().intValue() == robotBO2.getId().intValue()) {
+					if (robotBO.getId().intValue() == robotBO2.getId().intValue()) {
 						robotBO.setLoadException(robotBO2.getLoadException());
 						break;
 					}
 				}
 			}
-			
-			//更新机器信息
-  			RobotInfoRedisDAO.update(robotBOs);
-			
-		}catch (Exception e) {
+
+			// 更新机器信息
+			RobotInfoRedisDAO.update(robotBOs);
+
+		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 			e.printStackTrace();
 		}
@@ -92,15 +94,15 @@ public class RobotInfoSocket{
 	private static void connect(String uri) {
 		WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 		Boolean flag = true;
-		while(flag) {
+		while (flag) {
 			try {
 				Thread.sleep(3000);
 				container.connectToServer(new RobotInfoSocket(), new URI(uri));
 				flag = false;
 			} catch (Exception e) {
-				ErrorLogWritter.save(e.getClass().getSimpleName()+ ":" +e.getMessage());
+				ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 				e.printStackTrace();
-			} 
+			}
 		}
 	}
 

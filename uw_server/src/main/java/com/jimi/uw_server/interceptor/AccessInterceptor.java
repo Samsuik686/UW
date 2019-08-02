@@ -25,48 +25,47 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class AccessInterceptor implements Interceptor {
 
-	
 	@Override
 	public void intercept(Invocation invocation) {
-		 String token = invocation.getController().getPara(TokenBox.TOKEN_ID_KEY_NAME);
-		 User user = TokenBox.get(token, UserController.SESSION_KEY_LOGIN_USER);
-		 int userTypeId = 0;
-		 if(user != null && user.getEnabled()) {
-			 user = User.dao.findById(user.getUid());
-			 userTypeId = user.getType();
-		 }
-		 //获取用户类型权限
-		 UserType userType = UserType.dao.findById(userTypeId);
-		 String permission = userType.getPermission();
-		//获取方法名
-		 String requestMethodName = invocation.getActionKey();
-		 //解析权限字
-		 String allowOrExpect = permission.split(":")[0];
-		 String permissionMethodNames = permission.split(":")[1];
-		 if(allowOrExpect.equals("allow")) {
-			 if(permissionMethodNames.equals("*")) {
-				 invocation.invoke();
-			 }else {
-				 for (String permissionMethodName : permissionMethodNames.split(",")) {
-					if(permissionMethodName.equals(requestMethodName)) {
+		String token = invocation.getController().getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(token, UserController.SESSION_KEY_LOGIN_USER);
+		int userTypeId = 0;
+		if (user != null && user.getEnabled()) {
+			user = User.dao.findById(user.getUid());
+			userTypeId = user.getType();
+		}
+		// 获取用户类型权限
+		UserType userType = UserType.dao.findById(userTypeId);
+		String permission = userType.getPermission();
+		// 获取方法名
+		String requestMethodName = invocation.getActionKey();
+		// 解析权限字
+		String allowOrExpect = permission.split(":")[0];
+		String permissionMethodNames = permission.split(":")[1];
+		if (allowOrExpect.equals("allow")) {
+			if (permissionMethodNames.equals("*")) {
+				invocation.invoke();
+			} else {
+				for (String permissionMethodName : permissionMethodNames.split(",")) {
+					if (permissionMethodName.equals(requestMethodName)) {
 						invocation.invoke();
 						return;
 					}
-				 }
-				 throw new AccessException("access denied");
-			 }
-		 }else {
-			 if(permissionMethodNames.equals("*")) {
-				 throw new AccessException("access denied");
-			 }else {
-				 for (String permissionMethodName : permissionMethodNames.split(",")) {
-					if(permissionMethodName.equals(requestMethodName)) {
+				}
+				throw new AccessException("access denied");
+			}
+		} else {
+			if (permissionMethodNames.equals("*")) {
+				throw new AccessException("access denied");
+			} else {
+				for (String permissionMethodName : permissionMethodNames.split(",")) {
+					if (permissionMethodName.equals(requestMethodName)) {
 						throw new AccessException("access denied");
 					}
-				 }
-				 invocation.invoke();
-			 }
-		 }
-		 
+				}
+				invocation.invoke();
+			}
+		}
+
 	}
 }

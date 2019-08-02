@@ -11,6 +11,7 @@ import com.jimi.uw_server.service.RobotService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
+
 /**
  * 叉车控制层
  * @author HardyYao
@@ -21,8 +22,9 @@ public class RobotController extends Controller {
 	private static RobotService robotService = Enhancer.enhance(RobotService.class);
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
+
 	// 查询叉车
-	public void select(){
+	public void select() {
 		String string = JSON.toJSONString(ResultUtil.succeed(robotService.select()));
 		renderText(string);
 	}
@@ -34,7 +36,7 @@ public class RobotController extends Controller {
 		robotService.robotSwitch(id, enabled);
 		renderJson(ResultUtil.succeed());
 	}
-	
+
 
 	// 启动/暂停叉车
 	public void pause(Boolean pause) throws Exception {
@@ -46,7 +48,7 @@ public class RobotController extends Controller {
 	// 令叉车回库，并更新库存
 	@Log("发送SL(回库)指令给叉车，该叉车目前绑定的任务条目为{id}")
 	public void back(Integer id, Boolean isLater, Integer state) throws Exception {
-		if (id == null || isLater == null || state == null){
+		if (id == null || isLater == null || state == null) {
 			throw new OperationException("参数不能为空");
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
@@ -65,7 +67,7 @@ public class RobotController extends Controller {
 	// 入库前扫料盘，发LS指令给叉车
 	@Log("料号为{no}的物料需要入库，该物料对应的供应商为{supplierName}，发送LS指令让叉车取托盘到仓口{id}")
 	public void call(Integer id, String no, String supplierName) throws Exception {
-		if (id == null || no == null || supplierName == null){
+		if (id == null || no == null || supplierName == null) {
 			throw new OperationException("参数不能为空");
 		}
 		String resultString = robotService.call(id, no, supplierName);

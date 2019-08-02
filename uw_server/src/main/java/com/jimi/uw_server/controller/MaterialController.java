@@ -34,22 +34,22 @@ public class MaterialController extends Controller {
 		renderJson(ResultUtil.succeed(materialService.count(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
-	
+
 	// 统计超过期限的物料类型信息
-		public void getOverdueMaterial(Integer pageNo, Integer pageSize, Integer day) {
-			if ((pageNo != null && pageSize == null) || (pageNo == null && pageSize != null)) {
-				throw new ParameterException("页码和页数只能同时为空或同时不为空！");
-			}
-			if (pageNo != null && pageSize != null && (pageNo <= 0 || pageSize <= 0 )) {
-				throw new ParameterException("页码和页数必须为正整数！");
-			}
-			if (day == null || day < 0) {
-				throw new ParameterException("天数必须为非负整数！");
-			}
-			renderJson(ResultUtil.succeed(materialService.getOverdueMaterial(pageNo, pageSize, day)));
+	public void getOverdueMaterial(Integer pageNo, Integer pageSize, Integer day) {
+		if ((pageNo != null && pageSize == null) || (pageNo == null && pageSize != null)) {
+			throw new ParameterException("页码和页数只能同时为空或同时不为空！");
+		}
+		if (pageNo != null && pageSize != null && (pageNo <= 0 || pageSize <= 0)) {
+			throw new ParameterException("页码和页数必须为正整数！");
+		}
+		if (day == null || day < 0) {
+			throw new ParameterException("天数必须为非负整数！");
+		}
+		renderJson(ResultUtil.succeed(materialService.getOverdueMaterial(pageNo, pageSize, day)));
 	}
-		
-		
+
+
 	// 获取物料实体
 	public void getEntities(Integer type, Integer box, Integer pageNo, Integer pageSize) {
 		renderJson(ResultUtil.succeed(materialService.getEntities(type, box, pageNo, pageSize)));
@@ -60,7 +60,7 @@ public class MaterialController extends Controller {
 	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商ID为{supplierId}，厚度为{thickness}，直径为{radius}")
 	public void addType(String no, String specification, Integer supplierId, Integer thickness, Integer radius) {
 		String resultString = materialService.addType(no, specification, supplierId, thickness, radius);
-		if(resultString.equals("添加成功！")) {
+		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);
@@ -72,40 +72,41 @@ public class MaterialController extends Controller {
 	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}")
 	public void updateType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
 		String resultString = materialService.updateType(id, enabled, thickness, radius);
-		if(resultString.equals("更新成功！")) {
+		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);
 		}
 	}
 
-	
+
 	@Log("批量删除物料类型号为[{filter}]的物料类型")
 	public void deleteByIds(String filter) {
 		if (filter == null || filter.equals("")) {
 			throw new OperationException("参数不能为空");
 		}
 		String resultString = materialService.deleteByIds(filter);
-		if(resultString.equals("删除成功！")) {
+		if (resultString.equals("删除成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.succeed(resultString));
 		}
 	}
 
-	
+
 	// 获取料盒信息
 	public void getBoxes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(materialService.getBoxes(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
+
 	// 添加料盒#
 	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}，供应商{supplierId}，是否标准料盒{isStandard}")
-	public void addBox(String area, Integer row, Integer col, Integer height,  Integer supplierId, Boolean isStandard) {
+	public void addBox(String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
 		String resultString = materialService.addBox(area, row, col, height, supplierId, isStandard);
-		if(resultString.equals("添加成功！")) {
+		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
-		}else {
+		} else {
 			throw new OperationException(resultString);
 		}
 	}
@@ -114,9 +115,9 @@ public class MaterialController extends Controller {
 	// 更新料盒在架情况#
 	@Log("更新料盒号为{id}的料盒在架情况，传递的isOnShelf值为：{isOnShelf}(0表示标记为不在架，1表示标记为在架)")
 	public void updateBox(Integer id, Boolean isOnShelf) {
-		if(materialService.updateBox(id, isOnShelf)) {
+		if (materialService.updateBox(id, isOnShelf)) {
 			renderJson(ResultUtil.succeed());
-		}else {
+		} else {
 			renderJson(ResultUtil.failed());
 		}
 	}
@@ -126,9 +127,9 @@ public class MaterialController extends Controller {
 	@Log("更新料盒号为{id}的料盒的启/禁用状态，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
 	public void deleteBox(Integer id, Boolean enabled) {
 		String resultString = materialService.deleteBox(id, enabled);
-		if(resultString.equals("更新成功！")) {
+		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
-		}else {
+		} else {
 			throw new OperationException(resultString);
 		}
 	}
@@ -181,7 +182,7 @@ public class MaterialController extends Controller {
 		}
 		renderNull();
 	}
-	
+
 
 	// 导出物料报表
 	public void exportMaterialDetialReport(Integer supplier) {
@@ -210,21 +211,21 @@ public class MaterialController extends Controller {
 		}
 		renderNull();
 	}
-	
-	
+
+
 	// 获取料盒类型信息
 	public void getBoxTypes(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		renderJson(ResultUtil.succeed(materialService.getBoxTypes(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
-	
+
 	// 添加料盒#
 	@Log("添加新的料盒类型，规格为{cellWidth}，总行数{cellRows}，总列数{cellCols}")
 	public void addBoxType(Integer cellWidth, Integer cellRows, Integer cellCols) {
 		String resultString = materialService.addBoxType(cellWidth, cellRows, cellCols);
-		if(resultString.equals("添加成功！")) {
+		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
-		}else {
+		} else {
 			throw new OperationException(resultString);
 		}
 	}
@@ -234,9 +235,9 @@ public class MaterialController extends Controller {
 	@Log("更新料盒类型号为{id}的料盒类型，传递的enabeld值为：{enabled}(0表示标记为删除，1表示不标记为删除)")
 	public void deleteBoxType(Integer id, Boolean enabled) {
 		String resultString = materialService.deleteBoxType(id, enabled);
-		if(resultString.equals("更新成功！")) {
+		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
-		}else {
+		} else {
 			throw new OperationException(resultString);
 		}
 	}
@@ -249,7 +250,7 @@ public class MaterialController extends Controller {
 		String fileName = file.getFileName();
 		String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
 		String resultString = materialService.importFile(fileName, fullFileName, supplierId);
-		if(resultString.equals("导入成功！")) {
+		if (resultString.equals("导入成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);

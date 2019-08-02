@@ -36,4 +36,13 @@ public abstract class BaseWindow<M extends BaseWindow<M>> extends Model<M> imple
 		return getInt("bind_task_id");
 	}
 
+	public M setSize(java.lang.Integer size) {
+		set("size", size);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSize() {
+		return getInt("size");
+	}
+
 }

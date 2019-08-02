@@ -1,8 +1,7 @@
 package com.jimi.uw_server.agv.entity.bo.base;
 
-
 public class BaseTaskItem {
-	
+
 	protected Integer taskId;
 
 	protected Integer robotId;
@@ -22,68 +21,68 @@ public class BaseTaskItem {
 	protected Integer windowId;
 
 	protected Integer goodsLocationId;
-	
-	
+
+
 	public Integer getTaskId() {
 		return taskId;
 	}
 
-	
+
 	public void setTaskId(Integer taskId) {
 		this.taskId = taskId;
 	}
 
-	
+
 	public Integer getRobotId() {
 		return robotId;
 	}
 
-	
+
 	public void setRobotId(Integer robotId) {
 		this.robotId = robotId;
 	}
 
-	
+
 	public Integer getBoxId() {
 		return boxId;
 	}
 
-	
+
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
 	}
 
-	
+
 	public Integer getState() {
 		return state;
 	}
 
-	
+
 	public void setState(Integer state) {
 		this.state = state;
 	}
 
-	
+
 	public Boolean getIsForceFinish() {
 		return isForceFinish;
 	}
 
-	
+
 	public void setIsForceFinish(Boolean isForceFinish) {
 		this.isForceFinish = isForceFinish;
 	}
 
-	
+
 	public Integer getWindowId() {
 		return windowId;
 	}
 
-	
+
 	public void setWindowId(Integer windowId) {
 		this.windowId = windowId;
 	}
 
-	
+
 	public Integer getGoodsLocationId() {
 		return goodsLocationId;
 	}
@@ -92,5 +91,5 @@ public class BaseTaskItem {
 	public void setGoodsLocationId(Integer goodsLocationId) {
 		this.goodsLocationId = goodsLocationId;
 	}
-	
+
 }

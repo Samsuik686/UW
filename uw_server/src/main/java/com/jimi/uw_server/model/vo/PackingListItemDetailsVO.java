@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import java.util.Date;
 
+
 /**
  * 停泊任务条目详情表示层
  * @author HardyYao
@@ -11,13 +12,13 @@ import java.util.Date;
 public class PackingListItemDetailsVO {
 
 	private Integer taskLogId;
-	
+
 	private String materialId;
-	
+
 	private Integer boxId;
-	
+
 	private Integer row;
-	
+
 	private Integer col;
 
 	private Integer quantity;
@@ -40,28 +41,29 @@ public class PackingListItemDetailsVO {
 		this.setBoxId(boxId);
 		this.setCol(col);
 		this.setRow(row);
-		
+
 	}
 
-	
+
 	public Integer getTaskLogId() {
 		return taskLogId;
 	}
 
-	
+
 	public void setTaskLogId(Integer taskLogId) {
 		this.taskLogId = taskLogId;
 	}
 
-	
+
 	public void setIsInBoxString(String isInBoxString) {
 		this.isInBoxString = isInBoxString;
 	}
-	
+
 
 	public String getIsInBoxString() {
 		return isInBoxString;
 	}
+
 
 	public void setIsInBoxString(Boolean isInBox) {
 		if (isInBox) {
@@ -71,39 +73,47 @@ public class PackingListItemDetailsVO {
 		}
 	}
 
+
 	public String getMaterialId() {
 		return materialId;
 	}
+
 
 	public void setMaterialId(String materialId) {
 		this.materialId = materialId;
 	}
 
+
 	public Integer getQuantity() {
 		return quantity;
 	}
+
 
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
 	}
 
+
 	public Date getProductionTime() {
 		return productionTime;
 	}
+
 
 	public void setProductionTime(Date productionTime) {
 		this.productionTime = productionTime;
 	}
 
+
 	public Integer getRemainderQuantity() {
 		return remainderQuantity;
 	}
+
 
 	public void setRemainderQuantity(Integer remainderQuantity) {
 		this.remainderQuantity = remainderQuantity;
 	}
 
-	
+
 	public Integer getRow() {
 		return row;
 	}
@@ -113,12 +123,12 @@ public class PackingListItemDetailsVO {
 		this.row = row;
 	}
 
-	
+
 	public Integer getCol() {
 		return col;
 	}
 
-	
+
 	public void setCol(Integer col) {
 		this.col = col;
 	}
@@ -128,10 +138,9 @@ public class PackingListItemDetailsVO {
 		return boxId;
 	}
 
-	
+
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
 	}
-
 
 }

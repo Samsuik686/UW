@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.jfinal.plugin.activerecord.Record;
 
+
 /**
  * 针对JFinal框架处理Excel表的类，可根据传入的Record集合对象填充excel表格数据
  * @author HardyYao
@@ -30,16 +31,18 @@ public class ExcelWritter extends ExcelHelper {
 		return new ExcelWritter(isNewVersion);
 	}
 
+
 	protected ExcelWritter(boolean isNewVersion) {
-		//判断格式
-		if(isNewVersion){
+		// 判断格式
+		if (isNewVersion) {
 			workbook = new XSSFWorkbook();
-		}else {
+		} else {
 			workbook = new HSSFWorkbook();
 		}
 		workbook.createSheet();
 		init();
 	}
+
 
 	/**
 	 * 根据传入的值生成Excel
@@ -49,22 +52,22 @@ public class ExcelWritter extends ExcelHelper {
 	 * @param head 显示在Excel表里的字段名称集合
 	 * @date 2018年10月16日 上午9:07:42
 	 */
-	public void fill(List<Record> records, String title, String[] field, String[] head){
+	public void fill(List<Record> records, String title, String[] field, String[] head) {
 		fill(headStyle, bodyStyle, records, 1, field, head);
 		Sheet sheet = workbook.getSheetAt(currentSheetNum);
-		if(sheet.getRow(1) == null){
+		if (sheet.getRow(1) == null) {
 			return;
-		} 
+		}
 		int lastCellNum = sheet.getRow(1).getLastCellNum();
 		CellRangeAddress cra = new CellRangeAddress(0, 0, 0, lastCellNum - 1);
-        //在sheet里增加合并单元格  
+		// 在sheet里增加合并单元格
 		sheet.addMergedRegion(cra);
-        Row row = sheet.createRow(0);
-        Cell cell = row.createCell(0);
-        cell.setCellValue(title);
-        //设置样式
-        CellStyle style = workbook.createCellStyle();
-        style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+		Row row = sheet.createRow(0);
+		Cell cell = row.createCell(0);
+		cell.setCellValue(title);
+		// 设置样式
+		CellStyle style = workbook.createCellStyle();
+		style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
 		Font font = workbook.createFont();
 		font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
 		font.setFontName("Arial");
@@ -81,21 +84,21 @@ public class ExcelWritter extends ExcelHelper {
 	 * @throws IllegalArgumentException 
 	 */
 	public void fill(CellStyle headStyle, CellStyle bodyStyle, List<Record> records, int startRowNum, String[] field, String[] head) {
-		if(records != null) {
+		if (records != null) {
 			for (int i = 1; i <= records.size(); i++) {
 				Record record = records.get(i - 1);
 				for (int j = 0; j < head.length; j++) {
-					//如果是第一行则填写表头
-					if(i == startRowNum) {
+					// 如果是第一行则填写表头
+					if (i == startRowNum) {
 						set(i, j, head[j], headStyle);
 					}
 					try {
 						set(i + 1, j, record.get(field[j]) == null ? "" : record.get(field[j]).toString(), bodyStyle);
-					}catch (IllegalArgumentException e2) {
+					} catch (IllegalArgumentException e2) {
 						logger.error("调用ExcelHelper.fill()中field.get()方法时出错");
 						e2.printStackTrace();
 					}
-				}				
+				}
 			}
 		}
 	}

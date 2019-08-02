@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import com.jimi.uw_server.model.BoxType;
 
+
 /**
  * 料盒类型表示层对象
  * @author HardyYao

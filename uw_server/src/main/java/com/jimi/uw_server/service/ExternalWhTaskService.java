@@ -1,6 +1,5 @@
 package com.jimi.uw_server.service;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,6 +30,7 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 
+
 /**
  * 
  * @author trjie
@@ -38,21 +38,20 @@ import com.jimi.uw_server.util.ExcelWritter;
  */
 
 public class ExternalWhTaskService {
-	
+
 	public static final ExternalWhTaskService me = new ExternalWhTaskService();
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
-	
-	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id"; 
-	
+
+	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id";
+
 	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT e.*, material_return_record.quantity as return_num FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e LEFT JOIN material_return_record ON e.task_id = material_return_record.task_id AND e.material_type_id = material_return_record.material_type_id AND e.source_wh = material_return_record.wh_id ORDER BY e.time ASC";
-	
+
 	private static ExternalWhLogService externalWhLogService = ExternalWhLogService.me;
-	
+
 	public static final MaterialService materialService = MaterialService.me;
-	
-	
-	
+
+
 	/**
 	 * 导入外仓的任务
 	 * @param file
@@ -63,7 +62,7 @@ public class ExternalWhTaskService {
 	 * @return
 	 */
 	public String importTask(File file, Integer supplierId, Integer sourceHwId, Integer destinationHwId, User user, String remarks) {
-		
+
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = getTaskName(date);
@@ -78,7 +77,7 @@ public class ExternalWhTaskService {
 				throw new OperationException("表格无有效数据或者表格格式不正确！");
 			}
 			for (TaskItemBO item : items) {
-				if (item.getSerialNumber() != null && item.getSerialNumber() > 0) {		// 只读取有序号的行数据
+				if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 					ExternalWhLog externalWhLog = new ExternalWhLog();
 					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
 						resultString = "导入失败，请检查表格第" + i + "行的料号或数量是否填写了准确信息！";
@@ -93,7 +92,7 @@ public class ExternalWhTaskService {
 						resultString = "导入失败，表格第" + i + "行的数量为" + item.getQuantity() + "，当发料地为UW无人仓时，类型为抵扣，数量必须为负！";
 						return resultString;
 					}
-					
+
 					// 根据料号找到对应的物料类型
 					MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), supplierId);
 					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
@@ -128,15 +127,16 @@ public class ExternalWhTaskService {
 					i++;
 				} else {
 					break;
-				
+
 				}
 			}
 			Task task = new Task();
-			task.setCreateTime(date).setDestination(destinationHwId).setSupplier(supplierId).setFileName(fileName).setType(TaskType.EXTERNAL_IN_OUT).setState(TaskState.FINISHED).setRemarks(remarks);;
+			task.setCreateTime(date).setDestination(destinationHwId).setSupplier(supplierId).setFileName(fileName).setType(TaskType.EXTERNAL_IN_OUT).setState(TaskState.FINISHED).setRemarks(remarks);
+			;
 			if (sourceHwId == 0) {
 				task.setType(TaskType.OUT);
 			}
-			
+
 			task.save();
 			for (ExternalWhLog externalWhLog : externalWhLogs) {
 				externalWhLog.setTaskId(task.getId());
@@ -146,16 +146,15 @@ public class ExternalWhTaskService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new OperationException(e.getMessage());
-		}finally {
+		} finally {
 			file.delete();
 		}
 		return resultString;
 	}
-	
-	
-	
+
+
 	public String importWastageTask(File file, Integer supplierId, Integer HwId, User user, String remarks) {
-		
+
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = getTaskName(date);
@@ -170,7 +169,7 @@ public class ExternalWhTaskService {
 			Set<Integer> materailTypeIdSet = new HashSet<>();
 			List<ExternalWhLog> externalWhLogs = new ArrayList<>();
 			for (TaskItemBO item : items) {
-				if (item.getSerialNumber() != null && item.getSerialNumber() > 0) {		// 只读取有序号的行数据
+				if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 					ExternalWhLog externalWhLog = new ExternalWhLog();
 					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
 						resultString = "导入失败，请检查表格第" + i + "行的料号或数量是否填写了准确信息！";
@@ -194,7 +193,7 @@ public class ExternalWhTaskService {
 						return resultString;
 					}
 					materailTypeIdSet.add(mType.getId());
-					
+
 					if (HwId != 0) {
 						int storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
 						if (storeNum < item.getQuantity()) {
@@ -211,7 +210,7 @@ public class ExternalWhTaskService {
 					i++;
 				} else {
 					break;
-				
+
 				}
 			}
 			Task task = new Task();
@@ -225,11 +224,12 @@ public class ExternalWhTaskService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new OperationException(e.getMessage());
-		}finally {
+		} finally {
 			file.delete();
 		}
 		return resultString;
 	}
+
 
 	/**
 	 * 添加某仓库，某物料的损耗记录
@@ -239,8 +239,8 @@ public class ExternalWhTaskService {
 	 * @param user
 	 * @return
 	 */
-	public String addWorstageLog(Integer materialTypeId, Integer HwId, Integer quantity, User user, String remarks ) {
-		
+	public String addWorstageLog(Integer materialTypeId, Integer HwId, Integer quantity, User user, String remarks) {
+
 		String resultString = "操作成功";
 		MaterialType mType = MaterialType.dao.findById(materialTypeId);
 		if (mType == null) {
@@ -270,7 +270,7 @@ public class ExternalWhTaskService {
 		task.setFileName(fileName);
 		task.setRemarks(remarks);
 		task.save();
-		
+
 		ExternalWhLog externalWhLog = new ExternalWhLog();
 		externalWhLog.setMaterialTypeId(mType.getId());
 		externalWhLog.setSourceWh(HwId);
@@ -282,20 +282,20 @@ public class ExternalWhTaskService {
 		externalWhLog.save();
 		return resultString;
 	}
-	
-	
+
+
 	public String getTaskName(Date date) {
-		
+
 		String fileName = "workorder_";
 		DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 		String time = formatter.format(date);
 		fileName = fileName + time;
 		return fileName;
 	}
-	
-	
-	public  String deleteExternalWhLog(Integer logId) {
-		
+
+
+	public String deleteExternalWhLog(Integer logId) {
+
 		String resultString = "操作成功";
 		ExternalWhLog externalWhLog = ExternalWhLog.dao.findById(logId);
 		if (externalWhLog == null) {
@@ -305,8 +305,8 @@ public class ExternalWhTaskService {
 		externalWhLog.delete();
 		return resultString;
 	}
-	
-	
+
+
 	public PagePaginate selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
@@ -320,7 +320,7 @@ public class ExternalWhTaskService {
 			if (whId == null) {
 				sql.append(" WHERE  a.supplier_id = ? ");
 				sqlPara.addPara(supplierId);
-			}else {
+			} else {
 				sql.append(" AND a.supplier_id = ? ");
 				sqlPara.addPara(supplierId);
 			}
@@ -329,7 +329,7 @@ public class ExternalWhTaskService {
 			if (whId == null && supplierId == null) {
 				sql.append(" WHERE  a.no like ? ");
 				sqlPara.addPara("%" + no + "%");
-			}else {
+			} else {
 				sql.append(" AND  a.no like ? ");
 				sqlPara.addPara("%" + no + "%");
 			}
@@ -357,8 +357,8 @@ public class ExternalWhTaskService {
 		pagePaginate.setList(externalWhInfoVOs);
 		return pagePaginate;
 	}
-	
-	
+
+
 	// 导出物料仓库存报表
 	public void exportEWhReport(Integer whId, Integer supplierId, String no, String fileName, OutputStream output) throws IOException {
 		SqlPara sqlPara = new SqlPara();
@@ -372,7 +372,7 @@ public class ExternalWhTaskService {
 			if (whId == null) {
 				sql.append(" WHERE  a.supplier_id = ? ");
 				sqlPara.addPara(supplierId);
-			}else {
+			} else {
 				sql.append(" AND a.supplier_id = ? ");
 				sqlPara.addPara(supplierId);
 			}
@@ -381,7 +381,7 @@ public class ExternalWhTaskService {
 			if (whId == null && supplierId == null) {
 				sql.append(" WHERE  a.no like ? ");
 				sqlPara.addPara("%" + no + "%");
-			}else {
+			} else {
 				sql.append(" AND  a.no like ? ");
 				sqlPara.addPara("%" + no + "%");
 			}
@@ -395,13 +395,13 @@ public class ExternalWhTaskService {
 		String[] field = null;
 		String[] head = null;
 		field = new String[] {"wh_name", "no", "specification", "supplier_name", "quantity"};
-		head =  new String[] {"仓库名", "料号", "规格", "供应商", "库存"};	
+		head = new String[] {"仓库名", "料号", "规格", "供应商", "库存"};
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(records, fileName, field, head);
 		writter.write(output, true);
 	}
-	
-	
+
+
 	public List<ExternalWhInfoVO> selectExternalWhInfo(Integer whId, Integer supplierId, String no, Task task) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
@@ -415,7 +415,7 @@ public class ExternalWhTaskService {
 			if (whId == null) {
 				sql.append(" WHERE  a.supplier_id = ? ");
 				sqlPara.addPara(supplierId);
-			}else {
+			} else {
 				sql.append(" AND a.supplier_id = ? ");
 				sqlPara.addPara(supplierId);
 			}
@@ -424,7 +424,7 @@ public class ExternalWhTaskService {
 			if (whId == null && supplierId == null) {
 				sql.append(" WHERE  a.no like ? ");
 				sqlPara.addPara("%" + no + "%");
-			}else {
+			} else {
 				sql.append(" AND  a.no like ? ");
 				sqlPara.addPara("%" + no + "%");
 			}
@@ -447,10 +447,10 @@ public class ExternalWhTaskService {
 		}
 		return externalWhInfoVOs;
 	}
-	
-	
+
+
 	public PagePaginate selectEWhMaterialDetails(Integer pageNo, Integer pageSize, Integer materialTypeId, Integer whId) {
-		
+
 		SqlPara sqlPara = new SqlPara();
 		sqlPara.setSql(GET_WEH_MATERIAL_DETAILS_SQL);
 		sqlPara.addPara(materialTypeId);
@@ -467,5 +467,5 @@ public class ExternalWhTaskService {
 		pagePaginate.setList(materialDetails);
 		return pagePaginate;
 	}
-	
+
 }

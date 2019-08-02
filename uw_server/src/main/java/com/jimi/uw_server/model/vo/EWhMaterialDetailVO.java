@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.jfinal.plugin.activerecord.Record;
 
+
 /**
  * 
  * @author HardyYao
@@ -13,39 +14,40 @@ import com.jfinal.plugin.activerecord.Record;
  */
 
 public class EWhMaterialDetailVO {
-	
+
 	private Integer id;
-	
+
 	private Integer materialTypeId;
-	
+
 	private String no;
-	
+
 	private Integer taskId;
-	
+
 	private Integer taskType;
-	
+
 	private String taskTypeString;
-	
+
 	private String taskName;
-	
+
 	private Integer sourceWhId;
-	
+
 	private Integer destinationId;
-	
+
 	private String sourceWhName;
-	
+
 	private String destinationName;
-	
+
 	private Integer quantity;
-	
+
 	private String operatior;
-	
+
 	private Date time;
-	
+
 	private Integer returnNum;
-	
+
 	private String remarks;
-	
+
+
 	public Integer getId() {
 		return id;
 	}
@@ -54,7 +56,6 @@ public class EWhMaterialDetailVO {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-
 
 
 	public Integer getMaterialTypeId() {
@@ -195,7 +196,8 @@ public class EWhMaterialDetailVO {
 	public void setReturnNum(Integer returnNum) {
 		this.returnNum = returnNum;
 	}
-	
+
+
 	public String getRemarks() {
 		return remarks;
 	}
@@ -206,8 +208,8 @@ public class EWhMaterialDetailVO {
 	}
 
 
-	public static List<EWhMaterialDetailVO> fillList(List<Record> records){
-		
+	public static List<EWhMaterialDetailVO> fillList(List<Record> records) {
+
 		List<EWhMaterialDetailVO> eWhMaterialDetails = new ArrayList<EWhMaterialDetailVO>();
 		for (Record record : records) {
 			EWhMaterialDetailVO eWhMaterialDetail = new EWhMaterialDetailVO();

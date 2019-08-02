@@ -13,6 +13,7 @@ import com.jimi.uw_server.model.vo.DestinationVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 
+
 /**
  * 发料目的地业务层
  * @author HardyYao
@@ -60,26 +61,26 @@ public class DestinationService {
 		return resultString;
 	}
 
-
-//	public String update(Integer id, String name) {
-//		String resultString = "更新成功！";
-//		Destination destination = Destination.dao.findById(id);
-//		if(!destination.getName().equals(name)) {
-//			if (Destination.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() != 0) {
-//				resultString = "该供应商已存在，请勿重复添加！";
-//				return resultString;
-//			}
-//		}
-//		destination.setName(name);
-//		destination.update();
-//		return resultString;
-//	}
+	// public String update(Integer id, String name) {
+	// String resultString = "更新成功！";
+	// Destination destination = Destination.dao.findById(id);
+	// if(!destination.getName().equals(name)) {
+	// if (Destination.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() !=
+	// 0) {
+	// resultString = "该供应商已存在，请勿重复添加！";
+	// return resultString;
+	// }
+	// }
+	// destination.setName(name);
+	// destination.update();
+	// return resultString;
+	// }
 
 
 	// 查询发料目的地
 	public Object get(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
-		if (filter != null ) {
+		if (filter != null) {
 			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
@@ -97,6 +98,5 @@ public class DestinationService {
 		pagePaginate.setList(destinationVOs);
 		return pagePaginate;
 	}
-
 
 }

@@ -16,6 +16,7 @@ import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.service.MaterialService;
 
+
 /**
  * 建仓LL命令处理器
  * @author HardyYao
@@ -28,11 +29,11 @@ public class BuildHandler {
 
 
 	public static void sendBuildCmd(AGVBuildTaskItem item, MaterialBox materialBox) throws Exception {
-		//构建LL指令，令指定robot把料盒入仓
+		// 构建LL指令，令指定robot把料盒入仓
 		AGVMoveCmd moveCmd = createLLCmd(materialBox, item);
-		//发送LL>>>
+		// 发送LL>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
-		//更新任务条目状态为1
+		// 更新任务条目状态为1
 		TaskItemRedisDAO.updateBuildTaskItemState(item, TaskItemState.ASSIGNED);
 	}
 
@@ -40,17 +41,17 @@ public class BuildHandler {
 	private static AGVMoveCmd createLLCmd(MaterialBox materialBox, AGVBuildTaskItem item) {
 		List<AGVMissionGroup> groups = new ArrayList<>();
 		AGVMissionGroup group = new AGVMissionGroup();
-		group.setMissiongroupid(item.getGroupId());		//missionGroupId要和LL指令相同
-		group.setRobotid(item.getRobotId());			//robotId要和LL指令相同
+		group.setMissiongroupid(item.getGroupId()); // missionGroupId要和LL指令相同
+		group.setRobotid(item.getRobotId()); // robotId要和LL指令相同
 		Integer srcX = Integer.parseInt(item.getSrcPosition().split(":")[0]);
 		Integer srcY = Integer.parseInt(item.getSrcPosition().split(":")[1]);
 		Integer srcZ = Integer.parseInt(item.getSrcPosition().split(":")[2]);
-		group.setStartx(srcX);		//起点X
-		group.setStarty(srcY);		//起点Y
-		group.setStartz(srcZ);		//起点Z
-		group.setEndx(materialBox.getRow());	//终点X
-		group.setEndy(materialBox.getCol());	//终点Y
-		group.setEndz(materialBox.getHeight());	//终点Z
+		group.setStartx(srcX); // 起点X
+		group.setStarty(srcY); // 起点Y
+		group.setStartz(srcZ); // 起点Z
+		group.setEndx(materialBox.getRow()); // 终点X
+		group.setEndy(materialBox.getCol()); // 终点Y
+		group.setEndz(materialBox.getHeight()); // 终点Z
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");
@@ -64,18 +65,18 @@ public class BuildHandler {
 	 * 处理Status指令
 	 */
 	public static void handleStatus(String message) throws Exception {
-		//转换成实体类
+		// 转换成实体类
 		AGVStatusCmd statusCmd = Json.getJson().parse(message, AGVStatusCmd.class);
 
 		// missiongroupid 不包含“:”表示为建仓任务
 		if (!statusCmd.getMissiongroupid().contains(":")) {
-			//判断是否是开始执行任务
-			if(statusCmd.getStatus() == BuildTaskItemState.WAIT_MOVE) {
+			// 判断是否是开始执行任务
+			if (statusCmd.getStatus() == BuildTaskItemState.WAIT_MOVE) {
 				handleStatus0(statusCmd);
 			}
 
-			//判断是否是完成了一个建仓任务
-			if(statusCmd.getStatus() == BuildTaskItemState.FINISH_ONE_BUILD_TASK) {
+			// 判断是否是完成了一个建仓任务
+			if (statusCmd.getStatus() == BuildTaskItemState.FINISH_ONE_BUILD_TASK) {
 				handleStatus2(statusCmd);
 			}
 		}
@@ -83,13 +84,13 @@ public class BuildHandler {
 
 
 	private static void handleStatus0(AGVStatusCmd statusCmd) {
-		//获取groupid
+		// 获取groupid
 		String groupid = statusCmd.getMissiongroupid();
-		
-		//匹配groupid
+
+		// 匹配groupid
 		for (AGVBuildTaskItem item : TaskItemRedisDAO.getBuildTaskItems()) {
-			if(groupid.equals(item.getGroupId())) {
-				//更新buildTsakitems里对应item的robotid
+			if (groupid.equals(item.getGroupId())) {
+				// 更新buildTsakitems里对应item的robotid
 				TaskItemRedisDAO.updateBuildTaskItemRobot(item, statusCmd.getRobotid());
 			}
 		}
@@ -97,13 +98,13 @@ public class BuildHandler {
 
 
 	private static void handleStatus2(AGVStatusCmd statusCmd) throws Exception {
-		//获取groupid
+		// 获取groupid
 		String groupid = statusCmd.getMissiongroupid();
-		
-		//匹配groupid
+
+		// 匹配groupid
 		for (AGVBuildTaskItem item : TaskItemRedisDAO.getBuildTaskItems()) {
-			if(groupid.equals(item.getGroupId())) {
-				//更改taskitems里对应item状态为2（已入仓完成）***
+			if (groupid.equals(item.getGroupId())) {
+				// 更改taskitems里对应item状态为2（已入仓完成）***
 				TaskItemRedisDAO.updateBuildTaskItemState(item, BuildTaskItemState.FINISH_ONE_BUILD_TASK);
 
 				// 设置料盒在架
@@ -116,7 +117,6 @@ public class BuildHandler {
 	}
 
 
-
 	/**
 	 * 判断该srcPosition所在的任务是否全部条目状态为"已完成"
 	 * 如果是，则清除所有该任务id对应的条目，释放内存***
@@ -124,11 +124,11 @@ public class BuildHandler {
 	public static void clearTil(String srcPosition) {
 		boolean isAllFinish = true;
 		for (AGVBuildTaskItem item1 : TaskItemRedisDAO.getBuildTaskItems()) {
-			if(srcPosition.equals(item1.getSrcPosition()) && item1.getState() != BuildTaskItemState.FINISH_ONE_BUILD_TASK) {
+			if (srcPosition.equals(item1.getSrcPosition()) && item1.getState() != BuildTaskItemState.FINISH_ONE_BUILD_TASK) {
 				isAllFinish = false;
 			}
 		}
-		if(isAllFinish) {
+		if (isAllFinish) {
 			TaskItemRedisDAO.removeBuildTaskItemBySrcPosition(srcPosition);
 		}
 	}
@@ -136,11 +136,10 @@ public class BuildHandler {
 
 	private static void setMaterialBoxIsOnShelf(MaterialBox materialBox, boolean isOnShelf) {
 		List<MaterialBox> specifiedPositionMaterialBoxes = materialService.listByXYZ(materialBox.getRow(), materialBox.getCol(), materialBox.getHeight());
-		for (MaterialBox mb: specifiedPositionMaterialBoxes) {
+		for (MaterialBox mb : specifiedPositionMaterialBoxes) {
 			mb.setIsOnShelf(isOnShelf);
 			mb.update();
 		}
 	}
-
 
 }

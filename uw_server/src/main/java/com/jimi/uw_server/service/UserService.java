@@ -15,12 +15,13 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 
 import cc.darhao.dautils.api.MD5Util;
 
+
 /**
  * 用户业务层
  * @author HardyYao
  * @createTime 2018年6月8日
  */
-public class UserService extends SelectService{
+public class UserService extends SelectService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
@@ -34,10 +35,10 @@ public class UserService extends SelectService{
 	// 登录
 	public User login(String uid, String password) {
 		User user = User.dao.findFirst(LOGIN_SQL, uid, MD5Util.MD5(password));
-		if(user == null) {
+		if (user == null) {
 			throw new OperationException("用户名或密码不正确！");
-		} 
-		if(!user.getEnabled()) {
+		}
+		if (!user.getEnabled()) {
 			throw new OperationException("用户" + user.getName() + "已被禁用！");
 		}
 		return user;
@@ -49,7 +50,7 @@ public class UserService extends SelectService{
 		if (uid == null || name == null || password == null || type == null) {
 			return false;
 		}
-		if(User.dao.find(UNIQUE_USER_CHECK_SQL, uid).size() != 0) {
+		if (User.dao.find(UNIQUE_USER_CHECK_SQL, uid).size() != 0) {
 			throw new OperationException("用户" + uid + "已存在！");
 		}
 		if (uid.contains("!") || uid.contains("$")) {

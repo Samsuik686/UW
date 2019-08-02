@@ -8,6 +8,7 @@ import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.model.bo.RobotBO;
 
+
 /**
  * AGV任务条目Redis数据访问对象
  * <br>
@@ -17,7 +18,7 @@ import com.jimi.uw_server.model.bo.RobotBO;
 public class RobotInfoRedisDAO {
 
 	private static Cache cache = Redis.use();
-	
+
 
 	/**
 	 * 更新机器实时数据到Redis
@@ -28,21 +29,21 @@ public class RobotInfoRedisDAO {
 			cache.lpush("robot", Json.getJson().toJson(agvRobot));
 		}
 	}
-	
-	
+
+
 	/**
 	 * 更新机器实时数据到Redis
 	 */
 	public synchronized static void delete() {
 		cache.del("robot");
 	}
-	
-	
+
+
 	/**
 	 * 获取机器实时数据
 	 */
 	@SuppressWarnings("unchecked")
-	public synchronized static List<RobotBO> check(){
+	public synchronized static List<RobotBO> check() {
 		List<RobotBO> robotBOs = new ArrayList<>();
 		List<String> robots = cache.lrange("robot", 0, -1);
 		for (String robot : robots) {
@@ -50,23 +51,23 @@ public class RobotInfoRedisDAO {
 		}
 		return robotBOs;
 	}
-	
-	
+
+
 	/**
 	 * 设置某台机器的负载异常为真
 	 */
 	public synchronized static void setloadException(int id) {
 		List<RobotBO> robots = RobotInfoRedisDAO.check();
 		for (RobotBO robotBO : robots) {
-			if(robotBO.getId().intValue() == id) {
+			if (robotBO.getId().intValue() == id) {
 				robotBO.setLoadException(true);
 				break;
 			}
 		}
 		RobotInfoRedisDAO.update(robots);
 	}
-	
-	
+
+
 	/**
 	 * 清除全部负载异常
 	 */
@@ -77,5 +78,5 @@ public class RobotInfoRedisDAO {
 		}
 		RobotInfoRedisDAO.update(robots);
 	}
-	
+
 }

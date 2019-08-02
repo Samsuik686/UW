@@ -7,6 +7,7 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.service.SupplierService;
 import com.jimi.uw_server.util.ResultUtil;
 
+
 /**
  * 供应商控制层
  * @author HardyYao
@@ -17,11 +18,12 @@ public class SupplierController extends Controller {
 
 	private static SupplierService supplierService = Enhancer.enhance(SupplierService.class);
 
+
 	// 添加供应商
 	@Log("添加名为{name}的供应商")
 	public void add(String name) {
 		String resultString = supplierService.add(name);
-		if(resultString.equals("添加成功！")) {
+		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);
@@ -33,7 +35,7 @@ public class SupplierController extends Controller {
 	@Log("删除供应商号为{id}的供应商")
 	public void update(Integer id, Boolean enabled) {
 		String resultString = supplierService.update(id, enabled);
-		if(resultString.equals("更新成功！")) {
+		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			throw new OperationException(resultString);
@@ -46,14 +48,14 @@ public class SupplierController extends Controller {
 		renderJson(ResultUtil.succeed(supplierService.getSuppliers(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
-	
+
 	// 更新供应商的曾用名
-		@Log("更改供应商{id}，名字为{name}")
-		public void changeName(Integer id, String name) {
-			if (id == null || name == null) {
-				throw new OperationException("参数不能为空");
-			}
-			renderJson(ResultUtil.succeed(supplierService.changeName(id, name)));
+	@Log("更改供应商{id}，名字为{name}")
+	public void changeName(Integer id, String name) {
+		if (id == null || name == null) {
+			throw new OperationException("参数不能为空");
 		}
+		renderJson(ResultUtil.succeed(supplierService.changeName(id, name)));
+	}
 
 }

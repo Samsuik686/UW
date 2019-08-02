@@ -1,6 +1,5 @@
 package com.jimi.uw_server.agv.handle;
 
-
 import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -20,6 +19,7 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.service.TaskService;
 
+
 /**
  * 出入库LS、SL命令处理器
  * <br>
@@ -27,21 +27,23 @@ import com.jimi.uw_server.service.TaskService;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 
-public class IOTaskHandler extends BaseTaskHandler{
+public class IOTaskHandler extends BaseTaskHandler {
 
 	private static TaskService taskService = Enhancer.enhance(TaskService.class);
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-	
+
 	public final static String UNDEFINED = "undefined";
-	
+
 	private volatile static IOTaskHandler me;
-	
-	private IOTaskHandler (){}
-	
-	
+
+
+	private IOTaskHandler() {
+	}
+
+
 	public static IOTaskHandler getInstance() {
-		if (me == null) {  
+		if (me == null) {
 			synchronized (InvTaskHandler.class) {
 				if (me == null) {
 					me = new IOTaskHandler();
@@ -50,20 +52,21 @@ public class IOTaskHandler extends BaseTaskHandler{
 		}
 		return me;
 	}
-	
+
+
 	@Override
 	public void sendSendLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) throws Exception {
 		AGVIOTaskItem agvioTaskItem = (AGVIOTaskItem) item;
 		synchronized (Lock.TASK_REDIS_LOCK) {
-			//构建SL指令，令指定robot把料送回原仓位
+			// 构建SL指令，令指定robot把料送回原仓位
 			if (TaskItemRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()).equals(0)) {
-				return ;
+				return;
 			}
 			AGVMoveCmd moveCmd = createSendLLCmd(agvioTaskItem.getGroupId(), materialBox, goodsLocation, priority);
-			//发送取货LL>>>
+			// 发送取货LL>>>
 			AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 			materialBox.setIsOnShelf(false).update();
-			TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.ASSIGNED,  goodsLocation.getWindowId(), goodsLocation.getId(), null, null, null, null);
+			TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.ASSIGNED, goodsLocation.getWindowId(), goodsLocation.getId(), null, null, null, null);
 			TaskItemRedisDAO.setLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId(), 1);
 		}
 	}
@@ -73,73 +76,75 @@ public class IOTaskHandler extends BaseTaskHandler{
 	public void sendBackLL(BaseTaskItem item, MaterialBox materialBox, GoodsLocation goodsLocation, Integer priority) throws Exception {
 		AGVIOTaskItem agvioTaskItem = (AGVIOTaskItem) item;
 		synchronized (Lock.TASK_REDIS_LOCK) {
-			//发送回库LL>>>
+			// 发送回库LL>>>
 			AGVMoveCmd moveCmd = createBackLLCmd(agvioTaskItem.getGroupId(), materialBox, goodsLocation, priority);
 			AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
-			TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK,  null, null, null, null, null, null);
+			TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, null, null);
 		}
 	}
-	
+
 
 	@Override
-	protected  void handleStartStatus(AGVStatusCmd statusCmd) {
+	protected void handleStartStatus(AGVStatusCmd statusCmd) {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		// missiongroupid 包含“:”表示为出入库任务
 		String groupid = missionGroupId.split("_")[0];
-		//匹配groupid
+		// 匹配groupid
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
-			if(groupid.equals(item.getGroupId())) {
-				//更新tsakitems里对应item的robotid
-				TaskItemRedisDAO.updateIOTaskItemInfo(item, null,  null, null, null, statusCmd.getRobotid(), null, null);
+			if (groupid.equals(item.getGroupId())) {
+				// 更新tsakitems里对应item的robotid
+				TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, null, statusCmd.getRobotid(), null, null);
 			}
 		}
 	}
+
 
 	@Override
 	protected void handleProcessStatus(AGVStatusCmd statusCmd) throws Exception {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
-			
-			if(item.getGroupId().equals(groupid.trim()) && item.getState() == TaskItemState.ASSIGNED && missionGroupId.contains("S")) {//判断是取料盒并且叉到料盒
-				//更改taskitems里对应item状态为2（已拣料到站）***
-				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null, null, null);	
+
+			if (item.getGroupId().equals(groupid.trim()) && item.getState() == TaskItemState.ASSIGNED && missionGroupId.contains("S")) {// 判断是取料盒并且叉到料盒
+				// 更改taskitems里对应item状态为2（已拣料到站）***
+				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null, null, null);
 				break;
-			} else if(item.getState() == TaskItemState.START_BACK && item.getBoxId().equals(Integer.valueOf(groupid.split(":")[1])) && missionGroupId.contains("B")) {//判断是回库并且叉到料盒
-				//更改taskitems里对应item状态为4（已回库完成）***
-				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null, null, null);	
+			} else if (item.getState() == TaskItemState.START_BACK && item.getBoxId().equals(Integer.valueOf(groupid.split(":")[1])) && missionGroupId.contains("B")) {// 判断是回库并且叉到料盒
+				// 更改taskitems里对应item状态为4（已回库完成）***
+				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null, null, null);
 				TaskItemRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);
 			}
 		}
 	}
 
+
 	@Override
 	protected void handleFinishStatus(AGVStatusCmd statusCmd) throws Exception {
-		//获取groupid
+		// 获取groupid
 		String missionGroupId = statusCmd.getMissiongroupid();
 		// missiongroupid 包含“:”表示为出入库任务
 		String groupid = missionGroupId.split("_")[0];
-		//匹配groupid
+		// 匹配groupid
 		for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
-			//判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-			if(groupid.equals(item.getGroupId()) && item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {//LS执行完成时
-				//更改taskitems里对应item状态为2（已拣料到站）***
-				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null, null, null);	
+			// 判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
+			if (groupid.equals(item.getGroupId()) && item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {// LS执行完成时
+				// 更改taskitems里对应item状态为2（已拣料到站）***
+				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null, null, null);
 				break;
-			} else if(item.getState() == TaskItemState.BACK_BOX && item.getBoxId().equals(Integer.valueOf(groupid.split(":")[1])) && missionGroupId.contains("B")) {//SL执行完成时：
-				//更改taskitems里对应item状态为4（已回库完成）***
+			} else if (item.getState() == TaskItemState.BACK_BOX && item.getBoxId().equals(Integer.valueOf(groupid.split(":")[1])) && missionGroupId.contains("B")) {// SL执行完成时：
+				// 更改taskitems里对应item状态为4（已回库完成）***
 				Task task = Task.dao.findById(item.getTaskId());
 				if (item.getIsForceFinish().equals(false) && task.getType().equals(TaskType.OUT)) {
 					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
-					
+
 					if (remainderQuantity <= 0) {
 						item.setState(TaskItemState.LACK);
 						item.setIsForceFinish(true);
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
-					}else {
+					} else {
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
 					}
-				}else {
+				} else {
 					TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
 				}
 
@@ -154,10 +159,10 @@ public class IOTaskHandler extends BaseTaskHandler{
 
 				clearTask(task.getId());
 			}
-			
+
 		}
 	}
-	
+
 
 	private void nextRound(AGVIOTaskItem item) {
 		// 获取任务类型
@@ -167,10 +172,10 @@ public class IOTaskHandler extends BaseTaskHandler{
 			// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
 			if (taskType == TaskType.OUT) {
 				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
-			} else {	// 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
+			} else { // 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
 				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null);
 			}
-		}	
+		}
 	}
 
 
@@ -188,7 +193,7 @@ public class IOTaskHandler extends BaseTaskHandler{
 					if (item1.getState() == TaskItemState.LACK) {
 						isLack = true;
 					}
-					if( (item1.getState() != TaskItemState.FINISH_BACK && item1.getState() != TaskItemState.LACK && !item1.getIsForceFinish())) {
+					if ((item1.getState() != TaskItemState.FINISH_BACK && item1.getState() != TaskItemState.LACK && !item1.getIsForceFinish())) {
 						isAllFinish = false;
 					}
 					if (item1.getState() == TaskItemState.FINISH_CUT || item1.getIsCut().equals(true)) {
@@ -198,12 +203,12 @@ public class IOTaskHandler extends BaseTaskHandler{
 						isAllFinish = false;
 					}
 				}
-			}else {
+			} else {
 				for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems(taskId)) {
 					if (item1.getState() == TaskItemState.LACK) {
 						isLack = true;
 					}
-					if( item1.getState() != TaskItemState.FINISH_BACK && item1.getState() != TaskItemState.LACK && !item1.getIsForceFinish() && item1.getState() != TaskItemState.WAIT_SCAN) {
+					if (item1.getState() != TaskItemState.FINISH_BACK && item1.getState() != TaskItemState.LACK && !item1.getIsForceFinish() && item1.getState() != TaskItemState.WAIT_SCAN) {
 						isAllFinish = false;
 					}
 					if (item1.getState() == TaskItemState.FINISH_CUT || item1.getIsCut().equals(true)) {
@@ -214,15 +219,15 @@ public class IOTaskHandler extends BaseTaskHandler{
 					}
 				}
 			}
-			
+
 		}
-		
-		if(isAllFinish) {
-			
+
+		if (isAllFinish) {
+
 			taskService.finish(taskId, isLack);
 			TaskItemRedisDAO.removeTaskItemByTaskId(taskId);
 			TaskItemRedisDAO.delTaskStatus(taskId);
 		}
 	}
-	
+
 }

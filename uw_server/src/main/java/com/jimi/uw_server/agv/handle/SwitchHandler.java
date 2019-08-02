@@ -8,6 +8,7 @@ import com.jimi.uw_server.agv.entity.cmd.AGVSwitchEnableCmd;
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 
+
 /**
  * 启用、禁用、暂停、继续处理器
  * <br>
@@ -24,8 +25,8 @@ public class SwitchHandler {
 	public static void sendDisable(List<Integer> robotid) throws Exception {
 		sendEnableOrDisable(robotid, false);
 	}
-	
-	
+
+
 	public static void sendAllStart() throws Exception {
 		sendStartOrPause(true);
 	}
@@ -39,9 +40,9 @@ public class SwitchHandler {
 	private static void sendStartOrPause(boolean start) throws Exception {
 		AGVBaseCmd cmd = new AGVBaseCmd();
 		cmd.setCmdid(TaskItemRedisDAO.getCmdId());
-		if(start) {
+		if (start) {
 			cmd.setCmdcode("allstart");
-		}else {
+		} else {
 			cmd.setCmdcode("allpause");
 		}
 		AGVMainSocket.sendMessage(Json.getJson().toJson(cmd));
@@ -52,9 +53,9 @@ public class SwitchHandler {
 		AGVSwitchEnableCmd cmd = new AGVSwitchEnableCmd();
 		cmd.setCmdid(TaskItemRedisDAO.getCmdId());
 		cmd.setRobotids(robotid);
-		if(enabled) {
+		if (enabled) {
 			cmd.setCmdcode("enable");
-		}else {
+		} else {
 			cmd.setCmdcode("disable");
 		}
 		AGVMainSocket.sendMessage(Json.getJson().toJson(cmd));

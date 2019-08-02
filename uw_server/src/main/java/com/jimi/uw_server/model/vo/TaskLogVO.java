@@ -6,6 +6,7 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.User;
 
+
 /**
  * 任务日志表示层对象
  * @author HardyYao
@@ -13,11 +14,11 @@ import com.jimi.uw_server.model.User;
  */
 @SuppressWarnings("serial")
 public class TaskLogVO extends TaskLog {
-	
+
 	private String autoString;
 
 	private String taskTypeString;
-	
+
 	private String operatorName;
 
 
@@ -71,7 +72,7 @@ public class TaskLogVO extends TaskLog {
 
 
 	public void setAutoString(boolean auto) {
-		if(auto) {
+		if (auto) {
 			this.autoString = "自动";
 		} else {
 			this.autoString = "手动";
@@ -83,7 +84,7 @@ public class TaskLogVO extends TaskLog {
 		return autoString;
 	}
 
-	
+
 	public String setOperatorName(String operator) {
 		if (operator != null) {
 			User user = User.dao.findById(operator);
@@ -98,6 +99,5 @@ public class TaskLogVO extends TaskLog {
 	public String getOperatorName() {
 		return operatorName;
 	}
-
 
 }

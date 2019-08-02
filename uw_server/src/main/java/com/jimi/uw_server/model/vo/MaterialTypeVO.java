@@ -5,13 +5,14 @@ import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.service.MaterialService;
 
+
 /**
  * 物料类型表示层对象
  * @author HardyYao
  * @createTime 2018年7月5日 上午11:25:16 
  */
 @SuppressWarnings("serial")
-public class MaterialTypeVO extends MaterialType{
+public class MaterialTypeVO extends MaterialType {
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 
@@ -38,9 +39,11 @@ public class MaterialTypeVO extends MaterialType{
 		this.set("quantity", getQuantity());
 	}
 
+
 	public String getEnabledString() {
 		return enabledString;
 	}
+
 
 	public void setEnabledString(Boolean enabled) {
 		if (enabled) {
@@ -50,18 +53,22 @@ public class MaterialTypeVO extends MaterialType{
 		}
 	}
 
+
 	public Integer getQuantity() {
 		return quantity;
 	}
+
 
 	public void setQuantity(Integer id) {
 		Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(id);
 		this.quantity = remainderQuantity;
 	}
 
+
 	public String getSupplierName() {
 		return supplierName;
 	}
+
 
 	public void setSupplierName(Integer supplier) {
 		Supplier s = Supplier.dao.findById(supplier);
@@ -70,4 +77,3 @@ public class MaterialTypeVO extends MaterialType{
 	}
 
 }
- 

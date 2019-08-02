@@ -9,8 +9,8 @@ package com.jimi.uw_server.agv.entity;
 public class CmdStatus {
 
 	public static final int START = 0;
-	
+
 	public static final int PROCESS = 1;
-	
+
 	public static final int FINISH = 2;
 }

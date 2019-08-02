@@ -15,6 +15,7 @@ import com.jimi.uw_server.model.vo.SupplierVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 
+
 /**
  * 供应商业务层
  * @author HardyYao
@@ -26,12 +27,13 @@ public class SupplierService extends SelectService {
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
 	private static final String GET_ENABLED_SUPPLIER_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
-	
+
 	private static final String GET_MATERIAL_BY_SUPPLIER = "SELECT * FROM material WHERE material.remainder_quantity > 0 AND material.box IN (SELECT id FROM material_box WHERE material_box.supplier = ? AND enabled = 1)";
 
 	private static final String SET_BOX_SUPPLIER_NULL_BY_SUPPLIER = "UPDATE material_box SET material_box.supplier = null WHERE material_box.supplier = ?";
 
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ?";
+
 
 	// 添加供应商
 	public String add(String name) {
@@ -53,12 +55,12 @@ public class SupplierService extends SelectService {
 	public String update(Integer id, Boolean enabled) {
 		String resultString = "更新成功！";
 		Supplier supplier = Supplier.dao.findById(id);
-//		if(!supplier.getName().equals(name)) {
-//			if (Supplier.dao.find(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name).size() != 0) {
-//				resultString = "该供应商已存在，请勿重复添加！";
-//				return resultString;
-//			}
-//		}
+		// if(!supplier.getName().equals(name)) {
+		// if (Supplier.dao.find(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name).size() != 0) {
+		// resultString = "该供应商已存在，请勿重复添加！";
+		// return resultString;
+		// }
+		// }
 		if (!enabled) {
 			MaterialType mt = MaterialType.dao.findFirst(GET_MATERIAL_BY_SUPPLIER, id);
 			if (mt != null) {
@@ -66,7 +68,7 @@ public class SupplierService extends SelectService {
 				return resultString;
 			}
 			Db.update(SET_BOX_SUPPLIER_NULL_BY_SUPPLIER, supplier.getId());
-			
+
 		}
 		supplier.setEnabled(enabled);
 		supplier.update();
@@ -77,7 +79,7 @@ public class SupplierService extends SelectService {
 	// 查询所有供应商
 	public Object getSuppliers(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
-		if (filter != null ) {
+		if (filter != null) {
 			filter = filter.concat("#&#enabled=1");
 		} else {
 			filter = "enabled=1";
@@ -96,18 +98,18 @@ public class SupplierService extends SelectService {
 		return pagePaginate;
 	}
 
-	
+
 	// 更新供应商的曾用名
 	public String changeName(Integer id, String name) {
 		String resultString = "更新成功！";
 		Supplier supplier = Supplier.dao.findById(id);
-		if(!supplier.getName().equals(name.trim())) {
-		if (Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name) != null || FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, name.trim()) != null) {
+		if (!supplier.getName().equals(name.trim())) {
+			if (Supplier.dao.findFirst(GET_ENABLED_SUPPLIER_BY_NAME_SQL, name) != null || FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, name.trim()) != null) {
 				resultString = "该供应商已存在或者为某个供应商的曾用名，请勿重复添加！";
-				throw new OperationException(resultString) ;
+				throw new OperationException(resultString);
 			}
 		}
-		
+
 		String formerName = supplier.getName();
 		FormerSupplier formerSupplier = new FormerSupplier();
 		formerSupplier.setFormerName(formerName);

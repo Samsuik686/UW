@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.bo;
 
 import java.util.Date;
 
+
 /**
  * 出入库记录业务对象
  * @author HardyYao
@@ -35,25 +36,31 @@ public class RecordItem {
 		this.ioTime = ioTime;
 	}
 
+
 	public Integer getMaterialTypeId() {
 		return materialTypeId;
 	}
+
 
 	public void setMaterialTypeId(Integer materialTypeId) {
 		this.materialTypeId = materialTypeId;
 	}
 
+
 	public String getFileName() {
 		return fileName;
 	}
+
 
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
 
+
 	public String getTaskType() {
 		return this.taskType;
 	}
+
 
 	public void setTaskType(Integer type) {
 		if (type == 0) {
@@ -62,42 +69,49 @@ public class RecordItem {
 			this.taskType = "出库";
 		} else if (type == 4) {
 			this.taskType = "退料";
-		}else if (type == 7) {
+		} else if (type == 7) {
 			this.taskType = "抽检";
 		}
 	}
+
 
 	public Integer getPlanQuantity() {
 		return planQuantity;
 	}
 
+
 	public void setPlanQuantity(Integer planQuantity) {
 		this.planQuantity = planQuantity;
 	}
+
 
 	public Integer getActualQuantity() {
 		return actualQuantity;
 	}
 
+
 	public void setActualQuantity(Integer actualQuantity) {
 		this.actualQuantity = actualQuantity;
 	}
+
 
 	public String getOperator() {
 		return operator;
 	}
 
+
 	public void setOperator(String operator) {
 		this.operator = operator;
 	}
+
 
 	public Date getIoTime() {
 		return ioTime;
 	}
 
+
 	public void setIoTime(Date ioTime) {
 		this.ioTime = ioTime;
 	}
-
 
 }

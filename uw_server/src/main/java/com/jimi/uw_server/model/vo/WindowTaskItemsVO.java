@@ -7,27 +7,28 @@ import java.util.List;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskType;
 
+
 /**
  * 仓口任务条目表示层
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */
-public class WindowTaskItemsVO{
+public class WindowTaskItemsVO {
 
 	private Integer id;
-	
+
 	private String fileName;
-	
+
 	private Integer type;
-	
+
 	private String materialNo;
-	
+
 	private Integer planQuantity;
-	
+
 	private Integer actualQuantity;
-	
+
 	private String finishTime;
-	
+
 	private Integer state;
 
 	private String typeString;
@@ -35,15 +36,16 @@ public class WindowTaskItemsVO{
 	private String stateString;
 
 	private Integer boxId;
-	
+
 	private Integer goodsLocationId;
-	
+
 	private String goodsLocationName;
-	
+
 	private Integer robotId;
-	
+
 	private List<?> details;
-	
+
+
 	public WindowTaskItemsVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime, Integer state, Integer boxId, Integer goodsLocationId, String goodsLocaitonName, Integer robotId) {
 		this.setId(packingListItemId);
 		this.setFileName(fileName);
@@ -67,9 +69,6 @@ public class WindowTaskItemsVO{
 	}
 
 
-	
-
-
 	public void setStateString(Integer state) {
 		switch (state) {
 		case TaskItemState.LACK:
@@ -82,7 +81,7 @@ public class WindowTaskItemsVO{
 			this.stateString = "等待扫码";
 			break;
 		case TaskItemState.WAIT_ASSIGN:
-			this.stateString = "未分配给叉车";	
+			this.stateString = "未分配给叉车";
 			break;
 		case TaskItemState.ASSIGNED:
 			this.stateString = "已分配拣料";
@@ -138,69 +137,61 @@ public class WindowTaskItemsVO{
 	}
 
 
-	
 	public Integer getBoxId() {
 		return boxId;
 	}
 
 
-	
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
 	}
 
 
-	
 	public Integer getGoodsLocationId() {
 		return goodsLocationId;
 	}
 
 
-	
 	public void setGoodsLocationId(Integer goodsLocationId) {
 		this.goodsLocationId = goodsLocationId;
 	}
 
 
-	
 	public String getGoodsLocationName() {
 		return goodsLocationName;
 	}
 
 
-	
 	public void setGoodsLocationName(String goodsLocationName) {
 		this.goodsLocationName = goodsLocationName;
 	}
 
 
-	
 	public void setTypeString(String typeString) {
 		this.typeString = typeString;
 	}
 
 
-	
 	public void setStateString(String stateString) {
 		this.stateString = stateString;
 	}
 
-	
+
 	public void setId(Integer id) {
 		this.id = id;
 	}
-	
-	
+
+
 	public Integer getId() {
 		return id;
 	}
 
-	
+
 	public String getFileName() {
 		return fileName;
 	}
-	
-	
+
+
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
@@ -215,7 +206,7 @@ public class WindowTaskItemsVO{
 		this.type = type;
 	}
 
-	
+
 	public String getMaterialNo() {
 		return materialNo;
 	}
@@ -265,7 +256,7 @@ public class WindowTaskItemsVO{
 		this.state = state;
 	}
 
-	
+
 	public List<?> getDetails() {
 		return details;
 	}
@@ -280,7 +271,7 @@ public class WindowTaskItemsVO{
 		return stateString;
 	}
 
-	
+
 	public Integer getRobotId() {
 		return robotId;
 	}
@@ -289,6 +280,5 @@ public class WindowTaskItemsVO{
 	public void setRobotId(Integer robotId) {
 		this.robotId = robotId;
 	}
-	
 
 }

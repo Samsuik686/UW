@@ -16,19 +16,20 @@ public class CORSInterceptor implements Interceptor {
 
 	@Override
 	public void intercept(Invocation invocation) {
-//		String origin = null;
-//		if(UwConfig.isProductionEnvironment()) {
-//			origin = PropKit.use("properties.ini").get("p_frontURI");
-//		}else {
-//			origin = PropKit.use("properties.ini").get("d_frontURI");
-//		}
-		 HttpServletResponse response = invocation.getController().getResponse();
-//		 response.addHeader("Access-Control-Allow-Origin", "http://" + origin);
-		 response.addHeader("Access-Control-Allow-Origin", "*");
-//		 response.addHeader("Access-Control-Allow-Credentials", "true");
-//		 response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//		 response.setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, POST");
-		 invocation.invoke();
+		// String origin = null;
+		// if(UwConfig.isProductionEnvironment()) {
+		// origin = PropKit.use("properties.ini").get("p_frontURI");
+		// }else {
+		// origin = PropKit.use("properties.ini").get("d_frontURI");
+		// }
+		HttpServletResponse response = invocation.getController().getResponse();
+		// response.addHeader("Access-Control-Allow-Origin", "http://" + origin);
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		// response.addHeader("Access-Control-Allow-Credentials", "true");
+		// response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With,
+		// Content-Type, Accept");
+		// response.setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, POST");
+		invocation.invoke();
 	}
 
 }

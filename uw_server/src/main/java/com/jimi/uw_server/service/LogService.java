@@ -14,6 +14,7 @@ import com.jimi.uw_server.model.vo.TaskLogVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 
+
 /**
  * 日志业务层
  * @author HardyYao
@@ -50,7 +51,8 @@ public class LogService extends SelectService {
 		for (Record res : result.getList()) {
 			PackingListItem packingListItem = PackingListItem.dao.findById(Integer.parseInt(res.get("TaskLog_PackingListItemId").toString()));
 			Task task = Task.dao.findById(packingListItem.getTaskId());
-			TaskLogVO t = new TaskLogVO(res.get("TaskLog_Id"), res.get("TaskLog_PackingListItemId"), task.getType(), res.get("TaskLog_MaterialId"), res.get("MaterialType_No"), res.get("TaskLog_Quantity"), res.get("User_Uid"), res.get("TaskLog_Auto"), res.get("TaskLog_Time"));taskLogVOs.add(t);
+			TaskLogVO t = new TaskLogVO(res.get("TaskLog_Id"), res.get("TaskLog_PackingListItemId"), task.getType(), res.get("TaskLog_MaterialId"), res.get("MaterialType_No"), res.get("TaskLog_Quantity"), res.get("User_Uid"), res.get("TaskLog_Auto"), res.get("TaskLog_Time"));
+			taskLogVOs.add(t);
 		}
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
@@ -78,6 +80,5 @@ public class LogService extends SelectService {
 
 		return pagePaginate;
 	}
-
 
 }

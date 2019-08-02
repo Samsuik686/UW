@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.jimi.uw_server.model.PositionLog;
 
+
 /**
  * @author HardyYao
  * @createTime 2018年7月5日 下午10:39:41 
@@ -11,8 +12,7 @@ import com.jimi.uw_server.model.PositionLog;
 @SuppressWarnings("serial")
 public class PositionLogVO extends PositionLog {
 
-	public PositionLogVO(Integer id, Integer taskId, String materialId, String materialNo, Integer oldArea, Integer oldRow, Integer oldCol, 
-			Integer oldHeight, Integer newArea, Integer newRow, Integer newCol, Integer newHeight, Date time) {
+	public PositionLogVO(Integer id, Integer taskId, String materialId, String materialNo, Integer oldArea, Integer oldRow, Integer oldCol, Integer oldHeight, Integer newArea, Integer newRow, Integer newCol, Integer newHeight, Date time) {
 		this.setId(id);
 		this.set("taskId", taskId);
 		this.set("materialId", materialId);
@@ -28,4 +28,3 @@ public class PositionLogVO extends PositionLog {
 		this.setTime(time);
 	}
 }
- 
