@@ -1,6 +1,6 @@
 <template>
     <div class="boxes" v-loading="isLoading">
-        <el-form :inline="true" :model="boxInfo" class="box-form">
+        <el-form :inline="true" :model="boxInfo" class="box-form" label-width="70px">
             <el-form-item label="料盒号">
                 <el-input v-model.trim="boxInfo.id" placeholder="料盒号"></el-input>
             </el-form-item>
@@ -60,6 +60,7 @@
                     prop="id">
             </el-table-column>
             <el-table-column
+                    min-width="120"
                     label="供应商"
                     prop="supplierName">
             </el-table-column>

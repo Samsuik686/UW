@@ -5,55 +5,44 @@
                 :data="tableData"
                 style="width:100%">
             <el-table-column
-                    width="120"
+                    min-width="120"
                     label="料盘唯一码"
-                    prop="id"
-                    align="center">
+                    prop="id">
             </el-table-column>
             <el-table-column
                     label="类型"
-                    prop="type"
-                    align="center">
+                    prop="type">
             </el-table-column>
             <el-table-column
-                    width="150"
+                    min-width="150"
                     label="料号"
-                    prop="materialNo"
-                    align="center">
+                    prop="materialNo">
             </el-table-column>
             <el-table-column
                     label="所在料盒"
-                    prop="box"
-                    align="center">
+                    prop="box">
             </el-table-column>
             <el-table-column
                     label="料盒所在区域"
-                    prop="boxArea"
-                    align="center">
+                    min-width="100"
+                    prop="boxArea">
             </el-table-column>
             <el-table-column
                     label="盒内行号"
-                    width="80"
-                    prop="row"
-                    align="center">
+                    prop="row">
             </el-table-column>
             <el-table-column
                     label="盒内列号"
-                    width="80"
-                    prop="col"
-                    align="center">
+                    prop="col">
             </el-table-column>
             <el-table-column
                     label="剩余数量"
-                    width="100"
-                    prop="remainderQuantity"
-                    align="center">
+                    prop="remainderQuantity">
             </el-table-column>
             <el-table-column
                     label="入库日期"
-                    width="160"
-                    prop="store_time"
-                    align="center">
+                    min-width="160"
+                    prop="store_time">
             </el-table-column>
         </el-table>
         <div class="block">

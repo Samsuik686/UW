@@ -80,6 +80,9 @@
                 }
                 if(!this.isPending){
                     this.isPending = true;
+                    if(this.editData.password === this.editInfo.password){
+                        this.editInfo.password = null;
+                    }
                     let options = {
                         url: userUpdateUrl,
                         data:this.editInfo

@@ -65,7 +65,8 @@
                 scanText:'',
                 tempArr:[],
                 col:-1,
-                row:-1
+                row:-1,
+                isScan:false
             }
         },
         components: {
@@ -124,7 +125,7 @@
                     }
                 });
             },
-            select: function () {
+            select: function (i) {
                 if (this.thisWindow === '') {
                     return;
                 }
@@ -141,10 +142,19 @@
                             this.tasks.map((item) => {
                                 item.isCut = false;
                             });
+                            if(i !== undefined){
+                                this.textToSpeak('已扫'+this.tasks[i].details.length+'盘还剩'
+                                    +this.tasks[i].reelNum+'盘');
+                            }
                         } else {
                             this.tasks = [];
                         }
-                    } else {
+                    }else if(response.data.result === 412){
+                        if(response.data.data === "仓口不存在任务"){
+                            this.$alertWarning(response.data.data);
+                            this.setPreset();
+                        }
+                    }  else {
                         errHandler(response.data);
                     }
                 }).catch(err => {
@@ -253,13 +263,14 @@
                         };
                         axiosPost(options).then(response => {
                             if (response.data.result === 200) {
-                                this.select();
                                 this.successAudioPlay();
                                 this.$alertSuccess('操作成功');
-                                setTimeout(() => {
+                                this.isPending = false;
+                                this.select(i);
+                                /*setTimeout(() => {
                                     this.textToSpeak('已扫'+this.tasks[i].details.length+'盘还剩'
                                         +this.tasks[i].reelNum+'盘');
-                                },1000);
+                                },1000);*/
                             } else {
                                 this.failAudioPlay();
                                 errHandler(response.data);

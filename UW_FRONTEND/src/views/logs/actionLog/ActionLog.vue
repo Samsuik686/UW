@@ -11,6 +11,7 @@
                 <el-date-picker
                         :clearable="isClear"
                         v-model="times"
+                        :picker-options="pickerOptions"
                         type="datetimerange"
                         align="right"
                         value-format="yyyy-MM-dd HH:mm:ss"
@@ -101,6 +102,33 @@
                 isPending:false,
                 isLoading:false,
                 filter:'',
+                pickerOptions: {
+                    shortcuts: [{
+                        text: '最近一周',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近一个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近三个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }]
+                }
             }
         },
         mounted(){

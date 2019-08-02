@@ -133,7 +133,7 @@
                 });
             },
             //获取各仓口数据
-            select: function () {
+            select: function (i) {
                 if (this.thisWindow === '') {
                     return;
                 }
@@ -147,8 +147,16 @@
                     if (response.data.result === 200) {
                         if (response.data.data) {
                             this.tasks = response.data.data;
+                            if(i !== undefined){
+                                this.textToSpeak('已扫'+this.tasks[i].details.length+'盘');
+                            }
                         } else {
                             this.tasks = [];
+                        }
+                    } else if(response.data.result === 412){
+                        if(response.data.data === "仓口不存在任务"){
+                            this.$alertWarning(response.data.data);
+                            this.setPreset();
                         }
                     } else {
                         errHandler(response.data);
@@ -252,12 +260,10 @@
                             if (response.data.result === 200) {
                                 this.col = response.data.data.col;
                                 this.row = response.data.data.row;
-                                this.select();
                                 this.successAudioPlay();
                                 this.$alertSuccess('操作成功');
-                                setTimeout(() => {
-                                    this.textToSpeak('已扫'+this.tasks[i].details.length+'盘');
-                                },1000);
+                                this.isPending = false;
+                                this.select(i);
                             } else {
                                 this.failAudioPlay();
                                 errHandler(response.data);

@@ -10,8 +10,8 @@
             <el-form-item label="盘点数量">
                 <el-input v-model.trim="editInfo.atrualNum" placeholder="盘点数量"></el-input>
             </el-form-item>
-            <el-form-item label="盘前盈亏">
-                <el-input v-model.trim="editInfo.returnNum" placeholder="盘前盈亏"></el-input>
+            <el-form-item label="调拨多出数量">
+                <el-input v-model.trim="editInfo.returnNum" placeholder="调拨多出数量"></el-input>
             </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">

@@ -9,7 +9,7 @@
             </el-table-column>
             <el-table-column
                     label="料盘唯一码"
-                    min-width="100"
+                    min-width="120"
                     prop="materialId">
             </el-table-column>
             <el-table-column

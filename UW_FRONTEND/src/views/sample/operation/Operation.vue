@@ -242,6 +242,11 @@
                             if(isScan !== undefined){
                                 this.isScan = true;
                             }
+                        } else if(response.data.result === 412){
+                            if(response.data.data === "仓口不存在任务"){
+                                this.$alertWarning(response.data.data);
+                                this.setPreset();
+                            }
                         } else {
                             errHandler(response.data);
                             this.clearMyTimeOut();

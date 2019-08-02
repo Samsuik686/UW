@@ -5,48 +5,44 @@
                 :data="tableData"
                 style="width:100%">
             <el-table-column
+                    min-width="170"
                     label="任务"
-                    prop="taskName"
-                    align="center">
+                    prop="taskName">
             </el-table-column>
             <el-table-column
                     label="类型"
-                    prop="taskTypeString"
-                    align="center">
+                    prop="taskTypeString">
             </el-table-column>
             <el-table-column
                     label="来源地"
-                    prop="sourceWhName"
-                    align="center">
+                    min-width="140"
+                    prop="sourceWhName">
             </el-table-column>
             <el-table-column
                     label="目的地"
-                    prop="destinationName"
-                    align="center">
+                    min-width="140"
+                    prop="destinationName">
             </el-table-column>
             <el-table-column
                     label="数量"
-                    prop="quantity"
-                    align="center">
+                    prop="quantity">
             </el-table-column>
             <el-table-column
+                    min-width="120"
                     label="调拨多出数量"
-                    prop="returnNum"
-                    align="center">
+                    prop="returnNum">
             </el-table-column>
             <el-table-column
+                    min-width="160"
                     label="日期"
-                    prop="time"
-                    align="center">
+                    prop="time">
             </el-table-column>
             <el-table-column
                     label="备注"
-                    prop="remarks"
-                    align="center">
+                    prop="remarks">
             </el-table-column>
             <el-table-column
-                    label="操作"
-                    align="center">
+                    label="操作">
                 <template slot-scope="scope">
                     <span style="margin-right:10px;cursor: pointer;" title="修改备注" @click="handleEdit(scope.row)">
                         <i class="el-icon-coke-edit"></i>

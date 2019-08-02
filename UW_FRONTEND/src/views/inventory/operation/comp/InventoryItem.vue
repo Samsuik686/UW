@@ -10,10 +10,12 @@
                     :data="inventoryItem.list"
                     style="width:100%">
                 <el-table-column
+                        min-width="120"
                         prop="materialId"
                         label="料盘号">
                 </el-table-column>
                 <el-table-column
+                        min-width="120"
                         prop="no"
                         label="料号">
                 </el-table-column>
@@ -183,8 +185,11 @@
                     }
                 }
                 if (Number(row.storeNum) !== Number(actualNum)) {
-                    //this.printBarcode(row,actualNum);
-                    this.handlePrintMaterialArr(row.materialId);
+                    if(Number(actualNum) === 0){
+                        this.handlePrintMaterialArr(row.materialId);
+                        return;
+                    }
+                    this.printBarcode(row,actualNum);
                 }
             },
             printBarcode: function (row,actualNum) {

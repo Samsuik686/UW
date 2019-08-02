@@ -9,7 +9,7 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="仓口">
-                <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0" value="">
+                <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0" value="" @focus="setPreset">
                     <el-option value="" :label="windowsList.length === 0 ? '无非空闲仓口':'请选择'"></el-option>
                     <el-option v-for="item in windowsList" :value="item.id" :label="item.id" :key="item.id"></el-option>
                 </el-select>
@@ -42,6 +42,7 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    min-width="160"
                     prop="fileName"
                     label="套料单名称">
             </el-table-column>
@@ -58,12 +59,14 @@
                     label="料盒号">
             </el-table-column>
             <el-table-column
+                    min-width="120"
                     label="任务条目状态">
                 <template slot-scope="scope">
                     <span :class="{activeClass:scope.row.state === -3}">{{ scope.row.stateString}}</span>
                 </template>
             </el-table-column>
             <el-table-column
+                    min-width="150"
                     prop="materialNo"
                     label="料号">
             </el-table-column>
@@ -76,6 +79,7 @@
                     label="实际数量">
             </el-table-column>
             <el-table-column
+                    min-width="160"
                     prop="finishTime"
                     label="完成时间">
             </el-table-column>
@@ -244,6 +248,7 @@
         }
         .materialId-box {
             display: flex;
+            margin-bottom:10px;
             .box-item{
                 margin-right:100px;
                 span:first-of-type {

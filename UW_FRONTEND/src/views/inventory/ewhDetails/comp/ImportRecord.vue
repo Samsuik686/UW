@@ -22,7 +22,7 @@
 
 <script>
     import axios from './../../../../plugins/http'
-    import {mapGetters} from 'vuex'
+    import {mapGetters,mapActions} from 'vuex'
     import {importEWhInventoryRecordUrl} from "../../../../plugins/globalUrl";
     import {errHandler} from "../../../../utils/errorHandler";
 
@@ -44,6 +44,7 @@
             taskId:String
         },
         methods:{
+            ...mapActions(['setUnInventoryData']),
             cancel:function(){
                 this.fileName = '';
                 this.thisFile = '';
@@ -67,6 +68,7 @@
                     axios.post(importEWhInventoryRecordUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('添加成功');
+                            this.setUnInventoryData([]);
                             this.cancel();
                         }else{
                             errHandler(res.data);

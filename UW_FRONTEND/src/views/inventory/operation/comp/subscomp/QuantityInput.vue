@@ -24,7 +24,7 @@
             thisWindow:String
         },
         computed:{
-            ...mapGetters(['isScanner','printMaterialIdArr'])
+            ...mapGetters(['isScanner','printMaterialIdArr','disabledMaterialId'])
         },
         data(){
             return{
@@ -76,6 +76,7 @@
             cancelFocus:function(){
                 //使外部输入框聚焦
                 this.setIsFocus(false);
+                this.setDisabledMaterialId('');
                 if(this.inputVal === '' || this.inputVal === null){
                     this.inputVal = this.row.actualNum;
                     Bus.$emit('refreshInventory',true);

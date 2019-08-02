@@ -28,7 +28,8 @@
                 <el-form-item>
                     <el-button type="primary"
                                style="width:100%;"
-                               @click="login('loginForm')">登录</el-button>
+                               @click="login('loginForm')">登录
+                    </el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -42,53 +43,54 @@
     import {axiosPost} from "../../utils/fetchData";
     import {errHandler} from "../../utils/errorHandler";
     import {loginUrl} from "../../plugins/globalUrl";
+
     export default {
         name: "Login",
-        data(){
-            return{
-                loginInfo:{
-                    uid:'',
-                    password:''
+        data() {
+            return {
+                loginInfo: {
+                    uid: '',
+                    password: ''
                 },
                 rules: {
                     uid: [
-                        { required: true, message: '请输入用户名', trigger: 'change' },
+                        {required: true, message: '请输入用户名', trigger: 'change'},
                     ],
                     password: [
-                        { required: true, message: '请输入密码', trigger: 'change' }
+                        {required: true, message: '请输入密码', trigger: 'change'}
                     ]
                 },
-                isPending:false
+                isPending: false
             }
         },
-        components:{
+        components: {
             Copyright
         },
-        methods:{
-            ...mapActions(['setToken','setUser']),
-            login:function (loginForm) {
+        methods: {
+            ...mapActions(['setToken', 'setUser']),
+            login: function (loginForm) {
                 this.$refs[loginForm].validate((valid) => {
                     if (valid) {
-                        if(!this.isPending){
+                        if (!this.isPending) {
                             this.isPending = true;
                             let options = {
-                                url:loginUrl,
-                                data:{
-                                    uid:this.loginInfo.uid,
-                                    password:this.loginInfo.password
+                                url: loginUrl,
+                                data: {
+                                    uid: this.loginInfo.uid,
+                                    password: this.loginInfo.password
                                 }
                             };
                             axiosPost(options).then(response => {
                                 this.isPending = false;
-                                if(response.data.result === 200){
+                                if (response.data.result === 200) {
                                     this.$alertSuccess("登录成功");
                                     let data = response.data.data;
                                     this.setToken(data['#TOKEN#']);
                                     this.setUser(data);
-                                    window.sessionStorage.setItem("token",data['#TOKEN#']);
-                                    window.sessionStorage.setItem("user",JSON.stringify(data));
+                                    window.sessionStorage.setItem("token", data['#TOKEN#']);
+                                    window.sessionStorage.setItem("user", JSON.stringify(data));
                                     this.$router.replace('/material/uwMaterial');
-                                }else{
+                                } else {
                                     errHandler(response.data);
                                 }
                             }).catch(err => {
@@ -106,36 +108,41 @@
 </script>
 
 <style scoped lang="scss">
-    .login{
-        width:100%;
-        height:100%;
-        .login-box{
-            position:absolute;
-            top:50%;
-            left:50%;
-            transform:translate(-50%, -50%);
-            width:360px;
-            background:#4BC0C0;
+    .login {
+        width: 100%;
+        height: 100%;
+
+        .login-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 360px;
+            background: #4BC0C0;
             box-shadow: 0 0 25px #cacaca;
-            border-radius:4px;
-            .login-name{
-                width:100%;
+            border-radius: 4px;
+
+            .login-name {
+                width: 100%;
                 text-align: center;
-                font-size:20px;
-                font-weight:bold;
-                padding:20px 0;
-                color:#fff;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 20px 0;
+                color: #fff;
             }
-            .login-form{
-                box-sizing:border-box;
-                background:#fff;
-                padding:35px 40px 20px 40px;
-                .el-form-item{
-                    margin-bottom:24px;
+
+            .login-form {
+                box-sizing: border-box;
+                background: #fff;
+                padding: 35px 40px 20px 40px;
+
+                .el-form-item {
+                    margin-bottom: 24px;
                 }
-                .el-form-item__label{
-                    font-size:16px;
-                    font-weight:bold;
+
+                .el-form-item__label {
+                    font-size: 16px;
+                    font-weight: bold;
                 }
             }
         }

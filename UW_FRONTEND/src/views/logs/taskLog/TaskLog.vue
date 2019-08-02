@@ -20,6 +20,7 @@
                         type="datetimerange"
                         align="right"
                         value-format="yyyy-MM-dd HH:mm:ss"
+                        :picker-options="pickerOptions"
                         range-separator="-"
                         :default-time="['00:00:00','23:59:59']"
                         start-placeholder="开始日期"
@@ -49,12 +50,13 @@
                     prop="taskType">
             </el-table-column>
             <el-table-column
+                    min-width="120"
                     label="料盘唯一码"
                     prop="materialId">
             </el-table-column>
             <el-table-column
                     label="料号"
-                    min-width="120"
+                    min-width="140"
                     prop="materialNo">
             </el-table-column>
             <el-table-column
@@ -120,6 +122,33 @@
                 isPending:false,
                 isLoading:false,
                 filter:'',
+                pickerOptions: {
+                    shortcuts: [{
+                        text: '最近一周',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近一个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近三个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }]
+                }
             }
         },
         mounted(){

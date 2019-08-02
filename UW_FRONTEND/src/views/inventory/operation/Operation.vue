@@ -10,7 +10,7 @@
                @blur="setFocus" autofocus="autofocus" autocomplete="off" @keyup.enter="scannerHandler">
         <el-form :inline="true" class="demo-form-inline" size="medium">
             <el-form-item label="仓口">
-                <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0" value="">
+                <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0" value="" @focus="setPreset">
                     <el-option value="" :label="windowsList.length === 0 ? '无非空闲仓口':'请选择'"></el-option>
                     <el-option v-for="item in windowsList" :value="item.id" :label="item.id" :key="item.id"></el-option>
                 </el-select>
@@ -111,7 +111,7 @@
             })
         },
         methods:{
-            ...mapActions(['setIsScanner','setDisabledMaterialId']),
+            ...mapActions(['setIsScanner']),
             //获取仓口
             setPreset: function () {
                 let options = {
@@ -230,7 +230,7 @@
                     }
                 }
             },
-            select:function(){
+            select:function(isDisabled){
                 //仓口为空
                 if (!this.thisWindow) {
                     return;
@@ -250,7 +250,11 @@
                                 return;
                             }
                             this.inventoryData = response.data.data;
-                            this.setDisabledMaterialId('');
+                        }else if(response.data.result === 412){
+                            if(response.data.data === "仓口不存在任务"){
+                                this.$alertWarning(response.data.data);
+                                this.setPreset();
+                            }
                         } else {
                             errHandler(response.data);
                             this.clearMyTimeOut();
@@ -271,6 +275,7 @@
                 }
                 this.isTimeOut = true;
                 let that = this;
+                this.isPending = false;
                 this.select();
                 this.myTimeOut = setInterval(function () {
                     that.select();

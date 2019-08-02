@@ -36,12 +36,13 @@
             </el-table-column>
             <el-table-column
                     label="料号"
-                    min-width="120">
+                    min-width="150">
                 <template slot-scope="scope">
-                    <span :class="{highLight:unInventoryData.includes(scope.row.material_type_id)}">{{scope.row.no}}</span>
+                    <span :class="{highLight:unInventoryData.includes(String(scope.row.material_type_id))}">{{scope.row.no}}</span>
                 </template>
             </el-table-column>
             <el-table-column
+                    min-width="150"
                     label="供应商"
                     prop="supplier_name">
             </el-table-column>
@@ -135,6 +136,11 @@
             },
             taskId:function(val){
                 if(val !== ''){
+                    this.select();
+                }
+            },
+            isImport:function(val){
+                if(val === false){
                     this.select();
                 }
             }

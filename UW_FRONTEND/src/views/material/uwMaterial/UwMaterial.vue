@@ -57,19 +57,20 @@
             </el-table-column>
             <el-table-column
                     label="客户专用码"
-                    width="90"
                     prop="supplier">
             </el-table-column>
             <el-table-column
                     label="物料类型号"
-                    width="90"
+                    min-width="90"
                     prop="id">
             </el-table-column>
             <el-table-column
+                    min-width="140"
                     label="料号"
                     prop="no">
             </el-table-column>
             <el-table-column
+                    min-width="140"
                     label="供应商"
                     prop="supplierName">
             </el-table-column>
@@ -79,20 +80,17 @@
             </el-table-column>
             <el-table-column
                     label="厚度"
-                    width="80"
                     prop="thickness">
             </el-table-column>
             <el-table-column
                     label="直径"
-                    width="80"
                     prop="radius">
             </el-table-column>
             <el-table-column
                     label="数量"
-                    width="100"
                     prop="quantity">
             </el-table-column>
-            <el-table-column label="操作">
+            <el-table-column label="操作" min-width="100">
                <template slot-scope="scope">
                     <span style="margin-right:10px;cursor:pointer" title="收发记录" @click="showDetails(scope.row)">
                         <i class="el-icon-coke-card"></i>

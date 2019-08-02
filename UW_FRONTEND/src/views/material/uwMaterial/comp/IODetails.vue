@@ -117,6 +117,7 @@
         },
         mounted(){
             Bus.$on('showIODetails',(row) => {
+                this.initForm();
                 this.materialTypeId = row.id;
                 this.select();
                 this.dialogVisible = true;
