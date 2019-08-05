@@ -171,6 +171,7 @@
                 }
                 this.isTimeOut = true;
                 let that = this;
+                this.isPending = false;
                 this.select();
                 this.myTimeOut = setInterval(function () {
                     that.select();

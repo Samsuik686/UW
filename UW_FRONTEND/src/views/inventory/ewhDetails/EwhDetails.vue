@@ -141,6 +141,9 @@
             },
             isImport:function(val){
                 if(val === false){
+                    if(this.taskId === ''){
+                        return;
+                    }
                     this.select();
                 }
             }

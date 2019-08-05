@@ -167,6 +167,7 @@
                 }
                 this.isTimeOut = true;
                 let that = this;
+                this.isPending = false;
                 this.select();
                 this.myTimeOut = setInterval(function () {
                     that.select();
@@ -267,10 +268,6 @@
                                 this.$alertSuccess('操作成功');
                                 this.isPending = false;
                                 this.select(i);
-                                /*setTimeout(() => {
-                                    this.textToSpeak('已扫'+this.tasks[i].details.length+'盘还剩'
-                                        +this.tasks[i].reelNum+'盘');
-                                },1000);*/
                             } else {
                                 this.failAudioPlay();
                                 errHandler(response.data);

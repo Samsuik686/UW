@@ -39,9 +39,7 @@
             activeMaterialId:function(val){
                 if(val === this.row.materialId){
                     this.isHighLight = true;
-                    if(this.activeQuantity === -1){
-                        this.inputVal = this.row.actualNum;
-                    }else{
+                    if(this.activeQuantity !== -1){
                         this.inputVal = this.activeQuantity;
                         Bus.$emit('setActiveQuantity',-1);
                     }
