@@ -21,7 +21,7 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
-import com.jimi.uw_server.agv.handle.SamTaskHandler;
+import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.constant.SQL;
 import com.jimi.uw_server.constant.SamplerOutType;
 import com.jimi.uw_server.constant.TaskItemState;
@@ -80,7 +80,7 @@ public class SampleTaskService {
 
 	private static SelectService selectService = Enhancer.enhance(SelectService.class);
 
-	private static SamTaskHandler samTaskHandler = SamTaskHandler.getInstance();
+	private static SampleTaskHandler samTaskHandler = SampleTaskHandler.getInstance();
 
 	public static SampleTaskService me = new SampleTaskService();
 
@@ -451,7 +451,7 @@ public class SampleTaskService {
 		String groupId = "";
 		Window window = Window.dao.findById(windowId);
 		if (window == null || window.getBindTaskId() == null) {
-			throw new OperationException("当前仓口没有绑定任务！");
+			throw new OperationException("仓口不存在任务");
 		}
 		Map<Integer, PackingSampleInfoVO> map = new LinkedHashMap<>();
 		List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, windowId);

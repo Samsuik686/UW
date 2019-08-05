@@ -18,7 +18,7 @@ import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
-import com.jimi.uw_server.agv.handle.SamTaskHandler;
+import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.BuildTaskItemState;
 import com.jimi.uw_server.constant.SQL;
@@ -71,7 +71,7 @@ public class TaskPool extends Thread {
 
 	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
 
-	private static SamTaskHandler samTaskHandler = SamTaskHandler.getInstance();
+	private static SampleTaskHandler samTaskHandler = SampleTaskHandler.getInstance();
 
 
 	@Override

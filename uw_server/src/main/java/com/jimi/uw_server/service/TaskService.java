@@ -20,8 +20,11 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
+import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
+import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.constant.BoxState;
+import com.jimi.uw_server.constant.InventoryTaskSQL;
 import com.jimi.uw_server.constant.SQL;
 import com.jimi.uw_server.constant.SampleTaskSQL;
 import com.jimi.uw_server.constant.TaskItemState;
@@ -799,7 +802,7 @@ public class TaskService {
 	public Object getWindowParkingItem(Integer id) {
 		Window window = Window.dao.findById(id);
 		if (window == null || window.getBindTaskId() == null) {
-			return null;
+			throw new OperationException("仓口不存在任务");
 		}
 		Map<Integer, WindowParkingListItemVO> map = new LinkedHashMap<>();
 		List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, id);
@@ -1321,7 +1324,7 @@ public class TaskService {
 	 * @param taskId
 	 * @param windowIds
 	 */
-	public void setTaskWindow(Integer taskId, String windowIds) {
+	public synchronized void setTaskWindow(Integer taskId, String windowIds) {
 		Task task = Task.dao.findById(taskId);
 		if (!task.getState().equals(TaskState.PROCESSING)) {
 			throw new OperationException("任务未处于进行中状态，无法指定仓口！");
@@ -1329,40 +1332,77 @@ public class TaskService {
 		if (TaskItemRedisDAO.getTaskStatus(taskId)) {
 			throw new OperationException("任务未处于暂停状态，无法指定或更改仓口！");
 		}
+		List<Window> windows = Window.dao.find(GET_WINDOW_BY_TASK, task.getId());
+		if (task.getType().equals(TaskType.COUNT)) {
+			List<InventoryLog> logs = InventoryLog.dao.find(InventoryTaskSQL.GET_UN_INVENTORY_LOG_BY_TASKID, taskId);
+			if (logs.size() == 0 && windows.isEmpty()) {
+				throw new OperationException("盘点任务UW仓盘点阶段已结束，无法指定或更改仓口！");
+			}
+		}
 		/*
 		 * if ((task.getType().equals(TaskType.IN) ||
 		 * task.getType().equals(TaskType.SEND_BACK)) &&
 		 * !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) { throw
 		 * new OperationException("无法指定或更改仓口，请先将之前的物料正确入库再进行更改仓口操作"); }
 		 */
-		List<Window> windows = Window.dao.find(GET_WINDOW_BY_TASK, task.getId());
-		if (!windows.isEmpty()) {
-			for (AGVIOTaskItem agvioTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
-				if (agvioTaskItem.getState() >= TaskItemState.ASSIGNED && agvioTaskItem.getState() < TaskItemState.BACK_BOX) {
-					throw new OperationException("仓口" + agvioTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
-				}
-			}
-		}
-		for (Window window : windows) {
-			window.setBindTaskId(null);
-			window.update();
-		}
+		List<Integer> windowIdList = new ArrayList<>();
 		if (windowIds != null && !windowIds.trim().equals("")) {
 			String[] windowIdArr = windowIds.split(",");
-			List<Integer> windowIdList = new ArrayList<>();
+			
 			for (String windowId : windowIdArr) {
 				windowIdList.add(Integer.valueOf(windowId.trim()));
 			}
+		}
+		
+		Boolean flag = true;
+		for (Window window : windows) {
+			if (!windowIdList.contains(window.getId())) {
+				flag = false;
+			}
+		}
+		if (!flag && !windows.isEmpty()) {
+			if(task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.OUT) || task.getType().equals(TaskType.SEND_BACK)) {
+				for (AGVIOTaskItem agvioTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+					if (agvioTaskItem.getState() >= TaskItemState.ASSIGNED && agvioTaskItem.getState() < TaskItemState.BACK_BOX) {
+						throw new OperationException("仓口" + agvioTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
+					}
+				}
+			}else if (task.getType().equals(TaskType.COUNT)) {
+				for (AGVInventoryTaskItem agvInventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
+					if (agvInventoryTaskItem.getState() >= TaskItemState.ASSIGNED && agvInventoryTaskItem.getState() < TaskItemState.BACK_BOX) {
+						throw new OperationException("仓口" + agvInventoryTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
+					}
+				}
+			}else if (task.getType().equals(TaskType.SAMPLE)) {
+				for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(taskId)) {
+					if (agvSampleTaskItem.getState() >= TaskItemState.ASSIGNED && agvSampleTaskItem.getState() < TaskItemState.BACK_BOX) {
+						throw new OperationException("仓口" + agvSampleTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
+					}
+				}
+			}
+			
+		}
+		
+		if (windowIds != null && !windowIds.trim().equals("")) {
 			List<Window> bindWindows = new ArrayList<>(10);
 			for (Integer windowId : windowIdList) {
 				Window window = Window.dao.findById(windowId);
-				if (window.getBindTaskId() != null) {
+				if (window != null && window.getBindTaskId() != null && !window.getBindTaskId().equals(taskId)) {
 					throw new OperationException("仓口" + windowId + "存在已绑定其他任务，无法绑定该任务");
 				}
 				bindWindows.add(window);
 			}
+			for (Window window : windows) {
+				window.setBindTaskId(null);
+				window.update();
+			}
 			for (Window window : bindWindows) {
 				window.setBindTaskId(taskId).update();
+			}
+		}else {
+			for (Window window : windows) {
+				window.setBindTaskId(null);
+				window.update();
 			}
 		}
 	}

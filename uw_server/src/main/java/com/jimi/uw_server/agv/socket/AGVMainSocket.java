@@ -27,7 +27,7 @@ import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
-import com.jimi.uw_server.agv.handle.SamTaskHandler;
+import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.util.ErrorLogWritter;
 
@@ -58,7 +58,7 @@ public class AGVMainSocket {
 
 	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
 
-	private static SamTaskHandler samTaskHandler = SamTaskHandler.getInstance();
+	private static SampleTaskHandler samTaskHandler = SampleTaskHandler.getInstance();
 
 
 	public static void init(String uri) throws Exception {

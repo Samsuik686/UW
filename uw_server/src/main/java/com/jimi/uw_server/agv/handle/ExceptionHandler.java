@@ -32,7 +32,7 @@ public class ExceptionHandler {
 
 	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
 
-	private static SamTaskHandler samTaskHandler = SamTaskHandler.getInstance();
+	private static SampleTaskHandler samTaskHandler = SampleTaskHandler.getInstance();
 
 
 	public static void handleLoadException(String message) {

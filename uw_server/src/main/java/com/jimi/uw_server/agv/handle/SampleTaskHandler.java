@@ -19,22 +19,22 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
 
 
-public class SamTaskHandler extends BaseTaskHandler {
+public class SampleTaskHandler extends BaseTaskHandler {
 
 	private static String GET_WINDOW_BY_TASK_ID = "select * from window where bind_task_id = ?";
 
-	private volatile static SamTaskHandler me;
+	private volatile static SampleTaskHandler me;
 
 
-	private SamTaskHandler() {
+	private SampleTaskHandler() {
 	}
 
 
-	public static SamTaskHandler getInstance() {
+	public static SampleTaskHandler getInstance() {
 		if (me == null) {
 			synchronized (InvTaskHandler.class) {
 				if (me == null) {
-					me = new SamTaskHandler();
+					me = new SampleTaskHandler();
 				}
 			}
 		}
