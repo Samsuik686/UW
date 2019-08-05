@@ -135,6 +135,7 @@
                 }
             },
             taskId:function(val){
+                this.setUnInventoryData([]);
                 if(val !== ''){
                     this.select();
                 }
