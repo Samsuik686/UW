@@ -1348,12 +1348,12 @@ public class TaskService {
 		List<Integer> windowIdList = new ArrayList<>();
 		if (windowIds != null && !windowIds.trim().equals("")) {
 			String[] windowIdArr = windowIds.split(",");
-			
+
 			for (String windowId : windowIdArr) {
 				windowIdList.add(Integer.valueOf(windowId.trim()));
 			}
 		}
-		
+
 		Boolean flag = true;
 		for (Window window : windows) {
 			if (!windowIdList.contains(window.getId())) {
@@ -1361,28 +1361,28 @@ public class TaskService {
 			}
 		}
 		if (!flag && !windows.isEmpty()) {
-			if(task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.OUT) || task.getType().equals(TaskType.SEND_BACK)) {
+			if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.OUT) || task.getType().equals(TaskType.SEND_BACK)) {
 				for (AGVIOTaskItem agvioTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
 					if (agvioTaskItem.getState() >= TaskItemState.ASSIGNED && agvioTaskItem.getState() < TaskItemState.BACK_BOX) {
 						throw new OperationException("仓口" + agvioTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
 					}
 				}
-			}else if (task.getType().equals(TaskType.COUNT)) {
+			} else if (task.getType().equals(TaskType.COUNT)) {
 				for (AGVInventoryTaskItem agvInventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
 					if (agvInventoryTaskItem.getState() >= TaskItemState.ASSIGNED && agvInventoryTaskItem.getState() < TaskItemState.BACK_BOX) {
 						throw new OperationException("仓口" + agvInventoryTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
 					}
 				}
-			}else if (task.getType().equals(TaskType.SAMPLE)) {
+			} else if (task.getType().equals(TaskType.SAMPLE)) {
 				for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(taskId)) {
 					if (agvSampleTaskItem.getState() >= TaskItemState.ASSIGNED && agvSampleTaskItem.getState() < TaskItemState.BACK_BOX) {
 						throw new OperationException("仓口" + agvSampleTaskItem.getWindowId() + "存在已分配叉车或已到站的任务条目，无法解绑或重新设置该任务的仓口");
 					}
 				}
 			}
-			
+
 		}
-		
+
 		if (windowIds != null && !windowIds.trim().equals("")) {
 			List<Window> bindWindows = new ArrayList<>(10);
 			for (Integer windowId : windowIdList) {
@@ -1399,7 +1399,7 @@ public class TaskService {
 			for (Window window : bindWindows) {
 				window.setBindTaskId(taskId).update();
 			}
-		}else {
+		} else {
 			for (Window window : windows) {
 				window.setBindTaskId(null);
 				window.update();

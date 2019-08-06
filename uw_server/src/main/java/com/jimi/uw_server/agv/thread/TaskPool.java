@@ -191,17 +191,17 @@ public class TaskPool extends Thread {
 						// 5. 发送LS指令
 						if (task.getPriority().equals(0)) {
 							ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-						}else {
-							if (i > Math.floor(windowSize/2)) {
+						} else {
+							if (i > Math.floor(windowSize / 2)) {
 								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-							}else {
+							} else {
 								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
 							}
 						}
-						
+
 						goodsLocations.remove(0);
 						if (i > 0) {
-							i --;
+							i--;
 						}
 					}
 				} else if (item.getState().intValue() == TaskItemState.LACK) { // 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
@@ -222,7 +222,8 @@ public class TaskPool extends Thread {
 
 		List<AGVInventoryTaskItem> agvInventoryTaskItems = new ArrayList<>();
 		TaskItemRedisDAO.appendInventoryTaskItems(task.getId(), agvInventoryTaskItems);
-
+		int i = 0;
+		int windowSize = window.getSize();
 		if (!agvInventoryTaskItems.isEmpty()) {
 			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, window.getId());
 			if (goodsLocations.isEmpty()) {
@@ -235,8 +236,8 @@ public class TaskPool extends Thread {
 					iterator.remove();
 					continue;
 				}
-
 			}
+			i = goodsLocations.size();
 			for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
 				if (goodsLocations.isEmpty()) {
 					return;
@@ -244,8 +245,19 @@ public class TaskPool extends Thread {
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 					if (materialBox.getIsOnShelf()) {
-						invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+						if (task.getPriority().equals(0)) {
+							invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+						} else {
+							if (i > Math.floor(windowSize / 2)) {
+								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+							} else {
+								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+							}
+						}
 						goodsLocations.remove(0);
+						if (i > 0) {
+							i--;
+						}
 					}
 				}
 
@@ -258,7 +270,8 @@ public class TaskPool extends Thread {
 
 		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
 		TaskItemRedisDAO.appendSampleTaskItems(task.getId(), agvSampleTaskItems);
-
+		int i = 0;
+		int windowSize = window.getSize();
 		if (!agvSampleTaskItems.isEmpty()) {
 			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, window.getId());
 			if (goodsLocations.isEmpty()) {
@@ -271,8 +284,8 @@ public class TaskPool extends Thread {
 					iterator.remove();
 					continue;
 				}
-
 			}
+			i = goodsLocations.size();
 			for (AGVSampleTaskItem item : agvSampleTaskItems) {
 				if (goodsLocations.isEmpty()) {
 					return;
@@ -280,8 +293,19 @@ public class TaskPool extends Thread {
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 					if (materialBox.getIsOnShelf()) {
-						samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+						if (task.getPriority().equals(0)) {
+							samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+						} else {
+							if (i > Math.floor(windowSize / 2)) {
+								samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+							} else {
+								samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+							}
+						}
 						goodsLocations.remove(0);
+						if (i > 0) {
+							i--;
+						}
 					}
 				}
 
