@@ -488,7 +488,7 @@ public class SampleTaskService {
 					materialInfoVO.setIsScaned(record.getBoolean("is_scaned"));
 					materialInfoVO.setCol(record.getInt("col"));
 					materialInfoVO.setRow(record.getInt("row"));
-					materialInfoVO.setIsOuted(false);
+					materialInfoVO.setIsOuted(-1);
 					materialInfoVOs.add(materialInfoVO);
 					if (record.getBoolean("is_scaned")) {
 						scanNum++;
@@ -508,7 +508,7 @@ public class SampleTaskService {
 					materialInfoVO.setSupplier(record.getStr("supplier_name"));
 					materialInfoVO.setProductionTime(record.getDate("production_time"));
 					materialInfoVO.setIsScaned(true);
-					materialInfoVO.setIsOuted(true);
+					materialInfoVO.setIsOuted(record.getInt("out_type"));
 					materialInfoVO.setActualNum(0);
 					materialInfoVO.setCol(record.getInt("col"));
 					materialInfoVO.setRow(record.getInt("row"));

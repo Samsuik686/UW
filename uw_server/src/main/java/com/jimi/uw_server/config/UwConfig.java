@@ -24,12 +24,14 @@ import com.jimi.uw_server.controller.DestinationController;
 import com.jimi.uw_server.controller.ExternalWhController;
 import com.jimi.uw_server.controller.InventoryTaskController;
 import com.jimi.uw_server.controller.LogController;
+import com.jimi.uw_server.controller.ManualTaskController;
 import com.jimi.uw_server.controller.MaterialController;
 import com.jimi.uw_server.controller.RobotController;
 import com.jimi.uw_server.controller.SampleTaskController;
 import com.jimi.uw_server.controller.SupplierController;
 import com.jimi.uw_server.controller.TaskController;
 import com.jimi.uw_server.controller.UserController;
+import com.jimi.uw_server.input.InputMaterialHelper;
 import com.jimi.uw_server.interceptor.AccessInterceptor;
 import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
@@ -85,7 +87,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manage/externalWh", ExternalWhController.class);
 		me.add("/task/inventory", InventoryTaskController.class);
 		me.add("/task/sampleTask", SampleTaskController.class);
-		// me.add("/manualTask", ManualTaskController.class);
+		me.add("/manualTask", ManualTaskController.class);
 	}
 
 
@@ -106,23 +108,14 @@ public class UwConfig extends JFinalConfig {
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
-
+			
+			InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
+			System.out.println("InputHelper is Running now...");
 			System.out.println("Uw Server is Running now...");
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 			e.printStackTrace();
 		}
-		/*
-		 * InputHelper.getInstance().setOnInputListener(new OnInputListener() {
-		 * 
-		 * @Override public void onInput(int windowId, int PositionNo) { int pNo =
-		 * InputMaterialRedisDAO.getScanStatus(windowId); if (pNo != -1) { if (pNo ==
-		 * PositionNo) { InputMaterialRedisDAO.setScanStatus(windowId, -1);
-		 * InputHelper.getInstance().switchAlarm(windowId, false); } else {
-		 * InputHelper.getInstance().switchAlarm(windowId, true); } }
-		 * 
-		 * } });
-		 */
 	}
 
 

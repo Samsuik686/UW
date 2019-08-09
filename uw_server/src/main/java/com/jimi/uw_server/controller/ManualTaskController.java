@@ -35,4 +35,9 @@ public class ManualTaskController extends Controller {
 			renderJson(ResultUtil.failed(result));
 		}
 	}
+	
+	
+	public void ping() {
+		renderJson(ResultUtil.succeed());
+	}
 }

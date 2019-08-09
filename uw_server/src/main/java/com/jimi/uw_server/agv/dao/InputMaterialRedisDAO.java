@@ -15,10 +15,10 @@ public class InputMaterialRedisDAO {
 	 * 任务绑定仓口状态
 	 */
 	public synchronized static Integer getScanStatus(Integer windowId) {
-		Integer status = 0;
+		Integer status = -1;
 		status = cache.get("Scan_" + windowId);
 		if (status == null) {
-			status = 0;
+			status = -1;
 			cache.set("Scan_" + windowId, -1);
 
 		}

@@ -35,7 +35,7 @@ public class MaterialInfoVO {
 
 	private Boolean isScaned;
 
-	private Boolean isOuted;
+	private Integer isOuted;
 
 
 	public String getMaterialId() {
@@ -138,12 +138,12 @@ public class MaterialInfoVO {
 	}
 
 
-	public Boolean getIsOuted() {
+	public Integer getIsOuted() {
 		return isOuted;
 	}
 
 
-	public void setIsOuted(Boolean isOuted) {
+	public void setIsOuted(Integer isOuted) {
 		this.isOuted = isOuted;
 	}
 

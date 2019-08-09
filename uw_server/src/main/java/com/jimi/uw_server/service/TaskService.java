@@ -18,6 +18,8 @@ import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.InputHelper.send.MyInputHelper;
+import com.jimi.uw_server.agv.dao.InputMaterialRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -32,6 +34,7 @@ import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
+import com.jimi.uw_server.model.ErrorLog;
 import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.FormerSupplier;
 import com.jimi.uw_server.model.GoodsLocation;
@@ -358,12 +361,11 @@ public class TaskService {
 			} else if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
 				throw new OperationException("该任务已作废！");
 			} else {
-				/*
-				 * // 当前仓口存在未放入料盒的入库物料 if ((task.getType().equals(TaskType.IN) ||
-				 * task.getType().equals(TaskType.SEND_BACK)) &&
-				 * !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) { throw
-				 * new OperationException("禁止作废，请先将之前的物料正确入库再进行作废任务操作"); }
-				 */
+
+				// 当前仓口存在未放入料盒的入库物料
+				if ((task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) && !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) {
+					throw new OperationException("禁止作废，请先将之前的物料正确入库再进行作废任务操作");
+				}
 				boolean untiedWindowflag = true;
 				// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
 				if (state == TaskState.PROCESSING) {
@@ -383,7 +385,6 @@ public class TaskService {
 				// 更新任务状态为作废
 				task.setState(TaskState.CANCELED).update();
 				ioTaskHandler.clearTask(task.getId());
-
 				return true;
 			}
 		}
@@ -769,7 +770,7 @@ public class TaskService {
 					}
 					if (windowTaskItem.get("PackingListItem_Id").equals(redisTaskItem.getId())) {
 
-						WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.get("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.get("MaterialType_No"), windowTaskItem.get("PackingListItem_Quantity"), actualQuantity, windowTaskItem.get("PackingListItem_FinishTime"), redisTaskItem.getState(), redisTaskItem.getBoxId(), goodsLocation.getId(), goodsLocation.getName(), redisTaskItem.getRobotId());
+						WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.getInt("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.getStr("MaterialType_No"), windowTaskItem.getInt("PackingListItem_Quantity"), actualQuantity, windowTaskItem.getDate("PackingListItem_FinishTime"), redisTaskItem.getState(), redisTaskItem.getBoxId(), goodsLocation.getId(), goodsLocation.getName(), redisTaskItem.getRobotId());
 						wt.setDetails(taskLogs);
 						windowTaskItemVOs.add(wt);
 					}
@@ -897,18 +898,19 @@ public class TaskService {
 			}
 			// 新增物料表记录
 			int boxId = 0;
-			// int windowId = 0;
+			int windowId = 0;
 			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 				if (item.getId().intValue() == packListItemId) {
 					boxId = item.getBoxId().intValue();
-					// windowId = item.getWindowId();
+					windowId = item.getWindowId();
 				}
 			}
-			/*
-			 * // 当前仓口存在未放入料盒的入库物料 if
-			 * (!InputMaterialRedisDAO.getScanStatus(windowId).equals(-1)) { throw new
-			 * OperationException("扫码错误，请先将之前的物料正确入库再进行扫码操作"); }
-			 */
+
+			// 当前仓口存在未放入料盒的入库物料
+			if (!InputMaterialRedisDAO.getScanStatus(windowId).equals(-1)) {
+				throw new OperationException("扫码错误，请先将之前的物料正确入库再进行扫码操作");
+			}
+
 			Task task = Task.dao.findById(packingListItem.getTaskId());
 			Integer reelNum = 0;
 			if (materialType.getRadius().equals(7)) {
@@ -924,7 +926,6 @@ public class TaskService {
 				material.setCol(-1);
 				material.setRemainderQuantity(quantity);
 				material.setProductionTime(productionTime);
-				material.setIsRepeated(false);
 				try {
 					material.setStoreTime(getDateTime());
 				} catch (ParseException e) {
@@ -976,18 +977,28 @@ public class TaskService {
 			taskLog.setAuto(false);
 			taskLog.setTime(new Date());
 			taskLog.setDestination(task.getDestination());
-			// taskLog.setIsCleared(isCleared);
 			taskLog.save();
-			/*
-			 * if (!material.getCol().equals(-1) && material.getRow().equals(-1)) { int
-			 * positionNo = material.getCol() * 20 + material.getRow(); String result =
-			 * InputHelper.getInstance().switchLight(windowId, positionNo, true); if
-			 * (result.contains("succeed")) { InputMaterialRedisDAO.setScanStatus(windowId,
-			 * positionNo); } else { taskLog.delete(); material.delete(); throw new
-			 * OperationException("入库失败，开启投料辅助器LED灯失败"); }
-			 * 
-			 * }
-			 */
+			if (!material.getCol().equals(-1) && !material.getRow().equals(-1)) {
+				int positionNo = material.getCol() * 20 + material.getRow();
+				String result = MyInputHelper.getInstance().switchLight(windowId, positionNo, true);
+				if (result.contains("succeed")) {
+					InputMaterialRedisDAO.setScanStatus(windowId, positionNo);
+				} else {
+					taskLog.delete();
+					if (material.getIsRepeated() != null && material.getIsRepeated() ) {
+						material.setRemainderQuantity(0);
+						material.setCol(-1);
+						material.setRow(-1);
+						material.setIsInBox(false);
+						material.setIsRepeated(true);
+						material.update();
+					} else {
+						material.delete();
+					}
+					throw new OperationException("入库失败，开启投料辅助器LED灯失败|Error|LED OPERN FAILED|" + result);
+				}
+			}
+			material.setIsRepeated(false).update();
 			return material;
 		}
 	}
@@ -1339,12 +1350,9 @@ public class TaskService {
 				throw new OperationException("盘点任务UW仓盘点阶段已结束，无法指定或更改仓口！");
 			}
 		}
-		/*
-		 * if ((task.getType().equals(TaskType.IN) ||
-		 * task.getType().equals(TaskType.SEND_BACK)) &&
-		 * !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) { throw
-		 * new OperationException("无法指定或更改仓口，请先将之前的物料正确入库再进行更改仓口操作"); }
-		 */
+		if ((task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) && !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) {
+			throw new OperationException("无法指定或更改仓口，请先将之前的物料正确入库再进行更改仓口操作");
+		}
 		List<Integer> windowIdList = new ArrayList<>();
 		if (windowIds != null && !windowIds.trim().equals("")) {
 			String[] windowIdArr = windowIds.split(",");

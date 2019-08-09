@@ -117,8 +117,7 @@ public class ManualTaskService {
 				}
 			}
 		}
-
 		return resultString;
-
 	}
+	
 }
