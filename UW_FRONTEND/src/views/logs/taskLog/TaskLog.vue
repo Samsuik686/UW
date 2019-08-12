@@ -33,6 +33,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column
@@ -41,6 +42,7 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="任务ID"
                     prop="packingListItemId"
             >
@@ -50,32 +52,39 @@
                     prop="taskType">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     min-width="120"
                     label="料盘唯一码"
                     prop="materialId">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="料号"
                     min-width="140"
                     prop="materialNo">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="数量"
                     prop="quantity">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="操作员ID"
                     prop="operator">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="操作员"
                     prop="operatorName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="是否自动"
                     prop="auto">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="时间"
                     min-width="160"
                     prop="time">
@@ -148,7 +157,9 @@
                             picker.$emit('pick', [start, end]);
                         }
                     }]
-                }
+                },
+                ascBy:'',
+                descBy:'time'
             }
         },
         mounted(){
@@ -174,8 +185,9 @@
                             table: 'task_log',
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter,
-                            descBy: 'time'
                         }
                     };
                     axiosPost(options).then(res => {
@@ -235,6 +247,40 @@
             },
             handlePageSize:function(){
                 this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = data.prop;
+                switch (data.prop) {
+                    case "packingListItemId":
+                        prop = "packing_list_item_id";
+                        break;
+                    case "materialId":
+                        prop = "material_id";
+                        break;
+                    case "materialNo":
+                        prop = "no";
+                        break;
+                    case "quantity":
+                        prop = "task_log.quantity";
+                        break;
+                    case "operatorName":
+                        prop = "operator";
+                        break;
+                    default:
+                        prop = data.prop;
+                        break;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = 'time';
+                    this.ascBy = '';
+                }
                 this.select();
             }
         },

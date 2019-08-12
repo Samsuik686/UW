@@ -25,6 +25,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column type="expand">
@@ -38,22 +39,27 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="所在仓库"
                     prop="wareHouse">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="料号"
                     prop="no">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="供应商"
                     prop="supplier">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="规格"
                     prop="specification">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="数量"
                     prop="quantity">
             </el-table-column>
@@ -126,7 +132,9 @@
                 editData:{},
                 selection:[],
                 checked:false,
-                day:90
+                day:90,
+                ascBy:'',
+                descBy:''
             }
         },
         watch:{
@@ -164,6 +172,8 @@
                             no:this.ewhMaterialInfo.no,
                             whId:this.ewhMaterialInfo.whId,
                             supplierId:this.ewhMaterialInfo.supplierId,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             pageNo:this.pageNo,
                             pageSize: this.pageSize
                         }
@@ -273,6 +283,31 @@
             },
             handlePageSize:function(){
                 this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = data.prop;
+                /*switch (data.prop) {
+                    case "supplierName":
+                        prop = "supplier";
+                        break;
+                    case "quantity":
+                        prop = "";
+                        break;
+                    default:
+                        prop = data.prop;
+                        break;
+                }*/
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = '';
+                    this.ascBy = '';
+                }
                 this.select();
             }
         }

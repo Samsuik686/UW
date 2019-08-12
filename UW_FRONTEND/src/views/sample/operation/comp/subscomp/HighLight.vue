@@ -27,7 +27,7 @@
         },
         methods: {
             changeStyle: function (row) {
-                if(row.isOuted){
+                if(row.isOuted !== -1){
                     this.itemStyle.color = "#909399";
                     return;
                 }

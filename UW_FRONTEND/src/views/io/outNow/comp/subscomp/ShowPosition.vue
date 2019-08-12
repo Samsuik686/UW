@@ -6,7 +6,7 @@
           :close-on-press-escape="isCloseOnModal"
           :visible.sync="isShowPosition"
           width="30%">
-    <p>请把料盘从图示位置取出</p>
+    <p>请把料盘放入到图示位置</p>
     <canvas id="myCanvas" :width="width*2" :height="height*20" class="myCanvas"></canvas>
     <span slot="footer" class="dialog-footer">
             <el-button type="primary" @click="cancel" size="small">确定</el-button>

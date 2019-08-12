@@ -36,6 +36,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column label="启动/暂停" width="60">
@@ -52,24 +53,29 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     min-width="120"
                     label="任务名"
                     prop="fileName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="状态"
                     prop="stateString">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="供应商"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="创建时间"
                     min-width="160"
                     prop="createTimeString">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="备注"
                     prop="remarks">
             </el-table-column>
@@ -147,7 +153,9 @@
                 isEditStatus:false,
                 filter:'',
                 editData:{},
-                isChange:false
+                isChange:false,
+                ascBy:'',
+                descBy:'create_time'
             }
         },
         created(){
@@ -183,7 +191,8 @@
                         data:{
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
-                            descBy: 'create_time',
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter
                         }
                     };
@@ -333,6 +342,37 @@
             handleChangeWindow:function(row){
                 this.editData = row;
                 this.isChange = true;
+            },
+            sortChange:function(data){
+                let prop = '';
+                switch (data.prop) {
+                    case "fileName":
+                        prop = "file_name";
+                        break;
+                    case "stateString":
+                        prop = "state";
+                        break;
+                    case "supplierName":
+                        prop = "supplier";
+                        break;
+                    case "createTimeString":
+                        prop = "create_time";
+                        break;
+                    default:
+                        prop = data.prop;
+                        break;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = 'create_time';
+                    this.ascBy = '';
+                }
+                this.select();
             }
         }
     }

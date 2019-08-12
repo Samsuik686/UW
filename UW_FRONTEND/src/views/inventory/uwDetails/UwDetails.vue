@@ -35,10 +35,8 @@
             </el-table-column>
             <el-table-column
                     label="料号"
+                    prop="no"
                     min-width="150">
-                <template slot-scope="scope">
-                    <span :class="{highLight:unInventoryData.includes(String(scope.row.material_type_id))}">{{scope.row.no}}</span>
-                </template>
             </el-table-column>
             <el-table-column
                     min-width="150"
@@ -119,9 +117,6 @@
         created(){
             this.selectSupplier();
         },
-        computed:{
-            ...mapGetters(['unInventoryData'])
-        },
         watch:{
             supplier:function (val) {
                 if(val !== ''){
@@ -138,7 +133,6 @@
             }
         },
         methods:{
-            ...mapActions(['setUnInventoryData']),
             selectSupplier:function(){
                 let options = {
                     url: supplierSelectUrl,
@@ -287,15 +281,7 @@
                     };
                     axiosPost(options).then(res => {
                         if(res.data.result === 200){
-                            if(res.data.data === "操作成功"){
-                                this.$alertSuccess('审核成功');
-                                this.setUnInventoryData([]);
-                            }else{
-                                this.$alertWarning('存在物料未盘点');
-                                let data = res.data.data;
-                                let arr = data.split('[')[1].split(']')[0].split(',');
-                                this.setUnInventoryData(arr);
-                            }
+                            this.$alertSuccess('审核成功');
                             this.isPending = false;
                             this.select();
                         }else{
