@@ -185,3 +185,14 @@ export const cancelSampleTaskUrl = url + '/task/sampleTask/cancel';
 export const scanMaterialUrl = url + '/task/sampleTask/scanMaterial';
 //抽检报表导出
 export const exportSampleTaskInfoUrl = url + '/task/sampleTask/exportSampleTaskInfo';
+
+//帮助页面-上传图片
+export const uploadPhotoUrl = url + '/faq/uploadPic';
+//上传内容
+export const uploadFAQUrl = url + '/faq/uploadFAQ';
+//修改内容
+export const updateFAQUrl = url + '/faq/updateFAQ';
+//查询内容
+export const selectFAQUrl = url + '/faq/selectFAQ';
+//删除内容
+export const deleteFAQUrl = url + '/faq/deleteFAQ';

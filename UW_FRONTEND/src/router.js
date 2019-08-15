@@ -65,6 +65,10 @@ import SampleTasks from './views/sample/tasks/Tasks';
 import SampleOperation from './views/sample/operation/Operation';
 //FAQ
 import Help from './views/help/Help';
+//FAQ编写
+import Write from './views/help/write/Write';
+//FAQ查看
+import Read from "./views/help/read/Read";
 
 const router = new Router({
   mode: 'history',
@@ -227,7 +231,17 @@ const router = new Router({
               {
                   path:'/help',
                   name:'Help',
-                  component:Help
+                  component:Help,
+                  children: [
+                      {
+                          path: 'write',
+                          component: Write
+                      },
+                      {
+                          path: 'read',
+                          component: Read
+                      }
+                  ]
               }
           ]
       }
