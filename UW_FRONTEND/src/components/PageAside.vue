@@ -11,7 +11,7 @@
                     :router="true"
                     mode="vertical"
                     :collapse="isCollapse">
-                <template v-for="(item,index) in showData">
+                <template v-for="(item,index) in navData">
                     <el-submenu v-if="item.children.length !== 0" :index="item.index" :key="item.index">
                         <template slot="title">
                             <i :class="item.icon"></i>
@@ -181,155 +181,21 @@
                         children:[]
                     },
                     {
-                        index: '/help',
+                        index: 'help',
                         name: '帮助',
                         icon: 'el-icon-coke-help',
-                        children:[]
+                        children:[
+                            {
+                                index: '/help/write',
+                                name: '在线编辑'
+                            },
+                            {
+                                index: '/help/read',
+                                name: '在线查阅'
+                            }
+                        ]
                     }
                 ],
-                navData1:[
-                    {
-                        index: 'material',
-                        name: '物料',
-                        icon: 'el-icon-coke-table',
-                        children: [
-                            {
-                                index: '/material/boxes',
-                                name: '料盒管理'
-                            },
-                            {
-                                index: '/material/supplier',
-                                name: '供应商管理'
-                            },
-                            {
-                                index: '/material/destination',
-                                name: '发料目的地管理'
-                            },
-                            {
-                                index: '/material/uwMaterial',
-                                name: 'UW仓物料管理'
-                            },
-                            {
-                                index: '/material/ewhMaterial',
-                                name: '物料仓物料管理'
-                            }
-                        ]
-                    },
-                    {
-                        index: '/tasks',
-                        name: '任务',
-                        icon: 'el-icon-coke-tasks',
-                        children:[]
-                    },
-                    {
-                        index: 'logs',
-                        name: '日志',
-                        icon: 'el-icon-coke-logs',
-                        children: [
-                            {
-                                index: '/logs/taskLog',
-                                name: '任务日志'
-                            },
-                            {
-                                index: '/logs/actionLog',
-                                name: '接口调用日志'
-                            }
-                            /*{
-                                index: '/logs/positionLog',
-                                name: '物料位置转移日志'
-                            }*/
-                        ]
-                    },
-                    {
-                        index: '/robot',
-                        name: '叉车',
-                        icon: 'el-icon-coke-forklift',
-                        children:[]
-                    },
-                    {
-                        index: 'io',
-                        name: '出入库',
-                        icon: 'el-icon-coke-transfer',
-                        children: [
-                            {
-                                index: '/io/preview',
-                                name: '查看仓口任务'
-                            },
-                            {
-                                index: '/io/call',
-                                name: '扫码呼叫叉车'
-                            },
-                            {
-                                index: '/io/inNow',
-                                name: '入库任务操作'
-                            },
-                            {
-                                index: '/io/outNow',
-                                name: '出库任务操作'
-                            },
-                            {
-                                index: '/io/returnNow',
-                                name: '调拨入库任务操作'
-                            }
-                        ]
-                    },
-                    {
-                        index: 'inventory',
-                        name: '盘点',
-                        icon: 'el-icon-coke-check-material',
-                        children: [
-                            {
-                                index: '/inventory/tasks',
-                                name: '盘点任务'
-                            },
-                            {
-                                index: '/inventory/operation',
-                                name: 'UW仓盘点操作'
-                            },
-                            {
-                                index: '/inventory/uwDetails',
-                                name: 'UW仓盘点详情'
-                            },
-                            {
-                                index: '/inventory/ewhDetails',
-                                name: '物料仓盘点详情'
-                            }
-                        ]
-                    },
-                    {
-                        index: 'sample',
-                        name: '抽检',
-                        icon: 'el-icon-coke-spot-check',
-                        children: [
-                            {
-                                index: '/sample/tasks',
-                                name: '抽检任务'
-                            },
-                            {
-                                index: '/sample/operation',
-                                name: '抽检操作'
-                            }
-                        ]
-                    },
-                    {
-                        index: '/build',
-                        name: '建仓',
-                        icon: 'el-icon-coke-build',
-                        children:[]
-                    },
-                    {
-                        index: '/config',
-                        name: '配置',
-                        icon: 'el-icon-coke-config',
-                        children:[]
-                    },
-                    {
-                        index: '/help',
-                        name: '帮助',
-                        icon: 'el-icon-coke-help',
-                        children:[]
-                    }
-                ]
             }
         },
         computed:{
@@ -337,20 +203,12 @@
         },
         mounted(){
             this.setNowRoute();
-            if(this.user.type === 1){
-                this.showData = this.navData;
-            }else{
-                this.showData = this.navData1;
-            }
+            this.changeRoute();
         },
         watch:{
             $route:function(){
                 this.setNowRoute();
-                if(this.user.type === 1){
-                    this.showData = this.navData;
-                }else{
-                    this.showData = this.navData1;
-                }
+                this.changeRoute();
             }
         },
         methods:{
@@ -388,6 +246,15 @@
                     arr.push(path);
                 }
                 this.setRouteName('',arr);
+            },
+            changeRoute:function(){
+                if(this.user.type !== 1 && this.user.type !== 3){
+                    this.navData.splice(8,1);
+                }
+                if(this.user.type !== 3){
+                    this.navData[10].index = '/help/read';
+                    this.navData[10].children = [];
+                }
             }
         }
     }

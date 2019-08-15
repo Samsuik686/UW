@@ -55,20 +55,20 @@
                     <template slot-scope="scope">
                         <el-button
                                 size="small"
-                                :type="scope.row.isOuted === true?'info':'primary'"
-                                :disabled="scope.row.isOuted === true"
+                                :type="scope.row.isOuted === 1?'info':'primary'"
+                                :disabled="scope.row.isOuted !== -1"
                                 @click="outSingular(scope.row.materialId)">异常出库
                         </el-button>
                         <el-button
                                 size="small"
-                                :type="scope.row.isOuted === true?'info':'primary'"
-                                :disabled="scope.row.isOuted === true"
+                                :type="scope.row.isOuted === 0?'info':'primary'"
+                                :disabled="scope.row.isOuted !== -1"
                                 @click="outRegular(scope.row.materialId)">抽检出库
                         </el-button>
                         <el-button
                                 size="small"
-                                :type="scope.row.isOuted === true?'info':'primary'"
-                                :disabled="scope.row.isOuted === true"
+                                :type="scope.row.isOuted === 2?'info':'primary'"
+                                :disabled="scope.row.isOuted !== -1"
                                 @click="outLost(scope.row.materialId)">料盘丢失
                         </el-button>
                     </template>
