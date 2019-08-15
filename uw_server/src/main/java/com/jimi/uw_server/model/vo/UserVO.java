@@ -36,6 +36,8 @@ public class UserVO extends User {
 			this.typeString = "超级管理员";
 		} else if (this.getType() == 2) {
 			this.typeString = "普通管理员";
+		}else if (this.getType() == 3) {
+			this.typeString = "开发人员";
 		}
 	}
 

@@ -69,7 +69,7 @@ public class ManualTaskService {
 					resultString += "[供应商 " + record.getSupplierName() + " 不存在]";
 					return resultString;
 				}
-				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, supplier.getId(), record.getNo());
+				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, record.getNo(), supplier.getId());
 				if (materialType == null) {
 					resultString += "[物料类型 " + record.getNo() + " 不存在]";
 					return resultString;
@@ -78,7 +78,7 @@ public class ManualTaskService {
 				packingListItem.save();
 				if (packingListItem.getId() <= 0) {
 					resultString += "[料号" + record.getNo() + "的出库条目保存失败]";
-					continue;
+					return resultString;
 				}
 				List<MaterialReel> materialReels = record.getMaterialReels();
 				int actualQuantity = 0;
@@ -96,10 +96,11 @@ public class ManualTaskService {
 						}
 						operator = materialReel.getOperator();
 						TaskLog taskLog = new TaskLog().setAuto(false).setMaterialId(materialReel.getMaterialId()).setOperator(materialReel.getOperator()).setQuantity(material.getRemainderQuantity()).setPackingListItemId(packingListItem.getId()).setDestination(task.getDestination()).setTime(new Date());
-						material.setRemainderQuantity(0).setCol(-1).setRow(-1).update();
+						material.setRemainderQuantity(0).setCol(-1).setRow(-1).setIsInBox(false).update();
 						actualQuantity += materialReel.getQuantity();
 						taskLog.save();
 					}
+					task.setState(TaskState.FINISHED);
 				}
 				if (actualQuantity != 0) {
 					if (packingListItem.getQuantity() < actualQuantity) {

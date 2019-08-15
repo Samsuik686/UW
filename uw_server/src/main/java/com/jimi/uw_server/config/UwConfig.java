@@ -22,6 +22,7 @@ import com.jimi.uw_server.agv.thread.TaskPool;
 import com.jimi.uw_server.controller.BuildController;
 import com.jimi.uw_server.controller.DestinationController;
 import com.jimi.uw_server.controller.ExternalWhController;
+import com.jimi.uw_server.controller.FAQController;
 import com.jimi.uw_server.controller.InventoryTaskController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.ManualTaskController;
@@ -88,6 +89,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/task/inventory", InventoryTaskController.class);
 		me.add("/task/sampleTask", SampleTaskController.class);
 		me.add("/manualTask", ManualTaskController.class);
+		me.add("/faq", FAQController.class);
 	}
 
 
@@ -109,8 +111,10 @@ public class UwConfig extends JFinalConfig {
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
 			
-			InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
-			System.out.println("InputHelper is Running now...");
+			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
+				InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
+				System.out.println("InputHelper is Running now...");
+			}
 			System.out.println("Uw Server is Running now...");
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
