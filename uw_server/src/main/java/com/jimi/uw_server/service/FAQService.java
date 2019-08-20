@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.jfinal.aop.Enhancer;
 import com.jfinal.kit.PathKit;
-import com.jimi.uw_server.constant.FAQSQL;
+import com.jimi.uw_server.constant.sql.FAQSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Faq;
 import com.jimi.uw_server.service.base.SelectService;

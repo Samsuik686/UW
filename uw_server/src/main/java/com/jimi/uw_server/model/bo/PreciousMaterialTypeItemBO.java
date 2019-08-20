@@ -2,14 +2,7 @@ package com.jimi.uw_server.model.bo;
 
 import com.jimi.uw_server.util.ExcelHelper.Excel;
 
-
-/**
- * 
- * @author HardyYao
- * @createTime 2018年12月12日  下午2:11:01
- */
-
-public class MaterialTypeItemBO {
+public class PreciousMaterialTypeItemBO {
 
 	@Excel(col = 0, head = "序号")
 	private Integer serialNumber;
@@ -26,6 +19,8 @@ public class MaterialTypeItemBO {
 	@Excel(col = 4, head = "直径")
 	private Integer radius;
 
+	@Excel(col = 5, head = "位号")
+	private String designator;
 
 	public String getNo() {
 		return no;
@@ -76,4 +71,15 @@ public class MaterialTypeItemBO {
 		this.serialNumber = serialNumber;
 	}
 
+
+	
+	public String getDesignator() {
+		return designator;
+	}
+
+
+	
+	public void setDesignator(String designator) {
+		this.designator = designator;
+	}
 }

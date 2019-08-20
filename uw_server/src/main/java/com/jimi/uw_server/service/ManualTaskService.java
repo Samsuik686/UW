@@ -3,19 +3,23 @@ package com.jimi.uw_server.service;
 import java.util.Date;
 import java.util.List;
 
-import com.jimi.uw_server.constant.DestinationSQL;
-import com.jimi.uw_server.constant.MaterialTypeSQL;
-import com.jimi.uw_server.constant.SupplierSQL;
+import com.jfinal.json.Json;
 import com.jimi.uw_server.constant.TaskState;
+import com.jimi.uw_server.constant.sql.DestinationSQL;
+import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
+import com.jimi.uw_server.constant.sql.SupplierSQL;
+import com.jimi.uw_server.constant.sql.UserSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.model.PdaUploadLog;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.TaskLog;
+import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.bo.ManualTaskInfo;
 import com.jimi.uw_server.model.bo.ManualTaskRecord;
 import com.jimi.uw_server.model.bo.MaterialReel;
@@ -50,7 +54,6 @@ public class ManualTaskService {
 
 	public String uploadRecord(ManualTaskInfo info) {
 		String resultString = "导入成功！";
-
 		Task task = Task.dao.findById(info.getTaskId());
 		if (task == null) {
 			resultString = "导入料盘记录表失败，任务不存在！";
@@ -60,25 +63,25 @@ public class ManualTaskService {
 			resultString = "任务并未处于已审核状态，无法人工出库！";
 			return resultString;
 		}
-
+		resultString += "任务[" + task.getFileName() + "]的上传详情如下：\n";
 		List<ManualTaskRecord> records = info.getRecords();
 		if (!records.isEmpty()) {
 			for (ManualTaskRecord record : records) {
 				Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME, record.getSupplierName());
 				if (supplier == null) {
-					resultString += "[供应商 " + record.getSupplierName() + " 不存在]";
-					return resultString;
+					resultString += "[供应商 " + record.getSupplierName() + " 不存在]\n";
+					continue;
 				}
 				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, record.getNo(), supplier.getId());
 				if (materialType == null) {
-					resultString += "[物料类型 " + record.getNo() + " 不存在]";
-					return resultString;
+					resultString += "[物料类型 " + record.getNo() + " 不存在]\n";
+					continue;
 				}
 				PackingListItem packingListItem = new PackingListItem().setTaskId(task.getId()).setQuantity(record.getPlanQuantity()).setMaterialTypeId(materialType.getId()).setFinishTime(new Date());
 				packingListItem.save();
 				if (packingListItem.getId() <= 0) {
-					resultString += "[料号" + record.getNo() + "的出库条目保存失败]";
-					return resultString;
+					resultString += "[料号" + record.getNo() + "的出库条目保存失败]\n";
+					continue;
 				}
 				List<MaterialReel> materialReels = record.getMaterialReels();
 				int actualQuantity = 0;
@@ -87,11 +90,16 @@ public class ManualTaskService {
 					for (MaterialReel materialReel : materialReels) {
 						Material material = Material.dao.findById(materialReel.getMaterialId());
 						if (material == null || !material.getIsInBox()) {
-							resultString += "[料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,料盘不存在或者不在盒内]";
+							resultString += "[料号 ：" +record.getNo() + "， 料盘码：" + materialReel.getMaterialId() + "的出库条目保存失败,料盘不存在或者不在盒内]\n";
 							continue;
 						}
 						if (!material.getRemainderQuantity().equals(materialReel.getQuantity())) {
-							resultString += "[料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,料盘剩余数量与出库数量不符]";
+							resultString += "[料号 ：" +record.getNo() + "， 料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,料盘剩余数量与出库数量不符]\n";
+							continue;
+						}
+						User user = User.dao.findFirst(UserSQL.GET_USER_BY_NAME, materialReel.getOperator());
+						if (user == null) {
+							resultString += "[料号 ：" +record.getNo() + "，料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,该料盘的操作人员不存在或者未启用]\n";
 							continue;
 						}
 						operator = materialReel.getOperator();
@@ -100,7 +108,7 @@ public class ManualTaskService {
 						actualQuantity += materialReel.getQuantity();
 						taskLog.save();
 					}
-					task.setState(TaskState.FINISHED);
+					
 				}
 				if (actualQuantity != 0) {
 					if (packingListItem.getQuantity() < actualQuantity) {
@@ -117,7 +125,10 @@ public class ManualTaskService {
 					}
 				}
 			}
+			task.setState(TaskState.FINISHED).update();
 		}
+		PdaUploadLog pdaUploadLog = new PdaUploadLog();
+		pdaUploadLog.setParameter(Json.getJson().toJson(info)).setResponse(resultString).setTaskId(task.getId()).save();
 		return resultString;
 	}
 	

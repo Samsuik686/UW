@@ -280,7 +280,7 @@ public class InventoryTaskController extends Controller {
 	 * @param pageNo
 	 * @param pageSize
 	 */
-	public void selectAllInventoryTask(String filter, Integer pageNo, Integer pageSize) {
+	public void selectAllInventoryTask(String filter, Integer pageNo, Integer pageSize, String ascBy, String descBy) {
 
 		if (pageNo == null || pageSize == null) {
 			throw new ParameterException("参数不能为空");
@@ -288,7 +288,7 @@ public class InventoryTaskController extends Controller {
 		if (pageNo <= 0 || pageSize <= 0) {
 			throw new ParameterException("页码和页容量必须大于0");
 		}
-		PagePaginate result = inventoryTaskService.selectAllInventoryTask(filter, pageNo, pageSize);
+		PagePaginate result = inventoryTaskService.selectAllInventoryTask(filter, pageNo, pageSize, ascBy, descBy);
 		renderJson(ResultUtil.succeed(result));
 	}
 

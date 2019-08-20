@@ -1,4 +1,4 @@
-package com.jimi.uw_server.constant;
+package com.jimi.uw_server.constant.sql;
 
 public class DestinationSQL {
 

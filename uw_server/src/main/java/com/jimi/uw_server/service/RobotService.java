@@ -16,10 +16,10 @@ import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.BoxState;
-import com.jimi.uw_server.constant.SQL;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.ExternalWhLog;
@@ -47,7 +47,7 @@ import com.jimi.uw_server.service.base.SelectService;
  */
 public class RobotService extends SelectService {
 
-	private static TaskService taskService = Enhancer.enhance(TaskService.class);
+	private static IOTaskService taskService = Enhancer.enhance(IOTaskService.class);
 
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ? AND supplier = ?)";
 

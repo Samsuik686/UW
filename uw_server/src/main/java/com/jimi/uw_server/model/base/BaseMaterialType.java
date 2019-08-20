@@ -72,4 +72,22 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getInt("radius");
 	}
 
+	public M setType(java.lang.Integer type) {
+		set("type", type);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getType() {
+		return getInt("type");
+	}
+
+	public M setDesignator(java.lang.String designator) {
+		set("designator", designator);
+		return (M)this;
+	}
+	
+	public java.lang.String getDesignator() {
+		return getStr("designator");
+	}
+
 }

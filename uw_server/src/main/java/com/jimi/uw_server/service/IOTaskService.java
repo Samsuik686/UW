@@ -26,12 +26,12 @@ import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.constant.BoxState;
-import com.jimi.uw_server.constant.InventoryTaskSQL;
-import com.jimi.uw_server.constant.SQL;
-import com.jimi.uw_server.constant.SampleTaskSQL;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
+import com.jimi.uw_server.constant.sql.SQL;
+import com.jimi.uw_server.constant.sql.SampleTaskSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.ExternalWhLog;
@@ -66,7 +66,7 @@ import com.jimi.uw_server.util.MaterialHelper;
  * @author HardyYao
  * @createTime 2018年6月8日
  */
-public class TaskService {
+public class IOTaskService {
 
 	private static SelectService selectService = Aop.get(SelectService.class);
 

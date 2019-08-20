@@ -112,14 +112,14 @@ public class ExternalWhController extends Controller {
 
 
 	@Log("查询物料仓记录，页码为{pageNo}， 页容量为{pageSize}，物料仓ID为{whId}，供应商ID为{supplierId}，料号为{no}")
-	public void selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no) {
+	public void selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy) {
 		if (pageNo == null || pageSize == null) {
 			throw new ParameterException("参数不能为空");
 		}
 		if (pageNo <= 0 || pageSize <= 0) {
 			throw new ParameterException("页码和页容量必须大于0");
 		}
-		PagePaginate result = externalWhTaskService.selectExternalWhInfo(pageNo, pageSize, whId, supplierId, no);
+		PagePaginate result = externalWhTaskService.selectExternalWhInfo(pageNo, pageSize, whId, supplierId, no, ascBy, descBy);
 		renderJson(ResultUtil.succeed(result));
 	}
 

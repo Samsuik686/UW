@@ -16,6 +16,7 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.BoxState;
+import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.BoxType;
 import com.jimi.uw_server.model.Material;
@@ -24,7 +25,8 @@ import com.jimi.uw_server.model.MaterialReturnRecord;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.bo.MaterialTypeItemBO;
+import com.jimi.uw_server.model.bo.RegularMaterialTypeItemBO;
+import com.jimi.uw_server.model.bo.PreciousMaterialTypeItemBO;
 import com.jimi.uw_server.model.bo.RecordItem;
 import com.jimi.uw_server.model.vo.BoxTypeVO;
 import com.jimi.uw_server.model.vo.MaterialBoxVO;
@@ -84,7 +86,6 @@ public class MaterialService extends SelectService {
 
 	private static final String GET_ENABLED_MATERIAL_BOX_BY_TYPE_SQL = "SELECT * FROM material_box WHERE type = ? AND enabled = 1";
 
-	private static final String GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
 	private static final String JUDGE_MATERIAL_BOX_IS_EMPTY_SQL = "SELECT * FROM material_box WHERE enabled = 1";
 
@@ -517,9 +518,8 @@ public class MaterialService extends SelectService {
 
 
 	// 导入物料类型表
-	public String importFile(String fileName, String fullFileName, Integer supplierId) throws Exception {
+	public String importFile(String fileName, File file, Integer supplierId) throws Exception {
 		String resultString = "导入成功！";
-		File file = new File(fullFileName);
 		// 如果文件格式不对，则提示检查文件格式
 		if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
 			// 清空upload目录下的文件
@@ -528,7 +528,7 @@ public class MaterialService extends SelectService {
 			return resultString;
 		}
 		ExcelHelper fileReader = ExcelHelper.from(file);
-		List<MaterialTypeItemBO> items = fileReader.unfill(MaterialTypeItemBO.class, 0);
+		List<RegularMaterialTypeItemBO> items = fileReader.unfill(RegularMaterialTypeItemBO.class, 0);
 		// 如果物料类型表头不对或者表格中没有物料信息记录
 		if (items == null || items.size() == 0) {
 			deleteTempFile(file);
@@ -544,7 +544,7 @@ public class MaterialService extends SelectService {
 
 				// 从电子表格第2行开始有物料记录
 				int i = 2;
-				for (MaterialTypeItemBO item : items) {
+				for (RegularMaterialTypeItemBO item : items) {
 					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 
 						// 判断各单元格数据类型是否正确以及是否存在多余的空格
@@ -562,7 +562,7 @@ public class MaterialService extends SelectService {
 						}
 
 						// 根据料号和供应商找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo(), supplierId);
+						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, item.getNo(), supplierId, 0);
 						/*
 						 * 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
 						 */
@@ -596,6 +596,92 @@ public class MaterialService extends SelectService {
 		}
 		return resultString;
 	}
+	
+	
+	// 导入物料类型表
+		public String importPreicousMaterialTypeFile(String fileName, File file, Integer supplierId) throws Exception {
+			String resultString = "导入成功！";
+			// 如果文件格式不对，则提示检查文件格式
+			if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
+				// 清空upload目录下的文件
+				deleteTempFile(file);
+				resultString = "导入物料类型表失败，请检查文件格式是否正确！";
+				return resultString;
+			}
+			ExcelHelper fileReader = ExcelHelper.from(file);
+			List<PreciousMaterialTypeItemBO> items = fileReader.unfill(PreciousMaterialTypeItemBO.class, 0);
+			// 如果物料类型表头不对或者表格中没有物料信息记录
+			if (items == null || items.size() == 0) {
+				deleteTempFile(file);
+				resultString = "导入物料类型表失败，套料单表头错误或者表格中没有任何有效的物料信息记录！";
+				return resultString;
+			} else {
+				synchronized (IMPORT_FILE_LOCK) {
+					// 根据供应商名获取供应商id
+					Supplier s = Supplier.dao.findById(supplierId);
+					if (s == null) {
+						throw new OperationException("供应商不存在！");
+					}
+
+					// 从电子表格第2行开始有物料记录
+					int i = 2;
+					for (PreciousMaterialTypeItemBO item : items) {
+						if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
+
+							// 判断各单元格数据类型是否正确以及是否存在多余的空格
+							if (item.getNo() == null || item.getSpecification() == null || item.getThickness() == null || item.getRadius() == null || item.getNo().replaceAll(" ", "").equals("") || item.getSpecification().replaceAll(" ", "").equals("") || item.getThickness().toString().replaceAll(" ", "").equals("") || item.getRadius().toString().replaceAll(" ", "").equals("")) {
+								deleteTempFile(file);
+								resultString = "导入物料类型表失败，请检查单表格第" + i + "行的料号/规格/厚度/半径列是否填写了准确信息！";
+								return resultString;
+							}
+
+							// 判断厚度和半径是否为正整数
+							if (item.getThickness() <= 0 || item.getRadius() <= 0) {
+								deleteTempFile(file);
+								resultString = "导入物料类型表失败，表格第" + i + "行的厚度/半径列不是正整数！";
+								return resultString;
+							}
+
+							if (item.getDesignator() == null || item.getDesignator().trim().equals("")) {
+								deleteTempFile(file);
+								resultString = "导入物料类型表失败，表格第" + i + "行的位号为空！";
+								return resultString;
+							}
+							// 根据料号和供应商找到对应的物料类型
+							MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, item.getNo(), supplierId, 1);
+							/*
+							 * 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
+							 */
+							if (mType != null) {
+								i++;
+								continue;
+							} else {
+								// 若不存在异常数据，则新增一条物料类型表记录
+								MaterialType materialType = new MaterialType();
+								materialType.setNo(item.getNo());
+								materialType.setSpecification(item.getSpecification());
+								materialType.setThickness(item.getThickness());
+								materialType.setRadius(item.getRadius());
+								materialType.setEnabled(true);
+								materialType.setSupplier(supplierId);
+								materialType.save();
+							}
+
+							i++;
+						} else if (i == 2) { // 若第二行就没有序号，则说明表格一条物料记录也没有
+							deleteTempFile(file);
+							resultString = "导入物料类型表失败，表格没有任何有效的物料信息记录！";
+							return resultString;
+						} else {
+							break;
+						}
+					}
+
+					deleteTempFile(file);
+				}
+			}
+			return resultString;
+		}
 
 
 	public void deleteTempFile(File file) {

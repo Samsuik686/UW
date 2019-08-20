@@ -248,8 +248,7 @@ public class MaterialController extends Controller {
 	@Log("导入物料类型表，导入的物料对应的供应商为：{supplierId}")
 	public void importFile(UploadFile file, Integer supplierId) throws Exception {
 		String fileName = file.getFileName();
-		String fullFileName = file.getUploadPath() + File.separator + file.getFileName();
-		String resultString = materialService.importFile(fileName, fullFileName, supplierId);
+		String resultString = materialService.importFile(fileName, file.getFile(), supplierId);
 		if (resultString.equals("导入成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

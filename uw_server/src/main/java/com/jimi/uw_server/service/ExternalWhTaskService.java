@@ -307,7 +307,7 @@ public class ExternalWhTaskService {
 	}
 
 
-	public PagePaginate selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no) {
+	public PagePaginate selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy ) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
 		List<ExternalWhInfoVO> externalWhInfoVOs = new ArrayList<>();
@@ -334,7 +334,17 @@ public class ExternalWhTaskService {
 				sqlPara.addPara("%" + no + "%");
 			}
 		}
-		sql.append(" ORDER BY a.wh_id,a.no ASC");
+		if ((ascBy == null || ascBy.equals("")) && (descBy == null || descBy.equals(""))) {
+			sql.append(" ORDER BY a.wh_id,a.no ASC");
+		}else {
+			if (ascBy != null && !ascBy.equals("")) {
+				sql.append(" ORDER BY " + ascBy.trim() + " ASC");
+			}
+			if (descBy != null && !descBy.equals("")) {
+				sql.append(" ORDER BY " + descBy.trim() + " DESC");
+			}
+		}
+		
 		sqlPara.setSql(sql.toString());
 		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);
 		for (Record record : page.getList()) {

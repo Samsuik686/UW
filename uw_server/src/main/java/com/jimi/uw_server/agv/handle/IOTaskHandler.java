@@ -17,7 +17,7 @@ import com.jimi.uw_server.model.GoodsLocation;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.service.MaterialService;
-import com.jimi.uw_server.service.TaskService;
+import com.jimi.uw_server.service.IOTaskService;
 
 
 /**
@@ -29,7 +29,7 @@ import com.jimi.uw_server.service.TaskService;
 
 public class IOTaskHandler extends BaseTaskHandler {
 
-	private static TaskService taskService = Enhancer.enhance(TaskService.class);
+	private static IOTaskService taskService = Enhancer.enhance(IOTaskService.class);
 
 	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
 

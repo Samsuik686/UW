@@ -32,6 +32,7 @@ public class MappingKit {
 		arp.addMapping("material_type", "id", MaterialType.class);
 		arp.addMapping("package_log", "id", PackageLog.class);
 		arp.addMapping("packing_list_item", "id", PackingListItem.class);
+		arp.addMapping("pda_upload_log", "id", PdaUploadLog.class);
 		arp.addMapping("position_log", "id", PositionLog.class);
 		arp.addMapping("sample_out_record", "id", SampleOutRecord.class);
 		arp.addMapping("sample_task_item", "id", SampleTaskItem.class);

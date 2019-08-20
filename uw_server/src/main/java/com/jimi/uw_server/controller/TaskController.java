@@ -18,7 +18,7 @@ import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
-import com.jimi.uw_server.service.TaskService;
+import com.jimi.uw_server.service.IOTaskService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
@@ -30,7 +30,7 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class TaskController extends Controller {
 
-	private static TaskService taskService = Enhancer.enhance(TaskService.class);
+	private static IOTaskService taskService = Enhancer.enhance(IOTaskService.class);
 
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
