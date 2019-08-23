@@ -7,7 +7,7 @@ import com.jfinal.core.Controller;
 import com.jfinal.json.Json;
 import com.jfinal.kit.HttpKit;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.model.bo.ManualTaskInfo; 
+import com.jimi.uw_server.model.bo.ManualTaskInfo;
 import com.jimi.uw_server.service.ManualTaskService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -35,25 +35,24 @@ public class ManualTaskController extends Controller {
 			info = Json.getJson().parse(json.toString(), ManualTaskInfo.class);
 		} catch (NullPointerException e) {
 			throw new OperationException("参数不能为空");
-		} catch ( Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new OperationException("参数格式错误");
 		}
-		
-		
+
 		if (info == null || info.getTaskId() == null) {
 			throw new OperationException("参数不能为空");
 		}
 		String result = manualTaskService.uploadRecord(info);
-		
+
 		if (result.contains("导入成功")) {
 			renderJson(ResultUtil.succeed(result));
 		} else {
 			throw new OperationException(result);
 		}
 	}
-	
-	
+
+
 	public void ping() {
 		renderJson(ResultUtil.succeed());
 	}

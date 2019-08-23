@@ -90,7 +90,8 @@ public class InputMaterialHelper {
 		MyInputHelper.getInstance().start(port);
 
 	}
-	
+
+
 	private static PackageLog createLog(PackagePair packagePair) {
 		PackageLog log = new PackageLog();
 		log.setTime(packagePair.getRequestTime());

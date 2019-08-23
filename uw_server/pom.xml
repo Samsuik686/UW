@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>3.4.0</version>
+	<version>3.4.2</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -122,7 +122,6 @@
 			<artifactId>fastjson</artifactId>
 			<version>1.2.47</version>
 		</dependency>
-
 
 		<!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
 		<dependency>

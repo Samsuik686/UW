@@ -4,7 +4,7 @@ import java.util.List;
 
 
 public class ManualTaskRecord {
-	
+
 	private String supplierName;
 
 	private String no;
@@ -53,5 +53,4 @@ public class ManualTaskRecord {
 		this.materialReels = materialReels;
 	}
 
-	
 }

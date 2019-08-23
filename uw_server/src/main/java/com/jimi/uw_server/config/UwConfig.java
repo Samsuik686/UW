@@ -110,7 +110,7 @@ public class UwConfig extends JFinalConfig {
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
-			
+
 			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
 				InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
 				System.out.println("InputHelper is Running now...");

@@ -986,7 +986,7 @@ public class IOTaskService {
 						InputMaterialRedisDAO.setScanStatus(windowId, positionNo);
 					} else {
 						taskLog.delete();
-						if (material.getIsRepeated() != null && material.getIsRepeated() ) {
+						if (material.getIsRepeated() != null && material.getIsRepeated()) {
 							material.setRemainderQuantity(0);
 							material.setCol(-1);
 							material.setRow(-1);

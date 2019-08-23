@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
+import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Faq;
 import com.jimi.uw_server.service.FAQService;
@@ -13,7 +14,9 @@ import com.jimi.uw_server.util.ResultUtil;
 public class FAQController extends Controller {
 
 	FAQService faqService = FAQService.me;
-	
+
+
+	@Log("上传FAQ图片")
 	public void uploadPic(UploadFile file) {
 		file = getFile();
 		if (file == null) {
@@ -26,18 +29,20 @@ public class FAQController extends Controller {
 		String result = faqService.uploadPic(file.getFile(), file.getFileName());
 		renderJson(ResultUtil.succeed(result));
 	}
-	
-	
+
+
+	@Log("上传FAQ，标题{title}，内容{content}， 页面{resultHtml}")
 	public void uploadFAQ(String title, String content, String resultHtml) {
 		if (title == null || content == null) {
 			throw new ParameterException("参数不能为空！");
 		}
 		faqService.uploadFAQ(title, content, resultHtml);
 		renderJson(ResultUtil.succeed());
-		
+
 	}
-	
-	
+
+
+	@Log("更新FAQ，ID{id}，标题{title}，内容{content}， 页面{resultHtml}")
 	public void updateFAQ(Integer id, String title, String content, String resultHtml) {
 		if (id == null || title == null || content == null) {
 			throw new ParameterException("参数不能为空！");
@@ -45,14 +50,15 @@ public class FAQController extends Controller {
 		faqService.updateFAQ(id, title, content, resultHtml);
 		renderJson(ResultUtil.succeed());
 	}
-	
-	
+
+
 	public void selectFAQ(String keyword) {
 		List<Faq> result = faqService.selectFAQ(keyword);
 		renderJson(ResultUtil.succeed(result));
 	}
-	
-	
+
+
+	@Log("删除FAQ，ID{id}")
 	public void deleteFAQ(Integer id) {
 		if (id == null) {
 			throw new ParameterException("参数不能为空！");

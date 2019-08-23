@@ -182,6 +182,7 @@ public class SelectService {
 			try {
 				return Db.paginate(1, PropKit.use("properties.ini").getInt("defaultPageSize"), resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
+				a.printStackTrace();
 				throw new OperationException("请勿输入非法字符，如“!”或“$”");
 			}
 

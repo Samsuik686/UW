@@ -126,9 +126,9 @@ public class InventoryTaskService {
 	private static final String UPDATE_MATERIAL_RETURN_RECORD_UNENABLED = "UPDATE material_return_record SET enabled = 0 WHERE time <= ? AND enabled = 1 AND material_type_id IN (SELECT id from material_type WHERE material_type.supplier = ? AND material_type.enabled = 1)";
 
 	private static final String GET_EXPORT_EWH_INVENTORY_INFO = "SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, destination.`name` AS `wh_name`, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.ewh_checked_operatior AS check_operatior, task.ewh_checked_time AS check_time, SUM( external_inventory_log.before_num ) AS before_num, SUM( external_inventory_log.actural_num ) AS actural_num, SUM( external_inventory_log.different_num ) AS different_num, SUM( external_inventory_log.material_return_num ) AS material_return_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier INNER JOIN destination ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier AND destination.id = external_inventory_log.wh_id WHERE external_inventory_log.task_id = ? GROUP BY destination.id, external_inventory_log.material_type_id ORDER BY destination.id, material_type.`no` DESC ";
-	
+
 	private static final String GET_EXPORT_EWH_INVENTORY_INFO_BY_NO = "SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, destination.`name` AS `wh_name`, external_inventory_log.task_id AS task_id, task.file_name AS task_name, task.start_time, task.end_time, task.state, task.ewh_checked_operatior AS check_operatior, task.ewh_checked_time AS check_time, SUM( external_inventory_log.before_num ) AS before_num, SUM( external_inventory_log.actural_num ) AS actural_num, SUM( external_inventory_log.different_num ) AS different_num, SUM( external_inventory_log.material_return_num ) as material_return_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN task INNER JOIN supplier INNER JOIN destination ON external_inventory_log.task_id = task.id AND external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier AND destination.id = external_inventory_log.wh_id WHERE external_inventory_log.task_id = ? AND material_type.`no` like ? GROUP BY destination.id, external_inventory_log.material_type_id ORDER BY destination.id, material_type.`no` DESC";
-	
+
 	private static ExternalWhTaskService externalWhTaskService = ExternalWhTaskService.me;
 
 	private static InvTaskHandler invTaskHandler = InvTaskHandler.getInstance();
@@ -856,7 +856,7 @@ public class InventoryTaskService {
 		List<InventoryTaskVO> taskVOs = new ArrayList<>();
 		for (Record record : page.getList()) {
 
-			InventoryTaskVO taskVO = new InventoryTaskVO();		
+			InventoryTaskVO taskVO = new InventoryTaskVO();
 			taskVO.setTaskId(record.getInt("Task_Id"));
 			taskVO.setType(record.getInt("Task_Type"));
 			taskVO.setTypeString(record.getInt("Task_Type"));
@@ -888,7 +888,6 @@ public class InventoryTaskService {
 	}
 
 
-	
 	public void exportEwhInventoryTask(Integer taskId, String no, String fileName, OutputStream output) throws IOException {
 		SqlPara sqlPara = new SqlPara();
 		Task task = Task.dao.findById(taskId);
