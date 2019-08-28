@@ -249,8 +249,9 @@
             },
             changeRoute:function(){
                 if(this.user.type !== 3){
-                    this.navData[10].index = '/help/read';
-                    this.navData[10].children = [];
+                    let index = this.navData.length - 1;
+                    this.navData[index].index = '/help/read';
+                    this.navData[index].children = [];
                 }
                 if(this.user.type !== 1 && this.user.type !== 3){
                     this.navData.splice(8,1);

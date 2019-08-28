@@ -37,6 +37,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column label="启动/暂停" width="60">
@@ -53,19 +54,23 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     min-width="160"
                     label="任务名"
                     prop="taskName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="状态"
                     prop="stateString">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="供应商"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="创建时间"
                     min-width="160"
                     prop="checkedTime">
@@ -157,7 +162,9 @@
                             picker.$emit('pick', [start, end]);
                         }
                     }]
-                }
+                },
+                ascBy:'',
+                descBy:''
             }
         },
         created(){
@@ -193,6 +200,8 @@
                         data:{
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter
                         }
                     };
@@ -316,6 +325,38 @@
             handleChangeWindow:function(row){
                 this.editData = row;
                 this.isChange = true;
+            },
+            sortChange:function(data){
+                let prop = data.prop;
+                switch (data.prop) {
+                    case "taskName":
+                        prop = "task.file_name";
+                        break;
+                    case "stateString":
+                        prop = "task.state";
+                        break;
+                    case "supplierName":
+                        prop = "task.supplier";
+                        break;
+                    case "checkedTime":
+                        prop = "task.create_time";
+                        break;
+                    default:
+                        prop = data.prop;
+                        break;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = '';
+                    this.ascBy = '';
+                }
+                this.pageNo = 1;
+                this.select();
             }
         }
     }

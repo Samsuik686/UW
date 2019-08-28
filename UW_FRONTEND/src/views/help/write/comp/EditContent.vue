@@ -71,13 +71,13 @@
                 this.$emit("update:isEditing",false);
             },
             submit:function(){
-                this.content = this.$refs.myQuillEditor.changeContent;
-                this.resultHtml = this.$refs.myQuillEditor.changeHtml;
+                this.content = this.$refs.myQuillEditor.changeContent.trim();
+                this.resultHtml = this.$refs.myQuillEditor.changeHtml.trim();
                 if(this.title === ''){
                     this.$alertWarning('标题不能为空');
                     return;
                 }
-                if(this.content === ''){
+                if(this.content === '' || this.content === null){
                     this.$alertWarning('内容不能为空');
                     return;
                 }
@@ -89,8 +89,8 @@
                         data:{
                             id:this.editData.id,
                             title:this.title,
-                            content:this.content,
-                            resultHtml:this.resultHtml
+                            content:this.$refs.myQuillEditor.changeContent,
+                            resultHtml:this.$refs.myQuillEditor.changeHtml
                         }
                     };
                     axiosPost(options).then(res =>{

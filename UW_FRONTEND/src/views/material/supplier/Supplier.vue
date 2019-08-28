@@ -11,6 +11,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column
@@ -18,10 +19,12 @@
                     prop="showId">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="供应商号"
                     prop="id">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="供应商名"
                     prop="name">
             </el-table-column>
@@ -78,7 +81,9 @@
                 filter:'',
                 isAdding:false,
                 isEditing:false,
-                editData:{}
+                editData:{},
+                ascBy:'',
+                descBy:''
             }
         },
         mounted(){
@@ -110,6 +115,8 @@
                         data:{
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter
                         }
                     };
@@ -186,6 +193,21 @@
                 this.isEditing = true;
             },
             handlePageSize:function(){
+                this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = data.prop;
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = '';
+                    this.ascBy = '';
+                }
                 this.pageNo = 1;
                 this.select();
             }

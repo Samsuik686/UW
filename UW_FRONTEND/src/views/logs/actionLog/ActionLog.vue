@@ -27,6 +27,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column
@@ -35,27 +36,33 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="IP地址"
                     prop="ip"
             >
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="用户"
                     prop="uid">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="操作"
                     prop="action"
                     min-width="250">
             </el-table-column>
             <el-table-column
-                label="操作结果"
+                    sortable = "custom"
+                    prop="resultCode"
+                    label="操作结果"
             >
                 <template slot-scope="scope">
                     <high-light :row="scope.row"></high-light>
                 </template>
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="时间"
                     min-width="160"
                     prop="time">
@@ -127,8 +134,10 @@
                             start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
                             picker.$emit('pick', [start, end]);
                         }
-                    }]
-                }
+                    }],
+                },
+                ascBy:'',
+                descBy:'time'
             }
         },
         mounted(){
@@ -153,7 +162,8 @@
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
                             filter:this.filter,
-                            descBy: 'time'
+                            ascBy:this.ascBy,
+                            descBy:this.descBy
                         }
                     };
                     axiosPost(options).then(res => {
@@ -212,6 +222,26 @@
                 this.select();
             },
             handlePageSize:function(){
+                this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = data.prop;
+                if (data.prop === "resultCode") {
+                    prop = "result_code";
+                } else {
+                    prop = data.prop;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = 'time';
+                    this.ascBy = '';
+                }
                 this.pageNo = 1;
                 this.select();
             }

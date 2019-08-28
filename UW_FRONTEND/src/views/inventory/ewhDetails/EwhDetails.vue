@@ -359,8 +359,10 @@
                     confirmButtonText: '完成任务',
                     cancelButtonText: '取消',
                     type: 'warning'
-                }).then(() => {
-                    this.finishTask();
+                }).then((action) => {
+                    if (action === "confirm") {
+                        this.finishTask();
+                    }
                 }).catch(() => {
                     this.$message({
                         type: 'info',

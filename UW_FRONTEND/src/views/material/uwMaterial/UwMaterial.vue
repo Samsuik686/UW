@@ -38,6 +38,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 @selection-change="handleSelectionChange"
                 :data="tableData"
                 style="width:100%">
@@ -56,33 +57,41 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="客户专用码"
+                    min-width="120"
                     prop="supplier">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="物料类型号"
-                    min-width="90"
+                    min-width="120"
                     prop="id">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     min-width="140"
                     label="料号"
                     prop="no">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     min-width="140"
                     label="供应商"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="规格"
                     prop="specification">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="厚度"
                     prop="thickness">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="直径"
                     prop="radius">
             </el-table-column>
@@ -91,7 +100,7 @@
                     prop="quantity">
             </el-table-column>
             <el-table-column label="操作" min-width="100">
-               <template slot-scope="scope">
+                <template slot-scope="scope">
                     <span style="margin-right:10px;cursor:pointer" title="收发记录" @click="showDetails(scope.row)">
                         <i class="el-icon-coke-card"></i>
                     </span>
@@ -167,7 +176,9 @@
                 editData:{},
                 selection:[],
                 checked:false,
-                day:90
+                day:90,
+                ascBy:'',
+                descBy:''
             }
         },
         watch:{
@@ -211,6 +222,8 @@
                         data:{
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter
                         }
                     };
@@ -245,14 +258,14 @@
                 let filter = '';
                 for(let i in copyUwMaterialInfo){
                     if(isFirst === true){
-                        if(i === "id"){
+                        if(i === "id" || i === 'supplier'){
                             filter = filter + (i + "=" +  copyUwMaterialInfo[i]);
                         }else{
                             filter = filter + (i + "like" +  copyUwMaterialInfo[i]);
                         }
                         isFirst = false;
                     }else{
-                        if(i === "id"){
+                        if(i === "id" || i === 'supplier'){
                             filter = filter + ("#&#" + i + "=" +  copyUwMaterialInfo[i]);
                         }else{
                             filter = filter + ("#&#" + i + "like" +  copyUwMaterialInfo[i]);
@@ -428,6 +441,26 @@
                 }
             },
             handlePageSize:function(){
+                this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = '';
+                if (data.prop === "supplierName") {
+                    prop = "supplier";
+                } else {
+                    prop = data.prop;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = '';
+                    this.ascBy = '';
+                }
                 this.pageNo = 1;
                 this.select();
             }

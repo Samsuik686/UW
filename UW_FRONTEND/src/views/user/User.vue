@@ -24,6 +24,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column
@@ -32,18 +33,22 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="用户名"
                     prop="uid">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="用户描述"
                     prop="name">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="用户类型"
                     prop="typeString">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="是否启用"
                     prop="enabledString">
             </el-table-column>
@@ -100,7 +105,9 @@
                 isAdding:false,
                 isEditing:false,
                 editData:{},
-                userTypeList:[]
+                userTypeList:[],
+                ascBy:'',
+                descBy:''
             }
         },
         watch:{
@@ -142,6 +149,8 @@
                         data:{
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter
                         }
                     };
@@ -198,6 +207,32 @@
                 this.isEditing = true;
             },
             handlePageSize:function(){
+                this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = data.prop;
+                switch (data.prop) {
+                    case "typeString":
+                        prop = "type";
+                        break;
+                    case "enabledString":
+                        prop = "enabled";
+                        break;
+                    default:
+                        prop = data.prop;
+                        break;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = '';
+                    this.ascBy = '';
+                }
                 this.pageNo = 1;
                 this.select();
             }

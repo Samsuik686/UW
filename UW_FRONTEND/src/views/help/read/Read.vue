@@ -63,6 +63,7 @@
                         if(res.data.result === 200){
                             this.titles = res.data.data;
                             if(this.titles.length > 0){
+                                this.activeIndex = 0;
                                 this.result = this.htmlEscape(this.titles[0].result_html);
                             }else{
                                 this.result = '';

@@ -48,6 +48,7 @@
             </el-form-item>
         </el-form>
         <el-table
+                @sort-change="sortChange"
                 :data="tableData"
                 style="width:100%">
             <el-table-column
@@ -56,35 +57,42 @@
                     width="70">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="料盒号"
                     prop="id">
             </el-table-column>
             <el-table-column
-                    min-width="120"
+                    sortable = "custom"
                     label="供应商"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="类型"
                     prop="typeName">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="所在区域"
                     prop="area">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="行号"
                     prop="row">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="列号"
                     prop="col">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="高度"
                     prop="height">
             </el-table-column>
             <el-table-column
+                    sortable = "custom"
                     label="是否在架"
                     prop="isOnShelfString">
             </el-table-column>
@@ -154,7 +162,9 @@
                 filter:'',
                 isAdding:false,
                 isEditing:false,
-                editData:{}
+                editData:{},
+                ascBy:'',
+                descBy:''
             }
         },
         created(){
@@ -185,6 +195,8 @@
                         data:{
                             pageNo:this.pageNo,
                             pageSize: this.pageSize,
+                            ascBy:this.ascBy,
+                            descBy:this.descBy,
                             filter:this.filter
                         }
                     };
@@ -311,6 +323,38 @@
                 })
             },
             handlePageSize:function(){
+                this.pageNo = 1;
+                this.select();
+            },
+            sortChange:function(data){
+                let prop = '';
+                switch (data.prop) {
+                    case "id":
+                        prop = "material_box.id";
+                        break;
+                    case "supplierName":
+                        prop = "supplier";
+                        break;
+                    case "typeName":
+                        prop = "type";
+                        break;
+                    case "isOnShelfString":
+                        prop = "is_on_shelf";
+                        break;
+                    default:
+                        prop = data.prop;
+                        break;
+                }
+                if(data.order === "ascending"){
+                    this.ascBy = prop;
+                    this.descBy = '';
+                }else if(data.order === "descending"){
+                    this.descBy = prop;
+                    this.ascBy = '';
+                }else{
+                    this.descBy = '';
+                    this.ascBy = '';
+                }
                 this.pageNo = 1;
                 this.select();
             }
