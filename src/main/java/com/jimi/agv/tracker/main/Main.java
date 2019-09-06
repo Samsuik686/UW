@@ -69,7 +69,7 @@ public class Main {
 
 	private static void showMe() {
 		System.out.println("==================================");
-		System.out.println("欢迎使用 - AGV Tracker 1.5.0 - 轨迹采集器 by Darhao");
+		System.out.println("欢迎使用 - AGV Tracker 1.7.0 - 轨迹采集器 by Darhao");
 		System.out.println("1.1.0更新日志：1.报告输出仓口坐标 2.去掉\"秒\"");
 		System.out.println("1.2.0更新日志：1.现在可以输出 [轨迹报告] 了");
 		System.out.println("1.3.0更新日志：1.增加缓冲模式 2.报告支持输出到数据库了哦");
@@ -77,6 +77,7 @@ public class Main {
 		System.out.println("  >> 1.4.1修复日志：1.修复了正在充电且电量大于60的叉车无法调度的问题");
 		System.out.println("1.5.0更新日志：1.支持多任务导入，并按优先级顺序安排指令发送");
 		System.out.println("1.6.0更新日志：1.增加时间节点报告字段 2.增加执行叉车字段");
+		System.out.println("1.7.0更新日志：1.增加绝对高度Z的配置");
 		System.out.println("==================================");
 	}
 
