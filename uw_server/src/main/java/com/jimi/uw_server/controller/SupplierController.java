@@ -1,6 +1,6 @@
 package com.jimi.uw_server.controller;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
@@ -16,7 +16,7 @@ import com.jimi.uw_server.util.ResultUtil;
 
 public class SupplierController extends Controller {
 
-	private static SupplierService supplierService = Enhancer.enhance(SupplierService.class);
+	private static SupplierService supplierService =  Aop.get(SupplierService.class);
 
 
 	// 添加供应商

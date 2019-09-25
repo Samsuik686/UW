@@ -13,7 +13,8 @@ import com.jimi.uw_server.util.ResultUtil;
 public class FAQController extends Controller {
 
 	FAQService faqService = FAQService.me;
-	
+
+
 	public void uploadPic(UploadFile file) {
 		file = getFile();
 		if (file == null) {
@@ -26,18 +27,18 @@ public class FAQController extends Controller {
 		String result = faqService.uploadPic(file.getFile(), file.getFileName());
 		renderJson(ResultUtil.succeed(result));
 	}
-	
-	
+
+
 	public void uploadFAQ(String title, String content, String resultHtml) {
 		if (title == null || content == null) {
 			throw new ParameterException("参数不能为空！");
 		}
 		faqService.uploadFAQ(title, content, resultHtml);
 		renderJson(ResultUtil.succeed());
-		
+
 	}
-	
-	
+
+
 	public void updateFAQ(Integer id, String title, String content, String resultHtml) {
 		if (id == null || title == null || content == null) {
 			throw new ParameterException("参数不能为空！");
@@ -45,14 +46,14 @@ public class FAQController extends Controller {
 		faqService.updateFAQ(id, title, content, resultHtml);
 		renderJson(ResultUtil.succeed());
 	}
-	
-	
+
+
 	public void selectFAQ(String keyword) {
 		List<Faq> result = faqService.selectFAQ(keyword);
 		renderJson(ResultUtil.succeed(result));
 	}
-	
-	
+
+
 	public void deleteFAQ(Integer id) {
 		if (id == null) {
 			throw new ParameterException("参数不能为空！");

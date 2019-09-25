@@ -3,7 +3,7 @@ package com.jimi.uw_server.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
@@ -24,7 +24,7 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 
 public class SupplierService extends SelectService {
 
-	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+	private static SelectService selectService = Aop.get(SelectService.class);
 
 	private static final String GET_ENABLED_SUPPLIER_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 

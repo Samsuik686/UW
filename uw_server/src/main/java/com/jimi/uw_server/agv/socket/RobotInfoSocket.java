@@ -1,5 +1,6 @@
 package com.jimi.uw_server.agv.socket;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,10 @@ public class RobotInfoSocket {
 
 	private static String uri;
 
+	private static boolean flag = true;
+
+	private static Session session;
+
 
 	public static void init(String uri) {
 		try {
@@ -47,6 +52,7 @@ public class RobotInfoSocket {
 
 	@OnOpen
 	public void onOpen(Session userSession) {
+		session = userSession;
 		System.out.println("RobotInfoSocket is Running Now...");
 	}
 
@@ -55,7 +61,9 @@ public class RobotInfoSocket {
 	public void onClose(Session userSession, CloseReason reason) {
 		ErrorLogWritter.save("RobotInfoSocket was Stopped because :" + reason.getCloseCode() + " | " + reason.getCloseCode().getCode()); // CLOSED_ABNORMALLY
 		RobotInfoRedisDAO.delete();
-		connect(uri);
+		if (flag) {
+			connect(uri);
+		}
 	}
 
 
@@ -103,6 +111,19 @@ public class RobotInfoSocket {
 				ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 				e.printStackTrace();
 			}
+		}
+	}
+
+
+	public static void stop() {
+		flag = false;
+		try {
+			if (session != null) {
+				session.close();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

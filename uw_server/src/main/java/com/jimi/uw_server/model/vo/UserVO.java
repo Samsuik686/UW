@@ -13,37 +13,16 @@ public class UserVO extends User {
 
 	private String enabledString;
 
-	private String typeString;
 
-
-	public UserVO(String uid, String password, String name, Integer type, boolean enabled) {
+	public UserVO(String uid, String password, String name, Integer type, boolean enabled, String typeString) {
 		this.setUid(uid);
 		this.setPassword(password);
 		this.setName(name);
 		this.setType(type);
-		this.setTypeString(type);
-		this.set("typeString", getTypeString());
+		this.set("typeString", typeString);
 		this.setEnabled(enabled);
 		this.setEnabledString(enabled);
 		this.set("enabledString", getEnabledString());
-	}
-
-
-	public void setTypeString(Integer type) {
-		if (this.getType() == 0) {
-			this.typeString = "游客";
-		} else if (this.getType() == 1) {
-			this.typeString = "超级管理员";
-		} else if (this.getType() == 2) {
-			this.typeString = "普通管理员";
-		}else if (this.getType() == 3) {
-			this.typeString = "开发人员";
-		}
-	}
-
-
-	public String getTypeString() {
-		return typeString;
 	}
 
 

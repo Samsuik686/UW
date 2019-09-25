@@ -1,17 +1,17 @@
 package com.jimi.uw_server.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Supplier;
@@ -26,7 +26,7 @@ import com.jimi.uw_server.util.ResultUtil;
  */
 public class MaterialController extends Controller {
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+	private static MaterialService materialService =  Aop.get(MaterialService.class);
 
 
 	// 统计物料类型信息
@@ -36,7 +36,10 @@ public class MaterialController extends Controller {
 
 
 	// 统计超过期限的物料类型信息
-	public void getOverdueMaterial(Integer pageNo, Integer pageSize, Integer day) {
+	public void getOverdueMaterial(Integer pageNo, Integer pageSize, Integer day, Integer type) {
+		if (type == null) {
+			throw new ParameterException("参数不能为空！");
+		}
 		if ((pageNo != null && pageSize == null) || (pageNo == null && pageSize != null)) {
 			throw new ParameterException("页码和页数只能同时为空或同时不为空！");
 		}
@@ -46,20 +49,38 @@ public class MaterialController extends Controller {
 		if (day == null || day < 0) {
 			throw new ParameterException("天数必须为非负整数！");
 		}
-		renderJson(ResultUtil.succeed(materialService.getOverdueMaterial(pageNo, pageSize, day)));
+		renderJson(ResultUtil.succeed(materialService.getOverdueMaterial(pageNo, pageSize, day, type)));
 	}
 
 
 	// 获取物料实体
-	public void getEntities(Integer type, Integer box, Integer pageNo, Integer pageSize) {
-		renderJson(ResultUtil.succeed(materialService.getEntities(type, box, pageNo, pageSize)));
+	public void getEntities(Integer materialTypeId, Integer box, Integer pageNo, Integer pageSize) {
+		renderJson(ResultUtil.succeed(materialService.getEntities(materialTypeId, box, pageNo, pageSize)));
 	}
 
 
 	// 添加物料类型#
-	@Log("添加料号为{no}的物料类型，规格号为{specification}，供应商ID为{supplierId}，厚度为{thickness}，直径为{radius}")
-	public void addType(String no, String specification, Integer supplierId, Integer thickness, Integer radius) {
-		String resultString = materialService.addType(no, specification, supplierId, thickness, radius);
+	@Log("添加普通仓料号为{no}的物料类型，规格号为{specification}，供应商ID为{supplierId}，厚度为{thickness}，直径为{radius}")
+	public void addRegularMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius) {
+		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		String resultString = materialService.addMaterialType(WarehouseType.REGULAR, no, specification, supplierId, thickness, radius, null);
+		if (resultString.equals("添加成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			throw new OperationException(resultString);
+		}
+	}
+	
+	
+	// 添加物料类型#
+	@Log("添加贵重仓料号为{no}的物料类型，规格号为{specification}，供应商ID为{supplierId}，厚度为{thickness}，直径为{radius}， 位号为{designator}")
+	public void addPreciousMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, String designator) {
+		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || designator == null || designator.equals("")) {
+			throw new ParameterException("参数不能为空！");
+		}
+		String resultString = materialService.addMaterialType(WarehouseType.PRECIOUS, no, specification, supplierId, thickness, radius, designator);
 		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -69,9 +90,20 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}")
-	public void updateType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
-		String resultString = materialService.updateType(id, enabled, thickness, radius);
+	@Log("更新普通仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}")
+	public void updateRegularMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
+		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, null);
+		if (resultString.equals("更新成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			throw new OperationException(resultString);
+		}
+	}
+	
+	
+	@Log("更新贵重仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}， 行号为{designator}")
+	public void updatePreciousMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String designator) {
+		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, designator);
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -79,9 +111,23 @@ public class MaterialController extends Controller {
 		}
 	}
 
+	
+	@Log("批量删除普通仓物料类型号为[{filter}]的物料类型")
+	public void deleteRegularMaterialByIds(String filter) {
+		if (filter == null || filter.equals("")) {
+			throw new OperationException("参数不能为空");
+		}
+		String resultString = materialService.deleteByIds(filter);
+		if (resultString.equals("删除成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.succeed(resultString));
+		}
+	}
+	
 
-	@Log("批量删除物料类型号为[{filter}]的物料类型")
-	public void deleteByIds(String filter) {
+	@Log("批量删除贵重仓物料类型号为[{filter}]的物料类型")
+	public void deletePreciousMaterialByIds(String filter) {
 		if (filter == null || filter.equals("")) {
 			throw new OperationException("参数不能为空");
 		}
@@ -156,7 +202,7 @@ public class MaterialController extends Controller {
 
 
 	// 导出物料报表
-	public void exportMaterialReport(Integer supplier) {
+	public void exportMaterialReport(Integer supplier, Integer type) {
 		OutputStream output = null;
 		Supplier s = Supplier.dao.findById(supplier);
 		String supplierName = s.getName();
@@ -168,7 +214,7 @@ public class MaterialController extends Controller {
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			materialService.exportMaterialReport(supplier, fileName, output);
+			materialService.exportMaterialReport(supplier, fileName, output, type);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
@@ -185,10 +231,13 @@ public class MaterialController extends Controller {
 
 
 	// 导出物料报表
-	public void exportMaterialDetialReport(Integer supplier) {
+	public void exportMaterialDetialReport(Integer supplier, Integer type) {
 		OutputStream output = null;
 		Supplier s = Supplier.dao.findById(supplier);
 		String supplierName = s.getName();
+		if (type == null) {
+			type = 0;
+		}
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
 			String fileName = supplierName + "物料库存报表.xlsx";
@@ -197,7 +246,7 @@ public class MaterialController extends Controller {
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			materialService.exportMaterialDetialsReport(supplier, output);
+			materialService.exportMaterialDetialsReport(supplier, output, type);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
@@ -244,11 +293,24 @@ public class MaterialController extends Controller {
 
 
 	// 导入物料类型表#
-	@ActionKey("/manage/material/import")
+	@ActionKey("/manage/material/importRegularMaterialTypeFile")
 	@Log("导入物料类型表，导入的物料对应的供应商为：{supplierId}")
-	public void importFile(UploadFile file, Integer supplierId) throws Exception {
+	public void importRegularMaterialTypeFile(UploadFile file, Integer supplierId) throws Exception {
 		String fileName = file.getFileName();
-		String resultString = materialService.importFile(fileName, file.getFile(), supplierId);
+		String resultString = materialService.importRegularMaterialTypeFile(fileName, file.getFile(), supplierId);
+		if (resultString.equals("导入成功！")) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			throw new OperationException(resultString);
+		}
+	}
+
+
+	@ActionKey("/manage/material/importPreicousMaterialTypeFile")
+	@Log("导入物料类型表，导入的物料对应的供应商为：{supplierId}")
+	public void importPreicousMaterialTypeFile(UploadFile file, Integer supplierId) throws Exception {
+		String fileName = file.getFileName();
+		String resultString = materialService.importPreicousMaterialTypeFile(fileName, file.getFile(), supplierId);
 		if (resultString.equals("导入成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

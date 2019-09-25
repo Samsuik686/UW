@@ -1,6 +1,6 @@
 package com.jimi.uw_server.controller;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
@@ -17,7 +17,7 @@ import com.jimi.uw_server.util.ResultUtil;
 
 public class BuildController extends Controller {
 
-	private static BuildService buildService = Enhancer.enhance(BuildService.class);
+	private static BuildService buildService = Aop.get(BuildService.class);
 
 
 	// 建仓接口

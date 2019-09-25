@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
@@ -32,13 +33,13 @@ public class SampleTaskController extends Controller {
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
-	@Log("创建抽检任务，供应商{supplierId}， 备注{remarks}")
-	public void createSampleTask(UploadFile file, Integer supplierId, String remarks) {
+	@Log("创建普通仓抽检任务，供应商{supplierId}， 备注{remarks}")
+	public void createRegularSampleTask(UploadFile file, Integer supplierId, String remarks) {
 		try {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks);
+			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.REGULAR);
 			renderJson(ResultUtil.succeed(result));
 		} finally {
 			file.getFile().delete();
@@ -47,23 +48,49 @@ public class SampleTaskController extends Controller {
 	}
 
 
-	@Log("开始抽检任务，任务：{taskId}， 仓口：{windows}")
-	public void start(Integer taskId, String windows) {
+	@Log("创建贵重仓抽检任务，供应商{supplierId}， 备注{remarks}")
+	public void createPreciousSampleTask(UploadFile file, Integer supplierId, String remarks) {
+		try {
+			if (file == null || supplierId == null || remarks == null) {
+				throw new OperationException("参数不能为空");
+			}
+			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.PRECIOUS);
+			renderJson(ResultUtil.succeed(result));
+		} finally {
+			file.getFile().delete();
+		}
+
+	}
+
+
+	@Log("开始普通仓抽检任务，任务：{taskId}， 仓口：{windows}")
+	public void startRegularTask(Integer taskId, String windows) {
 
 		if (taskId == null || windows == null || windows.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
-		String result = sampleTaskService.start(taskId, windows);
+		String result = sampleTaskService.startRegularTask(taskId, windows);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
-	@Log("作废抽检任务编号为{taskId}的任务")
-	public void cancel(Integer taskId) {
+	@Log("开始贵重仓抽检任务，任务：{taskId}")
+	public void startPreciousTask(Integer taskId) {
+
+		if (taskId == null) {
+			throw new OperationException("参数不能为空");
+		}
+		String result = sampleTaskService.startPreciousTask(taskId);
+		renderJson(ResultUtil.succeed(result));
+	}
+
+
+	@Log("作废普通仓抽检任务编号为{taskId}的任务")
+	public void cancelRegularTask(Integer taskId) {
 		if (taskId == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (sampleTaskService.cancel(taskId)) {
+		if (sampleTaskService.cancelRegularTask(taskId)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -71,61 +98,135 @@ public class SampleTaskController extends Controller {
 	}
 
 
-	@Log("抽检回库，groupId：{groupId}")
-	public void backBox(String groupId) {
+	@Log("作废贵重仓抽检任务编号为{taskId}的任务")
+	public void cancelPreciousTask(Integer taskId) {
+		if (taskId == null) {
+			throw new ParameterException("任务id参数不能为空！");
+		}
+		if (sampleTaskService.cancelPreciousTask(taskId)) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.failed());
+		}
+	}
+
+	
+	@Log("完成贵重仓抽检任务编号为{taskId}的任务")
+	public void finishPreciousTask(Integer taskId) {
+		if (taskId == null) {
+			throw new ParameterException("任务id参数不能为空！");
+		}
+		if (sampleTaskService.finishPreciousTask(taskId)) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.failed());
+		}
+	}
+
+	@Log("普通仓抽检回库，groupId：{groupId}")
+	public void backRegularUWBox(String groupId) {
 		if (groupId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		String result = sampleTaskService.backBox(groupId);
+		String result = sampleTaskService.backRegularUWBox(groupId);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
-	@Log("异常出库，料盘码：{materialId}， groupId：{groupId}")
-	public void outSingular(String materialId, String groupId) {
+	@Log("普通仓异常出库，料盘码：{materialId}， groupId：{groupId}")
+	public void outRegularTaskSingular(String materialId, String groupId) {
 		if (groupId == null || materialId == null) {
 			throw new OperationException("参数不能为空");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outSingular(materialId, groupId, user);
+		String result = sampleTaskService.outRegularTaskSingular(materialId, groupId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
-	@Log("抽检出库，料盘码：{materialId}， groupId：{groupId}")
-	public void outRegular(String materialId, String groupId) {
+	@Log("贵重仓异常出库，料盘码：{materialId}， 任务ID：{taskId}")
+	public void outPreciousTaskSingular(String materialId, Integer taskId) {
+		if (taskId == null || materialId == null) {
+			throw new OperationException("参数不能为空");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = sampleTaskService.outPreciousTaskSingular(materialId, taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
+
+
+	@Log("贵重仓抽检出库，料盘码：{materialId}， groupId：{groupId}")
+	public void outRegularTaskRegular(String materialId, String groupId) {
 		if (groupId == null || materialId == null) {
 			throw new OperationException("参数不能为空");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outRegular(materialId, groupId, user);
+		String result = sampleTaskService.outRegularTaskRegular(materialId, groupId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
-	@Log("料盘丢失，料盘码：{materialId}， groupId：{groupId}")
-	public void outLost(String materialId, String groupId) {
+	@Log("贵重仓抽检出库，料盘码：{materialId}，任务ID：{taskId}")
+	public void outPreciousTaskRegular(String materialId, Integer taskId) {
+		if (taskId == null || materialId == null) {
+			throw new OperationException("参数不能为空");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = sampleTaskService.outPreciousTaskRegular(materialId, taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
+
+
+	@Log("普通仓料盘丢失，料盘码：{materialId}， groupId：{groupId}")
+	public void outRegularTaskLost(String materialId, String groupId) {
 		if (groupId == null || materialId == null) {
 			throw new OperationException("参数不能为空");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outLost(materialId, groupId, user);
+		String result = sampleTaskService.outRegularTaskLost(materialId, groupId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
-	@Log("扫码料盘，料盘码：{materialId}， groupId：{groupId}")
-	public void scanMaterial(String materialId, String groupId) {
+	@Log("贵重仓料盘丢失，料盘码：{materialId}，任务ID：{taskId}")
+	public void outPreciousTaskLost(String materialId, Integer taskId) {
+		if (taskId == null || materialId == null) {
+			throw new OperationException("参数不能为空");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = sampleTaskService.outPreciousTaskLost(materialId, taskId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
+
+
+	@Log("普通仓扫码料盘，料盘码：{materialId}， groupId：{groupId}")
+	public void sampleRegularUWMaterial(String materialId, String groupId) {
 		if (materialId == null || materialId.trim().equals("") || groupId == null || groupId.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
-		sampleTaskService.scanMaterial(materialId, groupId);
+		sampleTaskService.sampleRegularUWMaterial(materialId, groupId);
+		renderJson(ResultUtil.succeed());
+	}
+
+
+	@Log("贵重仓仓扫码料盘，料盘码：{materialId}，任务ID：{taskId}")
+	public void samplePreciousUWMaterial(String materialId, Integer taskId) {
+		if (materialId == null || materialId.trim().equals("") || taskId == null) {
+			throw new OperationException("参数不能为空");
+		}
+		sampleTaskService.samplePreciousUWMaterial(materialId, taskId);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -144,6 +245,15 @@ public class SampleTaskController extends Controller {
 	}
 
 
+	public void getSampleTaskMaterialInfo(Integer taskId) {
+		if (taskId == null) {
+			throw new OperationException("参数不能为空");
+		}
+		PackingSampleInfoVO result = sampleTaskService.getSampleTaskMaterialInfo(taskId);
+		renderJson(ResultUtil.succeed(result));
+	}
+
+
 	/**
 	 * 获取抽检任务详情
 	 * @param taskId
@@ -157,6 +267,15 @@ public class SampleTaskController extends Controller {
 		List<SampleTaskDetialsVO> result = sampleTaskService.getSampleTaskDetials(taskId);
 		renderJson(ResultUtil.succeed(result));
 
+	}
+
+
+	// 获取进行中的贵重仓抽检任务（PDA用）
+	public void getWorkingPreciousTask() {
+		String filter = "warehouse_type=1#&#state=2";
+		;
+		Object result = sampleTaskService.select(null, null, null, null, filter);
+		renderJson(ResultUtil.succeed(result));
 	}
 
 

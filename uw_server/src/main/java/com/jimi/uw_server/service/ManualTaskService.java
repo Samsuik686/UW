@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.jfinal.json.Json;
 import com.jimi.uw_server.constant.TaskState;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.DestinationSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SupplierSQL;
-import com.jimi.uw_server.constant.sql.UserSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.ExternalWhLog;
@@ -63,24 +63,24 @@ public class ManualTaskService {
 			resultString = "任务并未处于已审核状态，无法人工出库！";
 			return resultString;
 		}
-		resultString += "任务[" + task.getFileName() + "]的上传详情如下：\n";
+		String problemString = "";
 		List<ManualTaskRecord> records = info.getRecords();
 		if (!records.isEmpty()) {
 			for (ManualTaskRecord record : records) {
 				Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME, record.getSupplierName());
 				if (supplier == null) {
-					resultString += "[供应商 " + record.getSupplierName() + " 不存在]\n";
+					problemString += "[供应商 " + record.getSupplierName() + " 不存在]\n";
 					continue;
 				}
-				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, record.getNo(), supplier.getId());
+				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, record.getNo(), supplier.getId(), WarehouseType.REGULAR);
 				if (materialType == null) {
-					resultString += "[物料类型 " + record.getNo() + " 不存在]\n";
+					problemString += "[物料类型 " + record.getNo() + " 不存在]\n";
 					continue;
 				}
 				PackingListItem packingListItem = new PackingListItem().setTaskId(task.getId()).setQuantity(record.getPlanQuantity()).setMaterialTypeId(materialType.getId()).setFinishTime(new Date());
 				packingListItem.save();
 				if (packingListItem.getId() <= 0) {
-					resultString += "[料号" + record.getNo() + "的出库条目保存失败]\n";
+					problemString += "[料号" + record.getNo() + "的出库条目保存失败]\n";
 					continue;
 				}
 				List<MaterialReel> materialReels = record.getMaterialReels();
@@ -90,16 +90,16 @@ public class ManualTaskService {
 					for (MaterialReel materialReel : materialReels) {
 						Material material = Material.dao.findById(materialReel.getMaterialId());
 						if (material == null || !material.getIsInBox()) {
-							resultString += "[料号 ：" +record.getNo() + "， 料盘码：" + materialReel.getMaterialId() + "的出库条目保存失败,料盘不存在或者不在盒内]\n";
+							problemString += "[料号 ：" + record.getNo() + "， 料盘码：" + materialReel.getMaterialId() + "的出库条目保存失败,料盘不存在或者不在盒内]\n";
 							continue;
 						}
 						if (!material.getRemainderQuantity().equals(materialReel.getQuantity())) {
-							resultString += "[料号 ：" +record.getNo() + "， 料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,料盘剩余数量与出库数量不符]\n";
+							problemString += "[料号 ：" + record.getNo() + "， 料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,料盘剩余数量与出库数量不符]\n";
 							continue;
 						}
-						User user = User.dao.findFirst(UserSQL.GET_USER_BY_NAME, materialReel.getOperator());
+						User user = User.dao.findById(materialReel.getOperator());
 						if (user == null) {
-							resultString += "[料号 ：" +record.getNo() + "，料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,该料盘的操作人员不存在或者未启用]\n";
+							problemString += "[料号 ：" + record.getNo() + "，料盘码" + materialReel.getMaterialId() + "的出库条目保存失败,该料盘的操作人员不存在或者未启用]\n";
 							continue;
 						}
 						operator = materialReel.getOperator();
@@ -108,7 +108,7 @@ public class ManualTaskService {
 						actualQuantity += materialReel.getQuantity();
 						taskLog.save();
 					}
-					
+
 				}
 				if (actualQuantity != 0) {
 					if (packingListItem.getQuantity() < actualQuantity) {
@@ -129,7 +129,10 @@ public class ManualTaskService {
 		}
 		PdaUploadLog pdaUploadLog = new PdaUploadLog();
 		pdaUploadLog.setParameter(Json.getJson().toJson(info)).setResponse(resultString).setTaskId(task.getId()).save();
+		if (!problemString.equals("")) {
+			resultString = "任务[" + task.getFileName() + "]的上传详情如下：\n" + problemString;
+		}
 		return resultString;
 	}
-	
+
 }

@@ -34,6 +34,11 @@ public class PackingSampleInfoVO {
 	private List<MaterialInfoVO> list;
 
 
+	public PackingSampleInfoVO() {
+
+	}
+
+
 	public PackingSampleInfoVO(GoodsLocation goodsLocation) {
 		this.setGoodsLocationId(goodsLocation.getId());
 		this.setGoodsLocationName(goodsLocation.getName());

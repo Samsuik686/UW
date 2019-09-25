@@ -1,16 +1,13 @@
 package com.jimi.uw_server.input;
 
 import com.jimi.InputHelper.send.InputHelper.OnInputListener;
-import com.jimi.InputHelper.util.LogCatcher;
-import com.jimi.InputHelper.util.PackageLogger;
 import com.jimi.uw_server.agv.dao.InputMaterialRedisDAO;
 import com.jimi.uw_server.model.ErrorLog;
-import com.jimi.uw_server.model.PackageLog;
+import com.jimi.uw_server.model.InputHelpSocketLog;
 
 import java.util.Date;
-
-import com.alibaba.fastjson.JSON;
-import com.jimi.InputHelper.bo.PackagePair;
+import com.jimi.InputHelper.log.Logger;
+import com.jimi.InputHelper.log.SocketLogger;
 import com.jimi.InputHelper.send.MyInputHelper;
 
 
@@ -59,25 +56,29 @@ public class InputMaterialHelper {
 
 	private static void initializationLogger() {
 
-		PackageLogger.getInstance().setLogCatcher(new LogCatcher() {
+		SocketLogger.getInstance().setLogger(new Logger() {
 
 			@Override
-			public void onResponseFinish(PackagePair info) {
-				PackageLog log = createLog(info);
-				log.setFromId(info.getAddress());
-				log.setToId("uw");
-				log.setConsumeTime((int) (new Date().getTime() - info.getRequestTime().getTime()));
-				log.save();
+			public void onSend(String pack) {
+
+				InputHelpSocketLog log = new InputHelpSocketLog();
+				log.setIsSend(true).setPack(pack).setTime(new Date()).save();
+
 			}
 
 
 			@Override
-			public void onRequestFinish(PackagePair info) {
-				PackageLog log = createLog(info);
-				log.setConsumeTime((int) (new Date().getTime() - log.getTime().getTime()));
-				log.setFromId("uw");
-				log.setToId(info.getAddress());
-				log.save();
+			public void onReceive(String pack) {
+				// TODO Auto-generated method stub
+				InputHelpSocketLog log = new InputHelpSocketLog();
+				log.setIsSend(false).setPack(pack).setTime(new Date()).save();
+			}
+
+
+			@Override
+			public void OnDebug(String pack, boolean isSend) {
+				InputHelpSocketLog log = new InputHelpSocketLog();
+				log.setIsSend(isSend).setPack(pack).setTime(new Date()).save();
 			}
 		});
 		System.out.println("投料辅助器，日志记录器初始化成功");
@@ -89,20 +90,5 @@ public class InputMaterialHelper {
 		initializationLogger();
 		MyInputHelper.getInstance().start(port);
 
-	}
-	
-	private static PackageLog createLog(PackagePair packagePair) {
-		PackageLog log = new PackageLog();
-		log.setTime(packagePair.getRequestTime());
-		log.setPackageType(packagePair.getType());
-		try {
-			log.setPackageRequest(JSON.toJSONString(packagePair.getRequestPackage()));
-		} catch (NullPointerException e) {
-		}
-		try {
-			log.setPackageResponse(JSON.toJSONString(packagePair.getResponsePackage()));
-		} catch (NullPointerException e) {
-		}
-		return log;
 	}
 }

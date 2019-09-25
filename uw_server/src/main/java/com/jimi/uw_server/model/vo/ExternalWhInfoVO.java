@@ -26,6 +26,9 @@ public class ExternalWhInfoVO {
 
 	private Integer returnQuantity;
 
+	private Integer inventoryBeforeQuantity;
+	
+	private Integer inventoryAfterQuantity;
 
 	public String getWareHouse() {
 		return wareHouse;
@@ -115,5 +118,26 @@ public class ExternalWhInfoVO {
 	public void setReturnQuantity(Integer returnQuantity) {
 		this.returnQuantity = returnQuantity;
 	}
+
+
+	public Integer getInventoryBeforeQuantity() {
+		return inventoryBeforeQuantity;
+	}
+
+
+	public void setInventoryBeforeQuantity(Integer inventoryBeforeQuantity) {
+		this.inventoryBeforeQuantity = inventoryBeforeQuantity;
+	}
+
+
+	public Integer getInventoryAfterQuantity() {
+		return inventoryAfterQuantity;
+	}
+
+
+	public void setInventoryAfterQuantity(Integer inventoryAfterQuantity) {
+		this.inventoryAfterQuantity = inventoryAfterQuantity;
+	}
+
 
 }

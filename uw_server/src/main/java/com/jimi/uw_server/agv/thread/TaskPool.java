@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -47,7 +47,7 @@ import com.jimi.uw_server.util.ErrorLogWritter;
  */
 public class TaskPool extends Thread {
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 	private static final String GET_STANDARD_SAME_TYPE_MATERIAL_BOX_SQL = "SELECT material_box.id AS box FROM material_box INNER JOIN material ON material.box = material_box.id WHERE material.type = ? AND material_box.supplier = ? AND material_box.type = ?";
 
@@ -260,7 +260,7 @@ public class TaskPool extends Thread {
 						}
 					}
 				}
-				
+
 			}
 		}
 	}

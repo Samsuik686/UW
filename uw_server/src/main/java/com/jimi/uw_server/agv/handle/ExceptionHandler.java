@@ -1,6 +1,6 @@
 package com.jimi.uw_server.agv.handle;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -26,7 +26,7 @@ import com.jimi.uw_server.service.MaterialService;
  */
 public class ExceptionHandler {
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 	private static IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 

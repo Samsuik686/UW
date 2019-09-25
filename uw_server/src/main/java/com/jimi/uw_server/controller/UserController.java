@@ -1,6 +1,6 @@
 package com.jimi.uw_server.controller;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
@@ -18,7 +18,7 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class UserController extends Controller {
 
-	private UserService userService = Enhancer.enhance(UserService.class);
+	private UserService userService =  Aop.get(UserService.class);
 
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 

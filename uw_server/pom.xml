@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>3.4.0</version>
+	<version>3.5.0</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -48,9 +48,9 @@
 		<dependency>
 			<groupId>com.jfinal</groupId>
 			<artifactId>jfinal</artifactId>
-			<version>3.5</version>
+			<version>4.5</version>
 		</dependency>
-
+		
 		<!-- javaee-web-api包 注意和项目使用的JDK版本对应 -->
 		<dependency>
 			<groupId>javax</groupId>
@@ -60,9 +60,10 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.websocket</groupId>
-			<artifactId>javax.websocket-api</artifactId>
-			<version>RELEASE</version>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-websocket-api</artifactId>
+			<version>7.0.47</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -149,7 +150,7 @@
 		<dependency>
 			<groupId>com.jimi</groupId>
 			<artifactId>InputHelper</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.3</version>
 		</dependency>
 		
 	</dependencies>

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Record;
@@ -19,6 +19,7 @@ import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
@@ -28,7 +29,6 @@ import com.jimi.uw_server.model.GoodsLocation;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialReturnRecord;
-import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
@@ -47,13 +47,11 @@ import com.jimi.uw_server.service.base.SelectService;
  */
 public class RobotService extends SelectService {
 
-	private static IOTaskService taskService = Enhancer.enhance(IOTaskService.class);
+	private static IOTaskService taskService = Aop.get(IOTaskService.class);
 
-	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ? AND supplier = ?)";
+	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ? AND supplier = ? AND type = ?)";
 
 	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
-
-	private static final String GET_PACKING_LIST_ITEM_SQL = "SELECT * FROM packing_list_item WHERE task_id = ?";
 
 	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 
@@ -300,30 +298,23 @@ public class RobotService extends SelectService {
 			if (id != null) {
 				Window window = Window.dao.findById(id);
 				Integer taskId = window.getBindTaskId();
-				// 通过任务条目id获取套料单记录
-				PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKING_LIST_ITEM_SQL, taskId);
-				if (packingListItem == null) {
-					resultString = "该物料暂时不需要入库或截料！";
-					return resultString;
-				}
-				// 通过套料单记录获取物料类型id
-				MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-				if (materialType == null) {
+				Task task = Task.dao.findById(taskId);
+				if (task == null) {
 					resultString = "该物料暂时不需要入库或截料！";
 					return resultString;
 				}
 
 				// 通过物料类型获取对应的供应商id
-				Integer supplierId = materialType.getSupplier();
+				Integer supplierId = task.getSupplier();
 				// 通过供应商id获取供应商名
-				FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
+				FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, supplierId);
 				String sName = Supplier.dao.findById(supplierId).getName();
 				if (!supplierName.equals(sName) && formerSupplier == null) {
 					resultString = "扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！";
 					return resultString;
 				}
 				// 通过任务id，料号和供应商获取套料单条目
-				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplierId);
+				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplierId, WarehouseType.REGULAR);
 
 				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 				if (item == null) {
@@ -332,7 +323,7 @@ public class RobotService extends SelectService {
 				}
 				// 若是扫描到属于当前仓口任务的料盘二维码，则逐条读取任务队列中的任务条目
 				else {
-					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
+					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
 						// 若扫描的料号对应的任务条目与任务队列读取到的数据匹配
 						if (item.getId().intValue() == redisTaskItem.getId().intValue()) {
 							// 若任务条目已完成，则提示不要重复执行已完成任务条目

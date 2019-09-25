@@ -3,7 +3,7 @@ package com.jimi.uw_server.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.exception.OperationException;
@@ -23,7 +23,7 @@ import cc.darhao.dautils.api.MD5Util;
  */
 public class UserService extends SelectService {
 
-	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+	private static SelectService selectService = Aop.get(SelectService.class);
 
 	private static final String LOGIN_SQL = "SELECT * FROM user WHERE uid = ? AND password = ?";
 
@@ -94,10 +94,10 @@ public class UserService extends SelectService {
 
 	// 查询用户信息
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		Page<Record> result = selectService.select("user", pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] {"user", "user_type"}, new String[] {"user.type = user_type.id"}, pageNo, pageSize, ascBy, descBy, filter);
 		List<UserVO> userVOs = new ArrayList<UserVO>();
 		for (Record res : result.getList()) {
-			UserVO u = new UserVO(res.get("uid"), res.get("password"), res.get("name"), res.get("type"), res.get("enabled"));
+			UserVO u = new UserVO(res.get("User_Uid"), res.get("User_Password"), res.get("User_Name"), res.get("User_Type"), res.get("User_Enabled"), res.getStr("UserType_Name"));
 			userVOs.add(u);
 		}
 

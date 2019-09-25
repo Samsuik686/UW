@@ -41,6 +41,8 @@ import com.jimi.uw_server.util.ErrorLogWritter;
 @ClientEndpoint
 public class AGVMainSocket {
 
+	private static boolean flag = true;
+
 	private static Session session;
 
 	private static String uri;
@@ -83,7 +85,9 @@ public class AGVMainSocket {
 	public void onClose(Session userSession, CloseReason reason) {
 		ErrorLogWritter.save("AGVMainSocket was Stopped because :" + reason.getCloseCode());
 		TaskItemRedisDAO.setAgvWebSocketStatus(false);
-		connect(AGVMainSocket.uri);
+		if (flag) {
+			connect(AGVMainSocket.uri);
+		}
 	}
 
 
@@ -175,6 +179,19 @@ public class AGVMainSocket {
 			}
 		}
 
+	}
+
+
+	public static void stop() {
+		flag = false;
+		try {
+			if (session != null) {
+				session.close();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 

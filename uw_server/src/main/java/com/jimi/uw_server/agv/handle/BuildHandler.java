@@ -3,7 +3,6 @@ package com.jimi.uw_server.agv.handle;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jfinal.aop.Enhancer;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
@@ -14,7 +13,6 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.constant.BuildTaskItemState;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.service.MaterialService;
 
 
 /**
@@ -24,9 +22,6 @@ import com.jimi.uw_server.service.MaterialService;
  */
 
 public class BuildHandler {
-
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
-
 
 	public static void sendBuildCmd(AGVBuildTaskItem item, MaterialBox materialBox) throws Exception {
 		// 构建LL指令，令指定robot把料盒入仓
@@ -109,7 +104,7 @@ public class BuildHandler {
 
 				// 设置料盒在架
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-				setMaterialBoxIsOnShelf(materialBox, true);
+				materialBox.setIsOnShelf(true).update();
 
 				clearTil(item.getSrcPosition());
 			}
@@ -130,15 +125,6 @@ public class BuildHandler {
 		}
 		if (isAllFinish) {
 			TaskItemRedisDAO.removeBuildTaskItemBySrcPosition(srcPosition);
-		}
-	}
-
-
-	private static void setMaterialBoxIsOnShelf(MaterialBox materialBox, boolean isOnShelf) {
-		List<MaterialBox> specifiedPositionMaterialBoxes = materialService.listByXYZ(materialBox.getRow(), materialBox.getCol(), materialBox.getHeight());
-		for (MaterialBox mb : specifiedPositionMaterialBoxes) {
-			mb.setIsOnShelf(isOnShelf);
-			mb.update();
 		}
 	}
 

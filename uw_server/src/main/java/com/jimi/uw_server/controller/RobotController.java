@@ -1,7 +1,7 @@
 package com.jimi.uw_server.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
@@ -19,7 +19,7 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class RobotController extends Controller {
 
-	private static RobotService robotService = Enhancer.enhance(RobotService.class);
+	private static RobotService robotService =  Aop.get(RobotService.class);
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 

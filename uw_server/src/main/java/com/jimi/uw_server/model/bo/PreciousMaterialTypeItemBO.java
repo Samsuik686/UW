@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.bo;
 
 import com.jimi.uw_server.util.ExcelHelper.Excel;
 
+
 public class PreciousMaterialTypeItemBO {
 
 	@Excel(col = 0, head = "序号")
@@ -21,6 +22,7 @@ public class PreciousMaterialTypeItemBO {
 
 	@Excel(col = 5, head = "位号")
 	private String designator;
+
 
 	public String getNo() {
 		return no;
@@ -72,13 +74,11 @@ public class PreciousMaterialTypeItemBO {
 	}
 
 
-	
 	public String getDesignator() {
 		return designator;
 	}
 
 
-	
 	public void setDesignator(String designator) {
 		this.designator = designator;
 	}

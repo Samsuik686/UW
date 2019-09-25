@@ -16,7 +16,7 @@ import java.util.Date;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 
@@ -31,7 +31,7 @@ public class ExternalWhController extends Controller {
 
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
-	private static ExternalWhTaskService externalWhTaskService = Enhancer.enhance(ExternalWhTaskService.class);
+	private static ExternalWhTaskService externalWhTaskService =  Aop.get(ExternalWhTaskService.class);
 
 
 	@Log("导入物料仓任务，供应商ID为{supplierId}，源物料仓ID为{souceWhId}，目的物料仓ID为{destinationwhId}, 备注{remarks}")

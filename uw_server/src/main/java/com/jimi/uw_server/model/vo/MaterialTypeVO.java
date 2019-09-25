@@ -1,6 +1,7 @@
 package com.jimi.uw_server.model.vo;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.service.MaterialService;
@@ -14,7 +15,7 @@ import com.jimi.uw_server.service.MaterialService;
 @SuppressWarnings("serial")
 public class MaterialTypeVO extends MaterialType {
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 	private String enabledString;
 
@@ -23,7 +24,7 @@ public class MaterialTypeVO extends MaterialType {
 	private String supplierName;
 
 
-	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Integer thickness, Integer radius, Boolean enabled) {
+	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Integer thickness, Integer radius, Boolean enabled, String designator, Integer type) {
 		this.setId(id);
 		this.setNo(no);
 		this.setSpecification(specification);
@@ -34,9 +35,11 @@ public class MaterialTypeVO extends MaterialType {
 		this.setRadius(radius);
 		this.setEnabled(enabled);
 		this.setEnabledString(enabled);
+		this.setType(type);
 		this.set("enabledString", getEnabledString());
-		this.setQuantity(id);
+		this.setQuantity(id, type);
 		this.set("quantity", getQuantity());
+		this.set("designator", designator);
 	}
 
 
@@ -59,8 +62,14 @@ public class MaterialTypeVO extends MaterialType {
 	}
 
 
-	public void setQuantity(Integer id) {
-		Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(id);
+	public void setQuantity(Integer id, Integer type) {
+		Integer remainderQuantity = 0;
+		if (type.equals(WarehouseType.REGULAR)) {
+			remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(id);
+		} else if (type.equals(WarehouseType.PRECIOUS)) {
+			remainderQuantity = materialService.countPreciousQuantityByMaterialTypeId(id);
+		}
+
 		this.quantity = remainderQuantity;
 	}
 

@@ -1,6 +1,6 @@
 package com.jimi.uw_server.controller;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.service.LogService;
 import com.jimi.uw_server.util.ResultUtil;
@@ -13,7 +13,7 @@ import com.jimi.uw_server.util.ResultUtil;
  */
 public class LogController extends Controller {
 
-	private static LogService logService = Enhancer.enhance(LogService.class);
+	private static LogService logService =  Aop.get(LogService.class);
 
 
 	// 根据表名查询日志

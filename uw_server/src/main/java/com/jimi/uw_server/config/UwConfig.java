@@ -27,6 +27,7 @@ import com.jimi.uw_server.controller.InventoryTaskController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.ManualTaskController;
 import com.jimi.uw_server.controller.MaterialController;
+import com.jimi.uw_server.controller.PrinterController;
 import com.jimi.uw_server.controller.RobotController;
 import com.jimi.uw_server.controller.SampleTaskController;
 import com.jimi.uw_server.controller.SupplierController;
@@ -90,6 +91,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/task/sampleTask", SampleTaskController.class);
 		me.add("/manualTask", ManualTaskController.class);
 		me.add("/faq", FAQController.class);
+		me.add("/task/printer", PrinterController.class);
 	}
 
 
@@ -110,7 +112,7 @@ public class UwConfig extends JFinalConfig {
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
-			
+
 			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
 				InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
 				System.out.println("InputHelper is Running now...");
@@ -126,6 +128,8 @@ public class UwConfig extends JFinalConfig {
 	@Override
 	public void beforeJFinalStop() {
 		TokenBox.stop();
+		AGVMainSocket.stop();
+		RobotInfoSocket.stop();
 	}
 
 

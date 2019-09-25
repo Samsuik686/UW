@@ -38,7 +38,11 @@ public class IOTaskDetailVO extends TaskLog {
 		int lackNum = planQuantity - actualQuantity + deductQuantity;
 		if (finishTime != null) {
 			if (lackNum > 0) {
-				this.set("itemStatus", "欠料");
+				if (type == TaskType.IN || type == TaskType.SEND_BACK) {
+					this.set("itemStatus", "未入库");
+				} else {
+					this.set("itemStatus", "欠料");
+				}
 				this.set("lackNum", (0 - lackNum));
 			} else {
 				this.set("itemStatus", "正常");

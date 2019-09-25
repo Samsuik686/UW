@@ -37,7 +37,6 @@ public class PackingListItemDetailsVO {
 		this.setRemainderQuantity(remainderQuantity);
 		this.setProductionTime(productionTime);
 		this.setIsInBoxString(isInBox);
-		this.getIsInBoxString();
 		this.setBoxId(boxId);
 		this.setCol(col);
 		this.setRow(row);

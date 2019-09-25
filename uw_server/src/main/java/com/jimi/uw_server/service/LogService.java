@@ -3,7 +3,7 @@ package com.jimi.uw_server.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.model.PackingListItem;
@@ -22,7 +22,7 @@ import com.jimi.uw_server.service.entity.PagePaginate;
  */
 public class LogService extends SelectService {
 
-	private static SelectService selectService = Enhancer.enhance(SelectService.class);
+	private static SelectService selectService = Aop.get(SelectService.class);
 
 
 	// 查询接口调用日志

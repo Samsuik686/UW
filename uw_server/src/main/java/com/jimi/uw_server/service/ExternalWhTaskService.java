@@ -17,6 +17,7 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.ExternalWhLog;
@@ -43,7 +44,7 @@ public class ExternalWhTaskService {
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
-	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id";
+	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 AND material_type.enabled = 1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 AND material_type.enabled = 1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id";
 
 	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT e.*, material_return_record.quantity as return_num FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e LEFT JOIN material_return_record ON e.task_id = material_return_record.task_id AND e.material_type_id = material_return_record.material_type_id AND e.source_wh = material_return_record.wh_id ORDER BY e.time ASC";
 
@@ -307,7 +308,7 @@ public class ExternalWhTaskService {
 	}
 
 
-	public PagePaginate selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy ) {
+	public PagePaginate selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
 		List<ExternalWhInfoVO> externalWhInfoVOs = new ArrayList<>();
@@ -336,7 +337,7 @@ public class ExternalWhTaskService {
 		}
 		if ((ascBy == null || ascBy.equals("")) && (descBy == null || descBy.equals(""))) {
 			sql.append(" ORDER BY a.wh_id,a.no ASC");
-		}else {
+		} else {
 			if (ascBy != null && !ascBy.equals("")) {
 				sql.append(" ORDER BY " + ascBy.trim() + " ASC");
 			}
@@ -344,9 +345,11 @@ public class ExternalWhTaskService {
 				sql.append(" ORDER BY " + descBy.trim() + " DESC");
 			}
 		}
+
 		
 		sqlPara.setSql(sql.toString());
 		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);
+		List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(supplierId, WarehouseType.REGULAR);
 		for (Record record : page.getList()) {
 			ExternalWhInfoVO externalWhInfoVO = new ExternalWhInfoVO();
 			externalWhInfoVO.setNo(record.getStr("no"));
@@ -356,7 +359,12 @@ public class ExternalWhTaskService {
 			externalWhInfoVO.setSupplier(record.getStr("supplier_name"));
 			externalWhInfoVO.setWhId(record.getInt("wh_id"));
 			externalWhInfoVO.setWareHouse(record.getStr("wh_name"));
-			externalWhInfoVO.setQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")));
+			if (inventoryTasks.size() > 0) {
+				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTasks.get(0).getCreateTime()));
+				externalWhInfoVO.setInventoryAfterQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")) - externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTasks.get(0).getCreateTime()));
+			} else {
+				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")));
+			}
 			externalWhInfoVOs.add(externalWhInfoVO);
 		}
 		PagePaginate pagePaginate = new PagePaginate();

@@ -1,6 +1,6 @@
 package com.jimi.uw_server.controller;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
@@ -16,7 +16,7 @@ import com.jimi.uw_server.util.ResultUtil;
 
 public class DestinationController extends Controller {
 
-	private static DestinationService destinationService = Enhancer.enhance(DestinationService.class);
+	private static DestinationService destinationService = Aop.get(DestinationService.class);
 
 
 	// 添加发料目的地

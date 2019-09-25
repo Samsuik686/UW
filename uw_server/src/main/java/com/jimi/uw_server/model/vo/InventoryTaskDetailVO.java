@@ -39,6 +39,8 @@ public class InventoryTaskDetailVO {
 
 	private Date coverTime;
 
+	private Date productionTime;
+
 
 	public Integer getId() {
 		return id;
@@ -177,6 +179,16 @@ public class InventoryTaskDetailVO {
 
 	public void setMaterialreturnNum(Integer materialreturnNum) {
 		this.materialreturnNum = materialreturnNum;
+	}
+
+
+	public Date getProductionTime() {
+		return productionTime;
+	}
+
+
+	public void setProductionTime(Date productionTime) {
+		this.productionTime = productionTime;
 	}
 
 }

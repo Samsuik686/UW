@@ -1,6 +1,6 @@
 package com.jimi.uw_server.agv.handle;
 
-import com.jfinal.aop.Enhancer;
+import com.jfinal.aop.Aop;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
@@ -29,9 +29,9 @@ import com.jimi.uw_server.service.IOTaskService;
 
 public class IOTaskHandler extends BaseTaskHandler {
 
-	private static IOTaskService taskService = Enhancer.enhance(IOTaskService.class);
+	private static IOTaskService taskService = Aop.get(IOTaskService.class);
 
-	private static MaterialService materialService = Enhancer.enhance(MaterialService.class);
+	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 	public final static String UNDEFINED = "undefined";
 
@@ -224,7 +224,7 @@ public class IOTaskHandler extends BaseTaskHandler {
 
 		if (isAllFinish) {
 
-			taskService.finish(taskId, isLack);
+			taskService.finishRegualrTask(taskId, isLack);
 			TaskItemRedisDAO.removeTaskItemByTaskId(taskId);
 			TaskItemRedisDAO.delTaskStatus(taskId);
 		}
