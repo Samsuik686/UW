@@ -19,7 +19,7 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class RobotController extends Controller {
 
-	private static RobotService robotService =  Aop.get(RobotService.class);
+	private static RobotService robotService = Aop.get(RobotService.class);
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 

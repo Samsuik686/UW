@@ -59,4 +59,6 @@ public class Lock {
 	public static Object START_REGUALR_IOTASK_LOCK = new Object();
 
 	public static Object START_PRECIOUST_IOTASK_LOCK = new Object();
+
+	public static Object START_REGUALR_SAMPLETASL_LOCK = new Object();
 }

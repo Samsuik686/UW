@@ -34,6 +34,8 @@ public class SupplierService extends SelectService {
 
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ?";
 
+	public static final String GET_SUPPLIER_BY_MATERIAL_TYPE_ID = "SELECT * FROM material_type JOIN supplier ON material_type.supplier = supplier.id WHERE material_type.id = ?";
+
 
 	// 添加供应商
 	public String add(String name) {

@@ -34,7 +34,7 @@ public class PrinterService {
 			// 发送打印信息
 			String cycle = material.getCycle() == null ? "无" : material.getCycle();
 			String specification = materialType.getSpecification();
-			String manufacturer = material.getManufacturer() == null ? "无": material.getManufacturer();
+			String manufacturer = material.getManufacturer() == null ? "无" : material.getManufacturer();
 			String designator = materialType.getDesignator() == null ? "" : materialType.getDesignator();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String dateString = dateFormat.format(material.getProductionTime());

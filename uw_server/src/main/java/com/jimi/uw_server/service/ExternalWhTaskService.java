@@ -346,7 +346,6 @@ public class ExternalWhTaskService {
 			}
 		}
 
-		
 		sqlPara.setSql(sql.toString());
 		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);
 		List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(supplierId, WarehouseType.REGULAR);

@@ -45,7 +45,7 @@ public class ManualTaskController extends Controller {
 		}
 		String result = manualTaskService.uploadRecord(info);
 		renderJson(ResultUtil.succeed(result));
-		
+
 	}
 
 

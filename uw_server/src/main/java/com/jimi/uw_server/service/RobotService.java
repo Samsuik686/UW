@@ -141,7 +141,7 @@ public class RobotService extends SelectService {
 						materialBox.update();
 						if (materialBox != null && materialBox.getType().equals(1)) {
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
-							
+
 							int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
 							int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, agvioTaskItem.getBoxId()).size();
 							int unusedcapacity = materialBoxCapacity - usedcapacity;
@@ -160,7 +160,7 @@ public class RobotService extends SelectService {
 
 								}
 							}
-							
+
 						} else if (materialBox != null && materialBox.getType().equals(2)) {
 
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
@@ -194,11 +194,12 @@ public class RobotService extends SelectService {
 						if (task.getType() == TaskType.OUT) {
 							taskService.updateOutQuantityAndMaterialInfo(agvioTaskItem, afterCut, user);
 						}
+						
 					} else {
 						resultString = "该任务条目已发送过回库指令，请勿重复发送回库指令！";
 						return resultString;
 					}
-					break;
+					  break ;
 				}
 			}
 		}
@@ -291,7 +292,7 @@ public class RobotService extends SelectService {
 			}
 		}
 		return null;
-		
+
 	}
 
 

@@ -140,16 +140,16 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 	public java.lang.Integer getStatus() {
 		return getInt("status");
 	}
-	
-	
+
+
 	public M setManufacturer(java.lang.String Manufacturer) {
 		set("manufacturer", Manufacturer);
 		return (M) this;
 	}
 
-	
-	public java.lang.String getManufacturer(){
+
+	public java.lang.String getManufacturer() {
 		return getStr("manufacturer");
 	}
-	
+
 }

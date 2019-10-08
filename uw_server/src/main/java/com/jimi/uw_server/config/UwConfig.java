@@ -1,6 +1,7 @@
 package com.jimi.uw_server.config;
 
 import java.io.File;
+import java.text.ParseException;
 
 import com.jfinal.config.Constants;
 import com.jfinal.config.Handlers;
@@ -39,6 +40,7 @@ import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
 import com.jimi.uw_server.interceptor.ErrorLogInterceptor;
 import com.jimi.uw_server.model.MappingKit;
+import com.jimi.uw_server.ur.boot.RestaurantBootStrap;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
 
@@ -51,7 +53,7 @@ public class UwConfig extends JFinalConfig {
 
 	@Override
 	public void configConstant(Constants me) {
-		me.setDevMode(true);
+		me.setDevMode(false);
 		me.setJsonFactory(new MixedJsonFactory());
 	}
 
@@ -98,7 +100,7 @@ public class UwConfig extends JFinalConfig {
 	@Override
 	public void afterJFinalStart() {
 		try {
-			/*TokenBox.start(PropKit.use("properties.ini").getInt("sessionTimeout"));
+			TokenBox.start(PropKit.use("properties.ini").getInt("sessionTimeout"));
 			if (isProductionEnvironment()) {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("p_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("p_robotInfoURI"));
@@ -109,15 +111,33 @@ public class UwConfig extends JFinalConfig {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("d_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("d_robotInfoURI"));
 			}
-			TaskPool taskPool = new TaskPool();
-			taskPool.setName("TaskPoolThread");
-			taskPool.start();*/
+			/*
+			 * TaskPool taskPool = new TaskPool(); taskPool.setName("TaskPoolThread");
+			 * taskPool.start();
+			 */
 
 			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
 				InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
 				System.out.println("InputHelper is Running now...");
 			}
 			System.out.println("Uw Server is Running now...");
+			Thread urThread = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						RestaurantBootStrap.strap.start();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
+			urThread.setName("UR_SERVER");
+			urThread.start();
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 			e.printStackTrace();
@@ -130,6 +150,7 @@ public class UwConfig extends JFinalConfig {
 		TokenBox.stop();
 		AGVMainSocket.stop();
 		RobotInfoSocket.stop();
+		RestaurantBootStrap.stop();
 	}
 
 
@@ -146,11 +167,11 @@ public class UwConfig extends JFinalConfig {
 			System.out.println("System is in production envrionment");
 		} else if (isTestEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
-			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), 6379, PropKit.get("t_redisPassword"));
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379/* , PropKit.get("d_redisPassword") */);
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379, PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		me.add(dp);

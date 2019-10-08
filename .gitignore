@@ -84,4 +84,7 @@ Servers2/
 /uw_io_app/
 /Document/
 .project
-processor/
+processor/.classpath
+processor/.gitignore
+*.xlsx
+*.prefs

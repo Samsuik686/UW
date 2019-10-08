@@ -129,7 +129,7 @@ public class TaskController extends Controller {
 		if (id == null || window == null) {
 			throw new ParameterException("任务id或仓口id不能为空！");
 		}
-		if (taskService.startRegularIOTask(id, window)) {
+		if (taskService.start(id, window)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());

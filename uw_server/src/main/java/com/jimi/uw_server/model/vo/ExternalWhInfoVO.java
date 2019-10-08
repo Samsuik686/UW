@@ -27,8 +27,9 @@ public class ExternalWhInfoVO {
 	private Integer returnQuantity;
 
 	private Integer inventoryBeforeQuantity;
-	
+
 	private Integer inventoryAfterQuantity;
+
 
 	public String getWareHouse() {
 		return wareHouse;
@@ -138,6 +139,5 @@ public class ExternalWhInfoVO {
 	public void setInventoryAfterQuantity(Integer inventoryAfterQuantity) {
 		this.inventoryAfterQuantity = inventoryAfterQuantity;
 	}
-
 
 }

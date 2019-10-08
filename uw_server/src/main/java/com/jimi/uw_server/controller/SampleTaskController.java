@@ -110,7 +110,7 @@ public class SampleTaskController extends Controller {
 		}
 	}
 
-	
+
 	@Log("完成贵重仓抽检任务编号为{taskId}的任务")
 	public void finishPreciousTask(Integer taskId) {
 		if (taskId == null) {
@@ -122,6 +122,7 @@ public class SampleTaskController extends Controller {
 			renderJson(ResultUtil.failed());
 		}
 	}
+
 
 	@Log("普通仓抽检回库，groupId：{groupId}")
 	public void backRegularUWBox(String groupId) {

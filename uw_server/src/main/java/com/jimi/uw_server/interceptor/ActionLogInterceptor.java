@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.jfinal.aop.Interceptor;
 import com.jfinal.aop.Invocation;
 import com.jfinal.core.Controller;
@@ -61,9 +63,8 @@ public class ActionLogInterceptor implements Interceptor {
 			// 日志生成
 			HttpServletRequest request = controller.getRequest();
 			String url = request.getRequestURL().toString();
-			String ip = request.getRemoteAddr();
 			String parameters = Json.getJson().toJson(request.getParameterMap());
-			actionLog.setIp(ip);
+			actionLog.setIp(getIpAddr(request));
 			actionLog.setParameters(parameters);
 			actionLog.setTime(new Date());
 			actionLog.setUrl(url);
@@ -86,6 +87,22 @@ public class ActionLogInterceptor implements Interceptor {
 			}
 		} else {
 			invocation.invoke();
+		}
+	}
+
+
+	public static String getIpAddr(HttpServletRequest request){
+		String ip = request.getHeader("X-Forwarded-For");
+		if (!StringUtils.isBlank(ip) && !"unknown".equalsIgnoreCase(ip)) {
+			// 多次反向代理后会有多个IP值，第一个为真实IP。
+			int index = ip.indexOf(',');
+			if (index != -1) {
+				return ip.substring(0, index);
+			} else {
+				return ip;
+			}
+		} else {
+			return request.getRemoteAddr();
 		}
 	}
 }

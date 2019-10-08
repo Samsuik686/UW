@@ -8,10 +8,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
@@ -80,6 +83,8 @@ public class IOTaskService {
 	private static ExternalWhLogService externalWhLogService = Aop.get(ExternalWhLogService.class);
 
 	private static final int UW_ID = 0;
+	
+	public static AtomicBoolean flag = new AtomicBoolean(true);
 
 	private static final Object UPDATEOUTQUANTITYANDMATERIALINFO_LOCK = new Object();
 
@@ -130,6 +135,16 @@ public class IOTaskService {
 	private static final String GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME = "select * from material where box != ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
 
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ? and supplier_id = ?";
+
+	private static final String GET_PACKINGLIST_ITEM_BY_TYPE_AND_TASK = "SELECT * FROM packing_list_item WHERE material_type_id = ? AND task_id = ?";
+
+	private static final String GET_MATERIAL_BOX_BY_SUPPLIER_AND_TYPE_SQL = "SELECT * FROM material_box WHERE enabled = 1 AND supplier = ? AND material_box.type = ? AND material_box.status = 1";
+
+	private static final String GET_REMAIN_MATERIAL_BY_BOX = "SELECT * FROM material where box = ? and remainder_quantity > 0";
+
+	private static final String GET_SUM_REMAINDER_QUANTITY_GROUP_BY_MATERIAL_TYPE = "SELECT type,SUM(remainder_quantity) AS sum_remainder_quantity FROM material GROUP BY type";
+
+	private static final String GET_MATERIAL_BY_TYPE_SQL = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0";
 
 	private IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 
@@ -297,7 +312,6 @@ public class IOTaskService {
 	}
 
 
-	// 令指定任务开始
 	public boolean startRegularIOTask(Integer id, Integer window) {
 		synchronized (Lock.START_REGUALR_IOTASK_LOCK) {
 			// 根据仓口id查找对应的仓口记录
@@ -353,6 +367,130 @@ public class IOTaskService {
 			}
 		}
 		return false;
+	}
+
+
+	// 令指定任务开始
+	public boolean start(Integer id, Integer window) {
+		synchronized (Lock.START_REGUALR_IOTASK_LOCK) {
+			// 根据仓口id查找对应的仓口记录
+			Task task = Task.dao.findById(id);
+			// 任务仓库为普通UW仓
+			if (task.getWarehouseType().equals(WarehouseType.REGULAR)) {
+
+				Window windowDao = Window.dao.findById(window);
+				// 判断仓口是否被占用
+				if (windowDao.getBindTaskId() != null) {
+					throw new OperationException("该仓口已被占用，请选择其它仓口！");
+				} else {
+
+					Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR);
+					InventoryLog inventoryLog = null;
+					if (inventoryTask != null) {
+						inventoryLog = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
+					}
+					if (inventoryTask != null && inventoryLog != null) {
+						throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");
+					}
+					int state = task.getState();
+					// 判断任务状态是否为“未开始”
+					if (state != TaskState.WAIT_START) {
+						throw new OperationException("该任务已开始过或已作废！");
+					} else {
+						// 设置仓口，并在仓口表绑定该任务id
+						task.setWindow(window);
+						windowDao.setBindTaskId(id);
+						windowDao.update();
+						// 根据套料单、物料类型表生成任务条目
+						List<PackingListItem> items = PackingListItem.dao.find(GET_TASK_ITEMS_SQL, id);
+						// 如果任务类型为入库或退料入库，则将任务条目加载到redis中，将任务条目状态设置为不可分配
+						if (task.getType() == TaskType.IN) { // 如果任务类型为入库
+
+							// 入库分配空料盒
+							List<MaterialBox> materialBoxs = MaterialBox.dao.find(GET_MATERIAL_BOX_BY_SUPPLIER_AND_TYPE_SQL, task.getSupplier(), 1);
+							int ramdomI = new Random().nextInt(materialBoxs.size());
+							int j = 0;
+							MaterialBox emptyBox = null;
+							for (MaterialBox materialBox : materialBoxs) {
+								Material material = Material.dao.findFirst(GET_REMAIN_MATERIAL_BY_BOX, materialBox.getId());
+								if (material == null) {
+									emptyBox = materialBox;
+									if (j == ramdomI) {
+										break;
+									}
+								}
+								j ++;
+							}
+
+							putTaskItemToRedisAndSendGetBoxCmd(items, emptyBox, window);
+
+						} else if (task.getType() == TaskType.OUT) { // 如果任务类型为出库
+
+							// 检查库存是否足够
+							List<Record> quantityInfos = Db.find(GET_SUM_REMAINDER_QUANTITY_GROUP_BY_MATERIAL_TYPE);
+							for (Record record : quantityInfos) {
+								for (PackingListItem item : items) {
+									if (record.getInt("type").equals(item.getMaterialTypeId()) && record.getInt("sum_remainder_quantity").intValue() < item.getQuantity()) {
+										throw new OperationException("类型ID为" + item.getMaterialTypeId() + "的物料库存不足" + item.getQuantity() + "个，无法开始出库任务");
+									}
+								}
+							}
+
+							// 根据其中一个物料类型获取其中一个物料，进而获取它的盒号（物料获取料演示版本特例：任务所需物料都存在一个料盒中）
+							Material material = Material.dao.findFirst(GET_MATERIAL_BY_TYPE_SQL, items.get(0).getMaterialTypeId());
+							MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
+
+							putTaskItemToRedisAndSendGetBoxCmd(items, materialBox, window);
+
+						}
+						// 将任务状态设置为进行中
+						task.setStartTime(new Date()).setState(TaskState.PROCESSING);
+						return task.update();
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+
+	/**
+	 * 把任务条目放到Redis并发送取盒指令到AGVServer
+	 */
+	private void putTaskItemToRedisAndSendGetBoxCmd(List<PackingListItem> packingListItems, MaterialBox materialBox, Integer window) {
+		// 添加任务条目到Redis
+		AGVIOTaskItem a = null;
+		List<AGVIOTaskItem> taskItems = new ArrayList<AGVIOTaskItem>();
+		List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, window);
+		if (goodsLocations.isEmpty()) {
+			return;
+		}
+		Iterator<GoodsLocation> iterator = goodsLocations.iterator();
+		while (iterator.hasNext()) {
+			GoodsLocation goodsLocation = iterator.next();
+			if (TaskItemRedisDAO.getLocationStatus(window, goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(window, goodsLocation.getId()).equals(0)) {
+				iterator.remove();
+				continue;
+			}
+		}
+		if (goodsLocations.isEmpty()) {
+			throw new OperationException("不存在可用的货位");
+		}
+		for (PackingListItem item : packingListItems) {
+			a = new AGVIOTaskItem(item, TaskItemState.ASSIGNED, 0);
+			a.setBoxId(materialBox.getId());
+			a.setGoodsLocationId(goodsLocations.get(0).getId());
+			taskItems.add(a);
+		}
+		TaskItemRedisDAO.addIOTaskItem(taskItems.get(0).getTaskId(), taskItems);
+
+		// 发送取盒指令
+
+		try {
+			IOTaskHandler.getInstance().sendSendLL(taskItems.get(0), materialBox, goodsLocations.get(0), 0);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 
@@ -735,7 +873,7 @@ public class IOTaskService {
 		for (Record res : result.getList()) {
 			status = false;
 			if (res.getInt("state").equals(TaskState.PROCESSING)) {
-				status = TaskItemRedisDAO.getTaskStatus(res.getInt("id"));
+				status = IOTaskService.flag.get();
 			}
 			TaskVO t = new TaskVO(res.get("id"), res.get("state"), res.get("type"), res.get("file_name"), res.get("create_time"), res.get("priority"), res.get("supplier"), res.get("remarks"), status);
 			taskVOs.add(t);
@@ -1124,7 +1262,7 @@ public class IOTaskService {
 				}
 				if (manufacturer == null || manufacturer.equals("")) {
 					material.setManufacturer("无");
-				}else {
+				} else {
 					material.setManufacturer(manufacturer);
 				}
 				material.setIsInBox(true);
@@ -1261,6 +1399,87 @@ public class IOTaskService {
 
 
 	// 新增入库料盘记录并写入库任务日志记录
+	public boolean in(Integer taskId, String materialId, Integer row, Integer col, Integer materialTypeId, Integer quantity, String supplierName, Date productionTime) {
+		synchronized (Lock.IN_REGULAR_IOTASK_LOCK) {
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKINGLIST_ITEM_BY_TYPE_AND_TASK, materialTypeId, taskId);
+
+			// 新增物料表记录
+			int boxId = 0;
+			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+				if (item.getId().intValue() == packingListItem.getId()) {
+					boxId = item.getBoxId().intValue();
+				}
+			}
+
+			Material material = Material.dao.findById(materialId);
+			if (material == null) {
+				material = new Material();
+				setMaterialFields(quantity, productionTime, packingListItem, boxId, material, row, col);
+				material.setId(materialId);
+				material.setIsInBox(true);
+				material.save();
+			} else {
+				setMaterialFields(quantity, productionTime, packingListItem, boxId, material, row, col);
+				material.setIsInBox(true);
+				material.update();
+			}
+			packingListItem.setFinishTime(new Date()).update();
+			Task task = Task.dao.findById(packingListItem.getTaskId());
+
+			// 写入一条入库任务日志
+			TaskLog taskLog = new TaskLog();
+			taskLog.setPackingListItemId(packingListItem.getId());
+			taskLog.setMaterialId(materialId);
+			taskLog.setQuantity(quantity);
+			// 区分入库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
+			taskLog.setAuto(true);
+			taskLog.setTime(new Date());
+			taskLog.setDestination(task.getDestination());
+			return taskLog.save();
+		}
+	}
+
+
+	public boolean out(Integer taskId, String materialId, Integer materialTypeId, Integer quantity, String supplierName) {
+		synchronized (Lock.OUT_REGULAR_IOTASK_LOCK) {
+			// 通过供应商id获取供应商名
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(GET_PACKINGLIST_ITEM_BY_TYPE_AND_TASK, materialTypeId, taskId);
+			// 对于不在已到站料盒的物料，禁止对其进行操作
+			Material material = Material.dao.findById(materialId);
+
+			// 扫码出库后，将料盘设置为不在盒内
+			if (material.getRemainderQuantity().equals(quantity)) {
+				material.setRemainderQuantity(0);
+			}
+			material.setIsInBox(false);
+			material.update();
+			packingListItem.setFinishTime(new Date()).update();
+			Task task = Task.dao.findById(taskId);
+			// 写入一条出库任务日志
+			TaskLog taskLog = new TaskLog();
+			taskLog.setPackingListItemId(packingListItem.getId());
+			taskLog.setMaterialId(materialId);
+			taskLog.setQuantity(quantity);
+			// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
+			taskLog.setAuto(true);
+			taskLog.setTime(new Date());
+			taskLog.setDestination(task.getDestination());
+			return taskLog.save();
+		}
+	}
+
+
+	private void setMaterialFields(Integer quantity, Date productionTime, PackingListItem packingListItem, int boxId, Material material, Integer row, Integer col) {
+		material.setType(packingListItem.getMaterialTypeId());
+		material.setBox(boxId);
+		material.setRow(row);
+		material.setCol(col);
+		material.setRemainderQuantity(quantity);
+		material.setProductionTime(productionTime);
+	}
+
+
+	// 新增入库料盘记录并写入库任务日志记录
 	public Material inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, User user) {
 		synchronized (Lock.IN_PRECIOUS_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
@@ -1326,7 +1545,7 @@ public class IOTaskService {
 				}
 				if (manufacturer == null || manufacturer.equals("")) {
 					material.setManufacturer("无");
-				}else {
+				} else {
 					material.setManufacturer(manufacturer);
 				}
 				material.setIsInBox(false);
@@ -1375,16 +1594,16 @@ public class IOTaskService {
 			if (!packingListItem.getMaterialTypeId().equals(material.getType())) {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库料号，不能对其进行出库操作！");
 			}
-			//判断是否存在更旧的料盘
+			// 判断是否存在更旧的料盘
 			Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NULLCYCLE, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 			if (material.getCycle() == null) {
 				if (materialTemp1 != null) {
 					throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
 				}
-			}else {
+			} else {
 				if (materialTemp1 != null) {
 					throw new OperationException("该盘物料存在周期，优先出无周期物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
-				}else {
+				} else {
 					Material materialTemp2 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NOTNULLCYCLE, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 					if (materialTemp2 != null) {
 						throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp2.getProductionTime());
@@ -1654,7 +1873,7 @@ public class IOTaskService {
 			throw new OperationException("找不到当前任务条目时间戳为" + materialId + "的料盘的出库记录，修改失败！");
 		}
 		TaskLog taskLog2 = TaskLog.dao.findFirst(TaskSQL.GET_PRECIOUS_OUT_MATERIAL_SQL, taskLog.getPackingListItemId());
-		if (!taskLog2.getStr("materialId").equals(material.getId())){
+		if (!taskLog2.getStr("materialId").equals(material.getId())) {
 			throw new OperationException("时间戳为" + materialId + "并非当前料盒出库料盘中的最新料盘，请修改出库的最后一盘物料！");
 		}
 
@@ -2027,8 +2246,11 @@ public class IOTaskService {
 			if (window == null) {
 				throw new OperationException("任务没有绑定仓口，任务无法开始！");
 			}
+			IOTaskService.flag.compareAndSet(false, true);
+		}else {
+			IOTaskService.flag.compareAndSet(true, false);
 		}
-		TaskItemRedisDAO.setTaskStatus(taskId, flag);
+		
 		return "操作成功";
 	}
 
