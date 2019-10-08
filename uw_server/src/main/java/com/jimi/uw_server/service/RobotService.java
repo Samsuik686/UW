@@ -141,37 +141,43 @@ public class RobotService extends SelectService {
 						materialBox.update();
 						if (materialBox != null && materialBox.getType().equals(1)) {
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
-							AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem);
+							
 							int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
 							int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, agvioTaskItem.getBoxId()).size();
 							int unusedcapacity = materialBoxCapacity - usedcapacity;
-							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && unusedcapacity <= 0)) {
-								GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
-								if (goodsLocation != null) {
-									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
-								} else {
-									throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
-								}
-							} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-								TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), null, agvioTaskItem.getRobotId(), null, null);
-								resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
+							synchronized (Lock.IO_TASK_REDIS_LOCK) {
+								AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem);
+								if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && unusedcapacity <= 0)) {
+									GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
+									if (goodsLocation != null) {
+										ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
+									} else {
+										throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
+									}
+								} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
+									TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), null, agvioTaskItem.getRobotId(), null, null);
+									resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 
+								}
 							}
+							
 						} else if (materialBox != null && materialBox.getType().equals(2)) {
 
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
-							AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem);
-							if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
-								GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
-								if (goodsLocation != null) {
-									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
-								} else {
-									throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
+							synchronized (Lock.IO_TASK_REDIS_LOCK) {
+								AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem);
+								if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
+									GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
+									if (goodsLocation != null) {
+										ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
+									} else {
+										throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
+									}
+								} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
+									TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), null, agvioTaskItem.getRobotId(), null, null);
+									// 更新任务条目绑定的叉车id
+									resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 								}
-							} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-								TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), null, agvioTaskItem.getRobotId(), null, null);
-								// 更新任务条目绑定的叉车id
-								resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 							}
 						}
 						// 更新任务条目状态为已分配回库
@@ -285,6 +291,7 @@ public class RobotService extends SelectService {
 			}
 		}
 		return null;
+		
 	}
 
 
