@@ -87,14 +87,14 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 	}
 
 
-	public M setCycle(java.lang.Integer cycle) {
+	public M setCycle(java.lang.String cycle) {
 		set("cycle", cycle);
 		return (M) this;
 	}
 
 
-	public java.lang.Integer getCycle() {
-		return getInt("cycle");
+	public java.lang.String getCycle() {
+		return getStr("cycle");
 	}
 
 

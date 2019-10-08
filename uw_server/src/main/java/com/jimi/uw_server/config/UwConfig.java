@@ -98,7 +98,7 @@ public class UwConfig extends JFinalConfig {
 	@Override
 	public void afterJFinalStart() {
 		try {
-			/*TokenBox.start(PropKit.use("properties.ini").getInt("sessionTimeout"));
+			TokenBox.start(PropKit.use("properties.ini").getInt("sessionTimeout"));
 			if (isProductionEnvironment()) {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("p_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("p_robotInfoURI"));
@@ -111,7 +111,7 @@ public class UwConfig extends JFinalConfig {
 			}
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
-			taskPool.start();*/
+			taskPool.start();
 
 			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
 				InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
