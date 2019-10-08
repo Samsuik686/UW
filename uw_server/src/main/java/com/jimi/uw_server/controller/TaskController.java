@@ -260,25 +260,31 @@ public class TaskController extends Controller {
 
 	// 物料入库
 	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
-	public void inRegular(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String manufacturer) {
+	public void inRegular(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+		}
+		if (cycle == null || cycle.trim().equals("")) {
+			cycle = "无";
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		Material material = taskService.inRegular(packingListItemId, materialId, quantity, productionTime, supplierName,manufacturer, user);
+		Material material = taskService.inRegular(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, user);
 		renderJson(ResultUtil.succeed(material));
 	}
 
 
 	// 物料入库
 	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
-	public void inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, Integer cycle, String manufacturer) {
+	public void inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
+		if (cycle == null || cycle.trim().equals("")) {
+			cycle = "无";
+		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
 		Material material = taskService.inPrecious(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, user);

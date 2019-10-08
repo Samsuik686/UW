@@ -32,7 +32,7 @@ public class PrinterService {
 			MaterialType materialType = MaterialType.dao.findById(material.getType());
 			Supplier supplier = Supplier.dao.findById(materialType.getSupplier());
 			// 发送打印信息
-			String cycle = material.getCycle() == null ? "无" : material.getCycle().toString();
+			String cycle = material.getCycle() == null ? "无" : material.getCycle();
 			String specification = materialType.getSpecification();
 			String manufacturer = material.getManufacturer() == null ? "无": material.getManufacturer();
 			String designator = materialType.getDesignator() == null ? "" : materialType.getDesignator();

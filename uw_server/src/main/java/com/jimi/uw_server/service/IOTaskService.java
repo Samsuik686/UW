@@ -1045,7 +1045,7 @@ public class IOTaskService {
 
 
 	// 新增入库料盘记录并写入库任务日志记录
-	public Material inRegular(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String manufacturer, User user) {
+	public Material inRegular(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, User user) {
 		synchronized (Lock.IN_REGULAR_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
@@ -1096,6 +1096,7 @@ public class IOTaskService {
 				material.setRow(-1);
 				material.setCol(-1);
 				material.setRemainderQuantity(quantity);
+				material.setCycle(cycle);
 				material.setProductionTime(productionTime);
 				try {
 					material.setStoreTime(getDateTime());
@@ -1113,6 +1114,7 @@ public class IOTaskService {
 				material.setRow(-1);
 				material.setCol(-1);
 				material.setRemainderQuantity(quantity);
+				material.setCycle(cycle);
 				material.setProductionTime(productionTime);
 				try {
 					material.setStoreTime(getDateTime());
@@ -1259,7 +1261,7 @@ public class IOTaskService {
 
 
 	// 新增入库料盘记录并写入库任务日志记录
-	public Material inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, Integer cycle, String manufacturer, User user) {
+	public Material inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, User user) {
 		synchronized (Lock.IN_PRECIOUS_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
