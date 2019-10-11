@@ -27,10 +27,12 @@ import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.GoodsLocation;
+import com.jimi.uw_server.model.InventoryLog;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
@@ -102,7 +104,8 @@ public class SampleTaskService {
 
 	private static Object FINISH_LOCK = new Object();
 
-
+	private Integer batchSize = 2000;
+	
 	public String createSampleTask(File file, Integer supplierId, String remarks, Integer warehouseType) {
 		String resultString = "操作成功";
 		synchronized (Lock.IMPORT_SAMPLE_TASK_FILE_LOCK) {
@@ -168,111 +171,126 @@ public class SampleTaskService {
 
 
 	public String startRegularTask(Integer taskId, String windows) {
-		Task task = Task.dao.findById(taskId);
-		if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
-			throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
-		}
-		List<Window> wList = new ArrayList<>();
-		String[] windowArr = windows.split(",");
-		synchronized (Lock.WINDOW_LOCK) {
+		synchronized (Lock.START_REGUALR_SAMPLETASK_LOCK) {
+			Task task = Task.dao.findById(taskId);
+			if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
+				throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
+			}
+			Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR);
+			InventoryLog inventoryLog = null;
+			if (inventoryTask != null) {
+				inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
+			}
+			if (inventoryTask != null && inventoryLog != null) {
+				throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开抽检任务!");
+			}
+			List<Window> wList = new ArrayList<>();
+			String[] windowArr = windows.split(",");
+			synchronized (Lock.WINDOW_LOCK) {
 
-			for (String w : windowArr) {
-				Integer windowId = 0;
-				try {
-					windowId = Integer.valueOf(w.trim());
-				} catch (Exception e) {
-					throw new OperationException("仓口参数解析错误，请检查参数格式");
+				for (String w : windowArr) {
+					Integer windowId = 0;
+					try {
+						windowId = Integer.valueOf(w.trim());
+					} catch (Exception e) {
+						throw new OperationException("仓口参数解析错误，请检查参数格式");
+					}
+					Window window = Window.dao.findById(windowId);
+					if (window.getBindTaskId() != null) {
+						throw new OperationException("仓口" + windowId + "已经被其他任务绑定");
+					}
+					wList.add(window);
 				}
-				Window window = Window.dao.findById(windowId);
-				if (window.getBindTaskId() != null) {
-					throw new OperationException("仓口" + windowId + "已经被其他任务绑定");
+				if (wList.size() == 0) {
+					throw new OperationException("仓口参数不能为空，请检查参数及其格式");
 				}
-				wList.add(window);
 			}
-			if (wList.size() == 0) {
-				throw new OperationException("仓口参数不能为空，请检查参数及其格式");
+			Material material = Material.dao.findFirst(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR, false);
+			if (material != null) {
+				throw new OperationException("该抽检任务所抽检的物料类型存在不在料盒内的物料，请检查！");
 			}
-		}
-		Material material = Material.dao.findFirst(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR, false);
-		if (material != null) {
-			throw new OperationException("该抽检任务所抽检的物料类型存在不在料盒内的物料，请检查！");
-		}
-		List<Material> materials = Material.dao.find(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR, true);
-		for (Material material2 : materials) {
-			SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
-			record.setMaterialId(material2.getId());
-			record.setBoxId(material2.getBox());
-			record.setTaskId(task.getId());
-			record.save();
-		}
-		List<MaterialBox> materialBoxs = MaterialBox.dao.find(GET_MATERIAL_BOX_BY_SAMPLE_TASK, task.getId());
-		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
-		for (MaterialBox materialBox : materialBoxs) {
-			AGVSampleTaskItem agvSampleTaskItem = new AGVSampleTaskItem(taskId, materialBox.getId());
-			agvSampleTaskItems.add(agvSampleTaskItem);
-		}
-		List<SampleTaskItem> sampleTaskItems = SampleTaskItem.dao.find(GET_SAMPLETASKITEM_BY_TASK, task.getId());
-		// 填写本次抽检库存
-		for (SampleTaskItem sampleTaskItem : sampleTaskItems) {
-			sampleTaskItem.setStoreQuantity(materialService.countAndReturnRemainderQuantityByMaterialTypeId(sampleTaskItem.getMaterialTypeId()));
-			sampleTaskItem.update();
-		}
-		task.setState(TaskState.PROCESSING);
-		task.setStartTime(new Date());
-		task.update();
-		// 绑定仓口
-		if (!agvSampleTaskItems.isEmpty()) {
-			TaskItemRedisDAO.addSampleTaskItem(taskId, agvSampleTaskItems);
-			for (Window window : wList) {
-				window.setBindTaskId(task.getId());
-				window.update();
+			List<Material> materials = Material.dao.find(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR, true);
+			List<SampleTaskMaterialRecord> sampleTaskMaterialRecords = new ArrayList<>();
+			for (Material material2 : materials) {
+				SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
+				record.setMaterialId(material2.getId());
+				record.setBoxId(material2.getBox());
+				record.setTaskId(task.getId());
+				sampleTaskMaterialRecords.add(record);
 			}
-		} else {
-			task.setState(TaskState.FINISHED);
-			task.setEndTime(new Date());
+			Db.batchSave(sampleTaskMaterialRecords, batchSize);
+			List<MaterialBox> materialBoxs = MaterialBox.dao.find(GET_MATERIAL_BOX_BY_SAMPLE_TASK, task.getId());
+			List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
+			for (MaterialBox materialBox : materialBoxs) {
+				AGVSampleTaskItem agvSampleTaskItem = new AGVSampleTaskItem(taskId, materialBox.getId());
+				agvSampleTaskItems.add(agvSampleTaskItem);
+			}
+			List<SampleTaskItem> sampleTaskItems = SampleTaskItem.dao.find(GET_SAMPLETASKITEM_BY_TASK, task.getId());
+			// 填写本次抽检库存
+			for (SampleTaskItem sampleTaskItem : sampleTaskItems) {
+				sampleTaskItem.setStoreQuantity(materialService.countAndReturnRemainderQuantityByMaterialTypeId(sampleTaskItem.getMaterialTypeId()));
+				sampleTaskItem.update();
+			}
+			task.setState(TaskState.PROCESSING);
+			task.setStartTime(new Date());
 			task.update();
+			// 绑定仓口
+			if (!agvSampleTaskItems.isEmpty()) {
+				TaskItemRedisDAO.addSampleTaskItem(taskId, agvSampleTaskItems);
+				for (Window window : wList) {
+					window.setBindTaskId(task.getId());
+					window.update();
+				}
+			} else {
+				task.setState(TaskState.FINISHED);
+				task.setEndTime(new Date());
+				task.update();
+			}
 		}
+		
 		return "操作成功！";
 	}
 
 
 	public String startPreciousTask(Integer taskId) {
-		Task task = Task.dao.findById(taskId);
-		if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
-			throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
-		}
-		Material material = Material.dao.findFirst(GET_PROBLEM_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS, MaterialStatus.NORMAL);
-		if (material != null) {
-			throw new OperationException("该抽检任务所抽检的物料类型存在处于出库、入库或截料状态的物料，请检查！");
-		}
-		List<Material> materials = Material.dao.find(GET_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS, MaterialStatus.NORMAL);
-		for (Material material2 : materials) {
-			SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
-			record.setMaterialId(material2.getId());
-			record.setTaskId(task.getId());
-			record.save();
-		}
-
-		List<SampleTaskItem> sampleTaskItems = SampleTaskItem.dao.find(GET_SAMPLETASKITEM_BY_TASK, task.getId());
-		// 填写本次抽检库存
-		boolean flag = true;
-		for (SampleTaskItem sampleTaskItem : sampleTaskItems) {
-			int store = materialService.countPreciousQuantityByMaterialTypeId(sampleTaskItem.getMaterialTypeId());
-			if (store != 0) {
-				flag = false;
+		synchronized (Lock.START_PRECIOUS_SAMPLETASK_LOCK) {
+			Task task = Task.dao.findById(taskId);
+			if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
+				throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
 			}
-			sampleTaskItem.setStoreQuantity(store);
-			sampleTaskItem.update();
-		}
-
-		if (flag) {
-			task.setState(TaskState.FINISHED);
-			task.setEndTime(new Date());
-			task.update();
-		} else {
-			task.setState(TaskState.PROCESSING);
-			task.setStartTime(new Date());
-			task.update();
+			Material material = Material.dao.findFirst(GET_PROBLEM_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS, MaterialStatus.NORMAL);
+			if (material != null) {
+				throw new OperationException("该抽检任务所抽检的物料类型存在处于出库、入库或截料状态的物料，请检查！");
+			}
+			List<Material> materials = Material.dao.find(GET_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS, MaterialStatus.NORMAL);
+			for (Material material2 : materials) {
+				SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
+				record.setMaterialId(material2.getId());
+				record.setTaskId(task.getId());
+				record.save();
+			}
+	
+			List<SampleTaskItem> sampleTaskItems = SampleTaskItem.dao.find(GET_SAMPLETASKITEM_BY_TASK, task.getId());
+			// 填写本次抽检库存
+			boolean flag = true;
+			for (SampleTaskItem sampleTaskItem : sampleTaskItems) {
+				int store = materialService.countPreciousQuantityByMaterialTypeId(sampleTaskItem.getMaterialTypeId());
+				if (store != 0) {
+					flag = false;
+				}
+				sampleTaskItem.setStoreQuantity(store);
+				sampleTaskItem.update();
+			}
+	
+			if (flag) {
+				task.setState(TaskState.FINISHED);
+				task.setEndTime(new Date());
+				task.update();
+			} else {
+				task.setState(TaskState.PROCESSING);
+				task.setStartTime(new Date());
+				task.update();
+			}
 		}
 		return "操作成功！";
 	}

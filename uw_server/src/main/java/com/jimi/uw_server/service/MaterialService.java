@@ -69,7 +69,7 @@ public class MaterialService extends SelectService {
 
 	private static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT a.* FROM((SELECT task.id, task.file_name, task.type, task.destination AS destination, packing_list_item.material_type_id, packing_list_item.quantity AS plan_quantity, SUM(task_log.quantity) AS quantity, task_log.operator, task_log.time FROM task_log INNER JOIN packing_list_item INNER JOIN task ON packing_list_item.task_id = task.id AND task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.material_type_id = ? GROUP BY task.id, packing_list_item.material_type_id) union ALL (SELECT task.id, task.file_name, task.type, NULL AS destination, sample_task_item.material_type_id, NULL AS plan_quantity, SUM(sample_out_record.quantity) AS quantity, sample_out_record.operator, sample_out_record.time FROM sample_out_record INNER JOIN sample_task_item INNER JOIN task ON task.id = sample_task_item.task_id AND sample_task_item.id = sample_out_record.sample_task_item_id WHERE sample_task_item.material_type_id = ? GROUP BY task.id, sample_task_item.material_type_id)) a";
 
-	private static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.type = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
+	private static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity, material_type.designator as designator FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.type = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
 	private static final String GET_MATERIAL_DETIAL_REPORT_SQL = "SELECT supplier.`name` AS supplier_name, material_type.id AS material_type_id, material_type.`no` AS `no`, material_type.specification AS specification, material_box.id AS box_id, material_box.area AS area, material_box. ROW AS X, material_box.col AS Y, material_box.height AS Z, material.id AS material_id, material.col AS col, material.`row` AS `row`, material.production_time AS production_time, material.remainder_quantity AS quantity FROM supplier INNER JOIN material_type INNER JOIN material_box INNER JOIN material ON supplier.id = material_type.supplier AND supplier.id = material_box.supplier AND material_type.id = material.type AND material.box = material_box.id WHERE material_type.type = ? AND material_type.supplier = ? AND material_type.enabled = 1 AND remainder_quantity > 0 ORDER BY material_type.id, material_box.id";
 
@@ -469,11 +469,20 @@ public class MaterialService extends SelectService {
 		List<Record> materialRecord = Db.find(GET_MATERIAL_REPORT_SQL, supplier, type);
 		String[] field = null;
 		String[] head = null;
-		field = new String[] {"id", "no", "specification", "box", "row", "col", "height", "quantity"};
-		head = new String[] {"物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};
-		ExcelWritter writter = ExcelWritter.create(true);
-		writter.fill(materialRecord, fileName, field, head);
-		writter.write(output, true);
+		if (type.equals(WarehouseType.REGULAR)) {
+			field = new String[] {"id", "no", "specification", "box", "row", "col", "height", "quantity"};
+			head = new String[] {"物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};
+			ExcelWritter writter = ExcelWritter.create(true);
+			writter.fill(materialRecord, fileName, field, head);
+			writter.write(output, true);
+		}else {
+			field = new String[] {"id", "no", "specification", "designator", "quantity"};
+			head = new String[] {"物料类型号", "料号", "规格号", "位号", "物料数量"};
+			ExcelWritter writter = ExcelWritter.create(true);
+			writter.fill(materialRecord, fileName, field, head);
+			writter.write(output, true);
+		}
+		
 	}
 
 

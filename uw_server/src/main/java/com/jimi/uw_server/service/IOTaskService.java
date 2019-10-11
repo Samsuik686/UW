@@ -111,8 +111,6 @@ public class IOTaskService {
 
 	private static final String GET_EWH_LOG_BY_TASKID_AND_MATERIALTYPEID = "SELECT * FROM external_wh_log WHERE external_wh_log.task_id = ? AND external_wh_log.material_type_id = ? AND external_wh_log.quantity < 0";
 
-	private static final String GET_UNCOVER_INVENTORY_LOG_BY_TASKID = "SELECT * FROM inventory_log WHERE task_id = ? AND enabled = 1";
-
 	private static final String GET_FREE_WINDOWS_SQL = "SELECT id FROM window WHERE `bind_task_id` IS NULL ORDER BY id ASC";
 
 	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 0) ORDER BY id ASC";
@@ -314,7 +312,7 @@ public class IOTaskService {
 					Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR);
 					InventoryLog inventoryLog = null;
 					if (inventoryTask != null) {
-						inventoryLog = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
+						inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
 					}
 					if (inventoryTask != null && inventoryLog != null) {
 						throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");
@@ -366,7 +364,7 @@ public class IOTaskService {
 				Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS);
 				InventoryLog inventoryLog = null;
 				if (inventoryTask != null) {
-					inventoryLog = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
+					inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
 				}
 				if (inventoryTask != null && inventoryLog != null) {
 					throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");

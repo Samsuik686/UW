@@ -7,8 +7,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.jfinal.plugin.activerecord.Db;
@@ -52,6 +54,7 @@ public class ExternalWhTaskService {
 
 	public static final MaterialService materialService = MaterialService.me;
 
+	private Integer batchSize = 2000;
 
 	/**
 	 * 导入外仓的任务
@@ -105,22 +108,38 @@ public class ExternalWhTaskService {
 						resultString = "导入失败，料号为" + item.getNo() + "的物料表中存在重复项！";
 						return resultString;
 					}
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR);
 					materailTypeIdSet.add(mType.getId());
 					if (sourceHwId != 0 && sourceHwId != -1) {
-						int storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId);
+						int storeNum = 0;
+						if (inventoryTask != null) {
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId, inventoryTask.getCreateTime());
+						}else {
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId);
+						}
+						
 						if (storeNum < item.getQuantity()) {
 							resultString = "导入失败，表格中料号为" + item.getNo() + "的数量大于发料仓库存";
 							return resultString;
 						}
+						externalWhLog.setQuantity(item.getQuantity());
+					}else if (sourceHwId == 0) {
+						int storeNum = 0;
+						if (inventoryTask != null) {
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId, inventoryTask.getCreateTime());
+						}else {
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId);
+						}
+						if (storeNum + item.getQuantity() < 0) {
+							resultString = "导入失败，表格中料号为" + item.getNo() + "的数量抵扣数量大于目的仓库存";
+							return resultString;
+						}else {
+							externalWhLog.setQuantity(item.getQuantity());
+						}
+					}else {
+						externalWhLog.setQuantity(item.getQuantity());
 					}
 					externalWhLog.setMaterialTypeId(mType.getId());
-					externalWhLog.setQuantity(item.getQuantity());
-					if (sourceHwId == 0) {
-						int storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId);
-						if (storeNum + item.getQuantity() < 0) {
-							externalWhLog.setQuantity(0 - storeNum);
-						}
-					}
 					externalWhLog.setSourceWh(sourceHwId);
 					externalWhLog.setDestination(destinationHwId);
 					externalWhLog.setOperatior(user.getUid());
@@ -142,8 +161,8 @@ public class ExternalWhTaskService {
 			for (ExternalWhLog externalWhLog : externalWhLogs) {
 				externalWhLog.setTaskId(task.getId());
 				externalWhLog.setTime(new Date());
-				externalWhLog.save();
 			}
+			Db.batchSave(externalWhLogs, batchSize);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new OperationException(e.getMessage());
@@ -194,9 +213,14 @@ public class ExternalWhTaskService {
 						return resultString;
 					}
 					materailTypeIdSet.add(mType.getId());
-
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR);
 					if (HwId != 0) {
-						int storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
+						int storeNum = 0;
+						if (inventoryTask != null) {
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId, inventoryTask.getCreateTime());
+						}else {
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
+						}
 						if (storeNum < item.getQuantity()) {
 							resultString = "导入失败，料号为" + item.getNo() + "的损耗物料数量大于库存";
 							return resultString;
@@ -220,8 +244,8 @@ public class ExternalWhTaskService {
 			for (ExternalWhLog externalWhLog : externalWhLogs) {
 				externalWhLog.setTaskId(task.getId());
 				externalWhLog.setTime(new Date());
-				externalWhLog.save();
 			}
+			Db.batchSave(externalWhLogs, batchSize);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new OperationException(e.getMessage());
@@ -253,8 +277,14 @@ public class ExternalWhTaskService {
 			resultString = "目的仓不存在，请确认系统中存在该物料类型！";
 			return resultString;
 		}
+		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseType.REGULAR);
 		if (HwId != 0) {
-			int storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
+			int storeNum = 0;
+			if (inventoryTask != null) {
+				storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId, inventoryTask.getCreateTime());
+			}else {
+				storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
+			}
 			if (storeNum < quantity) {
 				resultString = "损耗物料数量不能大于库存";
 				return resultString;
@@ -349,7 +379,7 @@ public class ExternalWhTaskService {
 		
 		sqlPara.setSql(sql.toString());
 		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);
-		List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(supplierId, WarehouseType.REGULAR);
+		Map<Integer, Task> unStartInvTasks = new HashMap<Integer, Task>();
 		for (Record record : page.getList()) {
 			ExternalWhInfoVO externalWhInfoVO = new ExternalWhInfoVO();
 			externalWhInfoVO.setNo(record.getStr("no"));
@@ -359,9 +389,16 @@ public class ExternalWhTaskService {
 			externalWhInfoVO.setSupplier(record.getStr("supplier_name"));
 			externalWhInfoVO.setWhId(record.getInt("wh_id"));
 			externalWhInfoVO.setWareHouse(record.getStr("wh_name"));
-			if (inventoryTasks.size() > 0) {
-				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTasks.get(0).getCreateTime()));
-				externalWhInfoVO.setInventoryAfterQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")) - externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTasks.get(0).getCreateTime()));
+			Task inventoryTask = null;
+			if (unStartInvTasks.containsKey(record.getInt("supplier_id"))) {
+				inventoryTask = unStartInvTasks.get(record.getInt("supplier_id"));
+			}else {
+				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR);
+				unStartInvTasks.put(record.getInt("supplier_id"), inventoryTask);
+			}
+			if (inventoryTask != null) {
+				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTask.getCreateTime()));
+				externalWhInfoVO.setInventoryAfterQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")) - externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTask.getCreateTime()));
 			} else {
 				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")));
 			}
