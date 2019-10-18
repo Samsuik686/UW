@@ -51,7 +51,7 @@ public class UwConfig extends JFinalConfig {
 
 	@Override
 	public void configConstant(Constants me) {
-		me.setDevMode(true);
+		me.setDevMode(false);
 		me.setJsonFactory(new MixedJsonFactory());
 	}
 

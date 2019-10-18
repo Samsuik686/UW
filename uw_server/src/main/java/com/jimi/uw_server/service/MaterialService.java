@@ -207,7 +207,7 @@ public class MaterialService extends SelectService {
 			return resultString;
 		}
 		if (type.equals(WarehouseType.PRECIOUS)) {
-			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, designator, WarehouseType.PRECIOUS);
+			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, designator, WarehouseType.PRECIOUS);
 			if (tempMaterialType != null) {
 				resultString = "存在物料的位号与新添加物料的位号相同，添加失败！";
 				return resultString;
@@ -254,7 +254,7 @@ public class MaterialService extends SelectService {
 		materialType.setRadius(radius);
 		materialType.setEnabled(enabled);
 		if (materialType.getType().equals(WarehouseType.PRECIOUS)) {
-			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, designator.trim(), WarehouseType.PRECIOUS);
+			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, materialType.getSupplier(), designator.trim(), WarehouseType.PRECIOUS);
 			if (tempMaterialType != null && !tempMaterialType.getId().equals(id)) {
 				resultString = "存在其他物料的位号与新添加物料的位号相同，添加失败！";
 				return resultString;
@@ -700,7 +700,7 @@ public class MaterialService extends SelectService {
 						/*
 						 * 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
 						 */
-						MaterialType tempMaterialType2 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, item.getDesignator().trim(), WarehouseType.PRECIOUS);
+						MaterialType tempMaterialType2 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, item.getDesignator().trim(), WarehouseType.PRECIOUS);
 						
 						if (tempMaterialType1 != null) {
 							resultString = "导入物料类型表失败，表格第" + i + "行的料号已存在于系统中！";
