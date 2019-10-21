@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
+import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
@@ -244,6 +245,12 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(taskService.select(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
+	
+	//获取截料中的物料的信息
+	public void getCuttingMaterial() {
+		List<Record> records = taskService.getCuttingMaterial();
+		renderJson(ResultUtil.succeed(records));
+	}
 
 	// 获取指定仓口任务条目
 	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {

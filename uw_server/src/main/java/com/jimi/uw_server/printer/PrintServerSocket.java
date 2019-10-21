@@ -71,9 +71,9 @@ public class PrintServerSocket {
 	}
 
 
-	public synchronized static void send(String printerIP, String id, String materialId, String materialNo, String remainingQuantity, String productDate, String user, String supplier, String cycle, String manufacturer, String specification, String designator) throws IOException {
+	public synchronized static void send(String printerIP, String id, String materialId, String materialNo, String remainingQuantity, String productDate, String user, String supplier, String cycle, String manufacturer, String specification, String designator, Integer type) throws IOException {
 		results.put(id, null);
-		PrinterInfo printerInfo = new PrinterInfo(id, materialId, user, productDate, remainingQuantity, materialNo, supplier, cycle, manufacturer, specification, designator);
+		PrinterInfo printerInfo = new PrinterInfo(id, materialId, user, productDate, remainingQuantity, materialNo, supplier, cycle, manufacturer, specification, designator, type);
 		JSONObject jsonObject = (JSONObject) JSONObject.toJSON(printerInfo);
 		Session session = clients.get(printerIP);
 		session.getBasicRemote().sendText(jsonObject.toJSONString());

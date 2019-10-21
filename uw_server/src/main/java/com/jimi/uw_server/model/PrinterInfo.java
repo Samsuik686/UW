@@ -24,6 +24,7 @@ public class PrinterInfo {
 	
 	private String manufacturer;
 
+	private Integer type;
 
 	public String getMaterialId() {
 		return materialId;
@@ -133,9 +134,19 @@ public class PrinterInfo {
 	public void setDesignator(String designator) {
 		this.designator = designator;
 	}
+	
+	
+	public Integer getType() {
+		return type;
+	}
 
 
-	public PrinterInfo(String id, String materialId, String user, String productDate, String remainingQuantity, String materialNo, String supplier, String cycle, String manufacturer, String specification, String designator) {
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+
+	public PrinterInfo(String id, String materialId, String user, String productDate, String remainingQuantity, String materialNo, String supplier, String cycle, String manufacturer, String specification, String designator, Integer type) {
 		this.id = id;
 		this.supplier = supplier;
 		this.user = user;
@@ -147,5 +158,6 @@ public class PrinterInfo {
 		this.manufacturer = manufacturer;
 		this.specification = specification;
 		this.designator = designator;
+		this.type = type;
 	}
 }

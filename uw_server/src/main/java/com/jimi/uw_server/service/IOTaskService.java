@@ -18,6 +18,7 @@ import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.InputHelper.send.MyInputHelper;
 import com.jimi.uw_server.agv.dao.InputMaterialRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -26,6 +27,7 @@ import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.constant.BoxState;
+import com.jimi.uw_server.constant.MaterialBoxType;
 import com.jimi.uw_server.constant.MaterialStatus;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
@@ -131,6 +133,7 @@ public class IOTaskService {
 
 	private IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 
+	private static final String GET_CUTTING_MATERIAL_SQL = "SELECT 	material.id as materialId, material.remainder_quantity AS materialQuantity, task_log.quantity AS outQuantity, material.manufacturer AS manufacturer, material.production_time AS productionTime , material.cycle AS cycle, material_type.`no` AS `no`, material_type.specification AS specification, supplier.`name` AS supplierName, task_log.packing_list_item_id AS packingListItemId, task_log.id AS taskLogId FROM material INNER JOIN material_type INNER JOIN supplier INNER JOIN task_log ON material.type = material_type.id AND material_type.supplier = supplier.id AND material.id = task_log.material_id WHERE material.status = ? AND material.remainder_quantity > 0 AND material_type .type = ? AND material_type.enabled = 1 AND supplier.enabled = 1";
 
 	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType) throws Exception {
@@ -1134,7 +1137,7 @@ public class IOTaskService {
 					MaterialHelper.getMaterialLocation(material, false);
 				} else {
 					Material material2 = Material.dao.findFirst(SQL.GET_MATERIAL_WITH_LOCATION_BY_SUPPLIER, supplierId);
-					Material material3 = Material.dao.findFirst(SQL.GET_MATERIAL_BY_SUPPLIER, supplierId, material.getId());
+					Material material3 = Material.dao.findFirst(SQL.GET_MATERIAL_BY_SUPPLIER, supplierId, material.getId(), MaterialBoxType.STANDARD);
 					if (material2 != null || material3 == null) {
 						MaterialHelper.getMaterialLocation(material, true);
 					} else {
@@ -1182,6 +1185,20 @@ public class IOTaskService {
 	}
 
 
+	/**
+	 * 获取截料中的物料信息
+	 * @return
+	 */
+	public List<Record> getCuttingMaterial() {
+		SqlPara sqlPara = new SqlPara();
+		sqlPara.setSql(GET_CUTTING_MATERIAL_SQL);
+		sqlPara.addPara(MaterialStatus.CUTTING);
+		sqlPara.addPara(WarehouseType.REGULAR);
+		List<Record> list = Db.find(sqlPara);
+		return list;
+	}
+	
+	
 	// 写出库任务日志
 	public boolean outRegular(Integer packListItemId, String materialId, Integer quantity, String supplierName, User user) {
 		synchronized (Lock.OUT_REGULAR_IOTASK_LOCK) {
@@ -1239,8 +1256,7 @@ public class IOTaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
 			}
 			// 扫码出库后，将料盘设置为不在盒内
-			material.setIsInBox(false);
-			material.update();
+			material.setIsInBox(false).setStatus(MaterialStatus.OUTTING).update();
 
 			Task task = Task.dao.findById(packingListItem.getTaskId());
 			// 写入一条出库任务日志
@@ -1442,8 +1458,7 @@ public class IOTaskService {
 			if (record != null && !record.getDate("production_time").equals(material.getProductionTime())) {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库记录中最新的料盘，禁止删除！");
 			}
-			material.setIsInBox(true);
-			material.update();
+			material.setIsInBox(true).setStatus(MaterialStatus.NORMAL).update();
 			TaskLog.dao.deleteById(taskLog.getId());
 			// 判断删除的是否是截料的那一盘，是的话，消除其截料状态
 			record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
@@ -1495,9 +1510,8 @@ public class IOTaskService {
 				for (Record record : records) {
 					acturallyNum += record.getInt("quantity");
 					int remainderQuantity = record.getInt("remainder_quantity") - record.getInt("quantity");
-
+					Material material = Material.dao.findById(record.getStr("material_id"));
 					if (!afterCut && item.getIsForceFinish()) {
-						Material material = Material.dao.findById(record.getStr("material_id"));
 						if (remainderQuantity <= 0) {
 							material.setRow(-1);
 							material.setCol(-1);
@@ -1509,6 +1523,9 @@ public class IOTaskService {
 							material.setIsInBox(false);
 							material.update();
 						}
+					}
+					if(material.getStatus().equals(MaterialStatus.OUTTING)) {
+						material.setStatus(MaterialStatus.NORMAL).update();
 					}
 				}
 				Material material2 = Material.dao.findFirst(GET_MATERIAL_BY_BOX_ID, item.getBoxId(), true);
@@ -1625,8 +1642,10 @@ public class IOTaskService {
 				record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
 				if (record != null) {
 					TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, null, null, null, null, null, null, true);
+					material.setStatus(MaterialStatus.CUTTING).update();
 				} else {
 					TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, null, null, null, null, null, null, false);
+					material.setStatus(MaterialStatus.OUTTING).update();
 				}
 				result = "操作成功";
 				return result;
@@ -1696,7 +1715,7 @@ public class IOTaskService {
 		} else if (material.getIsInBox()) {
 			throw new OperationException("该料盘已设置为在盒内，请将料盘放入料盒内!");
 		} else {
-			material.setIsInBox(true).update();
+			material.setIsInBox(true).setStatus(MaterialStatus.OUTTING).update();
 			return material;
 		}
 	}
