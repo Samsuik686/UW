@@ -18,7 +18,7 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class UserController extends Controller {
 
-	private UserService userService =  Aop.get(UserService.class);
+	private UserService userService = Aop.get(UserService.class);
 
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 

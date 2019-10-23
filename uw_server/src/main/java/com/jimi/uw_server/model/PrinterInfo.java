@@ -9,9 +9,9 @@ public class PrinterInfo {
 	private String user;
 
 	private String specification;
-	
+
 	private String designator;
-	
+
 	private String productDate;
 
 	private String remainingQuantity;
@@ -21,10 +21,11 @@ public class PrinterInfo {
 	private String supplier;
 
 	private String cycle;
-	
+
 	private String manufacturer;
 
 	private Integer type;
+
 
 	public String getMaterialId() {
 		return materialId;
@@ -105,7 +106,7 @@ public class PrinterInfo {
 		this.cycle = cycle;
 	}
 
-	
+
 	public String getManufacturer() {
 		return manufacturer;
 	}
@@ -115,27 +116,27 @@ public class PrinterInfo {
 		this.manufacturer = manufacturer;
 	}
 
-	
+
 	public String getSpecification() {
 		return specification;
 	}
 
-	
+
 	public void setSpecification(String specification) {
 		this.specification = specification;
 	}
 
-	
+
 	public String getDesignator() {
 		return designator;
 	}
 
-	
+
 	public void setDesignator(String designator) {
 		this.designator = designator;
 	}
-	
-	
+
+
 	public Integer getType() {
 		return type;
 	}

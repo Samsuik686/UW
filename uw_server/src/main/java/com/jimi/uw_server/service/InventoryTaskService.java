@@ -35,6 +35,7 @@ import com.jimi.uw_server.model.ExternalInventoryLog;
 import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.GoodsLocation;
 import com.jimi.uw_server.model.InventoryLog;
+import com.jimi.uw_server.model.InventoryTaskBaseInfo;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.MaterialType;
@@ -147,12 +148,13 @@ public class InventoryTaskService {
 
 	private Integer batchSize = 2000;
 
+
 	/**
 	 * 创建盘点任务
 	 * @param supplierId
 	 * @return
 	 */
-	public String createRegularTask(Integer supplierId) {
+	public String createRegularTask(Integer supplierId, String destinationIds) {
 		Supplier supplier = Supplier.dao.findById(supplierId);
 		if (supplier == null) {
 			throw new OperationException("供应商不存在！");
@@ -160,6 +162,20 @@ public class InventoryTaskService {
 		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplierId, WarehouseType.REGULAR);
 		if (task != null) {
 			throw new OperationException("该供应商已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
+		}
+		String[] destinationIdStringArr = destinationIds.split(",");
+		List<Integer> destinationIdIntegerArr = new ArrayList<>();
+		for (String string : destinationIdStringArr) {
+			try {
+				Integer destinationId = Integer.valueOf(string);
+				Destination destination = Destination.dao.findById(destinationId);
+				if (destination == null) {
+					throw new OperationException("盘点的目的仓库不存在！");
+				}
+				destinationIdIntegerArr.add(destinationId);
+			} catch (NumberFormatException e) {
+				throw new OperationException("盘点的目的仓库ID格式不正确！");
+			}
 		}
 		task = new Task();
 		Date date = new Date();
@@ -170,6 +186,10 @@ public class InventoryTaskService {
 		task.setWarehouseType(WarehouseType.REGULAR);
 		task.setSupplier(supplierId);
 		task.save();
+		for (Integer destinationId : destinationIdIntegerArr) {
+			InventoryTaskBaseInfo info = new InventoryTaskBaseInfo();
+			info.setTaskId(task.getId()).setDestinationId(destinationId).save();
+		}
 		return "操作成功";
 	}
 
@@ -188,6 +208,7 @@ public class InventoryTaskService {
 		if (task != null) {
 			throw new OperationException("该供应商已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
 		}
+		
 		task = new Task();
 		Date date = new Date();
 		task.setFileName(getTaskName(date, WarehouseType.PRECIOUS));
@@ -284,7 +305,7 @@ public class InventoryTaskService {
 					inventoryLog.setEnabled(true);
 					inventoryLogs.add(inventoryLog);
 				}
-				
+
 				List<ExternalWhInfoVO> externalWhInfoVOs = externalWhTaskService.selectExternalWhInfo(null, task.getSupplier(), null, task);
 
 				for (ExternalWhInfoVO externalWhInfoVO : externalWhInfoVOs) {
@@ -324,7 +345,7 @@ public class InventoryTaskService {
 				TaskItemRedisDAO.addInventoryTaskItem(taskId, agvInventoryTaskItems);
 			}
 		}
-		
+
 		return "操作成功";
 	}
 
@@ -339,7 +360,7 @@ public class InventoryTaskService {
 			} else if (!task.getState().equals(TaskState.WAIT_START)) {
 				throw new OperationException("该任务并未处于未开始状态，无法开始任务！");
 			}
-	
+
 			Task tempTask = Task.dao.findFirst(GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS);
 			if (tempTask != null) {
 				throw new OperationException("当前盘点的供应商存在进行中的盘点任务，请等待任务结束后再开始盘点任务!");
@@ -1301,8 +1322,8 @@ public class InventoryTaskService {
 		List<Task> tasks = Task.dao.find(GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER, supplierId, warehouseType);
 		return tasks;
 	}
-	
-	
+
+
 	public Task getOneUnStartInventoryTask(Integer supplierId, Integer warehouseType) {
 
 		Task task = Task.dao.findFirst(GET_UNSTART_INVENTORY_TASK_BY_SUPPLIER, supplierId, warehouseType);

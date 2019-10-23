@@ -245,12 +245,13 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(taskService.select(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
-	
-	//获取截料中的物料的信息
+
+	// 获取截料中的物料的信息
 	public void getCuttingMaterial() {
 		List<Record> records = taskService.getCuttingMaterial();
 		renderJson(ResultUtil.succeed(records));
 	}
+
 
 	// 获取指定仓口任务条目
 	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {

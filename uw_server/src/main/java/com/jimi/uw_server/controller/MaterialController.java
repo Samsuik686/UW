@@ -26,7 +26,7 @@ import com.jimi.uw_server.util.ResultUtil;
  */
 public class MaterialController extends Controller {
 
-	private static MaterialService materialService =  Aop.get(MaterialService.class);
+	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 
 	// 统计物料类型信息
@@ -72,8 +72,8 @@ public class MaterialController extends Controller {
 			throw new OperationException(resultString);
 		}
 	}
-	
-	
+
+
 	// 添加物料类型#
 	@Log("添加贵重仓料号为{no}的物料类型，规格号为{specification}，供应商ID为{supplierId}，厚度为{thickness}，直径为{radius}， 位号为{designator}")
 	public void addPreciousMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, String designator) {
@@ -99,8 +99,8 @@ public class MaterialController extends Controller {
 			throw new OperationException(resultString);
 		}
 	}
-	
-	
+
+
 	@Log("更新贵重仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}， 行号为{designator}")
 	public void updatePreciousMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String designator) {
 		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, designator);
@@ -111,7 +111,7 @@ public class MaterialController extends Controller {
 		}
 	}
 
-	
+
 	@Log("批量删除普通仓物料类型号为[{filter}]的物料类型")
 	public void deleteRegularMaterialByIds(String filter) {
 		if (filter == null || filter.equals("")) {
@@ -124,7 +124,7 @@ public class MaterialController extends Controller {
 			renderJson(ResultUtil.succeed(resultString));
 		}
 	}
-	
+
 
 	@Log("批量删除贵重仓物料类型号为[{filter}]的物料类型")
 	public void deletePreciousMaterialByIds(String filter) {

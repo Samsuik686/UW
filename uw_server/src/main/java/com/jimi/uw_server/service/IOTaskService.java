@@ -135,6 +135,7 @@ public class IOTaskService {
 
 	private static final String GET_CUTTING_MATERIAL_SQL = "SELECT 	material.id as materialId, material.remainder_quantity AS materialQuantity, task_log.quantity AS outQuantity, material.manufacturer AS manufacturer, material.production_time AS productionTime , material.cycle AS cycle, material_type.`no` AS `no`, material_type.specification AS specification, supplier.`name` AS supplierName, task_log.packing_list_item_id AS packingListItemId, task_log.id AS taskLogId FROM material INNER JOIN material_type INNER JOIN supplier INNER JOIN task_log ON material.type = material_type.id AND material_type.supplier = supplier.id AND material.id = task_log.material_id WHERE material.status = ? AND material.remainder_quantity > 0 AND material_type .type = ? AND material_type.enabled = 1 AND supplier.enabled = 1";
 
+
 	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType) throws Exception {
 		String resultString = "添加成功！";
@@ -1125,7 +1126,7 @@ public class IOTaskService {
 				}
 				if (manufacturer == null || manufacturer.equals("")) {
 					material.setManufacturer("无");
-				}else {
+				} else {
 					material.setManufacturer(manufacturer);
 				}
 				material.setIsInBox(true);
@@ -1197,8 +1198,8 @@ public class IOTaskService {
 		List<Record> list = Db.find(sqlPara);
 		return list;
 	}
-	
-	
+
+
 	// 写出库任务日志
 	public boolean outRegular(Integer packListItemId, String materialId, Integer quantity, String supplierName, User user) {
 		synchronized (Lock.OUT_REGULAR_IOTASK_LOCK) {
@@ -1340,7 +1341,7 @@ public class IOTaskService {
 				}
 				if (manufacturer == null || manufacturer.equals("")) {
 					material.setManufacturer("无");
-				}else {
+				} else {
 					material.setManufacturer(manufacturer);
 				}
 				material.setIsInBox(false);
@@ -1389,16 +1390,16 @@ public class IOTaskService {
 			if (!packingListItem.getMaterialTypeId().equals(material.getType())) {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库料号，不能对其进行出库操作！");
 			}
-			//判断是否存在更旧的料盘
+			// 判断是否存在更旧的料盘
 			Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NULLCYCLE, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 			if (material.getCycle() == null) {
 				if (materialTemp1 != null) {
 					throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
 				}
-			}else {
+			} else {
 				if (materialTemp1 != null) {
 					throw new OperationException("该盘物料存在周期，优先出无周期物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
-				}else {
+				} else {
 					Material materialTemp2 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NOTNULLCYCLE, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 					if (materialTemp2 != null) {
 						throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp2.getProductionTime());
@@ -1524,7 +1525,7 @@ public class IOTaskService {
 							material.update();
 						}
 					}
-					if(material.getStatus().equals(MaterialStatus.OUTTING)) {
+					if (material.getStatus().equals(MaterialStatus.OUTTING)) {
 						material.setStatus(MaterialStatus.NORMAL).update();
 					}
 				}
@@ -1671,7 +1672,7 @@ public class IOTaskService {
 			throw new OperationException("找不到当前任务条目时间戳为" + materialId + "的料盘的出库记录，修改失败！");
 		}
 		TaskLog taskLog2 = TaskLog.dao.findFirst(TaskSQL.GET_PRECIOUS_OUT_MATERIAL_SQL, taskLog.getPackingListItemId());
-		if (!taskLog2.getStr("materialId").equals(material.getId())){
+		if (!taskLog2.getStr("materialId").equals(material.getId())) {
 			throw new OperationException("时间戳为" + materialId + "并非当前料盒出库料盘中的最新料盘，请修改出库的最后一盘物料！");
 		}
 

@@ -13,7 +13,7 @@ import com.jimi.uw_server.util.ResultUtil;
  */
 public class LogController extends Controller {
 
-	private static LogService logService =  Aop.get(LogService.class);
+	private static LogService logService = Aop.get(LogService.class);
 
 
 	// 根据表名查询日志

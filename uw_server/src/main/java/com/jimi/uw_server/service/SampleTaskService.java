@@ -105,7 +105,8 @@ public class SampleTaskService {
 	private static Object FINISH_LOCK = new Object();
 
 	private Integer batchSize = 2000;
-	
+
+
 	public String createSampleTask(File file, Integer supplierId, String remarks, Integer warehouseType) {
 		String resultString = "操作成功";
 		synchronized (Lock.IMPORT_SAMPLE_TASK_FILE_LOCK) {
@@ -247,7 +248,7 @@ public class SampleTaskService {
 				task.update();
 			}
 		}
-		
+
 		return "操作成功！";
 	}
 
@@ -269,7 +270,7 @@ public class SampleTaskService {
 				record.setTaskId(task.getId());
 				record.save();
 			}
-	
+
 			List<SampleTaskItem> sampleTaskItems = SampleTaskItem.dao.find(GET_SAMPLETASKITEM_BY_TASK, task.getId());
 			// 填写本次抽检库存
 			boolean flag = true;
@@ -281,7 +282,7 @@ public class SampleTaskService {
 				sampleTaskItem.setStoreQuantity(store);
 				sampleTaskItem.update();
 			}
-	
+
 			if (flag) {
 				task.setState(TaskState.FINISHED);
 				task.setEndTime(new Date());

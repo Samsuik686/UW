@@ -17,14 +17,14 @@ public class PrinterController extends Controller {
 	private static PrinterService printerService = PrinterService.me;
 
 
-	public void print(String ip, String materialId, Integer quantity) {
-		if (materialId == null || ip == null || quantity == null) {
+	public void print(String ip, String materialId, Integer packingListItemId) {
+		if (materialId == null || ip == null || packingListItemId == null) {
 			throw new ParameterException("参数不能为空");
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
 		try {
-			String reuslt = printerService.print(ip, materialId, quantity, user);
+			String reuslt = printerService.print(ip, materialId, packingListItemId, user);
 			renderJson(ResultUtil.succeed(reuslt));
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -33,6 +33,26 @@ public class PrinterController extends Controller {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+	}
+	
+	
+	public void printSingle(String ip, String materialId, Integer quantity) {
+		if (materialId == null || ip == null || quantity == null) {
+			throw new ParameterException("参数不能为空");
+		}
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		try {
+			String reuslt = printerService.printSingle(ip, materialId, quantity, user);
+			renderJson(ResultUtil.succeed(reuslt));
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 }

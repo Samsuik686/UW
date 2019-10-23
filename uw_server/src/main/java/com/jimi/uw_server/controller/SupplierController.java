@@ -16,7 +16,7 @@ import com.jimi.uw_server.util.ResultUtil;
 
 public class SupplierController extends Controller {
 
-	private static SupplierService supplierService =  Aop.get(SupplierService.class);
+	private static SupplierService supplierService = Aop.get(SupplierService.class);
 
 
 	// 添加供应商

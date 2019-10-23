@@ -23,6 +23,7 @@ public class PrinterService {
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIALID = "SELECT task_log.* FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.id = ? AND task_log.material_id = ? ";
 
+
 	public synchronized String print(String ip, String materialId, Integer packingListItemId, User user) throws InterruptedException, IOException {
 		if (PrintServerSocket.getClients().containsKey(ip)) {
 
@@ -40,13 +41,13 @@ public class PrinterService {
 			// 发送打印信息
 			String cycle = material.getCycle() == null ? "无" : material.getCycle();
 			String specification = materialType.getSpecification();
-			String manufacturer = material.getManufacturer() == null ? "无": material.getManufacturer();
+			String manufacturer = material.getManufacturer() == null ? "无" : material.getManufacturer();
 			String designator = materialType.getDesignator() == null ? "" : materialType.getDesignator();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String dateString = dateFormat.format(material.getProductionTime());
-			
+
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()) , dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
+				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();
@@ -58,7 +59,7 @@ public class PrinterService {
 			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIALID, packingListItemId, materialId);
 			if (taskLog != null && taskLog.getQuantity() != null && !taskLog.getQuantity().equals(0)) {
 				try {
-					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()) , dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
+					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
 				} catch (Exception e) {
 					PrintServerSocket.getResults().remove(id.toString());
 					PrintServerSocket.getClients().get(ip).close();
@@ -66,7 +67,7 @@ public class PrinterService {
 					throw new OperationException("发送打印信息失败,请检查打印机连接");
 				}
 			}
-			
+
 			// 监听客户端返回的信息
 			while (System.currentTimeMillis() - startTime < TIME_OUT) {
 				Thread.sleep(500);
@@ -98,8 +99,8 @@ public class PrinterService {
 			throw new OperationException("连接失败,请检查打印机连接");
 		}
 	}
-	
-	
+
+
 	public synchronized String printSingle(String ip, String materialId, Integer quantity, User user) throws InterruptedException, IOException {
 		if (PrintServerSocket.getClients().containsKey(ip)) {
 
@@ -114,13 +115,13 @@ public class PrinterService {
 			// 发送打印信息
 			String cycle = material.getCycle() == null ? "无" : material.getCycle();
 			String specification = materialType.getSpecification();
-			String manufacturer = material.getManufacturer() == null ? "无": material.getManufacturer();
+			String manufacturer = material.getManufacturer() == null ? "无" : material.getManufacturer();
 			String designator = materialType.getDesignator() == null ? "" : materialType.getDesignator();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String dateString = dateFormat.format(material.getProductionTime());
-			
+
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity) , dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
+				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();

@@ -161,7 +161,7 @@ public class MaterialService extends SelectService {
 			pageSize = PropKit.use("properties.ini").getInt("defaultPageSize");
 		}
 		MaterialType materialType = MaterialType.dao.findById(materialTypeId);
-		if ( materialType == null || materialType.getType().equals(WarehouseType.REGULAR)) {
+		if (materialType == null || materialType.getType().equals(WarehouseType.REGULAR)) {
 			if (materialTypeId != null && box == null) {
 				materialEntities = Db.paginate(pageNo, pageSize, GET_ENTITIES_SELECT_SQL, GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, materialTypeId);
 			} else if (materialTypeId == null && box != null) {
@@ -197,7 +197,7 @@ public class MaterialService extends SelectService {
 		if (materialType != null) {
 			if (materialType.getType().equals(type)) {
 				resultString = "本仓库该物料类型已存在，请勿重复添加！";
-			}else {
+			} else {
 				resultString = "其他仓库已存在相同料号的物料类型，请勿重复添加！";
 			}
 			return resultString;
@@ -213,7 +213,7 @@ public class MaterialService extends SelectService {
 				return resultString;
 			}
 		}
-		
+
 		materialType = new MaterialType();
 		materialType.setNo(no.toUpperCase());
 		materialType.setSpecification(specification);
@@ -224,7 +224,7 @@ public class MaterialService extends SelectService {
 		materialType.setType(type);
 		if (type.equals(WarehouseType.REGULAR)) {
 			materialType.setDesignator("无");
-		}else {
+		} else {
 			materialType.setDesignator(designator);
 		}
 		materialType.save();
@@ -475,14 +475,14 @@ public class MaterialService extends SelectService {
 			ExcelWritter writter = ExcelWritter.create(true);
 			writter.fill(materialRecord, fileName, field, head);
 			writter.write(output, true);
-		}else {
+		} else {
 			field = new String[] {"id", "no", "specification", "designator", "quantity"};
 			head = new String[] {"物料类型号", "料号", "规格号", "位号", "物料数量"};
 			ExcelWritter writter = ExcelWritter.create(true);
 			writter.fill(materialRecord, fileName, field, head);
 			writter.write(output, true);
 		}
-		
+
 	}
 
 
@@ -701,7 +701,7 @@ public class MaterialService extends SelectService {
 						 * 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
 						 */
 						MaterialType tempMaterialType2 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, item.getDesignator().trim(), WarehouseType.PRECIOUS);
-						
+
 						if (tempMaterialType1 != null) {
 							resultString = "导入物料类型表失败，表格第" + i + "行的料号已存在于系统中！";
 							return resultString;
@@ -711,10 +711,10 @@ public class MaterialService extends SelectService {
 						} else if (nos.contains(item.getNo().trim())) {
 							resultString = "导入物料类型表失败，表格第" + i + "行的料号在表格中重复！";
 							return resultString;
-						}else if (designators.contains(item.getDesignator().trim())) {
+						} else if (designators.contains(item.getDesignator().trim())) {
 							resultString = "导入物料类型表失败，表格第" + i + "行的位号在表格中重复！";
 							return resultString;
-						}else {
+						} else {
 							// 若不存在异常数据，则新增一条物料类型表记录
 							MaterialType materialType = new MaterialType();
 							materialType.setNo(item.getNo().toUpperCase());
