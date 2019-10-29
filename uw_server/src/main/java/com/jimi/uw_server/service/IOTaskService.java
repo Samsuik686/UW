@@ -117,14 +117,12 @@ public class IOTaskService {
 
 	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 0) ORDER BY id ASC";
 
-	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1) ORDER BY id ASC";
+	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT * FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1) ORDER BY id ASC";
 
 	private static final String GET_RETURN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 4) ORDER BY id ASC";
 
 	private static final String GET_WINDOW_BY_TASK = "SELECT * FROM window WHERE bind_task_id = ? ORDER BY id ASC";
-
-	private static final String GET_TASK_BY_TYPE_STATE_SUPPLIER = "select * from task where task.type = ? and task.state = ? and task.supplier = ?";
-
+	
 	private static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME = "select * from material where box = ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
 
 	private static final String GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME = "select * from material where box != ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
@@ -133,7 +131,9 @@ public class IOTaskService {
 
 	private IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 
-	private static final String GET_CUTTING_MATERIAL_SQL = "SELECT 	material.id as materialId, material.remainder_quantity AS materialQuantity, task_log.quantity AS outQuantity, material.manufacturer AS manufacturer, material.production_time AS productionTime , material.cycle AS cycle, material_type.`no` AS `no`, material_type.specification AS specification, supplier.`name` AS supplierName, task_log.packing_list_item_id AS packingListItemId, task_log.id AS taskLogId FROM material INNER JOIN material_type INNER JOIN supplier INNER JOIN task_log ON material.type = material_type.id AND material_type.supplier = supplier.id AND material.id = task_log.material_id WHERE material.status = ? AND material.remainder_quantity > 0 AND material_type .type = ? AND material_type.enabled = 1 AND supplier.enabled = 1";
+	private InventoryTaskService inventoryTaskService = Aop.get(InventoryTaskService.class);
+	
+	private static final String GET_CUTTING_MATERIAL_SQL = "SELECT material.id as materialId, material.remainder_quantity AS materialQuantity, task_log.quantity AS outQuantity, material.manufacturer AS manufacturer, material.production_time AS productionTime , material.cycle AS cycle, material_type.`no` AS `no`, material_type.specification AS specification, supplier.`name` AS supplierName, task_log.packing_list_item_id AS packingListItemId, task_log.id AS taskLogId FROM material INNER JOIN material_type INNER JOIN supplier INNER JOIN task_log ON material.type = material_type.id AND material_type.supplier = supplier.id AND material.cut_task_log_id = task_log.id WHERE material.status = ? AND material.remainder_quantity > 0 AND material_type .type = ? AND material_type.enabled = 1 AND supplier.enabled = 1";
 
 
 	// 创建出入库/退料任务
@@ -542,12 +542,16 @@ public class IOTaskService {
 
 
 	// 查看任务详情
-	public Object getIOTaskDetail(Integer id, Integer type, Integer pageSize, Integer pageNo) {
+	public Object getIOTaskDetails(Integer id, Integer type, String no, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
 		// 如果任务类型为出入库
+		String filter = null;
+		if (no != null && !no.trim().equals("")) {
+			filter = "material_type.no like " + no;
+		}
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
 			// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
-			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, null);
+			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, filter);
 
 			// 遍历同一个任务id的套料单数据
 			for (Record packingListItem : packingListItems.getList()) {
@@ -653,17 +657,19 @@ public class IOTaskService {
 				}
 
 				Integer whStoreNum = 0;
-				if (task.getIsInventoryApply() != null && task.getIsInventoryApply()) {
-					Task inventoryTask = Task.dao.findById(task.getInventoryTaskId());
-					if (inventoryTask != null) {
-						whStoreNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination(), inventoryTask.getCreateTime());
-					}
-				} else {
-					Task inventoryTask = Task.dao.findFirst(GET_TASK_BY_TYPE_STATE_SUPPLIER, TaskType.COUNT, TaskState.WAIT_START, task.getSupplier());
-					if (inventoryTask != null) {
-						whStoreNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination(), inventoryTask.getCreateTime());
+				if (task.getType().equals(TaskType.OUT)) {
+					if (task.getIsInventoryApply() != null && task.getIsInventoryApply()) {
+						Task inventoryTask = Task.dao.findById(task.getInventoryTaskId());
+						if (inventoryTask != null) {
+							whStoreNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination(), inventoryTask.getCreateTime());
+						}
 					} else {
-						whStoreNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination());
+						Task inventoryTask = inventoryTaskService.getOneUnStartInventoryTask(task.getSupplier(), task.getWarehouseType(), task.getDestination());
+						if (inventoryTask != null) {
+							whStoreNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination(), inventoryTask.getCreateTime());
+						} else {
+							whStoreNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getInt("MaterialType_Id"), task.getDestination());
+						}
 					}
 				}
 				io.setUwStoreNum(uwStoreNum);
@@ -803,6 +809,7 @@ public class IOTaskService {
 									externalWhLog.setTime(new Date());
 								}
 								externalWhLog.setOperatior(operatior);
+								externalWhLog.setOperationTime(new Date());
 								externalWhLog.save();
 							} else if (packingListItem.getQuantity() > acturallyNum) {
 								// 欠发
@@ -824,7 +831,7 @@ public class IOTaskService {
 										}
 									} else {
 										int storeNum = 0;
-										List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR);
+										List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR, task.getDestination());
 										if (inventoryTasks.size() > 0) {
 											storeNum = externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination(), inventoryTasks.get(0).getCreateTime());
 										} else {
@@ -910,6 +917,10 @@ public class IOTaskService {
 			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type",}, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemVOs = new ArrayList<WindowTaskItemsVO>();
 			int totalRow = 0;
+			Task inventoryTask = null;
+			if (task.getIsInventoryApply() != null && task.getIsInventoryApply()) {
+				inventoryTask = Task.dao.findById(task.getInventoryTaskId());
+			}
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId())) {
 				// 查询task_log中的material_id,quantity
 				List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
@@ -926,9 +937,23 @@ public class IOTaskService {
 					for (TaskLog tl : taskLogs) {
 						actualQuantity += tl.getQuantity();
 					}
+					Integer eWhStoreQuantity = 0;
+					if (task.getType().equals(TaskType.OUT)) {
+						if (inventoryTask != null) {
+							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
+						} else {
+							inventoryTask = inventoryTaskService.getOneUnStartInventoryTask(task.getSupplier(), task.getWarehouseType(), task.getDestination());
+							if (inventoryTask != null) {
+								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
+							} else {
+								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
+							}
+						}
+					}
+					
 					if (windowTaskItem.get("PackingListItem_Id").equals(redisTaskItem.getId())) {
 
-						WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.getInt("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.getStr("MaterialType_No"), windowTaskItem.getInt("PackingListItem_Quantity"), actualQuantity, windowTaskItem.getDate("PackingListItem_FinishTime"), redisTaskItem.getState(), redisTaskItem.getBoxId(), goodsLocation.getId(), goodsLocation.getName(), redisTaskItem.getRobotId());
+						WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.getInt("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.getStr("MaterialType_No"), windowTaskItem.getInt("PackingListItem_Quantity"), actualQuantity, windowTaskItem.getDate("PackingListItem_FinishTime"), redisTaskItem.getState(), redisTaskItem.getBoxId(), goodsLocation.getId(), goodsLocation.getName(), redisTaskItem.getRobotId(), eWhStoreQuantity);
 						wt.setDetails(taskLogs);
 						windowTaskItemVOs.add(wt);
 					}
@@ -1000,10 +1025,14 @@ public class IOTaskService {
 						Task inventoryTask = Task.dao.findById(task.getInventoryTaskId());
 						eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
 					} else {
-						Task inventoryTask = Task.dao.findFirst(GET_TASK_BY_TYPE_STATE_SUPPLIER, TaskType.COUNT, TaskState.WAIT_START, task.getSupplier());
-						if (inventoryTask != null) {
-							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
-						} else {
+						if (!task.getType().equals(TaskType.IN)) {
+							Task inventoryTask = inventoryTaskService.getOneUnStartInventoryTask(task.getSupplier(), task.getWarehouseType(), task.getDestination());
+							if (inventoryTask != null) {
+								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
+							} else {
+								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
+							}
+						}else {
 							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
 						}
 					}
@@ -1047,7 +1076,7 @@ public class IOTaskService {
 
 
 	// 新增入库料盘记录并写入库任务日志记录
-	public Material inRegular(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, User user) {
+	public Material inRegular(Integer packListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime, User user) {
 		synchronized (Lock.IN_REGULAR_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
@@ -1100,6 +1129,9 @@ public class IOTaskService {
 				material.setRemainderQuantity(quantity);
 				material.setCycle(cycle);
 				material.setProductionTime(productionTime);
+				if (printTime != null) {
+					material.setPrintTime(printTime);
+				}
 				try {
 					material.setStoreTime(getDateTime());
 				} catch (ParseException e) {
@@ -1118,6 +1150,9 @@ public class IOTaskService {
 				material.setRemainderQuantity(quantity);
 				material.setCycle(cycle);
 				material.setProductionTime(productionTime);
+				if (printTime != null) {
+					material.setPrintTime(printTime);
+				}
 				try {
 					material.setStoreTime(getDateTime());
 				} catch (ParseException e) {
@@ -1191,12 +1226,33 @@ public class IOTaskService {
 	 * @return
 	 */
 	public List<Record> getCuttingMaterial() {
+		Map<Integer, Record> cutitingMaterialMap = new HashMap<>();
+		
 		SqlPara sqlPara = new SqlPara();
 		sqlPara.setSql(GET_CUTTING_MATERIAL_SQL);
 		sqlPara.addPara(MaterialStatus.CUTTING);
 		sqlPara.addPara(WarehouseType.REGULAR);
 		List<Record> list = Db.find(sqlPara);
-		return list;
+		for (Record record : list) {
+			if (cutitingMaterialMap.get(record.getInt("packingListItemId")) != null) {
+				throw new OperationException("同个任务同种物料存在两盘截料中的物料，请检查！");
+			}
+			cutitingMaterialMap.put(record.getInt("packingListItemId"), record);
+		}
+		List<Record> records = new ArrayList<>(list.size());
+		List<Window> windows = Window.dao.find(GET_OUT_TASK_WINDOWS_SQL);
+		for (Window window : windows) {
+			List<AGVIOTaskItem> agvioTaskItems = TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId());
+			if (!agvioTaskItems.isEmpty()) {
+				for (AGVIOTaskItem item : agvioTaskItems) {
+					if (item.getIsForceFinish() && cutitingMaterialMap.get(item.getId()) != null) {
+						records.add(cutitingMaterialMap.get(item.getId()));
+					}
+				}
+			}
+			
+		}
+		return records;
 	}
 
 
@@ -1276,7 +1332,7 @@ public class IOTaskService {
 
 
 	// 新增入库料盘记录并写入库任务日志记录
-	public Material inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, User user) {
+	public Material inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime, User user) {
 		synchronized (Lock.IN_PRECIOUS_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
@@ -1314,6 +1370,9 @@ public class IOTaskService {
 				material.setProductionTime(productionTime);
 				material.setCycle(cycle);
 				material.setStatus(MaterialStatus.INING);
+				if (printTime != null) {
+					material.setPrintTime(printTime);
+				}
 				try {
 					material.setStoreTime(getDateTime());
 				} catch (ParseException e) {
@@ -1333,6 +1392,9 @@ public class IOTaskService {
 				material.setRemainderQuantity(quantity);
 				material.setProductionTime(productionTime);
 				material.setStatus(MaterialStatus.INING);
+				if (printTime != null) {
+					material.setPrintTime(printTime);
+				}
 				try {
 					material.setStoreTime(getDateTime());
 				} catch (ParseException e) {
@@ -1556,6 +1618,7 @@ public class IOTaskService {
 						} else {
 							externalWhLog.setTime(new Date());
 						}
+						externalWhLog.setOperationTime(new Date());
 						externalWhLog.setOperatior(user.getUid());
 						externalWhLog.save();
 					} else if (packingListItem.getQuantity() > acturallyNum) {
@@ -1578,7 +1641,7 @@ public class IOTaskService {
 								}
 							} else {
 								int storeNum = 0;
-								List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR);
+								List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR, task.getDestination());
 								if (inventoryTasks.size() > 0) {
 									storeNum = externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination(), inventoryTasks.get(0).getCreateTime());
 
@@ -1594,7 +1657,7 @@ public class IOTaskService {
 								}
 								externalWhLog.setTime(new Date());
 							}
-
+							externalWhLog.setOperationTime(new Date());
 							externalWhLog.setOperatior(user.getUid());
 							externalWhLog.save();
 						}
@@ -1643,10 +1706,11 @@ public class IOTaskService {
 				record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
 				if (record != null) {
 					TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, null, null, null, null, null, null, true);
-					material.setStatus(MaterialStatus.CUTTING).update();
+					material.setStatus(MaterialStatus.CUTTING).setCutTaskLogId(taskLogId).update();
+					
 				} else {
 					TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, null, null, null, null, null, null, false);
-					material.setStatus(MaterialStatus.OUTTING).update();
+					material.setStatus(MaterialStatus.OUTTING).setCutTaskLogId(null).update();
 				}
 				result = "操作成功";
 				return result;
@@ -1683,9 +1747,9 @@ public class IOTaskService {
 		taskLog.setQuantity(quantity).update();
 		record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
 		if (record != null) {
-			material.setStatus(MaterialStatus.CUTTING).update();
+			material.setStatus(MaterialStatus.CUTTING).setCutTaskLogId(taskLogId).update();
 		} else {
-			material.setStatus(MaterialStatus.OUTTING).update();
+			material.setStatus(MaterialStatus.OUTTING).setCutTaskLogId(null).update();
 		}
 		result = "操作成功";
 		return result;
@@ -1716,7 +1780,7 @@ public class IOTaskService {
 		} else if (material.getIsInBox()) {
 			throw new OperationException("该料盘已设置为在盒内，请将料盘放入料盒内!");
 		} else {
-			material.setIsInBox(true).setStatus(MaterialStatus.OUTTING).update();
+			material.setIsInBox(true).setStatus(MaterialStatus.OUTTING).setCutTaskLogId(null).update();
 			return material;
 		}
 	}
@@ -1744,7 +1808,7 @@ public class IOTaskService {
 		} else if (material.getRemainderQuantity() == 0) {
 			throw new OperationException("该料盘已全部出库!");
 		} else {
-			material.setStatus(MaterialStatus.OUTTING).update();
+			material.setStatus(MaterialStatus.OUTTING).setCutTaskLogId(null).update();
 			return material;
 		}
 	}

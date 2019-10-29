@@ -26,7 +26,8 @@ public class PrinterInfo {
 
 	private Integer type;
 
-
+	private String printTime;
+	
 	public String getMaterialId() {
 		return materialId;
 	}
@@ -147,7 +148,17 @@ public class PrinterInfo {
 	}
 
 
-	public PrinterInfo(String id, String materialId, String user, String productDate, String remainingQuantity, String materialNo, String supplier, String cycle, String manufacturer, String specification, String designator, Integer type) {
+	public String getPrintTime() {
+		return printTime;
+	}
+
+
+	public void setPrintTime(String printTime) {
+		this.printTime = printTime;
+	}
+
+
+	public PrinterInfo(String id, String materialId, String user, String productDate, String remainingQuantity, String materialNo, String supplier, String cycle, String manufacturer, String specification, String designator, Integer type, String printTime) {
 		this.id = id;
 		this.supplier = supplier;
 		this.user = user;
@@ -160,5 +171,6 @@ public class PrinterInfo {
 		this.specification = specification;
 		this.designator = designator;
 		this.type = type;
+		this.printTime = printTime;
 	}
 }

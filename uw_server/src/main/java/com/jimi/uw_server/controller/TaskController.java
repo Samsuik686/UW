@@ -216,11 +216,11 @@ public class TaskController extends Controller {
 
 
 	// 查看任务详情
-	public void getIOTaskDetails(Integer id, Integer type, Integer pageSize, Integer pageNo) {
+	public void getIOTaskDetails(Integer id, Integer type, String no, Integer pageSize, Integer pageNo) {
 		if (id == null || type == null) {
 			throw new ParameterException("任务id或任务类型不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.getIOTaskDetail(id, type, pageSize, pageNo)));
+		renderJson(ResultUtil.succeed(taskService.getIOTaskDetails(id, type, no, pageSize, pageNo)));
 	}
 
 
@@ -267,8 +267,8 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
-	public void inRegular(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer) {
+	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}， 打印时间{printTime}")
+	public void inRegular(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
@@ -278,14 +278,14 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		Material material = taskService.inRegular(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, user);
+		Material material = taskService.inRegular(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
 		renderJson(ResultUtil.succeed(material));
 	}
 
 
 	// 物料入库
-	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}")
-	public void inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer) {
+	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}， 打印时间{printTime}")
+	public void inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
@@ -295,7 +295,7 @@ public class TaskController extends Controller {
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		Material material = taskService.inPrecious(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, user);
+		Material material = taskService.inPrecious(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
 		renderJson(ResultUtil.succeed(material));
 	}
 

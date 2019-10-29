@@ -15,8 +15,8 @@ public class EWhInventoryRecordBO {
 	private Integer serialNumber;
 
 	@Excel(col = 1, head = "仓库")
-	private String wh;
-
+	private String whName;
+	
 	@Excel(col = 2, head = "料号")
 	private String no;
 
@@ -44,16 +44,6 @@ public class EWhInventoryRecordBO {
 	}
 
 
-	public String getWh() {
-		return wh;
-	}
-
-
-	public void setWh(String wh) {
-		this.wh = wh;
-	}
-
-
 	public Integer getQuantity() {
 		return quantity;
 	}
@@ -61,6 +51,16 @@ public class EWhInventoryRecordBO {
 
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
+	}
+
+
+	public String getWhName() {
+		return whName;
+	}
+
+
+	public void setWhName(String whName) {
+		this.whName = whName;
 	}
 
 }

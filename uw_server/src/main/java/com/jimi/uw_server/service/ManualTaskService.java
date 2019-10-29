@@ -120,6 +120,7 @@ public class ManualTaskService {
 						externalWhLog.setTaskId(task.getId());
 						externalWhLog.setQuantity(actualQuantity - packingListItem.getQuantity());
 						externalWhLog.setTime(new Date());
+						externalWhLog.setOperationTime(new Date());
 						externalWhLog.setOperatior(operator);
 						externalWhLog.save();
 					}

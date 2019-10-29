@@ -7,7 +7,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
@@ -15,7 +17,6 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
-
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.MaterialStatus;
 import com.jimi.uw_server.constant.WarehouseType;
@@ -69,6 +70,8 @@ public class MaterialService extends SelectService {
 
 	private static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT a.* FROM((SELECT task.id, task.file_name, task.type, task.destination AS destination, packing_list_item.material_type_id, packing_list_item.quantity AS plan_quantity, SUM(task_log.quantity) AS quantity, task_log.operator, task_log.time FROM task_log INNER JOIN packing_list_item INNER JOIN task ON packing_list_item.task_id = task.id AND task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.material_type_id = ? GROUP BY task.id, packing_list_item.material_type_id) union ALL (SELECT task.id, task.file_name, task.type, NULL AS destination, sample_task_item.material_type_id, NULL AS plan_quantity, SUM(sample_out_record.quantity) AS quantity, sample_out_record.operator, sample_out_record.time FROM sample_out_record INNER JOIN sample_task_item INNER JOIN task ON task.id = sample_task_item.task_id AND sample_task_item.id = sample_out_record.sample_task_item_id WHERE sample_task_item.material_type_id = ? GROUP BY task.id, sample_task_item.material_type_id)) a";
 
+	private static final String GET_MATERIAL_BY_BOX = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
+	
 	private static final String GET_MATERIAL_REPORT_SQL = "SELECT material_type.id as id, material_type.no as no, material_type.specification as specification, material_box.id AS box, material_box.row as row, material_box.col as col, material_box.height as height, SUM(material.remainder_quantity) AS quantity, material_type.designator as designator FROM (material_type LEFT JOIN material ON material_type.id = material.type) LEFT JOIN material_box ON material.box = material_box.id WHERE material_type.supplier = ? AND material_type.type = ? AND material_type.enabled = 1 GROUP BY material.box, material.type, material_type.id ORDER BY material_type.id, material_box.id";
 
 	private static final String GET_MATERIAL_DETIAL_REPORT_SQL = "SELECT supplier.`name` AS supplier_name, material_type.id AS material_type_id, material_type.`no` AS `no`, material_type.specification AS specification, material_box.id AS box_id, material_box.area AS area, material_box. ROW AS X, material_box.col AS Y, material_box.height AS Z, material.id AS material_id, material.col AS col, material.`row` AS `row`, material.production_time AS production_time, material.remainder_quantity AS quantity FROM supplier INNER JOIN material_type INNER JOIN material_box INNER JOIN material ON supplier.id = material_type.supplier AND supplier.id = material_box.supplier AND material_type.id = material.type AND material.box = material_box.id WHERE material_type.type = ? AND material_type.supplier = ? AND material_type.enabled = 1 AND remainder_quantity > 0 ORDER BY material_type.id, material_box.id";
@@ -93,7 +96,7 @@ public class MaterialService extends SelectService {
 
 	public static MaterialService me = new MaterialService();
 
-
+	private int batchSize = 1500;
 	// 统计物料类型信息
 	public Object count(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -193,7 +196,7 @@ public class MaterialService extends SelectService {
 		if (s == null) {
 			throw new OperationException("供应商不存在");
 		}
-		MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, no.toUpperCase(), supplierId);
+		MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, no.toUpperCase().trim(), supplierId);
 		if (materialType != null) {
 			if (materialType.getType().equals(type)) {
 				resultString = "本仓库该物料类型已存在，请勿重复添加！";
@@ -215,7 +218,7 @@ public class MaterialService extends SelectService {
 		}
 
 		materialType = new MaterialType();
-		materialType.setNo(no.toUpperCase());
+		materialType.setNo(no.toUpperCase().trim());
 		materialType.setSpecification(specification);
 		materialType.setSupplier(supplierId);
 		materialType.setThickness(thickness);
@@ -382,6 +385,43 @@ public class MaterialService extends SelectService {
 		MaterialBox materialBox = MaterialBox.dao.findById(id);
 		materialBox.setIsOnShelf(isOnShelf);
 		return materialBox.update();
+	}
+	
+	
+	public void editBoxOfSupplier(String ids, Integer supplierId) {
+		String[] idStringArr = ids.split(",");
+		List<Integer> idIntegerArr = new ArrayList<>(idStringArr.length);
+		List<MaterialBox> materialBoxs = new ArrayList<>(idStringArr.length);
+		Supplier supplier = Supplier.dao.findById(supplierId);
+		if (supplier == null) {
+			throw new OperationException("供应商不存在，请检查");
+		}
+		try {
+			for (String idString : idStringArr) {
+				idIntegerArr.add(Integer.valueOf(idString));
+			}
+			for (Integer idInteger : idIntegerArr) {
+				MaterialBox materialBox = MaterialBox.dao.findById(idInteger);
+				if (materialBox == null) {
+					throw new OperationException("料盒号为"+idInteger + "的料盒不存在，请检查");
+				}
+				Material material = Material.dao.findFirst(GET_MATERIAL_BY_BOX, idInteger);
+				if (material != null) {
+					throw new OperationException("料盒号为"+idInteger + "的料盒存在物料，请检查");
+				}
+				if (materialBox.getIsOnShelf()) {
+					throw new OperationException("料盒号为"+idInteger + "的料盒不在架，请检查");
+				}
+				materialBox.setSupplier(supplier.getId());
+				materialBoxs.add(materialBox);
+			}
+		} catch (NumberFormatException e) {
+			throw new OperationException("修改失败，参数转换出错，存在非数字的ID值");
+		}
+		if (!materialBoxs.isEmpty()) {
+			Db.batchUpdate(materialBoxs, batchSize);
+		}
+		
 	}
 
 
@@ -585,6 +625,7 @@ public class MaterialService extends SelectService {
 				// 从电子表格第2行开始有物料记录
 				int i = 2;
 				List<MaterialType> list = new ArrayList<>(items.size());
+				Set<String> noSet = new HashSet<>();
 				for (RegularMaterialTypeItemBO item : items) {
 					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 
@@ -603,7 +644,7 @@ public class MaterialService extends SelectService {
 						}
 
 						// 根据料号和供应商找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, item.getNo(), supplierId);
+						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME, item.getNo().trim(), supplierId);
 						/*
 						 * 判断物料类型表中是否存在对应的料号且供应商也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
 						 */
@@ -612,9 +653,13 @@ public class MaterialService extends SelectService {
 							continue;
 						} else {
 							// 若不存在异常数据，则新增一条物料类型表记录
+							if (noSet.contains(item.getNo().toUpperCase().trim())) {
+								continue;
+							}
+							noSet.add(item.getNo().toUpperCase().trim());
 							MaterialType materialType = new MaterialType();
-							materialType.setNo(item.getNo().toUpperCase());
-							materialType.setSpecification(item.getSpecification());
+							materialType.setNo(item.getNo().toUpperCase().trim());
+							materialType.setSpecification(item.getSpecification().trim());
 							materialType.setThickness(item.getThickness());
 							materialType.setRadius(item.getRadius());
 							materialType.setEnabled(true);

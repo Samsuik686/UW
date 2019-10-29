@@ -236,6 +236,7 @@ public class RobotService extends SelectService {
 							externalWhLog.setQuantity(acturallyNum);
 						}
 						externalWhLog.setTime(task2.getCreateTime());
+						externalWhLog.setOperationTime(new Date());
 					} else {
 						storeNum = externalWhLogService.getEWhMaterialQuantity(agvioTaskItem.getMaterialTypeId(), task.getDestination());
 						if (acturallyNum - storeNum > 0) {
@@ -252,6 +253,7 @@ public class RobotService extends SelectService {
 							externalWhLog.setQuantity(acturallyNum);
 						}
 						externalWhLog.setTime(new Date());
+						externalWhLog.setOperationTime(new Date());
 					}
 					externalWhLog.setOperatior(user.getUid());
 					externalWhLog.save();
@@ -321,7 +323,7 @@ public class RobotService extends SelectService {
 					return resultString;
 				}
 				// 通过任务id，料号和供应商获取套料单条目
-				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no, supplierId, WarehouseType.REGULAR);
+				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no.trim(), supplierId, WarehouseType.REGULAR);
 
 				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 				if (item == null) {

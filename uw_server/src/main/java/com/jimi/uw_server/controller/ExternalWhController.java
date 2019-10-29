@@ -34,7 +34,7 @@ public class ExternalWhController extends Controller {
 	private static ExternalWhTaskService externalWhTaskService = Aop.get(ExternalWhTaskService.class);
 
 
-	@Log("导入物料仓任务，供应商ID为{supplierId}，源物料仓ID为{souceWhId}，目的物料仓ID为{destinationwhId}, 备注{remarks}")
+	@Log("导入物料仓任务，供应商ID为{supplierId}，源物料仓ID为{sourceWhId}，目的物料仓ID为{destinationwhId}, 备注{remarks}")
 	public void importTask(UploadFile file, Integer supplierId, Integer sourceWhId, Integer destinationwhId, String remarks) {
 
 		if (file == null || supplierId == null || sourceWhId == null || destinationwhId == null || remarks == null || remarks.equals("")) {

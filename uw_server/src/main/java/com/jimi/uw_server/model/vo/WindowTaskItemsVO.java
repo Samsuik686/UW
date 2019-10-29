@@ -45,8 +45,9 @@ public class WindowTaskItemsVO {
 
 	private List<?> details;
 
+	private Integer deductibleQuantity;
 
-	public WindowTaskItemsVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime, Integer state, Integer boxId, Integer goodsLocationId, String goodsLocaitonName, Integer robotId) {
+	public WindowTaskItemsVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime, Integer state, Integer boxId, Integer goodsLocationId, String goodsLocaitonName, Integer robotId, Integer deductibleQuantity) {
 		this.setId(packingListItemId);
 		this.setFileName(fileName);
 		this.setType(type);
@@ -66,6 +67,7 @@ public class WindowTaskItemsVO {
 		this.setGoodsLocationId(goodsLocationId);
 		this.setGoodsLocationName(goodsLocaitonName);
 		this.setRobotId(robotId);
+		this.setDeductibleQuantity(deductibleQuantity);
 	}
 
 
@@ -279,6 +281,17 @@ public class WindowTaskItemsVO {
 
 	public void setRobotId(Integer robotId) {
 		this.robotId = robotId;
+	}
+
+	
+	public Integer getDeductibleQuantity() {
+		return deductibleQuantity;
+	}
+
+
+	
+	public void setDeductibleQuantity(Integer deductibleQuantity) {
+		this.deductibleQuantity = deductibleQuantity;
 	}
 
 }

@@ -21,9 +21,6 @@ public class PrinterService {
 	// 等待反馈的时间
 	private static final int TIME_OUT = 10000;
 
-	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIALID = "SELECT task_log.* FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.id = ? AND task_log.material_id = ? ";
-
-
 	public synchronized String print(String ip, String materialId, Integer packingListItemId, User user) throws InterruptedException, IOException {
 		if (PrintServerSocket.getClients().containsKey(ip)) {
 
@@ -33,7 +30,7 @@ public class PrinterService {
 			if (material == null) {
 				throw new OperationException("该料盘不存在，打印失败！");
 			}
-			if (!material.getStatus().equals(MaterialStatus.CUTTING)) {
+			if (!material.getStatus().equals(MaterialStatus.CUTTING) || material.getCutTaskLogId() == null) {
 				throw new OperationException("该料盘未处于截料状态，打印失败！");
 			}
 			MaterialType materialType = MaterialType.dao.findById(material.getType());
@@ -45,9 +42,12 @@ public class PrinterService {
 			String designator = materialType.getDesignator() == null ? "" : materialType.getDesignator();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String dateString = dateFormat.format(material.getProductionTime());
-
+			String printTimeString = null;
+			if (material.getPrintTime() != null) {
+				printTimeString = dateFormat.format(material.getPrintTime());
+			}
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
+				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString);
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();
@@ -56,10 +56,10 @@ public class PrinterService {
 			}
 			long startTime2 = System.currentTimeMillis();
 			Long id2 = PrintServerSocket.getResults().size() + 1 + startTime2;
-			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIALID, packingListItemId, materialId);
+			TaskLog taskLog = TaskLog.dao.findById(material.getCutTaskLogId());
 			if (taskLog != null && taskLog.getQuantity() != null && !taskLog.getQuantity().equals(0)) {
 				try {
-					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
+					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString);
 				} catch (Exception e) {
 					PrintServerSocket.getResults().remove(id.toString());
 					PrintServerSocket.getClients().get(ip).close();
@@ -119,9 +119,12 @@ public class PrinterService {
 			String designator = materialType.getDesignator() == null ? "" : materialType.getDesignator();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String dateString = dateFormat.format(material.getProductionTime());
-
+			String printTimeString = null;
+			if (material.getPrintTime() != null) {
+				printTimeString = dateFormat.format(material.getPrintTime());
+			}
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0);
+				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString);
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();

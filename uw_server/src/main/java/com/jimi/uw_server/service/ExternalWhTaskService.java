@@ -48,7 +48,7 @@ public class ExternalWhTaskService {
 
 	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 AND material_type.enabled = 1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 AND material_type.enabled = 1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id";
 
-	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT e.*, material_return_record.quantity as return_num FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e LEFT JOIN material_return_record ON e.task_id = material_return_record.task_id AND e.material_type_id = material_return_record.material_type_id AND e.source_wh = material_return_record.wh_id ORDER BY e.time ASC";
+	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT e.*, material_return_record.quantity as return_num FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e LEFT JOIN material_return_record ON e.task_id = material_return_record.task_id AND e.material_type_id = material_return_record.material_type_id AND e.source_wh = material_return_record.wh_id ORDER BY e.operation_time ASC";
 
 	private static ExternalWhLogService externalWhLogService = ExternalWhLogService.me;
 
@@ -61,12 +61,12 @@ public class ExternalWhTaskService {
 	 * 导入外仓的任务
 	 * @param file
 	 * @param supplierId
-	 * @param sourceHwId
-	 * @param destinationHwId
+	 * @param sourceWhId
+	 * @param destinationWhId
 	 * @param user
 	 * @return
 	 */
-	public String importTask(File file, Integer supplierId, Integer sourceHwId, Integer destinationHwId, User user, String remarks) {
+	public String importTask(File file, Integer supplierId, Integer sourceWhId, Integer destinationWhId, User user, String remarks) {
 
 		String resultString = "导入成功";
 		Date date = new Date();
@@ -89,11 +89,11 @@ public class ExternalWhTaskService {
 						return resultString;
 					}
 
-					if (sourceHwId != 0 && item.getQuantity() <= 0) {
+					if (sourceWhId != 0 && item.getQuantity() <= 0) {
 						resultString = "导入失败，表格第" + i + "行的数量为" + item.getQuantity() + "，数量必须大于0,仅当发料地为UW无人仓时数量必须为负！";
 						return resultString;
 					}
-					if (sourceHwId == 0 && item.getQuantity() > 0) {
+					if (sourceWhId == 0 && item.getQuantity() > 0) {
 						resultString = "导入失败，表格第" + i + "行的数量为" + item.getQuantity() + "，当发料地为UW无人仓时，类型为抵扣，数量必须为负！";
 						return resultString;
 					}
@@ -109,14 +109,14 @@ public class ExternalWhTaskService {
 						resultString = "导入失败，料号为" + item.getNo() + "的物料表中存在重复项！";
 						return resultString;
 					}
-					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR);
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR, destinationWhId);
 					materailTypeIdSet.add(mType.getId());
-					if (sourceHwId != 0 && sourceHwId != -1) {
+					if (sourceWhId != 0 && sourceWhId != -1) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId, inventoryTask.getCreateTime());
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId, inventoryTask.getCreateTime());
 						} else {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceHwId);
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId);
 						}
 
 						if (storeNum < item.getQuantity()) {
@@ -124,12 +124,12 @@ public class ExternalWhTaskService {
 							return resultString;
 						}
 						externalWhLog.setQuantity(item.getQuantity());
-					} else if (sourceHwId == 0) {
+					} else if (sourceWhId == 0) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId, inventoryTask.getCreateTime());
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId, inventoryTask.getCreateTime());
 						} else {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationHwId);
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId);
 						}
 						if (storeNum + item.getQuantity() < 0) {
 							resultString = "导入失败，表格中料号为" + item.getNo() + "的数量抵扣数量大于目的仓库存";
@@ -141,8 +141,8 @@ public class ExternalWhTaskService {
 						externalWhLog.setQuantity(item.getQuantity());
 					}
 					externalWhLog.setMaterialTypeId(mType.getId());
-					externalWhLog.setSourceWh(sourceHwId);
-					externalWhLog.setDestination(destinationHwId);
+					externalWhLog.setSourceWh(sourceWhId);
+					externalWhLog.setDestination(destinationWhId);
 					externalWhLog.setOperatior(user.getUid());
 					externalWhLogs.add(externalWhLog);
 					i++;
@@ -152,9 +152,9 @@ public class ExternalWhTaskService {
 				}
 			}
 			Task task = new Task();
-			task.setCreateTime(date).setDestination(destinationHwId).setSupplier(supplierId).setFileName(fileName).setType(TaskType.EXTERNAL_IN_OUT).setState(TaskState.FINISHED).setRemarks(remarks);
+			task.setCreateTime(date).setDestination(destinationWhId).setSupplier(supplierId).setFileName(fileName).setType(TaskType.EXTERNAL_IN_OUT).setState(TaskState.FINISHED).setRemarks(remarks);
 			;
-			if (sourceHwId == 0) {
+			if (sourceWhId == 0) {
 				task.setType(TaskType.OUT);
 			}
 
@@ -162,6 +162,7 @@ public class ExternalWhTaskService {
 			for (ExternalWhLog externalWhLog : externalWhLogs) {
 				externalWhLog.setTaskId(task.getId());
 				externalWhLog.setTime(new Date());
+				externalWhLog.setOperationTime(new Date());
 			}
 			Db.batchSave(externalWhLogs, batchSize);
 		} catch (Exception e) {
@@ -174,7 +175,7 @@ public class ExternalWhTaskService {
 	}
 
 
-	public String importWastageTask(File file, Integer supplierId, Integer HwId, User user, String remarks) {
+	public String importWastageTask(File file, Integer supplierId, Integer whId, User user, String remarks) {
 
 		String resultString = "导入成功";
 		Date date = new Date();
@@ -214,13 +215,13 @@ public class ExternalWhTaskService {
 						return resultString;
 					}
 					materailTypeIdSet.add(mType.getId());
-					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR);
-					if (HwId != 0) {
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR, whId);
+					if (whId != 0) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId, inventoryTask.getCreateTime());
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId, inventoryTask.getCreateTime());
 						} else {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId);
 						}
 						if (storeNum < item.getQuantity()) {
 							resultString = "导入失败，料号为" + item.getNo() + "的损耗物料数量大于库存";
@@ -229,8 +230,8 @@ public class ExternalWhTaskService {
 					}
 					externalWhLog.setMaterialTypeId(mType.getId());
 					externalWhLog.setQuantity(item.getQuantity());
-					externalWhLog.setSourceWh(HwId);
-					externalWhLog.setDestination(HwId);
+					externalWhLog.setSourceWh(whId);
+					externalWhLog.setDestination(whId);
 					externalWhLog.setOperatior(user.getUid());
 					externalWhLogs.add(externalWhLog);
 					i++;
@@ -240,11 +241,12 @@ public class ExternalWhTaskService {
 				}
 			}
 			Task task = new Task();
-			task.setCreateTime(date).setDestination(HwId).setSupplier(supplierId).setFileName(fileName).setType(TaskType.WASTAGE).setState(TaskState.FINISHED).setRemarks(remarks);
+			task.setCreateTime(date).setDestination(whId).setSupplier(supplierId).setFileName(fileName).setType(TaskType.WASTAGE).setState(TaskState.FINISHED).setRemarks(remarks);
 			task.save();
 			for (ExternalWhLog externalWhLog : externalWhLogs) {
 				externalWhLog.setTaskId(task.getId());
 				externalWhLog.setTime(new Date());
+				externalWhLog.setOperationTime(new Date());
 			}
 			Db.batchSave(externalWhLogs, batchSize);
 		} catch (Exception e) {
@@ -260,12 +262,12 @@ public class ExternalWhTaskService {
 	/**
 	 * 添加某仓库，某物料的损耗记录
 	 * @param materialTypeId
-	 * @param HwId
+	 * @param whId
 	 * @param quantity
 	 * @param user
 	 * @return
 	 */
-	public String addWorstageLog(Integer materialTypeId, Integer HwId, Integer quantity, User user, String remarks) {
+	public String addWorstageLog(Integer materialTypeId, Integer whId, Integer quantity, User user, String remarks) {
 
 		String resultString = "操作成功";
 		MaterialType mType = MaterialType.dao.findById(materialTypeId);
@@ -273,18 +275,18 @@ public class ExternalWhTaskService {
 			resultString = "物料类型不存在，请确认系统中存在该物料类型！";
 			return resultString;
 		}
-		Destination destination = Destination.dao.findById(HwId);
+		Destination destination = Destination.dao.findById(whId);
 		if (destination == null) {
 			resultString = "目的仓不存在，请确认系统中存在该物料类型！";
 			return resultString;
 		}
-		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseType.REGULAR);
-		if (HwId != 0) {
+		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseType.REGULAR, whId);
+		if (whId != 0) {
 			int storeNum = 0;
 			if (inventoryTask != null) {
-				storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId, inventoryTask.getCreateTime());
+				storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId, inventoryTask.getCreateTime());
 			} else {
-				storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), HwId);
+				storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId);
 			}
 			if (storeNum < quantity) {
 				resultString = "损耗物料数量不能大于库存";
@@ -294,7 +296,7 @@ public class ExternalWhTaskService {
 		Date date = new Date();
 		String fileName = getTaskName(date);
 		Task task = new Task();
-		task.setDestination(HwId);
+		task.setDestination(whId);
 		task.setCreateTime(date);
 		task.setState(TaskState.FINISHED);
 		task.setSupplier(mType.getSupplier());
@@ -305,12 +307,13 @@ public class ExternalWhTaskService {
 
 		ExternalWhLog externalWhLog = new ExternalWhLog();
 		externalWhLog.setMaterialTypeId(mType.getId());
-		externalWhLog.setSourceWh(HwId);
-		externalWhLog.setDestination(HwId);
+		externalWhLog.setSourceWh(whId);
+		externalWhLog.setDestination(whId);
 		externalWhLog.setQuantity(quantity);
 		externalWhLog.setTaskId(task.getId());
 		externalWhLog.setOperatior(user.getUid());
 		externalWhLog.setTime(new Date());
+		externalWhLog.setOperationTime(new Date());
 		externalWhLog.save();
 		return resultString;
 	}
@@ -393,7 +396,7 @@ public class ExternalWhTaskService {
 			if (unStartInvTasks.containsKey(record.getInt("supplier_id"))) {
 				inventoryTask = unStartInvTasks.get(record.getInt("supplier_id"));
 			} else {
-				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR);
+				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR,whId);
 				unStartInvTasks.put(record.getInt("supplier_id"), inventoryTask);
 			}
 			if (inventoryTask != null) {

@@ -51,7 +51,7 @@ public class UwConfig extends JFinalConfig {
 
 	@Override
 	public void configConstant(Constants me) {
-		me.setDevMode(false);
+		me.setDevMode(true);
 		me.setJsonFactory(new MixedJsonFactory());
 	}
 
@@ -146,11 +146,11 @@ public class UwConfig extends JFinalConfig {
 			System.out.println("System is in production envrionment");
 		} else if (isTestEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
-			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), PropKit.get("t_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"),6379, PropKit.get("t_redisPassword"));
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379/* , PropKit.get("d_redisPassword") */);
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379, PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		me.add(dp);

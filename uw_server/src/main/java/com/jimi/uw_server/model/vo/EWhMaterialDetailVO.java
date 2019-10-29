@@ -47,7 +47,6 @@ public class EWhMaterialDetailVO {
 
 	private String remarks;
 
-
 	public Integer getId() {
 		return id;
 	}
@@ -220,7 +219,7 @@ public class EWhMaterialDetailVO {
 			eWhMaterialDetail.setSourceWhId(record.getInt("source_wh"));
 			eWhMaterialDetail.setDestinationId(record.getInt("destination"));
 			eWhMaterialDetail.setOperatior(record.getStr("operatior"));
-			eWhMaterialDetail.setTime(record.getDate("time"));
+			eWhMaterialDetail.setTime(record.getDate("operation_time"));
 			eWhMaterialDetail.setSourceWhName(record.getStr("source_wh_name"));
 			eWhMaterialDetail.setDestinationName(record.getStr("destination_name"));
 			eWhMaterialDetail.setTaskName(record.getStr("task_name"));

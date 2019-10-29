@@ -28,8 +28,10 @@ public class SupplierService extends SelectService {
 
 	private static final String GET_ENABLED_SUPPLIER_BY_NAME_SQL = "SELECT * FROM supplier WHERE name = ? AND enabled = 1";
 
-	private static final String GET_MATERIAL_BY_SUPPLIER = "SELECT * FROM material WHERE material.remainder_quantity > 0 AND material.box IN (SELECT id FROM material_box WHERE material_box.supplier = ? AND enabled = 1)";
+	private static final String GET_MATERIAL_BY_SUPPLIER = "SELECT * FROM material INNER JOIN material_type ON material.type = material_type.id WHERE remainder_quantity > 0 AND material_type.supplier = ? AND material_type.enabled = 1";
 
+	private static final String SET_MATERIAL_TYPE_UNABLED_BY_SUPPLIER = "UPDATE material_type SET material_type.enabled = 0 WHERE material_type.supplier = ?";
+	
 	private static final String SET_BOX_SUPPLIER_NULL_BY_SUPPLIER = "UPDATE material_box SET material_box.supplier = null WHERE material_box.supplier = ?";
 
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ?";
@@ -68,6 +70,7 @@ public class SupplierService extends SelectService {
 				return resultString;
 			}
 			Db.update(SET_BOX_SUPPLIER_NULL_BY_SUPPLIER, supplier.getId());
+			Db.update(SET_MATERIAL_TYPE_UNABLED_BY_SUPPLIER, supplier.getId());
 
 		}
 		supplier.setEnabled(enabled);
