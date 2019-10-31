@@ -53,14 +53,20 @@
           let obj = this.list[i];
           if(obj.row !== -1 || obj.col !== -1){
             if(obj.row === row && obj.col === col){
-              ctx.fillStyle ='red';
+              ctx.fillStyle ='#4BC0C0';
             }else{
-              ctx.fillStyle ='orange';
+              ctx.fillStyle ='#eebcac';
             }
             ctx.fillRect(obj.col*this.width,obj.row*this.height,this.width,this.height);
             ctx.font = "18px serif";
             ctx.strokeStyle = '#333';
-            ctx.strokeText(String(obj.row + 1),obj.col*this.width + this.width/2.5,obj.row*this.height + this.height/1.2);
+            let num = 0;
+            if (obj.col === 0) {
+              num = obj.row + 1;
+            } else {
+              num = 21 + obj.row;
+            }
+            ctx.strokeText(String(num),obj.col*this.width + this.width/2.5,obj.row*this.height + this.height/1.2);
           }
         }
       }

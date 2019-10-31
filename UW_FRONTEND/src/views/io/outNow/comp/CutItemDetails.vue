@@ -19,7 +19,7 @@
           <el-form-item label="料号">
             <span>{{taskItem.materialNo}}</span>
           </el-form-item>
-          <el-form-item label="供应商">
+          <el-form-item label="客户">
             <span>{{taskItem.supplierName}}</span>
           </el-form-item>
           <el-form-item label="计划">
@@ -108,7 +108,8 @@
   import {mapGetters,mapActions} from 'vuex'
   import FinishTip from './subscomp/FinishTip'
   import {axiosPost} from "../../../../utils/fetchData";
-  import {robotBackUrl} from "../../../../plugins/globalUrl";
+  import {printUrl, robotBackUrl} from "../../../../plugins/globalUrl";
+  import {errHandler} from "../../../../utils/errorHandler";
   export default {
     name: "CutItemDetails",
     props:{
@@ -204,24 +205,18 @@
           return;
         }
         let options = {
-          url: window.g.PRINTER_URL,
+          url: printUrl,
           data: {
-            printerIP: this.configData.printerIP,
+            ip: this.configData.printerIP,
             materialId: item.materialId,
-            materialNo: this.taskItem.materialNo,
-            remainingQuantity:item.remainderQuantity,
-            productDate:arr[0],
-            user: this.user.uid,
-            supplier: this.taskItem.supplierName
+            quantity:item.remainderQuantity
           }
         };
         axiosPost(options).then(response => {
-          if (response.data.code === 200) {
-            this.$alertSuccess(response.data.msg);
-          } else if (response.data.code === 400) {
-            this.$alertWarning(response.data.msg);
-          } else {
-            this.$alertError(response.data.msg);
+          if(response.data.result === 200){
+            this.$alertSuccess('打印成功');
+          }else{
+            errHandler(response.data);
           }
         }).catch(err => {
             console.log(err);

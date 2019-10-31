@@ -7,8 +7,8 @@
             :close-on-press-escape="isCloseOnModal"
             width="30%">
         <el-form>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplierId" placeholder="供应商" value="" style="width:100%">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplierId" placeholder="客户" value="" style="width:100%">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
@@ -28,7 +28,7 @@
 <script>
     import axios from './../../../../plugins/http'
     import {mapGetters} from 'vuex'
-    import {importReportUrl} from "../../../../plugins/globalUrl";
+    import {importRegularMaterialTypeFileUrl} from "../../../../plugins/globalUrl";
     import {errHandler} from "../../../../utils/errorHandler";
     export default {
         name: "UploadMaterial",
@@ -57,7 +57,7 @@
             },
             submit:function(){
                 if(this.supplierId === ''){
-                    this.$alertWarning('供应商不能为空');
+                    this.$alertWarning('客户不能为空');
                     return;
                 }
                 if(this.thisFile === ''){
@@ -70,7 +70,7 @@
                     formData.append('file', this.thisFile);
                     formData.append('supplierId', this.supplierId);
                     formData.append('#TOKEN#',this.token);
-                    axios.post(importReportUrl, formData).then(res => {
+                    axios.post(importRegularMaterialTypeFileUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('导入成功');
                             this.cancel();

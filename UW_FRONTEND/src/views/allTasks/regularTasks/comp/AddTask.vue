@@ -16,19 +16,19 @@
                     <el-option label="出库 - 盘点前申补" value="11"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplier" placeholder="供应商" value="" style="width:100%">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplier" placeholder="客户" value="" style="width:100%">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
-                </el-select>
-            </el-form-item>
-            <el-form-item label="盘点任务" v-if="isInventoryApply">
-                <el-select v-model.trim="inventoryTaskId" placeholder="盘点任务" value="" style="width:100%">
-                    <el-option  v-for="item in inventoryTasks" :label="item.file_name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item :label="destinationTip" v-if="isDestinationShow">
                 <el-select v-model.trim="destination" placeholder="仓库" value="" style="width:100%">
                     <el-option  v-for="item in destinations" :label="item.name" :value='item.id' :key="item.id"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="盘点任务" v-if="isInventoryApply">
+                <el-select v-model.trim="inventoryTaskId" placeholder="盘点任务" value="" style="width:100%">
+                    <el-option  v-for="item in inventoryTasks" :label="item.file_name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item  label="选择文件">
@@ -48,11 +48,16 @@
 </template>
 
 <script>
-    import axios from './../../../plugins/http'
+    import axios from '../../../../plugins/http'
     import {mapGetters} from 'vuex'
-    import {destinationSelectUrl, getUnStartInventoryTaskUrl, taskCreateUrl} from "../../../plugins/globalUrl";
-    import {axiosPost} from "../../../utils/fetchData";
-    import {errHandler} from "../../../utils/errorHandler";
+    import {
+        destinationSelectUrl,
+        getUnStartInventoryTaskUrl,
+        taskCreateRegularIOTaskUrl,
+        taskCreateUrl
+    } from "../../../../plugins/globalUrl";
+    import {axiosPost} from "../../../../utils/fetchData";
+    import {errHandler} from "../../../../utils/errorHandler";
 
     export default {
         name: "AddTask",
@@ -90,9 +95,11 @@
                     this.destinationTip="退料仓位"
                 }
             },
-            supplier:function(val){
+            destination:function(val){
                 if(val !== ''){
-                    this.getUnStartInventoryTasks();
+                    if(this.taskType === '11'){
+                        this.getUnStartInventoryTasks(val);
+                    }
                 }
             }
         },
@@ -119,7 +126,7 @@
                     }
                     let formData = new FormData();
                    if(this.supplier === ''){
-                       this.$alertWarning('供应商不能为空');
+                       this.$alertWarning('客户不能为空');
                        return;
                    }
                    if(this.taskType !== '0'){
@@ -152,7 +159,7 @@
                     formData.append('remarks',this.remarks);
                     formData.append('#TOKEN#', this.token);
                     this.isPending = true;
-                    axios.post(taskCreateUrl, formData).then(res => {
+                    axios.post(taskCreateRegularIOTaskUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('创建成功');
                             this.cancel();
@@ -189,9 +196,9 @@
                     this.$alertError('连接超时，请刷新重试');
                 })
             },
-            getUnStartInventoryTasks: function () {
+            getUnStartInventoryTasks: function (whId) {
                 if(this.supplier === ''){
-                    this.$alertWarning('请先选择供应商');
+                    this.$alertWarning('请先选择客户');
                     return;
                 }
                 if (!this.isPending) {
@@ -199,7 +206,9 @@
                     let options = {
                         url: getUnStartInventoryTaskUrl,
                         data: {
-                            supplierId:this.supplier
+                            supplierId:this.supplier,
+                            warehouseType:0,
+                            whId:whId
                         }
                     };
                     axiosPost(options).then(response => {

@@ -1,8 +1,8 @@
 <template>
     <div class="build">
         <el-form class="build-form" :model="buildInfo">
-            <el-form-item label="供应商">
-                <el-select v-model.trim="buildInfo.supplierId" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="buildInfo.supplierId" placeholder="客户" value="">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
@@ -147,7 +147,7 @@
                     };
                     axiosPost(options).then(response => {
                         if (response.data.result === 200) {
-                            this.$alertSuccess('该供应商的料盒入仓成功');
+                            this.$alertSuccess('该客户的料盒入仓成功');
                         } else {
                             errHandler(response.data)
                         }

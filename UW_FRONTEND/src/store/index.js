@@ -40,7 +40,12 @@ const state = {
     //盘点-已点击过确定的料盘数组
     printMaterialIdArr:[],
     //盘点-未平仓的数据
-    unInventoryData:[]
+    unInventoryData:[],
+
+    //贵重仓出入库-外部扫描框是否失焦
+    isPreciousBlur:false,
+    //贵重仓出入库-当前截料页面
+    isPreciousCut:false
 };
 
 const store = new Vuex.Store({

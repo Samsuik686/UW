@@ -72,7 +72,9 @@
 
 <script>
     import {
-        coverEwhMaterialByTaskIdUrl, coverEWhMaterialUrl, getEwhInventoryTaskDetailsUrl,
+        coverRegularEwhMaterialByTaskIdUrl,
+        coverRegularEWhMaterialUrl,
+        getEwhInventoryTaskDetailsUrl,
     } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
@@ -82,7 +84,8 @@
         name: "EwhDetailsItem",
         components: {EditQuantity},
         props:{
-            row:Object
+            row:Object,
+            whId:Number
         },
         data(){
             return{
@@ -110,7 +113,8 @@
                         url: getEwhInventoryTaskDetailsUrl,
                         data: {
                             taskId:this.row.task_id,
-                            materialTypeId:this.row.material_type_id
+                            materialTypeId:this.row.material_type_id,
+                            whId:this.whId
                         }
                     };
                     axiosPost(options).then(res => {
@@ -135,7 +139,7 @@
                 if(!this.isPending){
                     this.isPending = false;
                     let options = {
-                        url:coverEWhMaterialUrl,
+                        url:coverRegularEWhMaterialUrl,
                         data:{
                             id:row.id,
                             taskId:row.taskId
@@ -161,7 +165,7 @@
                 if(!this.isPending){
                     this.isPending = false;
                     let options = {
-                        url:coverEwhMaterialByTaskIdUrl,
+                        url:coverRegularEwhMaterialByTaskIdUrl,
                         data:{
                             materialTypeId:this.row.material_type_id,
                             taskId:this.row.task_id

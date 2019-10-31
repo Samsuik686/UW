@@ -43,7 +43,7 @@
                 </el-table-column>
                 <el-table-column
                         prop="supplier"
-                        label="供应商">
+                        label="客户">
                 </el-table-column>
                 <el-table-column
                         prop="storeNum"
@@ -88,9 +88,10 @@
 
 <script>
     import {
-        backBoxSampleTaskUrl, outLostSampleTaskUrl,
-        outRegularSampleTaskUrl,
-        outSingularSampleTaskUrl
+        backBoxSampleTaskUrl,
+        outRegularTaskLostUrl,
+        outRegularTaskRegularUrl,
+        outRegularTaskSingularUrl
     } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
@@ -177,7 +178,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url:outRegularSampleTaskUrl,
+                        url:outRegularTaskRegularUrl,
                         data:{
                             materialId:materialId,
                             groupId:this.sampleItem.groupId
@@ -201,7 +202,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url:outSingularSampleTaskUrl,
+                        url:outRegularTaskSingularUrl,
                         data:{
                             materialId:materialId,
                             groupId:this.sampleItem.groupId
@@ -225,7 +226,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url:outLostSampleTaskUrl,
+                        url:outRegularTaskLostUrl,
                         data:{
                             materialId:materialId,
                             groupId:this.sampleItem.groupId

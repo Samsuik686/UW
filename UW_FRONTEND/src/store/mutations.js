@@ -37,3 +37,9 @@ export const setUnInventoryData = (state,unInventoryData) => {
 export const setIsBlur= (state,isBlur) => {
     state.isBlur = isBlur;
 };
+export const setIsPreciousBlur= (state,isPreciousBlur) => {
+    state.isPreciousBlur = isPreciousBlur;
+};
+export const setIsPreciousCut= (state,isPreciousCut) => {
+    state.isPreciousCut = isPreciousCut;
+};

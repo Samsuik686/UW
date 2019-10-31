@@ -132,7 +132,7 @@
                         let quill = this.$refs.myQuillEditor.quill;
                         let length = quill.getSelection().index;
                         // 插入图片  res.info为服务器返回的图片地址
-                        quill.insertEmbed(length, 'image',window.g.API_URL+res.data.data);
+                        quill.insertEmbed(length, 'image',res.data.data);
                     }else{
                         errHandler(res.data);
                     }

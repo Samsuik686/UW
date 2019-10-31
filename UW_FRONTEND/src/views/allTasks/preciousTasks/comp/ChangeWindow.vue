@@ -22,9 +22,9 @@
 </template>
 
 <script>
-    import {getTaskWindowUrl, setTaskWindowUrl, taskWindowsUrl} from "../../../plugins/globalUrl";
-    import {axiosPost} from "../../../utils/fetchData";
-    import {errHandler} from "../../../utils/errorHandler";
+    import {getTaskWindowUrl, setTaskWindowUrl, taskWindowsUrl} from "../../../../plugins/globalUrl";
+    import {axiosPost} from "../../../../utils/fetchData";
+    import {errHandler} from "../../../../utils/errorHandler";
 
     export default {
         name: "ChangeWindow",

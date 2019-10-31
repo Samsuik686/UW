@@ -25,7 +25,7 @@
                 </el-table-column>
                 <el-table-column
                         prop="supplier"
-                        label="供应商">
+                        label="客户">
                 </el-table-column>
                 <el-table-column
                         prop="storeNum"
@@ -69,7 +69,7 @@
     import {mapGetters,mapActions} from 'vuex'
     import QuantityInput from "./subscomp/QuantityInput";
     import {axiosPost} from "../../../../utils/fetchData";
-    import {backInventoryBoxUrl} from "../../../../plugins/globalUrl";
+    import {backInventoryBoxUrl, printUrl} from "../../../../plugins/globalUrl";
     import {errHandler} from "../../../../utils/errorHandler";
     import MaterialBox from "./subscomp/MaterialBox";
     export default {
@@ -193,27 +193,20 @@
                 }
             },
             printBarcode: function (row,actualNum) {
-                let date = row.productionTime.split(' ');
                 let options = {
-                    url: window.g.PRINTER_URL,
+                    url:printUrl,
                     data: {
-                        printerIP: this.configData.printerIP,
+                        ip: this.configData.printerIP,
                         materialId: row.materialId,
-                        materialNo: row.no,
-                        remainingQuantity: actualNum,
-                        productDate:date[0],
-                        user: this.user.uid,
-                        supplier:row.supplier
+                        quantity: actualNum
                     }
                 };
                 axiosPost(options).then(response => {
-                    if (response.data.code === 200) {
+                    if (response.data.result === 200) {
                         this.$alertSuccess('打印成功');
                         this.handlePrintMaterialArr(row.materialId);
-                    } else if (response.data.code === 400) {
-                        this.$alertWarning(response.data.msg);
-                    } else {
-                        this.$alertError(response.data.msg);
+                    }else {
+                        errHandler(response.data);
                     }
                 }).catch(err => {
                     console.log(err);

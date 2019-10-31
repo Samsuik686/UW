@@ -30,10 +30,10 @@ export const errHandler = function (data) {
             alertError(data.data);
             break;
         case 300:
-            alertError("第三方："+data.data);
+            alertError(data.data);
             break;
         case 310:
-            alertError("第三方："+data.data);
+            alertError(data.data);
             break;
         default:
             break;

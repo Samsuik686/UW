@@ -20,8 +20,8 @@
                     <el-option label="调拨入库" value='4'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="tasksInfo.supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="tasksInfo.supplier" placeholder="客户" value="">
                     <el-option label="不限" selected="selected"  value=''></el-option>
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
@@ -79,7 +79,7 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商"
+                    label="客户"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
@@ -150,15 +150,15 @@
 </template>
 
 <script>
-    import Bus from './../../utils/bus'
+    import Bus from '../../../utils/bus'
     import {
-        exportUnfinishTaskDetailsUrl,
+        exportUnfinishRegularTaskDetailsUrl,
         supplierSelectUrl,
         switchTaskUrl,
         taskSelectUrl
-    } from "../../plugins/globalUrl";
-    import {axiosPost, downloadFile} from "../../utils/fetchData";
-    import {errHandler} from "../../utils/errorHandler";
+    } from "../../../plugins/globalUrl";
+    import {axiosPost, downloadFile} from "../../../utils/fetchData";
+    import {errHandler} from "../../../utils/errorHandler";
     import AddTask from "./comp/AddTask";
     import SetPriority from "./comp/SetPriority";
     import EditRemarks from "./comp/EditRemarks";
@@ -176,7 +176,8 @@
                     type:'',
                     file_name:'',
                     create_time:'',
-                    supplier:''
+                    supplier:'',
+                    warehouse_type:0
                 },
                 times:[],
                 isClear:false,
@@ -429,7 +430,7 @@
                         type:row.type,
                         '#TOKEN#': this.$store.state.token
                     };
-                    downloadFile(exportUnfinishTaskDetailsUrl, data);
+                    downloadFile(exportUnfinishRegularTaskDetailsUrl, data);
                     let count = 0;
                     let mark = setInterval(() => {
                         count++;
@@ -490,7 +491,7 @@
                     this.ascBy = '';
                 }
                 this.pageNo = 1;
-                this.select();
+                this.setFilter();
             }
         }
     }

@@ -185,10 +185,18 @@
                 let filter = '';
                 for(let i in copyUserInfo){
                     if(isFirst === true){
-                        filter = filter + (i + "=" +  copyUserInfo[i]);
+                        if(i === 'uid'){
+                            filter = filter + (i + "like" +  copyUserInfo[i]);
+                        }else{
+                            filter = filter + (i + "=" +  copyUserInfo[i]);
+                        }
                         isFirst = false;
                     }else{
-                        filter = filter + ("#&#" + i + "=" +  copyUserInfo[i]);
+                        if(i === 'uid'){
+                            filter = filter + ("#&#" + i + "like" +  copyUserInfo[i]);
+                        }else{
+                            filter = filter + ("#&#" + i + "=" +  copyUserInfo[i]);
+                        }
                     }
                 }
                 this.filter = filter;

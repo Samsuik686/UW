@@ -35,9 +35,8 @@
 
 <script>
     import {
-        cancelSampleTaskUrl, finishInventoryTaskUrl,
-        startInventoryTaskUrl,
-        startSampleTaskUrl,
+        finishInventoryRegularTaskUrl,
+        startInventoryRegularTaskUrl,
         taskWindowsUrl
     } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
@@ -103,10 +102,10 @@
                         let statusUrl;
                         switch (this.thisState) {
                             case '2':
-                                statusUrl =  startInventoryTaskUrl;
+                                statusUrl =  startInventoryRegularTaskUrl;
                                 break;
                             case '3':
-                                statusUrl =  finishInventoryTaskUrl;
+                                statusUrl =  finishInventoryRegularTaskUrl;
                                 break;
                         }
                         let options = {

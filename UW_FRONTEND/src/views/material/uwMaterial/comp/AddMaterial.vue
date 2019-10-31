@@ -13,8 +13,8 @@
             <el-form-item label="规格">
                 <el-input v-model.trim="addInfo.specification" placeholder="规格"></el-input>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="addInfo.supplierId" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="addInfo.supplierId" placeholder="客户" value="">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
@@ -34,7 +34,7 @@
 
 <script>
     import {handleUwMaterial} from "../../../../utils/formValidate";
-    import {materialAddUrl} from "../../../../plugins/globalUrl";
+    import {addRegularMaterialTypeUrl, materialAddUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
 
@@ -47,6 +47,7 @@
         data(){
             return{
                 addInfo:{
+                    type:0,
                     no:'',
                     specification: '',
                     supplierId:'',
@@ -75,7 +76,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url: materialAddUrl,
+                        url: addRegularMaterialTypeUrl,
                         data:this.addInfo
                     };
                     axiosPost(options).then(res => {

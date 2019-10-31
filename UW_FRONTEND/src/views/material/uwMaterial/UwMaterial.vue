@@ -10,8 +10,8 @@
             <el-form-item label="物料类型号">
                 <el-input v-model.trim="uwMaterialInfo.id" placeholder="物料类型号"></el-input>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="uwMaterialInfo.supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="uwMaterialInfo.supplier" placeholder="客户" value="">
                     <el-option label="不限" selected="selected"  value=''></el-option>
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
@@ -77,7 +77,7 @@
             <el-table-column
                     sortable = "custom"
                     min-width="140"
-                    label="供应商"
+                    label="客户"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
@@ -137,10 +137,11 @@
 <script>
     import Bus from './../../../utils/bus'
     import {
-        deleteByIdsUrl,
+        deleteRegularMaterialByIdsUrl,
         getOverdueMaterialUrl,
-        materialCountUrl, materialUpdateUrl,
-        supplierSelectUrl
+        materialCountUrl,
+        supplierSelectUrl,
+        updateRegularMaterialTypeUrl
     } from "../../../plugins/globalUrl";
     import {axiosPost} from "../../../utils/fetchData";
     import {errHandler} from "../../../utils/errorHandler";
@@ -159,7 +160,8 @@
                     no:'',//料号
                     specification:'',//规格
                     id:'',//物料类型号
-                    supplier:''//供应商
+                    supplier:'',//客户
+                    type:0
                 },
                 suppliers:[],
                 tableData: [],
@@ -188,6 +190,11 @@
                 }
             },
             isAdding:function (val) {
+                if(val === false){
+                    this.setFilter();
+                }
+            },
+            isUploading:function (val) {
                 if(val === false){
                     this.setFilter();
                 }
@@ -258,14 +265,14 @@
                 let filter = '';
                 for(let i in copyUwMaterialInfo){
                     if(isFirst === true){
-                        if(i === "id" || i === 'supplier'){
+                        if(i === "id" || i === 'supplier' || i === 'type'){
                             filter = filter + (i + "=" +  copyUwMaterialInfo[i]);
                         }else{
                             filter = filter + (i + "like" +  copyUwMaterialInfo[i]);
                         }
                         isFirst = false;
                     }else{
-                        if(i === "id" || i === 'supplier'){
+                        if(i === "id" || i === 'supplier' || i === 'type'){
                             filter = filter + ("#&#" + i + "=" +  copyUwMaterialInfo[i]);
                         }else{
                             filter = filter + ("#&#" + i + "like" +  copyUwMaterialInfo[i]);
@@ -321,7 +328,7 @@
                 if (!this.isPending) {
                     this.isPending = true;
                     let options = {
-                        url: deleteByIdsUrl,
+                        url: deleteRegularMaterialByIdsUrl,
                         data: {
                             filter: filter
                         }
@@ -362,7 +369,8 @@
                     data: {
                         day: this.day,
                         pageNo:this.pageNo,
-                        pageSize:this.pageSize
+                        pageSize:this.pageSize,
+                        type:0
                     }
                 };
                 if (!this.isPending) {
@@ -421,7 +429,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url: materialUpdateUrl,
+                        url: updateRegularMaterialTypeUrl,
                         data:JSON.parse(JSON.stringify(row))
                     };
                     options.data.enabled = 0;
@@ -462,7 +470,7 @@
                     this.ascBy = '';
                 }
                 this.pageNo = 1;
-                this.select();
+                this.setFilter();
             }
         }
     }

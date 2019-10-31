@@ -7,7 +7,7 @@
                 <router-view></router-view>
             </div>
         </div>
-        <show-robot-status></show-robot-status>
+        <show-robot-status v-if="user.type !== 5"></show-robot-status>
     </el-container>
 </template>
 
@@ -19,7 +19,7 @@
     export default {
         name: "Main",
         computed:{
-            ...mapGetters(['isCollapse'])
+            ...mapGetters(['isCollapse','user'])
         },
         components:{
             ShowRobotStatus,

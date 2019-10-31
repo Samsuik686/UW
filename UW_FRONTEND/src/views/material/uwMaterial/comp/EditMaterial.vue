@@ -13,8 +13,8 @@
             <el-form-item label="规格">
                 <el-input v-model.trim="editInfo.specification" placeholder="规格" disabled></el-input>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-input v-model.trim="editInfo.supplierName" placeholder="供应商" disabled></el-input>
+            <el-form-item label="客户">
+                <el-input v-model.trim="editInfo.supplierName" placeholder="客户" disabled></el-input>
             </el-form-item>
             <el-form-item label="厚度">
                 <el-input v-model.trim="editInfo.thickness" placeholder="厚度"></el-input>
@@ -32,7 +32,7 @@
 
 <script>
     import {handleUwMaterial} from "../../../../utils/formValidate";
-    import {materialUpdateUrl} from "../../../../plugins/globalUrl";
+    import {materialUpdateUrl, updateRegularMaterialTypeUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
 
@@ -83,7 +83,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url: materialUpdateUrl,
+                        url: updateRegularMaterialTypeUrl,
                         data: {
                             id: this.editInfo.id,
                             enabled: 1,

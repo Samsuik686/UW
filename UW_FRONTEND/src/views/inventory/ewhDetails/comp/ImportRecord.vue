@@ -41,7 +41,8 @@
         },
         props:{
             isImport:Boolean,
-            taskId:String
+            taskId:String,
+            whId:Number
         },
         methods:{
             ...mapActions(['setUnInventoryData']),
@@ -63,6 +64,7 @@
                     }
                     formData.append('taskId',this.taskId);
                     formData.append('file', this.thisFile);
+                    formData.append('whId',this.whId);
                     formData.append('#TOKEN#', this.token);
                     this.isPending = true;
                     axios.post(importEWhInventoryRecordUrl, formData).then(res => {

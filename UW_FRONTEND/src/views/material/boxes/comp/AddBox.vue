@@ -20,8 +20,8 @@
                     <el-option label="非标准" value='0'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="addInfo.supplierId" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="addInfo.supplierId" placeholder="客户" value="">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
@@ -64,7 +64,7 @@
                     col:'',//列
                     height:'',//高度
                     isStandard:'',//是否为标准料盒
-                    supplierId:'',//供应商Id
+                    supplierId:'',//客户Id
                 },
                 isStandard:''
             }

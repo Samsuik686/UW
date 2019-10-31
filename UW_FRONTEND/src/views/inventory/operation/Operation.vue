@@ -176,7 +176,6 @@
                     return;
                 }
 
-                /*对比料号是否一致*/
                 let activeItem = []; //当前操作料盒的料盘信息
                 this.inventoryData.map((item) => {
                     if(Number(this.activeName) === Number(item.boxId)){
