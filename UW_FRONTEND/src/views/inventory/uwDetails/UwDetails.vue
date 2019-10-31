@@ -1,8 +1,8 @@
 <template>
     <div class="uw-details" v-loading="isLoading">
         <el-form :inline="true" class="uw-details-form">
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplier" placeholder="客户" value="">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
@@ -40,7 +40,7 @@
             </el-table-column>
             <el-table-column
                     min-width="150"
-                    label="供应商"
+                    label="客户"
                     prop="supplier_name">
             </el-table-column>
             <el-table-column
@@ -60,18 +60,8 @@
                     prop="inventory_operatior">
             </el-table-column>
             <el-table-column
-                    label="盘点开始时间"
-                    min-width="160"
-                    prop="start_time">
-            </el-table-column>
-            <el-table-column
-                    label="盘点结束时间"
-                    min-width="160"
-                    prop="end_time">
-            </el-table-column>
-            <el-table-column
                     label="审核人"
-                    prop="check_operatior">
+                    prop="check_operator">
             </el-table-column>
             <el-table-column
                     label="审核时间"
@@ -89,8 +79,8 @@
 
 <script>
     import {
-        checkInventoryTaskUrl, coverUwMaterialOneKeyUrl,
-        exportUwReportUrl, finishInventoryTaskUrl,
+        checkInventoryTaskUrl, checkRegularTaskUrl, coverRegularUWMaterialOneKeyUrl, coverUwMaterialOneKeyUrl,
+        exportUwReportUrl, finishInventoryRegularTaskUrl,
         getInventoryTaskUrl,
         getUwInventoryTaskInfoUrl,
         supplierSelectUrl
@@ -160,7 +150,8 @@
                     let options = {
                         url: getInventoryTaskUrl,
                         data: {
-                            supplierId: supplierId
+                            supplierId: supplierId,
+                            warehouseType:0
                         }
                     };
                     axiosPost(options).then(response => {
@@ -274,7 +265,7 @@
                     this.isPending = true;
                     this.isLoading = true;
                     let options = {
-                        url:checkInventoryTaskUrl,
+                        url:checkRegularTaskUrl,
                         data:{
                             taskId:this.taskId
                         }
@@ -282,6 +273,7 @@
                     axiosPost(options).then(res => {
                         if(res.data.result === 200){
                             this.$alertSuccess('审核成功');
+
                             this.isPending = false;
                             this.select();
                         }else{
@@ -305,7 +297,7 @@
                     this.isPending = true;
                     this.isLoading = true;
                     let options = {
-                        url:coverUwMaterialOneKeyUrl,
+                        url:coverRegularUWMaterialOneKeyUrl,
                         data:{
                             taskId:this.taskId
                         }
@@ -315,7 +307,7 @@
                             this.$alertSuccess(res.data.data);
                             this.isPending = false;
                             this.select();
-                            this.confirmFinishTask();
+                            //this.confirmFinishTask();
                         }else{
                             errHandler(res.data);
                         }
@@ -348,7 +340,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url: finishInventoryTaskUrl,
+                        url: finishInventoryRegularTaskUrl,
                         data: {
                             taskId: this.taskId
                         }

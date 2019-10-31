@@ -10,8 +10,8 @@
                     <el-option  v-for="item in destinations" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="ewhMaterialInfo.supplierId" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="ewhMaterialInfo.supplierId" placeholder="客户" value="">
                     <el-option label="不限" selected="selected"  value=''></el-option>
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
@@ -50,7 +50,7 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商"
+                    label="客户"
                     prop="supplier">
             </el-table-column>
             <el-table-column
@@ -59,8 +59,12 @@
                     prop="specification">
             </el-table-column>
             <el-table-column
-                    label="数量"
-                    prop="quantity">
+                    label="盘前数量"
+                    prop="inventoryBeforeQuantity">
+            </el-table-column>
+            <el-table-column
+                    label="盘后数量"
+                    prop="inventoryAfterQuantity">
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
@@ -113,7 +117,7 @@
                 ewhMaterialInfo:{
                     no:'',//料号
                     whId:'',//仓库
-                    supplierId:''//供应商
+                    supplierId:''//客户
                 },
                 suppliers:[],
                 origins:[],

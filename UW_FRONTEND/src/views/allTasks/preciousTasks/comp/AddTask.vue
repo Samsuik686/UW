@@ -13,17 +13,11 @@
                     <el-option  label="入库" value='0'></el-option>
                     <el-option  label="出库" value='1'></el-option>
                     <el-option label="调拨入库" value="4"></el-option>
-                    <el-option label="出库 - 盘点前申补" value="11"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplier" placeholder="供应商" value="" style="width:100%">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplier" placeholder="客户" value="" style="width:100%">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
-                </el-select>
-            </el-form-item>
-            <el-form-item label="盘点任务" v-if="isInventoryApply">
-                <el-select v-model.trim="inventoryTaskId" placeholder="盘点任务" value="" style="width:100%">
-                    <el-option  v-for="item in inventoryTasks" :label="item.file_name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item :label="destinationTip" v-if="isDestinationShow">
@@ -48,11 +42,14 @@
 </template>
 
 <script>
-    import axios from './../../../plugins/http'
+    import axios from '../../../../plugins/http'
     import {mapGetters} from 'vuex'
-    import {destinationSelectUrl, getUnStartInventoryTaskUrl, taskCreateUrl} from "../../../plugins/globalUrl";
-    import {axiosPost} from "../../../utils/fetchData";
-    import {errHandler} from "../../../utils/errorHandler";
+    import {
+        destinationSelectUrl,
+        taskCreatePreciousIOTaskUrl
+    } from "../../../../plugins/globalUrl";
+    import {axiosPost} from "../../../../utils/fetchData";
+    import {errHandler} from "../../../../utils/errorHandler";
 
     export default {
         name: "AddTask",
@@ -67,9 +64,6 @@
                 remarks:'',
                 fileName:'',
                 destinations:[],
-                isInventoryApply:false,
-                inventoryTaskId:'',
-                inventoryTasks:[],
                 isDestinationShow:false,
                 destinationTip:'目的地'
             }
@@ -82,17 +76,11 @@
         },
         watch: {
             taskType: function (val) {
-                this.isDestinationShow = val === "1" || val === "4" || val === "11";
-                this.isInventoryApply = val === "11";
+                this.isDestinationShow = val === "1" || val === "4";
                 if(val === '1'){
                     this.destinationTip="目的地"
                 }else{
                     this.destinationTip="退料仓位"
-                }
-            },
-            supplier:function(val){
-                if(val !== ''){
-                    this.getUnStartInventoryTasks();
                 }
             }
         },
@@ -104,7 +92,6 @@
             cancel:function(){
                 this.taskType = '';
                 this.supplier = '';
-                this.inventoryTaskId = '';
                 this.destination = '';
                 this.remarks = '';
                 this.fileName = '';
@@ -119,7 +106,7 @@
                     }
                     let formData = new FormData();
                    if(this.supplier === ''){
-                       this.$alertWarning('供应商不能为空');
+                       this.$alertWarning('客户不能为空');
                        return;
                    }
                    if(this.taskType !== '0'){
@@ -129,14 +116,6 @@
                        }
                        formData.append('destination', this.destination);
                    }
-                    if(this.isInventoryApply === true) {
-                        if (this.inventoryTaskId === '') {
-                            this.$alertWarning("盘点任务不可为空");
-                            return;
-                        }
-                        formData.append('isInventoryApply', this.isInventoryApply);
-                        formData.append('inventoryTaskId', this.inventoryTaskId);
-                    }
                    if(this.thisFile === ''){
                        this.$alertWarning('任务不能为空');
                        return;
@@ -152,7 +131,7 @@
                     formData.append('remarks',this.remarks);
                     formData.append('#TOKEN#', this.token);
                     this.isPending = true;
-                    axios.post(taskCreateUrl, formData).then(res => {
+                    axios.post(taskCreatePreciousIOTaskUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('创建成功');
                             this.cancel();
@@ -188,33 +167,6 @@
                     console.log(err);
                     this.$alertError('连接超时，请刷新重试');
                 })
-            },
-            getUnStartInventoryTasks: function () {
-                if(this.supplier === ''){
-                    this.$alertWarning('请先选择供应商');
-                    return;
-                }
-                if (!this.isPending) {
-                    this.isPending = true;
-                    let options = {
-                        url: getUnStartInventoryTaskUrl,
-                        data: {
-                            supplierId:this.supplier
-                        }
-                    };
-                    axiosPost(options).then(response => {
-                        if (response.data.result === 200) {
-                            this.inventoryTasks = response.data.data;
-                        } else {
-                            errHandler(response.data)
-                        }
-                    }).catch(err => {
-                        console.log(err);
-                        this.$alertError('连接超时，请刷新重试');
-                    }).finally(() => {
-                        this.isPending = false;
-                    })
-                }
             },
             handleUpload: function () {
                 let file = document.getElementById('fileUpload');

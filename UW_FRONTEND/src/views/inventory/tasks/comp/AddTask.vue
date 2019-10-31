@@ -7,9 +7,14 @@
             :close-on-press-escape="isCloseOnModal"
             width="30%">
         <el-form>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplierId" placeholder="供应商" value="" style="width:100%">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplierId" placeholder="客户" value="" style="width:100%">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="参与盘点仓位">
+                <el-select v-model.trim="selectDestinations" placeholder="仓位" value="" style="width:100%" multiple>
+                    <el-option  v-for="item in destinations" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
         </el-form>
@@ -22,7 +27,7 @@
 
 <script>
     import {errHandler} from "../../../../utils/errorHandler";
-    import {createInventoryTaskUrl} from "../../../../plugins/globalUrl";
+    import {createInventoryRegularTask, destinationSelectUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
 
     export default {
@@ -31,29 +36,36 @@
             return{
                 isPending:false,
                 isCloseOnModal:false,
-                supplierId:''
+                supplierId:'',
+                destinations:[],
+                selectDestinations:[]
             }
         },
         props:{
             isAdding:Boolean,
             suppliers:Array,
         },
+        mounted(){
+            this.getDestinations();
+        },
         methods:{
             cancel:function(){
                 this.supplierId = '';
+                this.selectDestinations = [];
                 this.$emit("update:isAdding",false);
             },
             submit:function(){
                 if (this.supplierId === '') {
-                    this.$alertWarning('供应商不能为空');
+                    this.$alertWarning('客户不能为空');
                     return;
                 }
                 if (!this.isPending) {
                     this.isPending = true;
                     let options = {
-                        url: createInventoryTaskUrl,
+                        url: createInventoryRegularTask,
                         data: {
-                            supplierId: this.supplierId
+                            supplierId: this.supplierId,
+                            destinationIds:this.selectDestinations.toString()
                         }
                     };
                     axiosPost(options).then(response => {
@@ -70,6 +82,29 @@
                         this.isPending = false;
                     })
                 }
+            },
+            getDestinations:function(){
+                let options = {
+                    url:destinationSelectUrl,
+                    data:{}
+                };
+                axiosPost(options).then(res => {
+                    if(res.data.result === 200){
+                        let data = res.data.data.list;
+                        let list = [];
+                        data.map((item) => {
+                            if(item.id !== 0 && item.id !== -1){
+                                list.push(item);
+                            }
+                        });
+                        this.destinations = list;
+                    }else{
+                        errHandler(res.data);
+                    }
+                }).catch(err => {
+                    console.log(err);
+                    this.$alertError('连接超时，请刷新重试');
+                })
             }
         }
     }

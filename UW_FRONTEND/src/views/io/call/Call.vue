@@ -1,20 +1,20 @@
 <template>
     <div class="call-robot">
         <el-form :inline="true" class="call-form" size="medium">
-            <el-form-item label="出入库类型">
-                <el-select v-model="windowType" placeholder="出入库类型" value="">
-                    <el-option label="入库" value="1"></el-option>
-                    <el-option label="截料入库" value="2"></el-option>
-                    <el-option label="调拨入库" value="3"></el-option>
-                </el-select>
-            </el-form-item>
-            <el-form-item label="仓口">
-                <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0" value="">
-                    <el-option value="" :label="windowsList.length === 0 ? '无非空闲仓口':'请选择'"></el-option>
-                    <el-option v-for="item in windowsList" :value="item.id" :label="item.id" :key="item.id"></el-option>
-                </el-select>
-            </el-form-item>
-        </el-form>
+        <el-form-item label="出入库类型">
+            <el-select v-model="windowType" placeholder="出入库类型" value="">
+                <el-option label="入库" value="1"></el-option>
+                <el-option label="截料入库" value="2"></el-option>
+                <el-option label="调拨入库" value="3"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="仓口">
+            <el-select v-model="thisWindow" placeholder="仓口" :disabled="windowsList.length === 0" value="">
+                <el-option value="" :label="windowsList.length === 0 ? '无非空闲仓口':'请选择'"></el-option>
+                <el-option v-for="item in windowsList" :value="item.id" :label="item.id" :key="item.id"></el-option>
+            </el-select>
+        </el-form-item>
+    </el-form>
         <video controls="controls" id="sAudio" hidden>
             <source src="./../../../assets/005-System05.ogg" type="video/ogg">
         </video>

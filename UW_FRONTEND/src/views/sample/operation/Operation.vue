@@ -33,7 +33,12 @@
 </template>
 
 <script>
-    import {getPackingSampleMaterialInfoUrl, scanMaterialUrl, taskWindowsUrl} from "../../../plugins/globalUrl";
+    import {
+        getPackingSampleMaterialInfoUrl,
+        sampleRegularUWMaterialUrl,
+        scanMaterialUrl,
+        taskWindowsUrl
+    } from "../../../plugins/globalUrl";
     import {axiosPost} from "../../../utils/fetchData";
     import {errHandler} from "../../../utils/errorHandler";
     import {handleScanText} from "../../../utils/scan";
@@ -194,7 +199,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url:scanMaterialUrl,
+                        url:sampleRegularUWMaterialUrl,
                         data:{
                             materialId:materialId,
                             groupId:groupId

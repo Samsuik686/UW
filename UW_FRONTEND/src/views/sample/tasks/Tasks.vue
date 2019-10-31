@@ -10,8 +10,8 @@
                     <el-option label="已作废" value='4'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="tasksInfo.supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="tasksInfo.supplier" placeholder="客户" value="">
                     <el-option label="不限" selected="selected"  value=''></el-option>
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
@@ -65,7 +65,7 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商"
+                    label="客户"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
@@ -138,7 +138,8 @@
                 tasksInfo:{
                     state:'',
                     create_time:'',
-                    supplier:''
+                    supplier:'',
+                    warehouse_type:0
                 },
                 times:[],
                 isClear:false,
@@ -373,7 +374,7 @@
                     this.ascBy = '';
                 }
                 this.pageNo = 1;
-                this.select();
+                this.setFilter();
             }
         }
     }

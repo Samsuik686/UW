@@ -34,7 +34,11 @@
 </template>
 
 <script>
-    import {cancelSampleTaskUrl, startSampleTaskUrl,taskWindowsUrl} from "../../../../plugins/globalUrl";
+    import {
+        cancelRegularTaskUrl,
+        startRegularTaskUrl,
+        taskWindowsUrl
+    } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
 
@@ -98,10 +102,10 @@
                         let statusUrl;
                         switch (this.thisState) {
                             case '2':
-                                statusUrl = startSampleTaskUrl;
+                                statusUrl = startRegularTaskUrl;
                                 break;
                             case '3':
-                                statusUrl = cancelSampleTaskUrl;
+                                statusUrl = cancelRegularTaskUrl;
                                 break;
                         }
                         let options = {

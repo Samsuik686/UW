@@ -37,3 +37,9 @@ export const unInventoryData = (state) => {
 export const isBlur = (state) => {
     return state.isBlur;
 };
+export const isPreciousBlur = (state) => {
+    return state.isPreciousBlur;
+};
+export const isPreciousCut = (state) => {
+    return state.isPreciousCut;
+};

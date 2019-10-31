@@ -11,7 +11,7 @@
                 <el-select v-model.trim="thisState" placeholder="状态更改" value="" style="width:100%">
                     <el-option  label="请选择" :value="originState" disabled></el-option>
                     <el-option  label="开始任务" value='2' v-if="originState === '1'"></el-option>
-                    <el-option  label="完成任务" value='3' v-if="originState === '2'"></el-option>
+                    <el-option  label="作废任务" value='3' v-if="originState === '1'"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="状态更改" v-else>
@@ -35,9 +35,9 @@
 
 <script>
     import {
-        cancelSampleTaskUrl, finishInventoryTaskUrl,
-        startInventoryTaskUrl,
-        startSampleTaskUrl,
+        cancelRegularInventoryTaskUrl,
+        finishInventoryRegularTaskUrl,
+        startInventoryRegularTaskUrl,
         taskWindowsUrl
     } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
@@ -103,10 +103,10 @@
                         let statusUrl;
                         switch (this.thisState) {
                             case '2':
-                                statusUrl =  startInventoryTaskUrl;
+                                statusUrl =  startInventoryRegularTaskUrl;
                                 break;
                             case '3':
-                                statusUrl =  finishInventoryTaskUrl;
+                                statusUrl =  cancelRegularInventoryTaskUrl;
                                 break;
                         }
                         let options = {

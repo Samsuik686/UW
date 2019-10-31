@@ -7,8 +7,8 @@
             :close-on-press-escape="isCloseOnModal"
             width="30%">
         <el-form>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="uploadInfo.supplierId" placeholder="供应商" value="" style="width:100%">
+            <el-form-item label="客户">
+                <el-select v-model.trim="uploadInfo.supplierId" placeholder="客户" value="" style="width:100%">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>

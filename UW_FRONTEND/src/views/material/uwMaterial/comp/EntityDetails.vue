@@ -90,7 +90,7 @@
                     let options = {
                         url: materialEntityUrl,
                         data: {
-                            type: this.type,
+                            materialTypeId: this.type,
                             pageNo:this.pageNo,
                             pageSize:this.pageSize
                         }

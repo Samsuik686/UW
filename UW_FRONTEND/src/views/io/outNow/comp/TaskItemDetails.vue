@@ -8,7 +8,7 @@
         <el-form-item label="料号">
           <span>{{taskItem.materialNo}}</span>
         </el-form-item>
-        <el-form-item label="供应商">
+        <el-form-item label="客户">
           <span>{{taskItem.supplierName}}</span>
         </el-form-item>
         <el-form-item label="计划">
@@ -113,7 +113,11 @@
   import EditMaterialId from "./subscomp/EditMaterialId";
   import MaterialBox from "./subscomp/MaterialBox";
   import ShowPosition from "./subscomp/ShowPosition";
-  import {robotBackUrl, taskDeleteMaterialRecordUrl} from "../../../../plugins/globalUrl";
+  import {
+    robotBackUrl,
+    taskDeleteMaterialRecordUrl,
+    taskDeleteRegularMaterialRecordUrl
+  } from "../../../../plugins/globalUrl";
   export default {
     name: "TaskItemDetails",
     props:{
@@ -231,9 +235,9 @@
         if (!this.isPending) {
           this.isPending = true;
           let options = {
-            url: taskDeleteMaterialRecordUrl,
+            url: taskDeleteRegularMaterialRecordUrl,
             data: {
-              packListItemId: this.taskItem.id,
+              packingListItemId: this.taskItem.id,
               materialId: materialId
             }
           };

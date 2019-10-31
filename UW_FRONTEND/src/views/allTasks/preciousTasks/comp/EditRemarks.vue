@@ -19,9 +19,9 @@
 </template>
 
 <script>
-    import {editTaskRemarksUrl} from "../../../plugins/globalUrl";
-    import {axiosPost} from "../../../utils/fetchData";
-    import {errHandler} from "../../../utils/errorHandler";
+    import {editTaskRemarksUrl} from "../../../../plugins/globalUrl";
+    import {axiosPost} from "../../../../utils/fetchData";
+    import {errHandler} from "../../../../utils/errorHandler";
 
     export default {
         name: "EditRemarks",

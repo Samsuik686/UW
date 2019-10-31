@@ -1,13 +1,13 @@
 <template>
     <div class="supplier" v-loading="isLoading">
         <el-form :inline="true" :model="supplierInfo" class="supplier-form" @submit.native.prevent>
-            <el-form-item label="供应商名">
-                <el-input v-model.trim="supplierInfo.name" placeholder="供应商名"></el-input>
+            <el-form-item label="客户名">
+                <el-input v-model.trim="supplierInfo.name" placeholder="客户名"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" icon="el-icon-search" @click="setFilter">查询</el-button>
                 <el-button type="info" icon="el-icon-close" @click="initForm">清除条件</el-button>
-                <el-button type="primary" icon="el-icon-plus" @click="isAdding=true">新增供应商</el-button>
+                <el-button type="primary" icon="el-icon-plus" @click="isAdding=true">新增客户</el-button>
             </el-form-item>
         </el-form>
         <el-table
@@ -20,17 +20,17 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商号"
+                    label="客户号"
                     prop="id">
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商名"
+                    label="客户名"
                     prop="name">
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
-                    <span style="margin-right:10px;cursor: pointer;" title="修改供应商名" @click="handleEdit(scope.row)">
+                    <span style="margin-right:10px;cursor: pointer;" title="修改客户名" @click="handleEdit(scope.row)">
                         <i class="el-icon-coke-edit"></i>
                     </span>
                     <span style="cursor: pointer" title="删除" @click="handleDelete(scope.row)">
@@ -151,7 +151,7 @@
                 this.select();
             },
             handleDelete: function (row) {
-                this.$confirm('你正在删除名字为“'+row.name+'”的供应商，请确认是否删除', {
+                this.$confirm('你正在删除名字为“'+row.name+'”的客户，请确认是否删除', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     showClose:false,

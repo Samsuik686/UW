@@ -50,8 +50,10 @@
                     this.$alertWarning("IP格式不对");
                     return;
                 }
-                window.sessionStorage.setItem('configData', JSON.stringify(this.configInfo));
-                this.setConfigData(this.configInfo);
+                let configData = JSON.parse(JSON.stringify(this.configData));
+                configData['printerIP'] = this.configInfo.printerIP;
+                window.sessionStorage.setItem('configData', JSON.stringify(configData));
+                this.setConfigData(configData);
                 this.$alertSuccess("保存成功");
             }
         }

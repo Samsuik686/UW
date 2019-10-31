@@ -41,7 +41,8 @@
         },
         props:{
             isImport:Boolean,
-            taskId:String
+            taskId:String,
+            whId:Number
         },
         methods:{
             ...mapActions(['setUnInventoryData']),
@@ -61,8 +62,13 @@
                         this.$alertWarning('文件不能为空');
                         return;
                     }
+                    if(this.whId === ''){
+                        this.$alertWarning('仓位不能为空');
+                        return;
+                    }
                     formData.append('taskId',this.taskId);
                     formData.append('file', this.thisFile);
+                    formData.append('whId',this.whId);
                     formData.append('#TOKEN#', this.token);
                     this.isPending = true;
                     axios.post(importEWhInventoryRecordUrl, formData).then(res => {

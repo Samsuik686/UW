@@ -12,8 +12,8 @@
                     <el-option label="C" value='C'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="boxInfo.supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="boxInfo.supplier" placeholder="客户" value="">
                     <el-option label="不限" selected="selected"  value=''></el-option>
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
@@ -63,7 +63,7 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商"
+                    label="客户"
                     prop="supplierName">
             </el-table-column>
             <el-table-column

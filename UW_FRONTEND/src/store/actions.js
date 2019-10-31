@@ -37,3 +37,9 @@ export const setUnInventoryData = ({commit},unInventoryData) => {
 export const setIsBlur= ({commit},isBlur) => {
     commit('setIsBlur',isBlur);
 };
+export const setIsPreciousBlur= ({commit},isPreciousBlur) => {
+    commit('setIsPreciousBlur',isPreciousBlur);
+};
+export const setIsPreciousCut= ({commit},isPreciousCut) => {
+    commit('setIsPreciousCut',isPreciousCut);
+};

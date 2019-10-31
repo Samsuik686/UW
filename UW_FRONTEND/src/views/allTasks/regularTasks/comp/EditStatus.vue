@@ -35,9 +35,9 @@
 </template>
 
 <script>
-    import {taskUrl, taskWindowsUrl} from "../../../plugins/globalUrl";
-    import {axiosPost} from "../../../utils/fetchData";
-    import {errHandler} from "../../../utils/errorHandler";
+    import {taskUrl, taskWindowsUrl} from "../../../../plugins/globalUrl";
+    import {axiosPost} from "../../../../utils/fetchData";
+    import {errHandler} from "../../../../utils/errorHandler";
 
     export default {
         name: "EditStatus",
@@ -101,13 +101,13 @@
                         let statusUrl;
                         switch (this.thisState) {
                             case '1':
-                                statusUrl = '/pass';
+                                statusUrl = '/passRegularIOTask';
                                 break;
                             case '2':
-                                statusUrl = '/start';
+                                statusUrl = '/startRegularIOTask';
                                 break;
                             case '3':
-                                statusUrl = '/cancel';
+                                statusUrl = '/cancelRegularIOTask';
                                 break;
                         }
                         let options = {

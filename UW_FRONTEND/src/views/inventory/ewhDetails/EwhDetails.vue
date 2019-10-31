@@ -1,14 +1,19 @@
 <template>
     <div class="ewh-details" v-loading="isLoading">
         <el-form :inline="true" class="uw-details-form">
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplier" placeholder="客户" value="">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="盘点任务">
                 <el-select v-model.trim="taskId" placeholder="盘点任务" value="">
                     <el-option  v-for="item in tasks" :label="item.file_name" :value='item.id' :key="item.id"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="仓位">
+                <el-select v-model.trim="whId" placeholder="仓位" value="" style="width:100%">
+                    <el-option  v-for="item in destinations" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="料号">
@@ -26,7 +31,7 @@
                 style="width:100%">
             <el-table-column type="expand">
                 <template slot-scope="props">
-                    <ewh-details-item :row="props.row"></ewh-details-item>
+                    <ewh-details-item :row="props.row" :whId="whId"></ewh-details-item>
                 </template>
             </el-table-column>
             <el-table-column
@@ -43,7 +48,7 @@
             </el-table-column>
             <el-table-column
                     min-width="150"
-                    label="供应商"
+                    label="客户"
                     prop="supplier_name">
             </el-table-column>
             <el-table-column
@@ -63,18 +68,8 @@
                     prop="inventory_operatior">
             </el-table-column>
             <el-table-column
-                    label="盘点开始时间"
-                    min-width="160"
-                    prop="start_time">
-            </el-table-column>
-            <el-table-column
-                    label="盘点结束时间"
-                    min-width="160"
-                    prop="end_time">
-            </el-table-column>
-            <el-table-column
                     label="审核人"
-                    prop="check_operatior">
+                    prop="check_operator">
             </el-table-column>
             <el-table-column
                     label="审核时间"
@@ -87,15 +82,15 @@
             <el-button type="primary" size="small" @click="coverEwhMaterial">一键平仓</el-button>
             <el-button type="primary" size="small" @click="exportInventoryReport">导出盘点报表</el-button>
         </div>
-        <import-record :is-import.sync="isImport" :task-id="String(taskId)"></import-record>
+        <import-record :is-import.sync="isImport" :task-id="String(taskId)" :wh-id="Number(whId)"></import-record>
     </div>
 </template>
 
 <script>
     import {
         checkEwhInventoryTaskUrl,
-        coverEwhMaterialOneKeyUrl,exportEWhReportInventoryUrl,
-        finishInventoryTaskUrl, getEwhInventoryTaskInfoUrl,
+        coverEwhMaterialOneKeyUrl, exportEWhReportInventoryUrl, finishInventoryRegularTaskUrl,
+        finishInventoryTaskUrl, getEwhInventoryTaskInfoUrl, getInventoryTaskDestinationUrl,
         getInventoryTaskUrl, supplierSelectUrl
     } from "../../../plugins/globalUrl";
     import {axiosPost, downloadFile} from "../../../utils/fetchData";
@@ -116,7 +111,9 @@
                 supplier:'',
                 taskId:'',
                 no:'',
-                isImport:false
+                isImport:false,
+                whId:'',
+                destinations:[]
             }
         },
         created(){
@@ -131,23 +128,32 @@
                     this.tasks = [];
                     this.taskId = '';
                     this.tableData = [];
+                    this.whId = '';
                     this.getInventoryTask(val);
                 }
             },
             taskId:function(val){
                 this.setUnInventoryData([]);
                 if(val !== ''){
-                    this.select();
+                    this.getInventoryTaskDestination();
                 }
             },
             isImport:function(val){
                 if(val === false){
-                    if(this.taskId === ''){
+                    if(this.whId === ''){
                         return;
                     }
                     this.select();
                 }
+            },
+            whId:function(val){
+                if(val !== ''){
+                    this.select();
+                }
             }
+        },
+        mounted(){
+            this.setUnInventoryData([]);
         },
         methods:{
             ...mapActions(['setUnInventoryData']),
@@ -178,7 +184,8 @@
                     let options = {
                         url: getInventoryTaskUrl,
                         data: {
-                            supplierId: supplierId
+                            supplierId: supplierId,
+                            warehouseType:0
                         }
                     };
                     axiosPost(options).then(response => {
@@ -218,6 +225,14 @@
                 return stateString;
             },
             select:function(){
+                if(this.taskId === ''){
+                    this.$alertWarning('盘点任务不能为空');
+                    return;
+                }
+                if(this.whId === ''){
+                    this.$alertWarning('仓位不能为空');
+                    return;
+                }
                 if(!this.isPending){
                     this.isPending = true;
                     this.isLoading = true;
@@ -225,7 +240,8 @@
                         url: getEwhInventoryTaskInfoUrl,
                         data: {
                             taskId:this.taskId,
-                            no:this.no
+                            no:this.no,
+                            whId:this.whId
                         }
                     };
                     axiosPost(options).then(res => {
@@ -261,11 +277,16 @@
                     this.$alertWarning('盘点任务不能为空');
                     return;
                 }
+                if(this.whId === ''){
+                    this.$alertWarning('仓位不能为空');
+                    return;
+                }
                 if (!this.isPending) {
                     this.isPending = true;
                     let data = {
                         taskId:this.taskId,
                         no:this.no,
+                        whId:this.whId,
                         '#TOKEN#': this.$store.state.token
                     };
                     downloadFile(exportEWhReportInventoryUrl, data);
@@ -288,13 +309,18 @@
                     this.$alertWarning('请先选择盘点任务');
                     return;
                 }
+                if(this.whId === ''){
+                    this.$alertWarning('请先选择仓位');
+                    return;
+                }
                 if(!this.isPending){
                     this.isPending = true;
                     this.isLoading = true;
                     let options = {
                         url:checkEwhInventoryTaskUrl,
                         data:{
-                            taskId:this.taskId
+                            taskId:this.taskId,
+                            whId:this.whId
                         }
                     };
                     axiosPost(options).then(res => {
@@ -327,13 +353,18 @@
                     this.$alertWarning('请先选择盘点任务');
                     return;
                 }
+                if(this.whId === ''){
+                    this.$alertWarning('请先选择仓位');
+                    return;
+                }
                 if(!this.isPending){
                     this.isPending = true;
                     this.isLoading = true;
                     let options = {
                         url:coverEwhMaterialOneKeyUrl,
                         data:{
-                            taskId:this.taskId
+                            taskId:this.taskId,
+                            whId:this.whId
                         }
                     };
                     axiosPost(options).then(res => {
@@ -374,9 +405,10 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url: finishInventoryTaskUrl,
+                        url: finishInventoryRegularTaskUrl,
                         data: {
-                            taskId: this.taskId
+                            taskId: this.taskId,
+                            whId:this.whId
                         }
                     };
                     axiosPost(options).then(res => {
@@ -394,6 +426,24 @@
                         this.isPending = false;
                     })
                 }
+            },
+            getInventoryTaskDestination:function(){
+                let options = {
+                    url: getInventoryTaskDestinationUrl,
+                    data: {
+                        taskId: this.taskId
+                    }
+                };
+                axiosPost(options).then(res => {
+                    if(res.data.result === 200){
+                       this.destinations = res.data.data;
+                    }else{
+                        errHandler(res.data);
+                    }
+                }).catch(err => {
+                    console.log(err);
+                    this.$alertError('连接超时，请刷新重试');
+                })
             }
         }
     }

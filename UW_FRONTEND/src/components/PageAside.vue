@@ -50,7 +50,7 @@
                             },
                             {
                                 index: '/material/supplier',
-                                name: '供应商管理'
+                                name: '客户管理'
                             },
                             {
                                 index: '/material/destination',
@@ -63,14 +63,27 @@
                             {
                                 index: '/material/ewhMaterial',
                                 name: '物料仓物料管理'
+                            },
+                            {
+                                index: '/material/precious',
+                                name: '贵重仓物料管理'
                             }
                         ]
                     },
                     {
-                        index: '/tasks',
+                        index: 'tasks',
                         name: '任务',
                         icon: 'el-icon-coke-tasks',
-                        children:[]
+                        children:[
+                            {
+                                index: '/tasks/regularTasks',
+                                name: 'UW仓任务'
+                            },
+                            {
+                                index: '/tasks/preciousTasks',
+                                name: '贵重仓任务'
+                            }
+                        ]
                     },
                     {
                         index: 'logs',
@@ -121,6 +134,10 @@
                             {
                                 index: '/io/returnNow',
                                 name: '调拨入库任务操作'
+                            },
+                            {
+                                index: '/io/preciousNow',
+                                name: '贵重仓任务操作'
                             }
                         ]
                     },
@@ -144,6 +161,14 @@
                             {
                                 index: '/inventory/ewhDetails',
                                 name: '物料仓盘点详情'
+                            },
+                            {
+                                index: '/inventory/preciousTasks',
+                                name: '贵重仓盘点任务'
+                            },
+                            {
+                                index: '/inventory/preciousDetails',
+                                name: '贵重仓盘点详情'
                             }
                         ]
                     },
@@ -159,6 +184,14 @@
                             {
                                 index: '/sample/operation',
                                 name: '抽检操作'
+                            },
+                            {
+                                index: '/sample/preciousTasks',
+                                name: '贵重仓抽检任务'
+                            },
+                            {
+                                index: '/sample/preciousOperation',
+                                name: '贵重仓抽检操作'
                             }
                         ]
                     },
@@ -248,13 +281,89 @@
                 this.setRouteName('',arr);
             },
             changeRoute:function(){
-                if(this.user.type !== 3){
-                    let index = this.navData.length - 1;
-                    this.navData[index].index = '/help/read';
-                    this.navData[index].children = [];
+                if(this.user.type === 1){
+                    for(let i =0;i<this.navData.length;i++){
+                        let obj = this.navData[i];
+                        if(obj.name === '帮助'){
+                            this.navData[i].index = '/help/read';
+                            this.navData[i].children = [];
+                            break;
+                        }
+                        if(obj.name === '建仓'){
+                            this.navData.splice(i,1);
+                            i--;
+                        }
+                    }
+                    return;
                 }
-                if(this.user.type !== 1 && this.user.type !== 3){
-                    this.navData.splice(8,1);
+                if(this.user.type === 2){
+                    for(let i =0;i<this.navData.length;i++){
+                        let obj = this.navData[i];
+                        if(obj.name === '任务'){
+                            this.navData[i].index = '/tasks/regularTasks';
+                            this.navData[i].children = [];
+                        }
+                        if(obj.name === '出入库' || obj.name === '盘点' || obj.name === '抽检'){
+                            let data = this.navData[i].children;
+                            for(let j = 0;j<data.length;j++){
+                                if(data[j].name.includes('贵重仓')){
+                                    data.splice(j,1);
+                                    i--
+                                }
+                            }
+                        }
+                        if(obj.name === '建仓'){
+                            this.navData.splice(i,1);
+                            i--;
+                        }
+                        if(obj.name === '人员'){
+                            this.navData.splice(i,1);
+                            i--;
+                        }
+                        if(obj.name === '帮助'){
+                            this.navData[i].index = '/help/read';
+                            this.navData[i].children = [];
+                        }
+                    }
+                    return;
+                }
+                if(this.user.type === 5){
+                    for(let i =0;i<this.navData.length;i++){
+                        let obj = this.navData[i];
+                        if(obj.name === '任务'){
+                            this.navData[i].index = '/tasks/preciousTasks';
+                            this.navData[i].children = [];
+                        }
+                        if(obj.name === '叉车'){
+                            this.navData.splice(i,1);
+                            i--;
+                        }
+                        if(obj.name === '出入库'){
+                            this.navData[i].index = '/io/preciousNow';
+                            this.navData[i].children = [];
+                        }
+                        if(obj.name === '盘点' || obj.name === '抽检'){
+                            let data = this.navData[i].children;
+                            for(let j = 0;j<data.length;j++){
+                                if(!data[j].name.includes('贵重仓')){
+                                    data.splice(j,1);
+                                    i--
+                                }
+                            }
+                        }
+                        if(obj.name === '建仓'){
+                            this.navData.splice(i,1);
+                            i--;
+                        }
+                        if(obj.name === '人员'){
+                            this.navData.splice(i,1);
+                            i--;
+                        }
+                        if(obj.name === '帮助'){
+                            this.navData[i].index = '/help/read';
+                            this.navData[i].children = [];
+                        }
+                    }
                 }
             }
         }

@@ -1,14 +1,14 @@
 <template>
     <el-dialog
-            title="更新供应商名"
+            title="更新客户名"
             :visible.sync="isEditing"
             :show-close="isCloseOnModal"
             :close-on-click-modal="isCloseOnModal"
             :close-on-press-escape="isCloseOnModal"
             width="30%">
         <el-form>
-            <el-form-item label="供应商名">
-                <el-input v-model.trim="name" placeholder="供应商名"></el-input>
+            <el-form-item label="客户名">
+                <el-input v-model.trim="name" placeholder="客户名"></el-input>
             </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
@@ -55,11 +55,11 @@
             },
             submit:function(){
                 if(this.name === ''){
-                    this.$alertWarning('供应商名不能为空');
+                    this.$alertWarning('客户名不能为空');
                     return;
                 }
                 if(!judgeCodeLen256(this.name)){
-                    this.$alertWarning('供应商名过长');
+                    this.$alertWarning('客户名过长');
                     return;
                 }
                 if(!this.isPending){

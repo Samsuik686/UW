@@ -7,8 +7,8 @@
             :close-on-press-escape="isCloseOnModal"
             width="30%">
         <el-form>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="supplier" placeholder="供应商" value="" style="width:100%">
+            <el-form-item label="客户">
+                <el-select v-model.trim="supplier" placeholder="客户" value="" style="width:100%">
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
@@ -31,7 +31,7 @@
 <script>
     import axios from './../../../../plugins/http'
     import {mapGetters} from 'vuex'
-    import {createSampleTaskUrl} from "../../../../plugins/globalUrl";
+    import {createRegularSampleTaskUrl} from "../../../../plugins/globalUrl";
     import {errHandler} from "../../../../utils/errorHandler";
 
     export default {
@@ -65,7 +65,7 @@
                 if(!this.isPending){
                     let formData = new FormData();
                     if(this.supplier === ''){
-                        this.$alertWarning('供应商不能为空');
+                        this.$alertWarning('客户不能为空');
                         return;
                     }
                     if(this.thisFile === ''){
@@ -81,7 +81,7 @@
                     formData.append('remarks',this.remarks);
                     formData.append('#TOKEN#', this.token);
                     this.isPending = true;
-                    axios.post(createSampleTaskUrl, formData).then(res => {
+                    axios.post(createRegularSampleTaskUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('创建成功');
                             this.cancel();

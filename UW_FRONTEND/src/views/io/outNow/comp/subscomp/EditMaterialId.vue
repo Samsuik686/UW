@@ -25,7 +25,7 @@
   import {mapActions} from 'vuex'
   import {axiosPost} from "../../../../../utils/fetchData";
   import {errHandler} from "../../../../../utils/errorHandler";
-  import {modifyOutQuantityUrl} from "../../../../../plugins/globalUrl";
+  import {modifyRegularOutQuantityUrl} from "../../../../../plugins/globalUrl";
 
   export default {
     name: "EditMaterialId",
@@ -72,10 +72,10 @@
         if(!this.isPending){
           this.isPending = true;
           let options = {
-            url:modifyOutQuantityUrl,
+            url:modifyRegularOutQuantityUrl,
             data:{
               taskLogId:this.taskLogId,
-              packListItemId:this.packListItemId,
+              packingListItemId:this.packListItemId,
               materialId:this.materialId,
               quantity:this.quantity
             }

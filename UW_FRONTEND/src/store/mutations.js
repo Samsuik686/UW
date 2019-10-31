@@ -9,6 +9,7 @@ export const setIsCollapse = (state, isCollapse) => {
 };
 export const setConfigData = (state,configData) => {
     state.configData.printerIP = configData.printerIP;
+    state.configData.cutLoginPrinterIP = configData.cutLoginPrinterIP;
 };
 export const setActiveName = (state, activeName) => {
     state.activeName = activeName;
@@ -36,4 +37,10 @@ export const setUnInventoryData = (state,unInventoryData) => {
 };
 export const setIsBlur= (state,isBlur) => {
     state.isBlur = isBlur;
+};
+export const setIsPreciousBlur= (state,isPreciousBlur) => {
+    state.isPreciousBlur = isPreciousBlur;
+};
+export const setIsPreciousCut= (state,isPreciousCut) => {
+    state.isPreciousCut = isPreciousCut;
 };

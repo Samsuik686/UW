@@ -30,13 +30,13 @@
                                :title='item.materialNo === null?item.goodsLocationName+" / "+"无数据":item.goodsLocationName+" / "+item.boxId+" / "+item.materialNo'
                                :name="item.boxId === null?item.goodsLocationId:item.boxId">
                 <task-item-details
-                    :taskItem="item"
-                    v-if="item.id !== null"
-                    :id="index"
-                    :col="col"
-                    :row="row"
-                    @refreshData="refreshData">
-                 </task-item-details>
+                        :taskItem="item"
+                        v-if="item.id !== null"
+                        :id="index"
+                        :col="col"
+                        :row="row"
+                        @refreshData="refreshData">
+                </task-item-details>
             </el-collapse-item>
         </el-collapse>
     </div>
@@ -48,7 +48,7 @@
     import {axiosPost} from "../../../utils/fetchData";
     import {errHandler} from "../../../utils/errorHandler";
     import {handleScanText} from "../../../utils/scan";
-    import {taskInUrl, taskWindowParkingItems, taskWindowsUrl} from "../../../plugins/globalUrl";
+    import {taskInRegularUrl, taskWindowParkingItems, taskWindowsUrl} from "../../../plugins/globalUrl";
 
     export default {
         name: "InNow",
@@ -228,6 +228,8 @@
 
 
                 /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
+                /*05.01.0506@1000@1562570647531@s444222@hcxx@A-6@13@2019-07-08@PCB:V10驱动光板,V10_Driver_v1.6@供应商@周期@*/
+                /*MMM@400@1573712789673@bobo@康凯斯@@9@2019-11-14@MMM@无@无@2019-11-14@*/
                 //判断扫描的条码格式
                 let result = handleScanText(scanText);
                 if (result !== '') {
@@ -241,36 +243,41 @@
                 let text = tempArray[0].replace('\ufeff', '');
                 let isExit = false;
                 for (let i = 0; i < this.tasks.length; i++) {
-                    if (text === this.tasks[i].materialNo) {
-                        isExit = true;
-                        if(this.activeName !== this.tasks[i].boxId){
-                            this.$alertWarning('当前扫描的二维码不属于该料盒');
+                    if(this.tasks[i].materialNo !== null){
+                        if (text.toLocaleUpperCase() === this.tasks[i].materialNo.toLocaleUpperCase()) {
+                            isExit = true;
+                            if(this.activeName !== this.tasks[i].boxId){
+                                this.$alertWarning('当前扫描的二维码不属于该料盒');
+                                return;
+                            }
+                            let options = {
+                                url: taskInRegularUrl,
+                                data: {
+                                    packingListItemId: this.tasks[i].id,
+                                }
+                            };
+                            if(tempArray[1])options.data['quantity'] = tempArray[1];
+                            if(tempArray[2])options.data['materialId'] = tempArray[2];
+                            if(tempArray[4])options.data['supplierName'] = tempArray[4];
+                            if(tempArray[7])options.data['productionTime'] = tempArray[7];
+                            if(tempArray[9])options.data['manufacturer'] = tempArray[9];
+                            if(tempArray[10])options.data['cycle'] = tempArray[10];
+                            if(tempArray[11])options.data['printTime'] = tempArray[11];
+                            axiosPost(options).then(response => {
+                                if (response.data.result === 200) {
+                                    this.col = response.data.data.col;
+                                    this.row = response.data.data.row;
+                                    this.successAudioPlay();
+                                    this.$alertSuccess('操作成功');
+                                    this.isPending = false;
+                                    this.select(i);
+                                } else {
+                                    this.failAudioPlay();
+                                    errHandler(response.data);
+                                }
+                            });
                             return;
                         }
-                        let options = {
-                            url: taskInUrl,
-                            data: {
-                                packListItemId: this.tasks[i].id,
-                                materialId: tempArray[2],
-                                quantity: tempArray[1],
-                                productionTime: tempArray[7],
-                                supplierName: tempArray[4]
-                            }
-                        };
-                        axiosPost(options).then(response => {
-                            if (response.data.result === 200) {
-                                this.col = response.data.data.col;
-                                this.row = response.data.data.row;
-                                this.successAudioPlay();
-                                this.$alertSuccess('操作成功');
-                                this.isPending = false;
-                                this.select(i);
-                            } else {
-                                this.failAudioPlay();
-                                errHandler(response.data);
-                            }
-                        });
-                        return;
                     }
                 }
                 if (isExit === false) {
@@ -327,3 +334,4 @@
         }
     }
 </style>
+

@@ -62,8 +62,8 @@
 
 <script>
     import {
-        coverMaterialUrl,
-        coverUwMaterialByTaskIdUrl,
+        coverRegularUWMaterialByTaskIdUrl,
+        coverRegularUWMaterialUrl,
         getUwInventoryTaskDetailsUrl
     } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
@@ -116,7 +116,7 @@
                 if(!this.isPending){
                     this.isPending = false;
                     let options = {
-                        url:coverMaterialUrl,
+                        url:coverRegularUWMaterialUrl,
                         data:{
                             id:row.id,
                             taskId:row.taskId
@@ -142,7 +142,7 @@
                 if(!this.isPending){
                     this.isPending = false;
                     let options = {
-                        url:coverUwMaterialByTaskIdUrl,
+                        url:coverRegularUWMaterialByTaskIdUrl,
                         data:{
                             materialTypeId:this.row.material_type_id,
                             taskId:this.row.task_id

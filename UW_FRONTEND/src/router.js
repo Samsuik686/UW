@@ -11,6 +11,7 @@ import Main from './views/Main';
 import Build from "./views/build/Build";
 //配置
 import Config from './views/config/Config';
+
 //盘点主界面
 import Inventory from "./views/inventory/Inventory";
 //盘点任务
@@ -21,6 +22,11 @@ import InventoryOperation from './views/inventory/operation/Operation';
 import InventoryUwDetails from './views/inventory/uwDetails/UwDetails';
 //物料仓盘点详情
 import InventoryEwhDetails from './views/inventory/ewhDetails/EwhDetails';
+//贵重仓任务
+import InventoryPreciousTasks from './views/inventory/preciousTasks/PreciousTasks';
+//贵重仓盘点详情
+import InventoryPreciousDetails from './views/inventory/preciousDetails/PreciousDetails';
+
 //出入库主界面
 import Io from './views/io/Io';
 //查看仓口详情
@@ -31,6 +37,8 @@ import IoCall from './views/io/call/Call';
 import IoInNow from './views/io/inNow/InNow';
 //出库
 import IoOutNow from './views/io/outNow/OutNow';
+//芯片仓出入库
+import PreciousNow from "./views/io/preciousNow/PreciousNow";
 //物料主界面
 import Material from './views/material/Material';
 //料盒
@@ -43,10 +51,17 @@ import MaterialDestination from './views/material/destination/Destination';
 import MaterialUwMaterial from './views/material/uwMaterial/UwMaterial';
 //物料仓物料
 import MaterialEwhMaterial from './views/material/ewhMaterial/EwhMaterial';
+//芯片仓物料
+import MaterialPrecious from './views/material/precious/Precious'
 //叉车
 import Robot from './views/robot/Robot';
-//任务
-import Tasks from './views/tasks/Tasks';
+//全部任务
+import AllTasks from './views/allTasks/AllTasks';
+//普通料任务
+import RegularTasks from './views/allTasks/regularTasks/Tasks'
+//贵重料任务
+import PreciousTasks from './views/allTasks/preciousTasks/Tasks'
+
 //人员
 import User from './views/user/User';
 //日志
@@ -57,12 +72,20 @@ import LogsActionLog from './views/logs/actionLog/ActionLog';
 import LogsPositionLog from './views/logs/positionLog/PositionLog';
 //任务日志
 import LogsTaskLog from './views/logs/taskLog/TaskLog';
+
+
 //抽检主界面
 import Sample from './views/sample/Sample';
 //抽检任务
 import SampleTasks from './views/sample/tasks/Tasks';
 //抽检操作
 import SampleOperation from './views/sample/operation/Operation';
+//贵重仓抽检任务
+import SamplePreciousTasks from './views/sample/preciousTasks/preciousTasks'
+//贵重仓抽检操作
+import SamplePreciousOperation from './views/sample/preciousOperation/PreciousOperation'
+
+
 //FAQ
 import Help from './views/help/Help';
 //FAQ编写
@@ -70,13 +93,19 @@ import Write from './views/help/write/Write';
 //FAQ查看
 import Read from "./views/help/read/Read";
 
+//截料入库
+import CutMaterial from "./views/cutMaterial/CutMaterial";
+
+//截料登录
+import CutLogin from "./views/user/CutLogin"
+
 const router = new Router({
-  mode: 'history',
+  mode: 'hash',
   base: window.g.SYSTEM_PATH,
   routes: [
       {
           path:'/',
-          redirect: '/login'
+          redirect:'/login'
       },
       {
           path:'/login',
@@ -116,13 +145,27 @@ const router = new Router({
                       {
                           path:'destination',
                           component:MaterialDestination
+                      },
+                      {
+                          path:'precious',
+                          component:MaterialPrecious
                       }
                   ]
               },
               {
                   path:'/tasks',
                   name:'Tasks',
-                  component:Tasks
+                  component:AllTasks,
+                  children:[
+                      {
+                          path:'regularTasks',
+                          component:RegularTasks
+                      },
+                      {
+                          path:'preciousTasks',
+                          component:PreciousTasks
+                      }
+                  ]
               },
               {
                   path:'/logs',
@@ -172,6 +215,10 @@ const router = new Router({
                       {
                           path:'returnNow',
                           component:IoInNow
+                      },
+                      {
+                          path:'preciousNow',
+                          component:PreciousNow
                       }
                   ]
               },
@@ -195,6 +242,14 @@ const router = new Router({
                       {
                           path: 'ewhDetails',
                           component: InventoryEwhDetails
+                      },
+                      {
+                          path:'preciousTasks',
+                          component:InventoryPreciousTasks
+                      },
+                      {
+                          path:'preciousDetails',
+                          component:InventoryPreciousDetails
                       }
                   ]
               },
@@ -210,6 +265,14 @@ const router = new Router({
                       {
                           path: 'operation',
                           component: SampleOperation
+                      },
+                      {
+                          path: 'preciousTasks',
+                          component: SamplePreciousTasks
+                      },
+                      {
+                          path: 'preciousOperation',
+                          component: SamplePreciousOperation
                       }
                   ]
               },
@@ -244,6 +307,19 @@ const router = new Router({
                   ]
               }
           ]
+      },
+      {
+          path:'/cut',
+          name:"CutMaterial",
+          component:CutMaterial,
+          meta: {
+              requireAuth: true
+          }
+      },
+      {
+          path:'/cutLogin',
+          name:"CutLogin",
+          component:CutLogin
       }
   ]
 });
@@ -265,16 +341,23 @@ router.beforeEach((to, from, next) => {
         store.commit('setToken','');
         store.commit('setUser',{});
     }
-    if (to.matched.some(r => r.meta.requireAuth)) {
-        if (store.state.token) {
-            next();
-        } else {
-            next({
-                path: '/login',
-            })
-        }
-    } else {
+    if(to.path === '/cutLogin'){
+        window.sessionStorage.clear();
+        store.commit('setToken','');
+        store.commit('setUser',{});
         next();
+    }else{
+        if (to.matched.some(r => r.meta.requireAuth)) {
+            if (store.state.token) {
+                next();
+            } else {
+                next({
+                    path: '/login',
+                })
+            }
+        } else {
+            next();
+        }
     }
 });
 export default router;

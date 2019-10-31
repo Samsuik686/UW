@@ -43,8 +43,7 @@
     import {errHandler} from "../../../utils/errorHandler";
     import {handleScanText} from "../../../utils/scan";
     import {
-        taskBackAfterCuttingUrl,
-        taskOutUrl,
+        taskBackRegularAfterCuttingUrl, taskOutRegularUrl,
         taskWindowParkingItems,
         taskWindowsUrl
     } from "../../../plugins/globalUrl";
@@ -240,40 +239,42 @@
                 let text = tempArray[0].replace('\ufeff', '');
                 let isExit = false;
                 for (let i = 0; i < this.tasks.length; i++) {
-                    if (text === this.tasks[i].materialNo) {
-                        isExit = true;
-                        //判断是否为当前货位
-                        if(this.activeName !== this.tasks[i].boxId){
-                            this.$alertWarning('当前扫描的二维码不属于该料盒');
+                    if(this.tasks[i].materialNo !== null){
+                        if (text.toLocaleUpperCase() === this.tasks[i].materialNo.toLocaleUpperCase()) {
+                            isExit = true;
+                            //判断是否为当前货位
+                            if(this.activeName !== this.tasks[i].boxId){
+                                this.$alertWarning('当前扫描的二维码不属于该料盒');
+                                return;
+                            }
+                            //判断是否为截料扫码
+                            if(this.tasks[i].isForceFinish === true){
+                                this.backAfterCutting(this.tasks[i],tempArray[2],tempArray[1],tempArray[4]);
+                                return;
+                            }
+                            //出库
+                            let options = {
+                                url: taskOutRegularUrl,
+                                data: {
+                                    packingListItemId: this.tasks[i].id,
+                                    materialId: tempArray[2],
+                                    quantity: tempArray[1],
+                                    supplierName: tempArray[4]
+                                }
+                            };
+                            axiosPost(options).then(response => {
+                                if (response.data.result === 200) {
+                                    this.successAudioPlay();
+                                    this.$alertSuccess('操作成功');
+                                    this.isPending = false;
+                                    this.select(i);
+                                } else {
+                                    this.failAudioPlay();
+                                    errHandler(response.data);
+                                }
+                            });
                             return;
                         }
-                        //判断是否为截料扫码
-                        if(this.tasks[i].isForceFinish === true){
-                            this.backAfterCutting(this.tasks[i],tempArray[2],tempArray[1],tempArray[4]);
-                            return;
-                        }
-                        //出库
-                        let options = {
-                            url: taskOutUrl,
-                            data: {
-                                packListItemId: this.tasks[i].id,
-                                materialId: tempArray[2],
-                                quantity: tempArray[1],
-                                supplierName: tempArray[4]
-                            }
-                        };
-                        axiosPost(options).then(response => {
-                            if (response.data.result === 200) {
-                                this.successAudioPlay();
-                                this.$alertSuccess('操作成功');
-                                this.isPending = false;
-                                this.select(i);
-                            } else {
-                                this.failAudioPlay();
-                                errHandler(response.data);
-                            }
-                        });
-                        return;
                     }
                 }
                 if (isExit === false) {
@@ -285,7 +286,7 @@
                 if (!this.isPending) {
                     this.isPending = true;
                     let options = {
-                        url: taskBackAfterCuttingUrl,
+                        url: taskBackRegularAfterCuttingUrl,
                         data: {
                             packingListItemId:taskItem.id,
                             materialId: materialId,

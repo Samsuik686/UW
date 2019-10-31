@@ -10,8 +10,8 @@
                     <el-option label="已作废" value='4'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="供应商">
-                <el-select v-model.trim="tasksInfo.supplier" placeholder="供应商" value="">
+            <el-form-item label="客户">
+                <el-select v-model.trim="tasksInfo.supplier" placeholder="客户" value="">
                     <el-option label="不限" selected="selected"  value=''></el-option>
                     <el-option  v-for="item in suppliers" :label="item.name" :value='item.id' :key="item.id"></el-option>
                 </el-select>
@@ -66,7 +66,7 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
-                    label="供应商"
+                    label="客户"
                     prop="supplierName">
             </el-table-column>
             <el-table-column
@@ -82,6 +82,9 @@
                     </span>
                     <span style="margin-right:10px;cursor:pointer" title="更换仓口" @click="handleChangeWindow(scope.row)">
                         <i class="el-icon-coke-transfer"></i>
+                    </span>
+                    <span style="cursor:pointer" title="详情" @click="handleShowDetails(scope.row)">
+                        <i class="el-icon-coke-list"></i>
                     </span>
                 </template>
             </el-table-column>
@@ -102,25 +105,29 @@
         <add-task :is-adding.sync="isAdding" :suppliers="suppliers"></add-task>
         <edit-status :is-edit-status.sync="isEditStatus" :edit-data="editData"></edit-status>
         <change-window :is-change.sync="isChange" :edit-data="editData"></change-window>
+        <show-details></show-details>
     </div>
 </template>
 
 <script>
+    import Bus from './../../../utils/bus'
     import {selectAllInventoryTaskUrl, supplierSelectUrl,switchTaskUrl} from "../../../plugins/globalUrl";
     import {axiosPost} from "../../../utils/fetchData";
     import {errHandler} from "../../../utils/errorHandler";
     import AddTask from "./comp/AddTask";
     import EditStatus from './comp/EditStatus'
     import ChangeWindow from './comp/ChangeWindow'
+    import ShowDetails from "./comp/ShowDetails";
     export default {
         name: "Tasks",
-        components: {AddTask,EditStatus,ChangeWindow},
+        components: {ShowDetails, AddTask,EditStatus,ChangeWindow},
         data(){
             return{
                 tasksInfo:{
                     state:'',
                     create_time:'',
-                    supplier:''
+                    supplier:'',
+                    warehouse_type:0
                 },
                 times:[],
                 isClear:false,
@@ -356,8 +363,12 @@
                     this.ascBy = '';
                 }
                 this.pageNo = 1;
-                this.select();
+                this.setFilter();
+            },
+            handleShowDetails:function(row){
+                Bus.$emit('showTaskDetails',row);
             }
+
         }
     }
 </script>
