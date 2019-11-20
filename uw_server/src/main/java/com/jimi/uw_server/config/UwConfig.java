@@ -33,7 +33,6 @@ import com.jimi.uw_server.controller.SampleTaskController;
 import com.jimi.uw_server.controller.SupplierController;
 import com.jimi.uw_server.controller.TaskController;
 import com.jimi.uw_server.controller.UserController;
-import com.jimi.uw_server.input.InputMaterialHelper;
 import com.jimi.uw_server.interceptor.AccessInterceptor;
 import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
@@ -112,11 +111,6 @@ public class UwConfig extends JFinalConfig {
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
-
-			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
-				InputMaterialHelper.startInputHepler(Integer.valueOf(PropKit.use("properties.ini").get("input_port")));
-				System.out.println("InputHelper is Running now...");
-			}
 			System.out.println("Uw Server is Running now...");
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());

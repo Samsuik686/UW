@@ -168,20 +168,23 @@ public class InventoryTaskService {
 		if (task != null) {
 			throw new OperationException("该供应商已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
 		}
-		String[] destinationIdStringArr = destinationIds.split(",");
 		List<Integer> destinationIdIntegerArr = new ArrayList<>();
-		for (String string : destinationIdStringArr) {
-			try {
-				Integer destinationId = Integer.valueOf(string);
-				Destination destination = Destination.dao.findById(destinationId);
-				if (destination == null) {
-					throw new OperationException("盘点的目的仓库不存在！");
+		if (destinationIds != null && !destinationIds.trim().equals("")) {
+			String[] destinationIdStringArr = destinationIds.split(",");
+			for (String string : destinationIdStringArr) {
+				try {
+					Integer destinationId = Integer.valueOf(string);
+					Destination destination = Destination.dao.findById(destinationId);
+					if (destination == null) {
+						throw new OperationException("盘点的目的仓库不存在！");
+					}
+					destinationIdIntegerArr.add(destinationId);
+				} catch (NumberFormatException e) {
+					throw new OperationException("盘点的目的仓库ID格式不正确！");
 				}
-				destinationIdIntegerArr.add(destinationId);
-			} catch (NumberFormatException e) {
-				throw new OperationException("盘点的目的仓库ID格式不正确！");
 			}
 		}
+		
 		if (!destinationIdIntegerArr.contains(uwId)) {
 			destinationIdIntegerArr.add(uwId);
 		}

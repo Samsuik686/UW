@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jimi.uw_server.constant.MaterialStatus;
+import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
@@ -13,6 +14,7 @@ import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.printer.PrintServerSocket;
+import com.mysql.jdbc.log.NullLogger;
 
 
 public class PrinterService {
@@ -46,25 +48,34 @@ public class PrinterService {
 			if (material.getPrintTime() != null) {
 				printTimeString = dateFormat.format(material.getPrintTime());
 			}
+			long startTime2 = System.currentTimeMillis();
+			Long id2 = PrintServerSocket.getResults().size() + 1 + startTime2;
+			TaskLog taskLog = TaskLog.dao.findById(material.getCutTaskLogId());
+			if (taskLog == null || taskLog.getQuantity() == null) {
+				throw new OperationException("发送打印信息失败,请检查物料是否处于截料状态！"); 
+			}
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString);
+				if (materialType.getType().equals(WarehouseType.REGULAR)) {
+					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString);
+				}else {
+					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity() - taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString);
+				}
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();
 				PrintServerSocket.getClients().remove(ip);
-				throw new OperationException("发送打印信息失败,请检查打印机连接");
+				throw new OperationException("发送打印信息失败,请检查打印机连接！");
 			}
-			long startTime2 = System.currentTimeMillis();
-			Long id2 = PrintServerSocket.getResults().size() + 1 + startTime2;
-			TaskLog taskLog = TaskLog.dao.findById(material.getCutTaskLogId());
+			
 			if (taskLog != null && taskLog.getQuantity() != null && !taskLog.getQuantity().equals(0)) {
 				try {
 					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString);
+					
 				} catch (Exception e) {
 					PrintServerSocket.getResults().remove(id.toString());
 					PrintServerSocket.getClients().get(ip).close();
 					PrintServerSocket.getClients().remove(ip);
-					throw new OperationException("发送打印信息失败,请检查打印机连接");
+					throw new OperationException("发送打印信息失败,请检查打印机连接！");
 				}
 			}
 
@@ -78,7 +89,7 @@ public class PrinterService {
 					return jsonObject.getString("data");
 				} else if (!PrintServerSocket.getClients().containsKey(ip)) {
 					PrintServerSocket.getResults().remove(id.toString());
-					throw new OperationException("连接失败,请检查打印机连接");
+					throw new OperationException("连接失败,请检查打印机连接！");
 				}
 				if (PrintServerSocket.getResults().get(id2.toString()) != null) {
 					String returnInfo = PrintServerSocket.getResults().get(id2.toString());
@@ -87,16 +98,16 @@ public class PrinterService {
 					return jsonObject.getString("data");
 				} else if (!PrintServerSocket.getClients().containsKey(ip)) {
 					PrintServerSocket.getResults().remove(id2.toString());
-					throw new OperationException("连接失败,请检查打印机连接");
+					throw new OperationException("连接失败,请检查打印机连接！");
 				}
 			}
 			PrintServerSocket.getResults().remove(id.toString());
 			PrintServerSocket.getResults().remove(id2.toString());
 			PrintServerSocket.getClients().get(ip).close();
 			PrintServerSocket.getClients().remove(ip);
-			throw new OperationException("打印信息发送超时,请检查打印机连接");
+			throw new OperationException("打印信息发送超时,请检查打印机连接！");
 		} else {
-			throw new OperationException("连接失败,请检查打印机连接");
+			throw new OperationException("连接失败,请检查打印机连接！");
 		}
 	}
 
@@ -108,7 +119,7 @@ public class PrinterService {
 			Long id = PrintServerSocket.getResults().size() + 1 + startTime;
 			Material material = Material.dao.findById(materialId);
 			if (material == null) {
-				throw new OperationException("该料盘不存在，打印失败");
+				throw new OperationException("该料盘不存在，打印失败！");
 			}
 			MaterialType materialType = MaterialType.dao.findById(material.getType());
 			Supplier supplier = Supplier.dao.findById(materialType.getSupplier());
@@ -129,7 +140,7 @@ public class PrinterService {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();
 				PrintServerSocket.getClients().remove(ip);
-				throw new OperationException("发送打印信息失败,请检查打印机连接");
+				throw new OperationException("发送打印信息失败,请检查打印机连接！");
 			}
 			// 监听客户端返回的信息
 			while (System.currentTimeMillis() - startTime < TIME_OUT) {
@@ -141,15 +152,15 @@ public class PrinterService {
 					return jsonObject.getString("data");
 				} else if (!PrintServerSocket.getClients().containsKey(ip)) {
 					PrintServerSocket.getResults().remove(id.toString());
-					throw new OperationException("连接失败,请检查打印机连接");
+					throw new OperationException("连接失败,请检查打印机连接！");
 				}
 			}
 			PrintServerSocket.getResults().remove(id.toString());
 			PrintServerSocket.getClients().get(ip).close();
 			PrintServerSocket.getClients().remove(ip);
-			throw new OperationException("打印信息发送超时,请检查打印机连接");
+			throw new OperationException("打印信息发送超时,请检查打印机连接！");
 		} else {
-			throw new OperationException("连接失败,请检查打印机连接");
+			throw new OperationException("连接失败,请检查打印机连接！");
 		}
 	}
 }

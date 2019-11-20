@@ -8,10 +8,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
@@ -19,8 +21,6 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
-import com.jimi.InputHelper.send.MyInputHelper;
-import com.jimi.uw_server.agv.dao.InputMaterialRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -117,7 +117,7 @@ public class IOTaskService {
 
 	private static final String GET_IN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 0) ORDER BY id ASC";
 
-	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT * FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 1) ORDER BY id ASC";
+	private static final String GET_OUT_TASK_WINDOWS_SQL = "SELECT window.* FROM window INNER JOIN task ON task.id = window.bind_task_id WHERE type = 1 ORDER BY id ASC";
 
 	private static final String GET_RETURN_TASK_WINDOWS_SQL = "SELECT id FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = 4) ORDER BY id ASC";
 
@@ -129,6 +129,8 @@ public class IOTaskService {
 
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ? and supplier_id = ?";
 
+	private static final String GET_WORKING_OUT_TASK = "SELECT * FROM task WHERE task.type = ? AND task.state = ? AND warehouse_type = ?";
+	
 	private IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 
 	private InventoryTaskService inventoryTaskService = Aop.get(InventoryTaskService.class);
@@ -398,12 +400,7 @@ public class IOTaskService {
 				throw new OperationException("该任务已作废！");
 			} else {
 				if (task.getWarehouseType().equals(WarehouseType.REGULAR)) {
-					if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
-						// 当前仓口存在未放入料盒的入库物料
-						if ((task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) && !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) {
-							throw new OperationException("禁止作废，请先将之前的物料正确入库再进行作废任务操作");
-						}
-					}
+					
 					boolean untiedWindowflag = true;
 					// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
 					if (state == TaskState.PROCESSING) {
@@ -1100,17 +1097,9 @@ public class IOTaskService {
 			}
 			// 新增物料表记录
 			int boxId = 0;
-			int windowId = 0;
 			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 				if (item.getId().intValue() == packListItemId) {
 					boxId = item.getBoxId().intValue();
-					windowId = item.getWindowId();
-				}
-			}
-			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
-				// 当前仓口存在未放入料盒的入库物料
-				if (!InputMaterialRedisDAO.getScanStatus(windowId).equals(-1)) {
-					throw new OperationException("扫码错误，请先将之前的物料正确入库再进行扫码操作");
 				}
 			}
 			Task task = Task.dao.findById(packingListItem.getTaskId());
@@ -1193,28 +1182,6 @@ public class IOTaskService {
 			taskLog.setTime(new Date());
 			taskLog.setDestination(task.getDestination());
 			taskLog.save();
-			if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
-				if (!material.getCol().equals(-1) && !material.getRow().equals(-1)) {
-					int positionNo = material.getCol() * 20 + material.getRow();
-					String result = MyInputHelper.getInstance().switchLight(windowId, positionNo, true);
-					if (result.contains("succeed")) {
-						InputMaterialRedisDAO.setScanStatus(windowId, positionNo);
-					} else {
-						taskLog.delete();
-						if (material.getIsRepeated() != null && material.getIsRepeated()) {
-							material.setRemainderQuantity(0);
-							material.setCol(-1);
-							material.setRow(-1);
-							material.setIsInBox(false);
-							material.setIsRepeated(true);
-							material.update();
-						} else {
-							material.delete();
-						}
-						throw new OperationException("入库失败，开启投料辅助器LED灯失败|Error|LED OPERN FAILED|" + result);
-					}
-				}
-			}
 			material.setIsRepeated(false).update();
 			return material;
 		}
@@ -1225,9 +1192,12 @@ public class IOTaskService {
 	 * 获取截料中的物料信息
 	 * @return
 	 */
-	public List<Record> getCuttingMaterial() {
+	public List<Record> getCuttingMaterial(Integer taskId) {
 		Map<Integer, Record> cutitingMaterialMap = new HashMap<>();
-		
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.OUT)) {
+			throw new OperationException("任务不存在或者该任务非出库任务");
+		}
 		SqlPara sqlPara = new SqlPara();
 		sqlPara.setSql(GET_CUTTING_MATERIAL_SQL);
 		sqlPara.addPara(MaterialStatus.CUTTING);
@@ -1240,19 +1210,44 @@ public class IOTaskService {
 			cutitingMaterialMap.put(record.getInt("packingListItemId"), record);
 		}
 		List<Record> records = new ArrayList<>(list.size());
-		List<Window> windows = Window.dao.find(GET_OUT_TASK_WINDOWS_SQL);
-		for (Window window : windows) {
-			List<AGVIOTaskItem> agvioTaskItems = TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId());
-			if (!agvioTaskItems.isEmpty()) {
+		List<AGVIOTaskItem> agvioTaskItems = TaskItemRedisDAO.getIOTaskItems(taskId);
+		if (!agvioTaskItems.isEmpty()) {
 				for (AGVIOTaskItem item : agvioTaskItems) {
 					if (item.getIsForceFinish() && cutitingMaterialMap.get(item.getId()) != null) {
 						records.add(cutitingMaterialMap.get(item.getId()));
 					}
 				}
-			}
-			
 		}
 		return records;
+	}
+	
+	
+	/**
+	 * 获取进行中的出库任务
+	 * @return
+	 */
+	public List<Task> getCuttingTask() {
+		List<Task> tasks = Task.dao.find(GET_WORKING_OUT_TASK, TaskType.OUT, TaskState.PROCESSING, WarehouseType.REGULAR);
+		Set<Integer> taskIdSet = new HashSet<>();
+		if (!tasks.isEmpty()) {
+			for (Task task : tasks) {
+				taskIdSet.add(task.getId());
+			}
+		}
+		
+		List<Window> windows = Window.dao.find(GET_OUT_TASK_WINDOWS_SQL);
+		if (!windows.isEmpty()) {
+			for (Window window : windows) {
+				if (taskIdSet.contains(window.getBindTaskId())) {
+					continue;
+				}
+				Task task = Task.dao.findById(window.getBindTaskId());
+				tasks.add(task);
+			}
+		}
+		
+		
+		return tasks;
 	}
 
 
@@ -1361,7 +1356,9 @@ public class IOTaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
 			}
 			// 新增物料表记录
-
+			if (cycle == null || cycle.trim().equals("") || cycle.trim().equals("无")) {
+				cycle = "无";
+			}
 			if (material != null) {
 				material.setBox(null);
 				material.setRow(null);
@@ -1985,11 +1982,6 @@ public class IOTaskService {
 			List<InventoryLog> logs = InventoryLog.dao.find(InventoryTaskSQL.GET_UN_INVENTORY_LOG_BY_TASKID, taskId);
 			if (logs.size() == 0 && windows.isEmpty()) {
 				throw new OperationException("盘点任务UW仓盘点阶段已结束，无法指定或更改仓口！");
-			}
-		}
-		if (Integer.valueOf(PropKit.use("properties.ini").get("input_open")) == 1) {
-			if ((task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) && !InputMaterialRedisDAO.getScanStatus(task.getWindow()).equals(-1)) {
-				throw new OperationException("无法指定或更改仓口，请先将之前的物料正确入库再进行更改仓口操作");
 			}
 		}
 		List<Integer> windowIdList = new ArrayList<>();

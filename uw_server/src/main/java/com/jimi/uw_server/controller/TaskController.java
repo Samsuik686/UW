@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.alibaba.druid.sql.ast.statement.SQLIfStatement.Else;
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
@@ -17,6 +18,7 @@ import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Material;
+import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.IOTaskService;
@@ -25,7 +27,7 @@ import com.jimi.uw_server.util.TokenBox;
 
 
 /**
- * 任务控制层
+   *  任务控制层
  * @author HardyYao
  * @createTime 2018年6月8日
  */
@@ -247,12 +249,18 @@ public class TaskController extends Controller {
 
 
 	// 获取截料中的物料的信息
-	public void getCuttingMaterial() {
-		List<Record> records = taskService.getCuttingMaterial();
+	public void getCuttingMaterial(Integer taskId) {
+		List<Record> records = taskService.getCuttingMaterial(taskId);
 		renderJson(ResultUtil.succeed(records));
 	}
 
-
+	// 获取截料中的物料的信息
+	public void getCuttingTask() {
+		List<Task> records = taskService.getCuttingTask();
+		renderJson(ResultUtil.succeed(records));
+	}
+	
+	
 	// 获取指定仓口任务条目
 	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
 		renderJson(ResultUtil.succeed(taskService.getWindowTaskItems(id, pageNo, pageSize)));

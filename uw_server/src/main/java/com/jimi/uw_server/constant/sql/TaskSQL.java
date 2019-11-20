@@ -6,7 +6,7 @@ public class TaskSQL {
 
 	public static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME = "select * from material where type = ? and production_time < ? and remainder_quantity > 0 and status = ? ORDER BY production_time asc";
 
-	public static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NULLCYCLE = "select * from material where type = ? and production_time < ? and remainder_quantity > 0 and status = ? and cycle is null ORDER BY production_time asc";
+	public static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NULLCYCLE = "select * from material where type = ? and production_time < ? and remainder_quantity > 0 and status = ? and (cycle is null or cycle = '无') ORDER BY production_time asc";
 
 	public static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME_AND_NOTNULLCYCLE = "select * from material where type = ? and production_time < ? and remainder_quantity > 0 and status = ? and cycle is not null ORDER BY production_time asc";
 

@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>3.5.7</version>
+	<version>3.5.8</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -144,13 +144,6 @@
 			<groupId>de.ruedigermoeller</groupId>
 			<artifactId>fst</artifactId>
 			<version>2.50</version>
-		</dependency>
-
-	<!-- UW的投料辅助器依赖包 -->
-		<dependency>
-			<groupId>com.jimi</groupId>
-			<artifactId>InputHelper</artifactId>
-			<version>1.0.3</version>
 		</dependency>
 		
 	</dependencies>
