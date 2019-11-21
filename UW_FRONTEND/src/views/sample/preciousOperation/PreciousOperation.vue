@@ -299,6 +299,9 @@
 
                 //判断扫描的二维码是否是该料盒的料盘码
                 let tempArray = scanText.split("@");
+                for(let i=0;i<tempArray.length;i++){
+                    tempArray[i] = tempArray[i].replace(/\$AT\$/g, "@");
+                }
                 let materialId = tempArray[2];
                 let isMaterialExit = false;
                 for(let i=0;i<this.preciousSampleData.list.length;i++){

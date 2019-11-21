@@ -71,6 +71,10 @@
                     label="料号">
             </el-table-column>
             <el-table-column
+                    prop="deductibleQuantity"
+                    label="周转仓抵扣后剩余超发数">
+            </el-table-column>
+            <el-table-column
                     prop="planQuantity"
                     label="计划数量">
             </el-table-column>

@@ -12,6 +12,7 @@
                     <el-option  label="请选择" :value="originState" disabled></el-option>
                     <el-option  label="开始任务" value='2' v-if="originState === '1'"></el-option>
                     <el-option  label="完成任务" value='3' v-if="originState === '2'"></el-option>
+                    <el-option  label="作废任务" value='4' v-if="originState === '1'"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="状态更改" v-else>
@@ -28,7 +29,9 @@
 </template>
 
 <script>
+    import {mapGetters} from 'vuex'
     import {
+        cancelPreciousInventoryTaskUrl,
         finishInventoryPreciousTaskUrl,
         startInventoryPreciousTaskUrl
     } from "../../../../plugins/globalUrl";
@@ -60,6 +63,11 @@
             isEditStatus:Boolean,
             editData:Object
         },
+        computed:{
+            ...mapGetters([
+                'user'
+            ])
+        },
         methods:{
             cancel:function(){
                 this.thisState = '';
@@ -77,6 +85,9 @@
                                 break;
                             case '3':
                                 statusUrl =  finishInventoryPreciousTaskUrl;
+                                break;
+                            case '4':
+                                statusUrl = cancelPreciousInventoryTaskUrl;
                                 break;
                         }
                         let options = {

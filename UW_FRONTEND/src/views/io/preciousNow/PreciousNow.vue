@@ -195,6 +195,9 @@
                 }
                 /*对比料号是否一致*/
                 let tempArray = scanText.split("@");
+                for(let i=0;i<tempArray.length;i++){
+                    tempArray[i] = tempArray[i].replace(/\$AT\$/g, "@");
+                }
                 let text = tempArray[0].replace('\ufeff', '');
                 let isExit = false;
                 for (let i = 0; i < this.tableData.length; i++) {

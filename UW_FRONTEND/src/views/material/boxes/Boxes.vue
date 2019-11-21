@@ -45,12 +45,19 @@
                 <el-button type="primary" icon="el-icon-search" @click="setFilter">查询</el-button>
                 <el-button type="info" icon="el-icon-close" @click="initForm">清除条件</el-button>
                 <el-button type="primary" icon="el-icon-plus" @click="isAdding=true">手动添加料盒</el-button>
+                <el-button type="primary" icon="el-icon-coke-edit" @click="isBatchEditSupplier = true" v-if="(user.type === 1 || user.type === 3)">批量修改料盒客户</el-button>
+                <el-button type="primary" icon="el-icon-coke-edit" @click="isBatchEditType = true" v-if="(user.type === 1 || user.type === 3)">批量修改料盒类型</el-button>
             </el-form-item>
         </el-form>
         <el-table
                 @sort-change="sortChange"
+                @selection-change="handleSelectionChange"
                 :data="tableData"
                 style="width:100%">
+            <el-table-column
+                    type="selection"
+                    width="55">
+            </el-table-column>
             <el-table-column
                     label="序号"
                     prop="showId"
@@ -126,10 +133,13 @@
         <add-box :isAdding.sync="isAdding" :suppliers="suppliers"></add-box>
         <edit-box :isEditing.sync="isEditing" :editData="editData"></edit-box>
         <box-details></box-details>
+        <BatchEditSupplier :is-batch-edit-supplier.sync="isBatchEditSupplier" :selection="selection" :suppliers="suppliers"></BatchEditSupplier>
+        <BatchEditType :is-batch-edit-type.sync="isBatchEditType" :selection="selection"></BatchEditType>
     </div>
 </template>
 
 <script>
+    import {mapGetters} from 'vuex'
     import {deleteBoxUrl, getBoxesUrl, supplierSelectUrl} from "../../../plugins/globalUrl";
     import {axiosPost} from "../../../utils/fetchData";
     import {errHandler} from "../../../utils/errorHandler";
@@ -137,9 +147,11 @@
     import BoxDetails from "./comp/BoxDetails";
     import Bus from './../../../utils/bus'
     import AddBox from "./comp/AddBox";
+    import BatchEditSupplier from "./comp/BatchEditSupplier";
+    import BatchEditType from "./comp/BatchEditType";
     export default {
         name: "Boxes",
-        components: {AddBox, BoxDetails, EditBox},
+        components: {BatchEditType, BatchEditSupplier, AddBox, BoxDetails, EditBox},
         data(){
             return{
                 boxInfo:{
@@ -164,7 +176,10 @@
                 isEditing:false,
                 editData:{},
                 ascBy:'',
-                descBy:''
+                descBy:'',
+                selection:[],
+                isBatchEditSupplier:false,
+                isBatchEditType:false
             }
         },
         created(){
@@ -173,6 +188,11 @@
         mounted(){
             this.setFilter();
         },
+        computed:{
+            ...mapGetters([
+                'user'
+            ])
+        },
         watch:{
             isEditing:function (val) {
                 if(val === false){
@@ -180,6 +200,16 @@
                 }
             },
             isAdding:function (val) {
+                if(val === false){
+                    this.setFilter();
+                }
+            },
+            isBatchEditSupplier:function(val){
+                if(val === false){
+                    this.setFilter();
+                }
+            },
+            isBatchEditType:function(val){
                 if(val === false){
                     this.setFilter();
                 }
@@ -253,6 +283,9 @@
                 this.boxInfo.type = '';
                 this.boxInfo.row = '';
                 this.filter = '';
+            },
+            handleSelectionChange:function(val){
+                this.selection = val;
             },
             handleDelete: function (row) {
                 this.$confirm('你正在删除料盒号为“'+row.id+'”的料盒，请确认是否删除', {

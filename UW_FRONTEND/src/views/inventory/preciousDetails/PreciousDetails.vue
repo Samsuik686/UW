@@ -67,18 +67,8 @@
                     prop="inventory_operatior">
             </el-table-column>
             <el-table-column
-                    label="盘点开始时间"
-                    min-width="160"
-                    prop="start_time">
-            </el-table-column>
-            <el-table-column
-                    label="盘点结束时间"
-                    min-width="160"
-                    prop="end_time">
-            </el-table-column>
-            <el-table-column
                     label="审核人"
-                    prop="check_operatior">
+                    prop="check_operator">
             </el-table-column>
             <el-table-column
                     label="审核时间"

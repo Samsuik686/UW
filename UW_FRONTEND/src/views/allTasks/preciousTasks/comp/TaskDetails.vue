@@ -1,10 +1,20 @@
 <template>
     <el-dialog
             title="详细"
+            @close="no = ''"
             :visible.sync="dialogVisible"
             :close-on-click-modal="isCloseOnModal"
             :close-on-press-escape="isCloseOnModal"
             width="90%">
+        <el-form :inline="true" size="small">
+            <el-form-item label="料号">
+                <el-input type="text" v-model="no"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" icon="el-icon-search" @click="select">查询</el-button>
+                <el-button type="info" icon="el-icon-close" @click="no = ''">清除条件</el-button>
+            </el-form-item>
+        </el-form>
         <el-table
                 v-loading="isLoading"
                 :data="tableData"
@@ -92,7 +102,8 @@
                 pageSize: 20,
                 totallyData:0,
                 isPending:false,
-                isLoading:false
+                isLoading:false,
+                no:''
             }
         },
         beforeDestroy(){
@@ -120,6 +131,9 @@
                             pageSize: this.pageSize
                         }
                     };
+                    if(this.no){
+                        options.data['no'] = this.no;
+                    }
                     axiosPost(options).then(res => {
                         if(res.data.result === 200){
                             if (res.data.data.list !== null) {

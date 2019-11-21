@@ -28,12 +28,10 @@
 </template>
 
 <script>
+    import {mapGetters} from 'vuex'
     import {
         cancelPreciousTaskUrl,
-        cancelSampleTaskUrl,
-        startPreciousTaskUrl,
-        startSampleTaskUrl,
-        taskWindowsUrl
+        startPreciousTaskUrl
     } from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
@@ -62,6 +60,11 @@
         props:{
             isEditStatus:Boolean,
             editData:Object
+        },
+        computed:{
+            ...mapGetters([
+                'user'
+            ])
         },
         methods:{
             cancel:function(){

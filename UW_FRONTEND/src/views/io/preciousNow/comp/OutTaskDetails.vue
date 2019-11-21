@@ -67,7 +67,7 @@
                     </el-table-column>
                     <el-table-column
                             prop="productionTime"
-                            label="生产日期">
+                            label="打印日期">
                     </el-table-column>
                     <el-table-column
                             label="操作">
@@ -92,6 +92,7 @@
             </div>
         </el-dialog>
         <edit-material-id
+                :task-item="taskItem"
                 :is-edit.sync="isEdit"
                 :row="editData"
                 :pack-list-item-id="taskItem.packingListItemId"

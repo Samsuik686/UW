@@ -23,7 +23,7 @@
                 </el-table-column>
                 <el-table-column
                         prop="productionTime"
-                        label="生产日期">
+                        label="打印日期">
                 </el-table-column>
                 <el-table-column
                         label="操作">
@@ -41,7 +41,7 @@
 <script>
     import {mapGetters,mapActions} from 'vuex'
     import {axiosPost} from "../../../../../utils/fetchData";
-    import {printUrl} from "../../../../../plugins/globalUrl";
+    import {printCutUrl, printUrl} from "../../../../../plugins/globalUrl";
     import {errHandler} from "../../../../../utils/errorHandler";
 
     export default {
@@ -70,11 +70,12 @@
                     return;
                 }
                 let options = {
-                    url: printUrl,
+                    url: printCutUrl,
                     data: {
                         ip: this.configData.printerIP,
                         materialId: item.materialId,
-                        quantity:item.remainderQuantity
+                        packingListItemId:this.taskItem.packingListItemId
+                        //quantity:item.remainderQuantity
                     }
                 };
                 axiosPost(options).then(response => {

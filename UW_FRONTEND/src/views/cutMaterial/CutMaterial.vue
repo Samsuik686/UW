@@ -12,7 +12,7 @@
             <h4>需截料、打印标签料盘</h4>
             <el-form :inline="true">
                 <el-form-item label="任务">
-                    <el-select v-model="taskId"  value="">
+                    <el-select v-model="taskId"  value="" @visible-change="refreshTasks">
                         <el-option v-for="item in tasks" :value="item.id" :label="item.file_name" :key="item.id"></el-option>
                     </el-select>
                 </el-form-item>
@@ -135,7 +135,10 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url:getCuttingMaterialUrl
+                        url:getCuttingMaterialUrl,
+                        data:{
+                            taskId:this.taskId
+                        }
                     };
                     axiosPost(options).then(res => {
                         if(res.data.result === 200){
@@ -189,8 +192,12 @@
                     axiosPost(options).then(res => {
                         if(res.data.result === 200){
                             this.$alertSuccess(res.data.data);
-                        }else{
+                        }else if(res.data.data.includes('该料盘未处于截料状态')){
                             this.$alertWarning(res.data.data);
+                            this.isPending = false;
+                            this.getCuttingMaterial();
+                        }else{
+                            errHandler(res.data);
                         }
                     }).catch(err => {
                         console.log(err);
@@ -237,6 +244,9 @@
                 }
                 /*对比料号是否一致*/
                 let tempArray = scanText.split("@");
+                for(let i=0;i<tempArray.length;i++){
+                    tempArray[i] = tempArray[i].replace(/\$AT\$/g, "@");
+                }
                 for(let i = 0;i<this.tableData.length;i++){
                     if(tempArray[2] === this.tableData[i].materialId){
                         this.print(this.tableData[i]);
@@ -268,6 +278,11 @@
             },
             setIP:function(){
                 this.isSet = true;
+            },
+            refreshTasks:function(val){
+                if(val === true){
+                    this.getCuttingTask();
+                }
             }
         }
     }

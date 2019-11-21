@@ -68,6 +68,7 @@
                 window.sessionStorage.setItem('configData', JSON.stringify(configData));
                 this.setConfigData(configData);
                 this.$alertSuccess("保存成功");
+                this.close();
             }
         }
     }

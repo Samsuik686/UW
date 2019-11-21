@@ -35,6 +35,11 @@ export const importRegularMaterialTypeFileUrl = url + '/manage/material/importRe
 export const importPreicousMaterialTypeFileUrl = url + '/manage/material/importPreicousMaterialTypeFile';
 export const getOverdueMaterialUrl = url + '/manage/material/getOverdueMaterial';
 
+//批量修改料盒客户
+export const editBoxOfSupplierUrl = url + '/manage/material/editBoxOfSupplier';
+//批量修改料盒类型
+export const editBoxOfTypeUrl = url + '/manage/material/editBoxOfType';
+
 //log
 export const logsUrl = url + '/log/select';
 
@@ -115,6 +120,8 @@ export const setTaskWindowUrl = url + '/task/setTaskWindow';
 export const finishPreciousTaskLackItemUrl = url + '/task/finishPreciousTaskLackItem';
 //完成任务条目
 export const finishPreciousTaskItemUrl = url + '/task/finishPreciousTaskItem';
+//强制解绑仓口
+export const forceUnbundlingWindowUrl = url + '/task/forceUnbundlingWindow';
 
 //robot manage
 export const robotSelectUrl = url + '/manage/robot/select';
@@ -161,6 +168,7 @@ export const  finishInventoryPreciousTaskUrl = url + '/task/inventory/finishPrec
 
 //作废未完成的盘点任务
 export const cancelRegularInventoryTaskUrl = url + '/task/inventory/cancelRegularTask';
+export const cancelPreciousInventoryTaskUrl = url + '/task/inventory/cancelPreciousTask';
 
 export const  backInventoryBoxUrl = url + '/task/inventory/backInventoryRegularUWBox';
 export const  selectAllInventoryTaskUrl = url + '/task/inventory/selectAllInventoryTask';

@@ -60,6 +60,11 @@
             </el-table-column>
             <el-table-column
                     sortable = "custom"
+                    label="优先级"
+                    prop="priorityString">
+            </el-table-column>
+            <el-table-column
+                    sortable = "custom"
                     label="状态"
                     prop="stateString">
             </el-table-column>
@@ -81,6 +86,9 @@
             </el-table-column>
             <el-table-column label="操作" min-width="120">
                 <template slot-scope="scope">
+                    <span style="margin-right:10px;cursor:pointer" title="设置优先级" @click="handleSet(scope.row)">
+                        <i class="el-icon-coke-config"></i>
+                    </span>
                     <span style="margin-right:10px;cursor:pointer" title="详细" @click="showDetails(scope.row)">
                         <i class="el-icon-coke-list"></i>
                     </span>
@@ -106,13 +114,13 @@
                     @current-change="select"
                     layout="total,sizes,prev,pager,next,jumper"
                     :total="totallyData">
-                >
             </el-pagination>
         </div>
         <add-task :is-adding.sync="isAdding" :suppliers="suppliers"></add-task>
         <edit-status :is-edit-status.sync="isEditStatus" :edit-data="editData"></edit-status>
         <sample-details></sample-details>
         <change-window :is-change.sync="isChange" :edit-data="editData"></change-window>
+        <set-priority :is-setting.sync="isSetting" :edit-data="editData"></set-priority>
     </div>
 </template>
 
@@ -130,9 +138,10 @@
     import Bus from './../../../utils/bus'
     import SampleDetails from './comp/SampleDetails'
     import ChangeWindow from './comp/ChangeWindow'
+    import SetPriority from "./comp/SetPriority";
     export default {
         name: "Tasks",
-        components: {EditStatus, AddTask,SampleDetails,ChangeWindow},
+        components: {EditStatus, AddTask,SampleDetails,ChangeWindow,SetPriority},
         data(){
             return{
                 tasksInfo:{
@@ -151,6 +160,7 @@
                 isPending:false,
                 isLoading:false,
                 isAdding:false,
+                isSetting:false,
                 isEditStatus:false,
                 filter:'',
                 editData:{},
@@ -166,6 +176,11 @@
             this.setFilter();
         },
         watch:{
+            isSetting:function (val) {
+                if(val === false){
+                    this.select()
+                }
+            },
             isAdding:function (val) {
                 if(val === false){
                     this.select()
@@ -202,6 +217,13 @@
                             let data = res.data.data.list;
                             data.map((item,index) => {
                                 item.showId = index + 1 + (this.pageNo - 1)*this.pageSize;
+                                if(item.priority === 0){
+                                    item.priorityString = '紧急';
+                                }else if(item.priority === 1){
+                                    item.priorityString = '正常';
+                                }else{
+                                    item.priorityString = '';
+                                }
                             });
                             this.tableData = data;
                             this.totallyData = res.data.data.totalRow;
@@ -353,6 +375,9 @@
                     case "stateString":
                         prop = "state";
                         break;
+                    case "priorityString":
+                        prop = "priority";
+                        break;
                     case "supplierName":
                         prop = "supplier";
                         break;
@@ -375,7 +400,15 @@
                 }
                 this.pageNo = 1;
                 this.setFilter();
-            }
+            },
+            handleSet:function(row){
+                if(row.stateString === "未开始" || row.stateString === "进行中"){
+                    this.editData = row;
+                    this.isSetting = true;
+                }else{
+                    this.$alertWarning("该状态不能设置优先级");
+                }
+            },
         }
     }
 </script>

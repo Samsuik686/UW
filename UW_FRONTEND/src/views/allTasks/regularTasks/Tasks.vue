@@ -103,7 +103,7 @@
                     label="备注"
                     prop="remarks">
             </el-table-column>
-            <el-table-column label="操作" min-width="160">
+            <el-table-column label="操作" min-width="200">
                 <template slot-scope="scope">
                     <span style="margin-right:10px;cursor:pointer" title="设置优先级" @click="handleSet(scope.row)">
                         <i class="el-icon-coke-config"></i>
@@ -122,6 +122,9 @@
                     </span>
                     <span style="margin-right:10px;cursor:pointer" title="导出报表" v-if="scope.row.state === 4" @click="exportUnfinishTaskDetails(scope.row)">
                         <i class="el-icon-coke-download"></i>
+                    </span>
+                    <span style="margin-right:10px;cursor:pointer" title="强制解绑仓口" v-if="scope.row.state === 4 && (user.type === 1 || user.type === 3)"  @click="forceUnbundlingWindow(scope.row)">
+                        <i class="el-icon-circle-close" style="font-size:20px;"></i>
                     </span>
                 </template>
             </el-table-column>
@@ -150,9 +153,10 @@
 </template>
 
 <script>
+    import {mapGetters} from 'vuex'
     import Bus from '../../../utils/bus'
     import {
-        exportUnfinishRegularTaskDetailsUrl,
+        exportUnfinishRegularTaskDetailsUrl, forceUnbundlingWindowUrl,
         supplierSelectUrl,
         switchTaskUrl,
         taskSelectUrl
@@ -237,6 +241,11 @@
             Bus.$on('refreshTask',() => {
                 this.select();
             })
+        },
+        computed:{
+            ...mapGetters([
+                'user'
+            ])
         },
         watch:{
             isSetting:function (val) {
@@ -443,6 +452,31 @@
                     this.$alertSuccess('请求成功，请等待下载');
                 } else {
                     this.$alertInfo('请稍后再试')
+                }
+            },
+            forceUnbundlingWindow:function(row){
+                if(!this.isPending){
+                    this.isPending = true;
+                    let options = {
+                        url:forceUnbundlingWindowUrl,
+                        data:{
+                            taskId:row.id,
+                        }
+                    };
+                    axiosPost(options).then(res => {
+                        if(res.data.result === 200){
+                            this.$alertSuccess('操作成功');
+                            this.isPending = false;
+                            this.select();
+                        }else{
+                            errHandler(res.data);
+                        }
+                    }).catch(err => {
+                        this.$alertError('连接超时，请刷新重试');
+                        console.log(err);
+                    }).finally(() => {
+                        this.isPending = false;
+                    })
                 }
             },
             showDetails:function(row){

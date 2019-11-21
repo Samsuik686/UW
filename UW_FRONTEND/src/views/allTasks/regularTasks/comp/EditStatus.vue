@@ -12,7 +12,7 @@
                     <el-option  label="请选择" :value="originState" disabled></el-option>
                     <el-option  label="通过审核" value='1' v-if="originState === '0'"></el-option>
                     <el-option  label="开始任务" value='2' v-if="originState === '1'"></el-option>
-                    <el-option  label="作废任务" value='3'></el-option>
+                    <el-option  label="作废任务" value='3' v-if="(user.type === 1 || user.type === 3)"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="状态更改" v-else>
@@ -35,6 +35,7 @@
 </template>
 
 <script>
+    import {mapGetters} from 'vuex'
     import {taskUrl, taskWindowsUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
@@ -70,6 +71,11 @@
                     this.$emit('showCheckTaskDetails',this.editData);
                 }
             }
+        },
+        computed:{
+            ...mapGetters([
+                'user'
+            ])
         },
         props:{
             isEditStatus:Boolean,

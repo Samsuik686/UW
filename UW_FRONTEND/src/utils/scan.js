@@ -1,6 +1,9 @@
 export const handleScanText = function(text){
    /*sample: 03.01.0001@1000@1531817296428@A008@范例表@A-1@9@2018-07-17@*/
   let tempArray = text.split("@");
+  for(let i=0;i<tempArray.length;i++){
+    tempArray[i] = tempArray[i].replace(/\$AT\$/g, "@");
+  }
   if(!judgeNumber(tempArray[1])){
     return '二维码格式错误，数量必须为非负整数';
   }

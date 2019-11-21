@@ -102,6 +102,9 @@
                 if (!this.isPending) {
                     this.isPending = true;
                     let tempArray = scanText.split("@");
+                    for(let i=0;i<tempArray.length;i++){
+                        tempArray[i] = tempArray[i].replace(/\$AT\$/g, "@");
+                    }
                     let options = {
                         url: robotCallUrl,
                         data: {

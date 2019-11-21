@@ -11,7 +11,7 @@
         <el-input v-model.trim="materialId" size="large" disabled></el-input>
       </el-form-item>
       <el-form-item label="数量">
-        <el-input v-model.trim="quantity" size="large"></el-input>
+        <el-input v-model.trim="quantity" size="large" disabled></el-input>
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
@@ -42,13 +42,21 @@
     props:{
       isEdit:Boolean,
       row:Object,
-      packListItemId:Number
+      packListItemId:Number,
+      taskItem:Object
     },
     watch:{
       isEdit:function(val){
         if(val === true){
           this.materialId = this.row.materialId;
-          this.quantity = this.row.taskLogQuantity;
+          let quantity = this.taskItem.planQuantity;
+          for(let i =0;i<this.taskItem.infos.length;i++){
+            let obj = this.taskItem.infos[i];
+            if(obj.materialId !== this.row.materialId){
+              quantity = quantity - Number(obj.materialQuantity);
+            }
+          }
+          this.quantity = quantity;
           this.taskLogId = this.row.taskLogId;
         }else{
           this.materialId = '';
