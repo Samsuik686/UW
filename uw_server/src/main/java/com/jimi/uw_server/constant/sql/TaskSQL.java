@@ -2,6 +2,8 @@ package com.jimi.uw_server.constant.sql;
 
 public class TaskSQL {
 
+	public static final String GET_PACKING_LIST_ITEM_BY_TASKID = "SELECT * FROM packing_list_item WHERE packing_list_item.task_id = ?";
+
 	public static final String GET_PACKING_LIST_ITEM_BY_TASKID_AND_NO = "SELECT * FROM packing_list_item INNER JOIN material_type ON packing_list_item.material_type_id = material_type.id WHERE packing_list_item.task_id = ? AND material_type.`no` = ? AND material_type.type = ? AND material_type.enabled = 1";
 
 	public static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME = "select * from material where type = ? and production_time < ? and remainder_quantity > 0 and status = ? ORDER BY production_time asc";
@@ -43,4 +45,6 @@ public class TaskSQL {
 	public static final String GET_OLDEST_MATERIAL_UW_STORE_NULLCYCLE = "SELECT A.* FROM ( SELECT material.*, packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item ON packing_list_item.material_type_id = material.type WHERE cycle IS NULL AND remainder_quantity > 0 AND packing_list_item.task_id = ? AND status = 0 ORDER BY production_time ASC ) A GROUP BY A.PackingListItem_Id";
 
 	public static final String GET_OLDEST_MATERIAL_UW_STORE_NOTNULLCYCLE = "SELECT A.* FROM ( SELECT material.*, packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item ON packing_list_item.material_type_id = material.type WHERE cycle IS NOT NULL AND remainder_quantity > 0 AND packing_list_item.task_id = ? AND status = 0 ORDER BY production_time ASC ) A GROUP BY A.PackingListItem_Id";
+
+
 }

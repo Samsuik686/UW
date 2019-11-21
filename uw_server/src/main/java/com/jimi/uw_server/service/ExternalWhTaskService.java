@@ -382,7 +382,7 @@ public class ExternalWhTaskService {
 
 		sqlPara.setSql(sql.toString());
 		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);
-		Map<Integer, Task> unStartInvTasks = new HashMap<Integer, Task>();
+		Map<String, Task> unStartInvTasks = new HashMap<String, Task>();
 		for (Record record : page.getList()) {
 			ExternalWhInfoVO externalWhInfoVO = new ExternalWhInfoVO();
 			externalWhInfoVO.setNo(record.getStr("no"));
@@ -393,11 +393,12 @@ public class ExternalWhTaskService {
 			externalWhInfoVO.setWhId(record.getInt("wh_id"));
 			externalWhInfoVO.setWareHouse(record.getStr("wh_name"));
 			Task inventoryTask = null;
-			if (unStartInvTasks.containsKey(record.getInt("supplier_id"))) {
-				inventoryTask = unStartInvTasks.get(record.getInt("supplier_id"));
+			String key = record.getInt("supplier_id") + "_" + record.getInt("wh_id");
+			if (unStartInvTasks.containsKey(key)) {
+				inventoryTask = unStartInvTasks.get(key);
 			} else {
-				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR,whId);
-				unStartInvTasks.put(record.getInt("supplier_id"), inventoryTask);
+				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR, record.getInt("wh_id"));
+				unStartInvTasks.put(key, inventoryTask);
 			}
 			if (inventoryTask != null) {
 				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTask.getCreateTime()));

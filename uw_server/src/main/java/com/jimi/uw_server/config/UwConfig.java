@@ -41,7 +41,6 @@ import com.jimi.uw_server.model.MappingKit;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
 
-
 /**
  * 全局配置
  *
@@ -54,16 +53,13 @@ public class UwConfig extends JFinalConfig {
 		me.setJsonFactory(new MixedJsonFactory());
 	}
 
-
 	@Override
 	public void configEngine(Engine me) {
 	}
 
-
 	@Override
 	public void configHandler(Handlers me) {
 	}
-
 
 	@Override
 	public void configInterceptor(Interceptors me) {
@@ -73,7 +69,6 @@ public class UwConfig extends JFinalConfig {
 		me.addGlobalActionInterceptor(new ActionLogInterceptor());
 		me.addGlobalServiceInterceptor(new Tx());
 	}
-
 
 	@Override
 	public void configRoute(Routes me) {
@@ -93,11 +88,11 @@ public class UwConfig extends JFinalConfig {
 		me.add("/task/printer", PrinterController.class);
 	}
 
-
 	@Override
 	public void afterJFinalStart() {
 		try {
 			TokenBox.start(PropKit.use("properties.ini").getInt("sessionTimeout"));
+
 			if (isProductionEnvironment()) {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("p_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("p_robotInfoURI"));
@@ -108,6 +103,7 @@ public class UwConfig extends JFinalConfig {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("d_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("d_robotInfoURI"));
 			}
+
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
@@ -118,14 +114,12 @@ public class UwConfig extends JFinalConfig {
 		}
 	}
 
-
 	@Override
 	public void beforeJFinalStop() {
 		TokenBox.stop();
 		AGVMainSocket.stop();
 		RobotInfoSocket.stop();
 	}
-
 
 	@Override
 	public void configPlugin(Plugins me) {
@@ -140,7 +134,7 @@ public class UwConfig extends JFinalConfig {
 			System.out.println("System is in production envrionment");
 		} else if (isTestEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
-			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"),6379, PropKit.get("t_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("t_redisIp"), 6379, PropKit.get("t_redisPassword"));
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
@@ -157,7 +151,6 @@ public class UwConfig extends JFinalConfig {
 		me.add(arp);
 	}
 
-
 	public static boolean isProductionEnvironment() {
 		File[] roots = File.listRoots();
 		for (int i = 0; i < roots.length; i++) {
@@ -167,7 +160,6 @@ public class UwConfig extends JFinalConfig {
 		}
 		return false;
 	}
-
 
 	public static boolean isTestEnvironment() {
 		File[] roots = File.listRoots();

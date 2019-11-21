@@ -23,5 +23,7 @@ public class TaskType {
 	public static final int WASTAGE = 6; // 损耗
 
 	public static final int SAMPLE = 7;
+	
+	public static final int EMERGENCY_OUT = 8;
 
 }
