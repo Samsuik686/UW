@@ -176,6 +176,15 @@ public class MaterialController extends Controller {
 		materialService.editBoxOfSupplier(ids, supplierId);
 		renderJson(ResultUtil.succeed());
 	}
+	
+	
+	public void editBoxOfType(String ids, Integer materialBoxTypeId) {
+		if (materialBoxTypeId == null || ids == null || ids.trim().equals("")) {
+			throw new OperationException("参数不能为空");
+		}
+		materialService.editBoxOfType(ids, materialBoxTypeId);
+		renderJson(ResultUtil.succeed());
+	}
 
 
 	// 更新料盒的启/禁用状态#

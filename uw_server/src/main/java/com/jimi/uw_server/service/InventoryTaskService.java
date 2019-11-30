@@ -403,7 +403,7 @@ public class InventoryTaskService {
 				inventoryLogs.add(inventoryLog);
 			}
 			Db.batchSave(inventoryLogs, batchSize);
-			Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), task.getSupplier(), WarehouseType.PRECIOUS);
+			Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), uwId, task.getSupplier(), WarehouseType.PRECIOUS);
 			task.setStartTime(new Date()).setState(TaskState.PROCESSING).update();
 		}
 		return "操作成功";

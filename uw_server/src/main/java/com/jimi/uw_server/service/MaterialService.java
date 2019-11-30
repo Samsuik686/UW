@@ -18,6 +18,7 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.BoxState;
+import com.jimi.uw_server.constant.MaterialBoxType;
 import com.jimi.uw_server.constant.MaterialStatus;
 import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
@@ -409,10 +410,47 @@ public class MaterialService extends SelectService {
 				if (material != null) {
 					throw new OperationException("料盒号为"+idInteger + "的料盒存在物料，请检查");
 				}
-				if (materialBox.getIsOnShelf()) {
+				if (!materialBox.getIsOnShelf()) {
 					throw new OperationException("料盒号为"+idInteger + "的料盒不在架，请检查");
 				}
 				materialBox.setSupplier(supplier.getId());
+				materialBoxs.add(materialBox);
+			}
+		} catch (NumberFormatException e) {
+			throw new OperationException("修改失败，参数转换出错，存在非数字的ID值");
+		}
+		if (!materialBoxs.isEmpty()) {
+			Db.batchUpdate(materialBoxs, batchSize);
+		}
+		
+	}
+	
+	
+	public void editBoxOfType(String ids, Integer type) {
+		String[] idStringArr = ids.split(",");
+		List<Integer> idIntegerArr = new ArrayList<>(idStringArr.length);
+		List<MaterialBox> materialBoxs = new ArrayList<>(idStringArr.length);
+		if (type != MaterialBoxType.STANDARD && type != MaterialBoxType.NONSTANDARD) {
+			throw new OperationException("料盒类型仅有标准与非标准，请检查！");
+		}
+		
+		try {
+			for (String idString : idStringArr) {
+				idIntegerArr.add(Integer.valueOf(idString));
+			}
+			for (Integer idInteger : idIntegerArr) {
+				MaterialBox materialBox = MaterialBox.dao.findById(idInteger);
+				if (materialBox == null) {
+					throw new OperationException("料盒号为"+idInteger + "的料盒不存在，请检查");
+				}
+				Material material = Material.dao.findFirst(GET_MATERIAL_BY_BOX, idInteger);
+				if (material != null) {
+					throw new OperationException("料盒号为"+idInteger + "的料盒存在物料，请检查");
+				}
+				if (!materialBox.getIsOnShelf()) {
+					throw new OperationException("料盒号为"+idInteger + "的料盒不在架，请检查");
+				}
+				materialBox.setType(type);
 				materialBoxs.add(materialBox);
 			}
 		} catch (NumberFormatException e) {
@@ -481,7 +519,7 @@ public class MaterialService extends SelectService {
 				sqlPara.addPara(startTime);
 				sqlPara.addPara(endTime);
 			}
-			sql.append(" ORDER BY a.time ");
+			sql.append(" ORDER BY a.time DESC ");
 		} else if (type == 1) {
 			sql.append(" WHERE (a.type = 0 OR a.type = 4) ");
 			if (startTime != null && endTime != null) {
@@ -489,14 +527,14 @@ public class MaterialService extends SelectService {
 				sqlPara.addPara(startTime);
 				sqlPara.addPara(endTime);
 			}
-			sql.append(" ORDER BY a.time ");
+			sql.append(" ORDER BY a.time DESC ");
 		} else {
 			if (startTime != null && endTime != null) {
 				sql.append(" WHERE (a.time BETWEEN ? AND ?) ");
 				sqlPara.addPara(startTime);
 				sqlPara.addPara(endTime);
 			}
-			sql.append(" ORDER BY a.time ");
+			sql.append(" ORDER BY a.time DESC ");
 		}
 		sqlPara.setSql(sql.toString());
 		Page<Record> page = Db.paginate(pageNo, pageSize, sqlPara);

@@ -1,7 +1,10 @@
 package com.jimi.uw_server.agv.handle;
 
+import java.util.Date;
+
 import com.jfinal.aop.Aop;
 import com.jfinal.json.Json;
+import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
@@ -130,6 +133,7 @@ public class IOTaskHandler extends BaseTaskHandler {
 			if (groupid.equals(item.getGroupId()) && item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {// LS执行完成时
 				// 更改taskitems里对应item状态为2（已拣料到站）***
 				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null, null, null);
+				//EfficiencyRedisDAO.putTaskBoxArrivedTime(item.getTaskId(), item.getBoxId(), new Date().getTime());
 				break;
 			} else if (item.getState() == TaskItemState.BACK_BOX && item.getBoxId().equals(Integer.valueOf(groupid.split(":")[1])) && missionGroupId.contains("B")) {// SL执行完成时：
 				// 更改taskitems里对应item状态为4（已回库完成）***
@@ -156,7 +160,7 @@ public class IOTaskHandler extends BaseTaskHandler {
 					TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_CUT, null, null, null, null, null, false);
 				}
 				nextRound(item);
-
+				//EfficiencyRedisDAO.removeTaskBoxArrivedTimeByTaskAndBox(item.getTaskId(), item.getBoxId());
 				clearTask(task.getId());
 			}
 
@@ -225,6 +229,10 @@ public class IOTaskHandler extends BaseTaskHandler {
 		if (isAllFinish) {
 
 			taskService.finishRegualrTask(taskId, isLack);
+			//EfficiencyRedisDAO.removeTaskBoxArrivedTimeByTask(taskId);
+			//EfficiencyRedisDAO.removeTaskLastOperationUserByTask(taskId);
+			//EfficiencyRedisDAO.removeTaskStartTimeByTask(taskId);
+			//EfficiencyRedisDAO.removeUserLastOperationTimeByTask(taskId);
 			TaskItemRedisDAO.removeTaskItemByTaskId(taskId);
 			TaskItemRedisDAO.delTaskStatus(taskId);
 		}

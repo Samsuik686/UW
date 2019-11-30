@@ -14,7 +14,6 @@ import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.printer.PrintServerSocket;
-import com.mysql.jdbc.log.NullLogger;
 
 
 public class PrinterService {

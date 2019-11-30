@@ -9,7 +9,7 @@ import java.util.Map;
 import com.jfinal.plugin.activerecord.Record;
 
 
-public class PreciousIOTaskInfo {
+public class IOTaskInfo {
 
 	public String no;
 
@@ -156,12 +156,12 @@ public class PreciousIOTaskInfo {
 	}
 
 
-	public static List<PreciousIOTaskInfo> fillList(List<Record> taskInfoRecords, List<Record> uwStoreRecords, List<Record> oldestMaterialRecordsWithNotCycle, List<Record> oldestMaterialRecordsWithCycle) {
-		Map<Integer, PreciousIOTaskInfo> map = new HashMap<>();
+	public static List<IOTaskInfo> fillList(List<Record> taskInfoRecords, List<Record> uwStoreRecords, List<Record> oldestMaterialRecords) {
+		Map<Integer, IOTaskInfo> map = new HashMap<>();
 		for (Record record : taskInfoRecords) {
-			PreciousIOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
+			IOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
 			if (info == null) {
-				info = new PreciousIOTaskInfo();
+				info = new IOTaskInfo();
 				info.setPackingListItemId(record.getInt("PackingListItem_Id"));
 				info.setPlanQuantity(record.getInt("PackingListItem_Quantity"));
 				info.setDesignator(record.getStr("MaterialType_Designator"));
@@ -187,29 +187,23 @@ public class PreciousIOTaskInfo {
 					info.setActuallyQuantity(record.getInt("TaskLog_Quantity") + info.getActuallyQuantity());
 					info.getInfos().add(IOTaskItemInfo.fill(record));
 					info.setScanNum(info.getScanNum() + 1);
-					info.setLackQuantity(record.getInt("PackingListItem_Quantity") - info.getActuallyQuantity());
+					info.setLackQuantity(info.getActuallyQuantity() - record.getInt("PackingListItem_Quantity") );
 				}
 			}
 		}
-		for (Record record : oldestMaterialRecordsWithNotCycle) {
-			PreciousIOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
-			if (info != null) {
-				info.setOldestMaterialDate(record.getDate("production_time"));
-			}
-		}
-		for (Record record : oldestMaterialRecordsWithCycle) {
-			PreciousIOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
+		for (Record record : oldestMaterialRecords) {
+			IOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
 			if (info != null && info.getOldestMaterialDate() == null) {
 				info.setOldestMaterialDate(record.getDate("production_time"));
 			}
 		}
 		for (Record record : uwStoreRecords) {
-			PreciousIOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
+			IOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
 			if (info != null) {
 				info.setStoreQuantity(record.getInt("uwStore"));
 			}
 		}
-		List<PreciousIOTaskInfo> infos = new ArrayList<>(map.values());
+		List<IOTaskInfo> infos = new ArrayList<>(map.values());
 
 		return infos;
 	}

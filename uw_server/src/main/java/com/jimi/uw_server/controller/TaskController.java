@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.alibaba.druid.sql.ast.statement.SQLIfStatement.Else;
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
@@ -45,7 +44,7 @@ public class TaskController extends Controller {
 			throw new ParameterException("参数不能为空！");
 		}
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
-		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
+		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			file = getFile();
 			String fileName = file.getFileName();
 			String resultString = taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR);
@@ -129,7 +128,7 @@ public class TaskController extends Controller {
 	// 令指定任务开始
 	@Log("开始常规任务编号为{id}的任务，绑定的仓口为{window}")
 	public void startRegularIOTask(Integer id, Integer window) {
-		if (id == null || window == null) {
+		if (id == null) {
 			throw new ParameterException("任务id或仓口id不能为空！");
 		}
 		if (taskService.startRegularIOTask(id, window)) {
@@ -180,9 +179,21 @@ public class TaskController extends Controller {
 			renderJson(ResultUtil.failed());
 		}
 	}
+	
+	
+	@Log("完成发料区紧急出库任务：{taskId}")
+	public void finishEmergencyRegularTask(Integer taskId) {
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		taskService.finishEmergencyRegularTask(taskId, user);
+		renderJson(ResultUtil.succeed());
+	}
 
 
-	@Log("完成任务{taskId}的缺料条目")
+	@Log("完成贵重仓任务{taskId}的缺料条目")
 	public void finishPreciousTaskLackItem(Integer taskId) {
 		if (taskId == null) {
 			throw new ParameterException("任务id参数不能为空！");
@@ -193,7 +204,6 @@ public class TaskController extends Controller {
 			renderJson(ResultUtil.failed());
 		}
 	}
-
 
 	@Log("完成{packingListItemId}的任务条目")
 	public void finishPreciousTaskItem(Integer packingListItemId) {
@@ -323,8 +333,24 @@ public class TaskController extends Controller {
 			renderJson(ResultUtil.failed());
 		}
 	}
-
-
+	
+	
+	// 物料出库
+	@Log("发料区紧急出库：将任务id号为{taskId}的任务进行扫码出库，料盘时间戳为{materialId}，出库数量为{quantity}，供应商名为{supplierName}， 料号为{no}，生产日期为{productionTime}， 周期为{cycle}， 产商为{manufacturer}， 打印日期为{printTime}")
+	public void outEmergencyRegular(String taskId, String no, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
+		if (taskId == null || materialId == null || quantity == null || supplierName == null || productionTime == null) {
+			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		if (taskService.outEmergencyRegular(taskId, no, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user)) {
+			renderJson(ResultUtil.succeed());
+		} else {
+			renderJson(ResultUtil.failed());
+		}
+	}
+	
 	// 物料出库
 	@Log("贵重仓出库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，料号为{no}，出入库数量为{quantity}，供应商名为{supplierName}")
 	public void outPrecious(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
@@ -349,6 +375,17 @@ public class TaskController extends Controller {
 			throw new ParameterException("参数不能为空！");
 		}
 		renderJson(ResultUtil.succeed(taskService.deleteRegularMaterialRecord(packingListItemId, materialId)));
+	}
+	
+	
+	// 删除错误的料盘记录
+	@Log("删除掉普通仓料盘时间戳为{materialId}的出入库记录，该料盘绑定的task_log条目id为{taskLogId}")
+	public void deleteEmergencyRegularMaterialRecord(Integer taskLogId, String materialId) {
+		if (taskLogId == null || materialId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		taskService.deleteEmergencyRegularMaterialRecord(taskLogId, materialId);
+		renderJson(ResultUtil.succeed());
 	}
 
 
@@ -492,6 +529,19 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed());
 	}
 
+	
+	/**
+	 * <p>Description: 获取紧急出库任务列表<p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2019年11月27日
+	 */
+	public void getEmergencyRegularTasks(){
+		List<Task> tasks = taskService.getEmergencyRegularTasks();
+		renderJson(ResultUtil.succeed(tasks));
+	}
+
 
 	/**
 	 * 设置任务指定的仓口
@@ -508,6 +558,23 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed());
 	}
 
+	/**
+	 * <p>Description:强制解绑仓口，仅有作废任务可以解绑 <p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2019年11月27日
+	 */
+	@Log("强制解绑仓口，任务ID：{taskId}")
+	public void forceUnbundlingWindow(Integer taskId) {
+		
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		taskService.forceUnbundlingWindow(taskId);
+		renderJson(ResultUtil.succeed());
+	}
+	
 
 	/**
 	 * 获取任务仓口

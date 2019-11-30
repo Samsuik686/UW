@@ -20,6 +20,7 @@ import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.sql.TaskSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.ExternalWhLog;
@@ -70,7 +71,11 @@ public class ExternalWhTaskService {
 
 		String resultString = "导入成功";
 		Date date = new Date();
-		String fileName = getTaskName(date);
+		String fileName = file.getName();
+		Task tempTask = Task.dao.findFirst(TaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		if (tempTask != null) {
+			throw new OperationException("文件名重复，请进行修改！");
+		}
 		ExcelHelper fileReader;
 		try {
 			fileReader = ExcelHelper.from(file);
@@ -179,7 +184,11 @@ public class ExternalWhTaskService {
 
 		String resultString = "导入成功";
 		Date date = new Date();
-		String fileName = getTaskName(date);
+		String fileName = file.getName();
+		Task tempTask = Task.dao.findFirst(TaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		if (tempTask != null) {
+			throw new OperationException("文件名重复，请进行修改！");
+		}
 		ExcelHelper fileReader;
 		try {
 			fileReader = ExcelHelper.from(file);
@@ -321,7 +330,7 @@ public class ExternalWhTaskService {
 
 	public String getTaskName(Date date) {
 
-		String fileName = "workorder_";
+		String fileName = "损耗_";
 		DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 		String time = formatter.format(date);
 		fileName = fileName + time;
