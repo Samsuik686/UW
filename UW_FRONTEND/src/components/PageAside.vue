@@ -138,6 +138,10 @@
                             {
                                 index: '/io/preciousNow',
                                 name: '贵重仓任务操作'
+                            },
+                            {
+                                index:'/io/outEmergency',
+                                name:'紧急出库操作'
                             }
                         ]
                     },

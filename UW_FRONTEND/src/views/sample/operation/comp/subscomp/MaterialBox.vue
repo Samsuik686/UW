@@ -71,6 +71,14 @@
                         ctx.strokeText(String(num),obj.col*this.width + this.width/2.5,obj.row*this.height + this.height/1.2);
                     }
                 }
+            },
+            //文字转语音提示
+            textToSpeak:function(text){
+                let synth = window.speechSynthesis;
+                let utterThis = new SpeechSynthesisUtterance(text);
+                utterThis.volume = 1;
+                utterThis.pitch = 2;
+                synth.speak(utterThis);
             }
         }
     }

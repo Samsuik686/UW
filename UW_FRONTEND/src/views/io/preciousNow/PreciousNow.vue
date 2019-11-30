@@ -24,6 +24,14 @@
             <el-form-item>
                 <el-button type="primary" @click="handleFinish" v-if="windowType === '1'">完成缺料条目</el-button>
             </el-form-item>
+            <el-form-item>
+                <el-button
+                        :type="isForced === true?'info':'primary'"
+                        v-if="windowType === '1'"
+                        @click="isForced = !isForced" >
+                    强制出库
+                </el-button>
+            </el-form-item>
         </el-form>
         <el-table
                 @cell-dblclick="selectRow"
@@ -107,7 +115,8 @@
                 isInShow:false,
                 isPending:false,
                 taskItem:{},
-                finishType:''
+                finishType:'',
+                isForced:false
             }
         },
         beforeDestroy(){
@@ -203,40 +212,42 @@
                 for (let i = 0; i < this.tableData.length; i++) {
                     if (text.toLocaleUpperCase() === this.tableData[i].no.toLocaleUpperCase()) {
                         isExit = true;
+                        //判断界面是否打开
                         if(this.isOutShow === false && this.isInShow === false){
                             if(this.windowType === '0'){
                                 this.isInShow = true;
                                 this.taskItem = this.tableData[i];
-                                return;
                             }
                             if(this.windowType === '1'){
                                 this.isOutShow = true;
                                 this.taskItem = this.tableData[i];
-                                return;
                             }
-                        }else{
-                            if(JSON.parse(JSON.stringify(this.taskItem)) !== ''){
-                                if(text !== this.taskItem.no){
+                        }
+                        if(JSON.parse(JSON.stringify(this.taskItem)) !== ''){
+                            if(text !== this.taskItem.no){
+                                if(this.isInShow === true){
+                                    this.taskItem = this.tableData[i];
+                                }else{
                                     this.$alertWarning('二维码格式错误，料号不对应');
                                     return;
                                 }
                             }
-                            let packingListItemId = this.tableData[i].packingListItemId;
-                            //截料
-                            if(this.isPreciousCut === true && this.isOutShow === true){
-                                this.backAfterCutting(packingListItemId,tempArray,i);
-                                return;
-                            }
-                            //出库
-                            if(this.isPreciousCut === false && this.isOutShow === true){
-                                this.outM(packingListItemId,tempArray,i);
-                                return;
-                            }
-                            //入库
-                            if(this.isInShow === true){
-                                this.inM(packingListItemId,tempArray,i);
-                                return;
-                            }
+                        }
+                        let packingListItemId = this.tableData[i].packingListItemId;
+                        //截料
+                        if(this.isPreciousCut === true && this.isOutShow === true){
+                            this.backAfterCutting(packingListItemId,tempArray,i);
+                            return;
+                        }
+                        //出库
+                        if(this.isPreciousCut === false && this.isOutShow === true){
+                            this.outM(packingListItemId,tempArray,i);
+                            return;
+                        }
+                        //入库
+                        if(this.isInShow === true){
+                            this.inM(packingListItemId,tempArray,i);
+                            return;
                         }
                     }
                 }
@@ -322,13 +333,15 @@
                         packingListItemId:packingListItemId,
                         materialId: tempArray[2],
                         quantity: tempArray[1],
-                        supplierName: tempArray[4]
+                        supplierName: tempArray[4],
+                        isForced:this.isForced
                     }
                 };
                 axiosPost(options).then(response => {
                     if (response.data.result === 200) {
                         this.successAudioPlay();
                         this.$alertSuccess('操作成功');
+                        this.isForced = false;
                         this.isPending = false;
                         this.select(i);
                     } else {

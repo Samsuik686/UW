@@ -84,7 +84,7 @@
                     label="备注"
                     prop="remarks">
             </el-table-column>
-            <el-table-column label="操作" min-width="120">
+            <el-table-column label="操作" min-width="160">
                 <template slot-scope="scope">
                     <span style="margin-right:10px;cursor:pointer" title="设置优先级" @click="handleSet(scope.row)">
                         <i class="el-icon-coke-config"></i>
@@ -100,6 +100,9 @@
                     </span>
                     <span style="margin-right:10px;cursor:pointer" title="导出报表"  @click="downloadReport(scope.row)">
                         <i class="el-icon-coke-download"></i>
+                    </span>
+                    <span style="margin-right:10px;cursor:pointer" title="强制解绑仓口" v-if="scope.row.state === 4 && (user.type === 1 || user.type === 3)"  @click="forceUnbundlingWindow(scope.row)">
+                        <i class="el-icon-circle-close" style="font-size:20px;"></i>
                     </span>
                 </template>
             </el-table-column>
@@ -125,8 +128,9 @@
 </template>
 
 <script>
+    import {mapGetters} from 'vuex'
     import {
-        exportSampleTaskInfoUrl,
+        exportSampleTaskInfoUrl, forceUnbundlingWindowSampleUrl,
         selectSampleTasksUrl,
         supplierSelectUrl,
         switchTaskUrl
@@ -171,6 +175,11 @@
         },
         created(){
             this.selectSupplier();
+        },
+        computed:{
+            ...mapGetters([
+                'user'
+            ])
         },
         mounted(){
             this.setFilter();
@@ -409,6 +418,31 @@
                     this.$alertWarning("该状态不能设置优先级");
                 }
             },
+            forceUnbundlingWindow:function(row){
+                if(!this.isPending){
+                    this.isPending = true;
+                    let options = {
+                        url:forceUnbundlingWindowSampleUrl,
+                        data:{
+                            taskId:row.id,
+                        }
+                    };
+                    axiosPost(options).then(res => {
+                        if(res.data.result === 200){
+                            this.$alertSuccess('操作成功');
+                            this.isPending = false;
+                            this.select();
+                        }else{
+                            errHandler(res.data);
+                        }
+                    }).catch(err => {
+                        this.$alertError('连接超时，请刷新重试');
+                        console.log(err);
+                    }).finally(() => {
+                        this.isPending = false;
+                    })
+                }
+            }
         }
     }
 </script>

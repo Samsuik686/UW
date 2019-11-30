@@ -123,6 +123,18 @@ export const finishPreciousTaskItemUrl = url + '/task/finishPreciousTaskItem';
 //强制解绑仓口
 export const forceUnbundlingWindowUrl = url + '/task/forceUnbundlingWindow';
 
+//---------紧急出库任务---------
+//获取紧急出库任务列表
+export const getEmergencyRegularTasksUrl = url + '/task/getEmergencyRegularTasks';
+//物料出库
+export const outEmergencyRegularUrl = url + '/task/outEmergencyRegular';
+//删除料盘记录
+export const deleteEmergencyRegularMaterialRecordUrl = url + '/task/deleteEmergencyRegularMaterialRecord';
+//完成任务
+export const finishEmergencyRegularTaskUrl = url + '/task/finishEmergencyRegularTask';
+
+
+
 //robot manage
 export const robotSelectUrl = url + '/manage/robot/select';
 export const robotSwitchUrl = url + '/manage/robot/switch';
@@ -291,6 +303,9 @@ export const scanMaterialUrl = url + '/task/sampleTask/scanMaterial';
 export const sampleRegularUWMaterialUrl = url + '/task/sampleTask/sampleRegularUWMaterial';
 //抽检报表导出
 export const exportSampleTaskInfoUrl = url + '/task/sampleTask/exportSampleTaskInfo';
+
+//强制解绑仓口
+export const forceUnbundlingWindowSampleUrl = url + '/task/sampleTask/forceUnbundlingWindow';
 
 //帮助页面-上传图片
 export const uploadPhotoUrl = url + '/faq/uploadPic';

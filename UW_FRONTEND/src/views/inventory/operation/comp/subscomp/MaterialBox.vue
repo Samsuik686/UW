@@ -26,11 +26,6 @@
                 if(val !== ''){
                     this.showPosition(this.col,this.row);
                 }
-            },
-            row:function(val){
-                if(val !== ''){
-                    this.showPosition(this.col,this.row);
-                }
             }
         },
         methods:{
@@ -55,12 +50,21 @@
                             }else{
                                 num = 21 + row;
                             }
+                            this.textToSpeak('第'+num+'格');
                             ctx.strokeText(String(num),i*this.width + this.width/2.5,j*this.height + this.height/1.2);
                         }else{
                             ctx.strokeRect(i*this.width,j*this.height,this.width,this.height);
                         }
                     }
                 }
+            },
+            //文字转语音提示
+            textToSpeak:function(text){
+                let synth = window.speechSynthesis;
+                let utterThis = new SpeechSynthesisUtterance(text);
+                utterThis.volume = 1;
+                utterThis.pitch = 2;
+                synth.speak(utterThis);
             }
         }
     }

@@ -20,7 +20,7 @@
                     <el-option  label="无法操作" :value='originState'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="仓口选择" v-if="windowShow === '2' && originState === '1'">
+            <el-form-item label="仓口选择" v-if="windowShow === '2' && originState === '1' && editData.type !== 8">
                 <el-select v-model.trim="windowVal" placeholder="仓口选择" value="" style="width:100%" :disabled="window.length === 0">
                     <el-option  :label="window.length > 0 ? '请选择' : '无可用仓口'" value=''></el-option>
                     <el-option v-for="item in window" :value="item.id" :label="item.id" :key="item.id"></el-option>
@@ -122,7 +122,7 @@
                                 id: this.editData.id
                             }
                         };
-                        if (this.thisState === '2') {
+                        if (this.thisState === '2' && this.editData.type !== 8) {
                             if (this.windowVal === "") {
                                 this.$alertInfo("请选择仓口");
                                 this.isPending = false;

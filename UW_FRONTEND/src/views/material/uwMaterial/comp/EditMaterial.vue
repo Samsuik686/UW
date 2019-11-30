@@ -10,11 +10,11 @@
             <el-form-item label="料号">
                 <el-input v-model.trim="editInfo.no" placeholder="料号" disabled></el-input>
             </el-form-item>
-            <el-form-item label="规格">
-                <el-input v-model.trim="editInfo.specification" placeholder="规格" disabled></el-input>
-            </el-form-item>
             <el-form-item label="客户">
                 <el-input v-model.trim="editInfo.supplierName" placeholder="客户" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="规格">
+                <el-input v-model.trim="editInfo.specification" placeholder="规格"></el-input>
             </el-form-item>
             <el-form-item label="厚度">
                 <el-input v-model.trim="editInfo.thickness" placeholder="厚度"></el-input>
@@ -88,7 +88,8 @@
                             id: this.editInfo.id,
                             enabled: 1,
                             thickness:this.editInfo.thickness,
-                            radius:this.editInfo.radius
+                            radius:this.editInfo.radius,
+                            specification:this.editInfo.specification
                         }
                     };
                     axiosPost(options).then(res => {

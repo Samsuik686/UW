@@ -61,6 +61,8 @@ import AllTasks from './views/allTasks/AllTasks';
 import RegularTasks from './views/allTasks/regularTasks/Tasks'
 //贵重料任务
 import PreciousTasks from './views/allTasks/preciousTasks/Tasks'
+//紧急出库操作
+import OutEmergency from "./views/io/outEmergency/OutEmergency";
 
 //人员
 import User from './views/user/User';
@@ -219,6 +221,10 @@ const router = new Router({
                       {
                           path:'preciousNow',
                           component:PreciousNow
+                      },
+                      {
+                          path:'outEmergency',
+                          component:OutEmergency
                       }
                   ]
               },

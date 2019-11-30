@@ -13,7 +13,8 @@
                     <el-option  label="入库" value='0'></el-option>
                     <el-option  label="出库" value='1'></el-option>
                     <el-option label="调拨入库" value="4"></el-option>
-                    <el-option label="出库 - 盘点前申补" value="11"></el-option>
+                    <el-option label="出库-盘点前申补" value="11"></el-option>
+                    <el-option label="发料区-紧急出库" value="8"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="客户">
@@ -86,9 +87,9 @@
         },
         watch: {
             taskType: function (val) {
-                this.isDestinationShow = val === "1" || val === "4" || val === "11";
+                this.isDestinationShow = val === "1" || val === "4" || val === "11" || val === "8";
                 this.isInventoryApply = val === "11";
-                if(val === '1'){
+                if(val === '1' || val === "8"){
                     this.destinationTip="目的地"
                 }else{
                     this.destinationTip="退料仓位"
