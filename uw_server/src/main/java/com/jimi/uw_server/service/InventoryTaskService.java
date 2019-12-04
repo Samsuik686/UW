@@ -1149,7 +1149,7 @@ public class InventoryTaskService {
 			taskVO.setSupplierId(record.getInt("Task_Supplier"));
 			taskVO.setSupplierName(record.getStr("Supplier_Name"));
 			status = false;
-			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("id"))) {
+			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
 				status = TaskItemRedisDAO.getTaskStatus(record.getInt("Task_Id"));
 			}
 

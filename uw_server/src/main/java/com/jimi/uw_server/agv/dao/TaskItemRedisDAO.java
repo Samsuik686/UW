@@ -264,11 +264,12 @@ public class TaskItemRedisDAO {
 
 	public synchronized static Boolean getAgvWebSocketStatus() {
 		String flagStr = cache.get("agvWebSocketStatus");
-		Boolean flag = false;
-		if (flagStr != null && flagStr.equals("true")) {
-			 flag= true;
-			cache.set("agvWebSocketStatus", true);
+		Boolean flag = true;
+		if (flagStr != null && flagStr.equals("false")) {
+			flag= false;
+			return flag;
 		}
+		cache.set("agvWebSocketStatus", true);
 		return flag;
 	}
 

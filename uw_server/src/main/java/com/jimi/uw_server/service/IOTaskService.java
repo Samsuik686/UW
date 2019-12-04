@@ -1615,7 +1615,7 @@ public class IOTaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库记录中最新的料盘，禁止删除！");
 			}
 			MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
-			material.setIsInBox(true).setStatus(MaterialStatus.NORMAL).update();
+			material.setIsInBox(true).setStatus(MaterialStatus.NORMAL).setCutTaskLogId(null).update();
 			int boxType = 0;
 			int operationType = 1;
 			if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
