@@ -237,7 +237,7 @@ public class MaterialService extends SelectService {
 
 
 	// 更新物料类型
-	public String updateMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String designator) {
+	public String updateMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String designator, String specification) {
 		String resultString = "更新成功！";
 		if (!enabled) {
 			Material m = Material.dao.findFirst(COUNT_MATERIAL_BY_TYPE_SQL, id);
@@ -257,6 +257,7 @@ public class MaterialService extends SelectService {
 		materialType.setThickness(thickness);
 		materialType.setRadius(radius);
 		materialType.setEnabled(enabled);
+		materialType.setSpecification(specification);
 		if (materialType.getType().equals(WarehouseType.PRECIOUS)) {
 			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, materialType.getSupplier(), designator.trim(), WarehouseType.PRECIOUS);
 			if (tempMaterialType != null && !tempMaterialType.getId().equals(id)) {

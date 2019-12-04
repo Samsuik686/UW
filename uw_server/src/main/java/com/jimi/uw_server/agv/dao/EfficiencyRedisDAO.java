@@ -26,14 +26,18 @@ public class EfficiencyRedisDAO {
 
 	private static Cache cache = Redis.use();
 	
-	private static final String USER_LAST_OPERATION_TIME_MAP = "UW_USER_LAST_OPERATION_TIME_MAP";
+	private static final String TASK_LAST_OPERATION_TIME_MAP = "UW_TASK_LAST_OPERATION_TIME_MAP";
 	
+	private static final String USER_LAST_OPERATION_TIME_MAP = "UW_USER_LAST_OPERATION_TIME_MAP";
+
 	private static final String TASK_LAST_OPERATION_USER_MAP = "UW_TASK_LAST_OPERATION_USER_MAP";
 	
 	private static final String TASK_BOX_ARRIVED_TIME_MAP = "UW_TASK_BOX_ARRIVED_TIME_MAP";
 	
 	private static final String TASK_START_TIME_MAP = "UW_TASK_START_TIME_MAP";
- 
+	
+	private static Object TASK_LAST_OPERATION_TIME_LOCK = new Object();
+	
 	private static Object USER_LAST_OPERATION_TIME_LOCK = new Object();
 
 	private static Object TASK_LAST_OPERATION_USER_LOCK = new Object();
@@ -43,44 +47,57 @@ public class EfficiencyRedisDAO {
 	private static Object TASK_START_TIME_MAP_LOCK = new Object();
 	
 	
-	public static void putUserLastOperationTime(Integer taskId, String uid, Long time) {
-		synchronized (USER_LAST_OPERATION_TIME_LOCK) {
-			cache.hset(USER_LAST_OPERATION_TIME_MAP, taskId + "_" + uid, time);
+	public static void putTaskLastOperationTime(Integer taskId, Long time) {
+		synchronized (TASK_LAST_OPERATION_TIME_LOCK) {
+			cache.hset(TASK_LAST_OPERATION_TIME_MAP, taskId, time);
 		}
 	}
 	
 	
-	public static Long getUserLastOperationTime(Integer taskId, String uid) {
-		Long time = cache.hget(USER_LAST_OPERATION_TIME_MAP, taskId + "_" + uid);
-		return time;
+	public static Long getTaskLastOperationTime(Integer taskId) {
+		String timeStr = cache.hget(TASK_LAST_OPERATION_TIME_MAP, taskId);
+		if (timeStr != null) {
+			Long time = Long.valueOf(timeStr);
+			return time;
+		}
+		return null;
 	}
 	
 	
-	public static void removeUserLastOperationTimeByTaskAndUser(Integer taskId, String uid) {
-		synchronized (USER_LAST_OPERATION_TIME_LOCK) {
-			cache.hdel(USER_LAST_OPERATION_TIME_MAP, taskId + "_" + uid);
+	public static void removeTaskLastOperationTimeByTask(Integer taskId) {
+		synchronized (TASK_LAST_OPERATION_TIME_LOCK) {
+			cache.hdel(TASK_LAST_OPERATION_TIME_MAP, taskId);
 		}
 	}
 	
 	
-	public static void removeUserLastOperationTimeByTask(Integer taskId) {
+	public static void removeTaskLastOperationTime() {
+		synchronized (TASK_LAST_OPERATION_TIME_LOCK) {
+			cache.del(TASK_LAST_OPERATION_TIME_MAP);
+		}
+	}
+	
+	
+	public static void putUserLastOperationTime(String uid, Long time) {
 		synchronized (USER_LAST_OPERATION_TIME_LOCK) {
-			String suffixKey = taskId + "_";
-			@SuppressWarnings("unchecked")
-			Map<String, Long> map = cache.hgetAll(USER_LAST_OPERATION_TIME_MAP);
-			List<String> delKeys = new ArrayList<String>();
-			if (!map.isEmpty()) {
-				for (Entry<String, Long> entry : map.entrySet()) {
-					if (entry.getKey().startsWith(suffixKey)) {
-						delKeys.add(entry.getKey());
-					}
-				}
-			}
-			if (!delKeys.isEmpty()) {
-				for (String delKey : delKeys) {
-					cache.hdel(USER_LAST_OPERATION_TIME_MAP, delKey);
-				}
-			}
+			cache.hset(USER_LAST_OPERATION_TIME_MAP, uid, time);
+		}
+	}
+	
+	
+	public static Long getUserLastOperationTime(String uid) {
+		String timeStr = cache.hget(USER_LAST_OPERATION_TIME_MAP, uid);
+		if (timeStr != null) {
+			Long time = Long.valueOf(timeStr);
+			return time;
+		}
+		return null;
+	}
+	
+	
+	public static void removeUserLastOperationTimeByUser(String uid) {
+		synchronized (USER_LAST_OPERATION_TIME_LOCK) {
+			cache.hdel(USER_LAST_OPERATION_TIME_MAP, uid);
 		}
 	}
 	
@@ -99,8 +116,12 @@ public class EfficiencyRedisDAO {
 	
 	
 	public static Long getTaskBoxArrivedTime(Integer taskId, Integer boxId) {
-		Long time = cache.hget(TASK_BOX_ARRIVED_TIME_MAP, taskId);
-		return time;
+		String timeStr = cache.hget(TASK_BOX_ARRIVED_TIME_MAP, taskId);
+		if (timeStr != null) {
+			Long time = Long.valueOf(timeStr);
+			return time;
+		}
+		return null;
 	}
 	
 	
@@ -115,10 +136,10 @@ public class EfficiencyRedisDAO {
 		synchronized (TASK_BOX_ARRIVED_TIME_LOCK) {
 			String suffixKey = taskId + "_";
 			@SuppressWarnings("unchecked")
-			Map<String, Long> map = cache.hgetAll(TASK_BOX_ARRIVED_TIME_MAP);
+			Map<String, String> map = cache.hgetAll(TASK_BOX_ARRIVED_TIME_MAP);
 			List<String> delKeys = new ArrayList<String>();
 			if (!map.isEmpty()) {
-				for (Entry<String, Long> entry : map.entrySet()) {
+				for (Entry<String, String> entry : map.entrySet()) {
 					if (entry.getKey().startsWith(suffixKey)) {
 						delKeys.add(entry.getKey());
 					}
@@ -176,8 +197,12 @@ public class EfficiencyRedisDAO {
 	
 	public static Long getTaskStartTime(Integer taskId) {
 		if (cache.hexists(TASK_START_TIME_MAP, taskId)) {
-			Long time = cache.hget(TASK_START_TIME_MAP, taskId);
-			return time;
+			String timeStr = cache.hget(TASK_START_TIME_MAP, taskId);
+			if (timeStr != null) {
+				Long time = Long.valueOf(timeStr);
+				return time;
+			}
+			return null;
 		}else {
 			return null;
 		}

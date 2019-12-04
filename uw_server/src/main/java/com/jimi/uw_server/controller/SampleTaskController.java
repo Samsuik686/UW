@@ -311,5 +311,23 @@ public class SampleTaskController extends Controller {
 		}
 		renderNull();
 	}
+	
+	
+	/**
+	 * <p>Description:强制解绑仓口，仅有作废任务可以解绑 <p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2019年11月27日
+	 */
+	@Log("强制解绑仓口，抽检任务ID：{taskId}")
+	public void forceUnbundlingWindow(Integer taskId) {
+		
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		sampleTaskService.forceUnbundlingWindow(taskId);
+		renderJson(ResultUtil.succeed());
+	}
 
 }

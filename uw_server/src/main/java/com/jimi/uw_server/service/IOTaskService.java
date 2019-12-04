@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +22,7 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
+import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -40,6 +42,7 @@ import com.jimi.uw_server.constant.sql.SampleTaskSQL;
 import com.jimi.uw_server.constant.sql.TaskSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
+import com.jimi.uw_server.model.Efficiency;
 import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.FormerSupplier;
 import com.jimi.uw_server.model.GoodsLocation;
@@ -134,6 +137,7 @@ public class IOTaskService {
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ? and supplier_id = ?";
 
 	private static final String GET_TASK_BY_TYPE = "SELECT * FROM task WHERE task.type = ? AND task.state = ? AND warehouse_type = ?";
+	
 	
 	private IOTaskHandler ioTaskHandler = IOTaskHandler.getInstance();
 
@@ -766,12 +770,19 @@ public class IOTaskService {
 		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
 		Boolean status;
-		for (Record res : result.getList()) {
-			status = false;
-			if (res.getInt("state").equals(TaskState.PROCESSING)) {
-				status = TaskItemRedisDAO.getTaskStatus(res.getInt("id"));
+		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
+		Set<Integer> windowBindTaskSet = new HashSet<>();
+		if (!windows.isEmpty()) {
+			for (Window window : windows) {
+				windowBindTaskSet.add(window.getBindTaskId());
 			}
-			TaskVO t = new TaskVO(res.get("id"), res.get("state"), res.get("type"), res.get("file_name"), res.get("create_time"), res.get("priority"), res.get("supplier"), res.get("remarks"), status);
+		}
+		for (Record record : result.getList()) {
+			status = false;
+			if (record.getInt("state").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("id"))) {
+				status = TaskItemRedisDAO.getTaskStatus(record.getInt("id"));
+			}
+			TaskVO t = new TaskVO(record.get("id"), record.get("state"), record.get("type"), record.get("file_name"), record.get("create_time"), record.get("priority"), record.get("supplier"), record.get("remarks"), status);
 			taskVOs.add(t);
 		}
 
@@ -1106,6 +1117,13 @@ public class IOTaskService {
 		synchronized (Lock.IN_REGULAR_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+			if (packingListItem == null) {
+				throw new OperationException("扫码错误，任务条目不存在");
+			}
+			Task task = Task.dao.findById(packingListItem.getTaskId());
+			if (!TaskItemRedisDAO.getTaskStatus(task.getId())) {
+				throw new OperationException("扫码无效，任务处于暂停状态！");
+			}
 			// 通过套料单记录获取物料类型id
 			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
 			// 通过物料类型获取对应的供应商id
@@ -1131,8 +1149,10 @@ public class IOTaskService {
 					boxId = item.getBoxId().intValue();
 				}
 			}
-			Task task = Task.dao.findById(packingListItem.getTaskId());
+			
 			Integer reelNum = 0;
+			int inOperationType = 0;
+			int boxType = 0;
 			if (materialType.getRadius().equals(7)) {
 				List<Material> materials = Material.dao.find(GET_MATERIAL_BY_BOX_SQL, boxId);
 				reelNum = materials.size();
@@ -1140,51 +1160,9 @@ public class IOTaskService {
 					throw new OperationException("当前料盒已满，请停止扫码！");
 				}
 			}
-			if (material != null) {
-				material.setBox(boxId);
-				material.setRow(-1);
-				material.setCol(-1);
-				material.setRemainderQuantity(quantity);
-				material.setCycle(cycle);
-				material.setProductionTime(productionTime);
-				if (printTime != null) {
-					material.setPrintTime(printTime);
-				}
-				try {
-					material.setStoreTime(getDateTime());
-				} catch (ParseException e) {
-					e.printStackTrace();
-					throw new OperationException("入库日期转化失败,入库失败！");
-				}
-				material.setIsInBox(true);
-				material.update();
-			} else {
-				material = new Material();
-				material.setId(materialId);
-				material.setType(packingListItem.getMaterialTypeId());
-				material.setBox(boxId);
-				material.setRow(-1);
-				material.setCol(-1);
-				material.setRemainderQuantity(quantity);
-				material.setCycle(cycle);
-				material.setProductionTime(productionTime);
-				if (printTime != null) {
-					material.setPrintTime(printTime);
-				}
-				try {
-					material.setStoreTime(getDateTime());
-				} catch (ParseException e) {
-					e.printStackTrace();
-					throw new OperationException("入库日期转化失败,入库失败！");
-				}
-				if (manufacturer == null || manufacturer.equals("")) {
-					material.setManufacturer("无");
-				} else {
-					material.setManufacturer(manufacturer);
-				}
-				material.setIsInBox(true);
-				material.save();
-			}
+			material = putInMaterialToDb(material, materialId, boxId, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.NORMAL);
+			Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), boxId, user.getUid());
+			System.out.println("end:" + userLastOperationTime);
 			if (materialType.getRadius().equals(7)) {
 
 				if (reelNum > 0) {
@@ -1198,29 +1176,13 @@ public class IOTaskService {
 						MaterialHelper.getMaterialLocation(material, false);
 					}
 				}
+				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
+			}else {
+				boxType = 1;
+				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
 			}
-			/*
-			 * Date now = new Date(); Long costTime = 0L; Long userLastOperationTime =
-			 * efficiencyService.getUserLastOperationTime(task.getId(), boxId,
-			 * user.getUid()); if (userLastOperationTime == null || userLastOperationTime ==
-			 * -1 || userLastOperationTime == -2) {
-			 * 
-			 * }
-			 */
-			// 写入一条入库任务日志
-			TaskLog taskLog = new TaskLog();
-			taskLog.setPackingListItemId(packListItemId);
-			taskLog.setMaterialId(materialId);
-			taskLog.setQuantity(quantity);
-			taskLog.setOperator(user.getUid());
-			// 区分入库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
-			taskLog.setAuto(false);
-			taskLog.setTime(new Date());
-			taskLog.setDestination(task.getDestination());
-			taskLog.save();
-			material.setIsRepeated(false).update();
 			
-			
+			createTaskLog(packListItemId, materialId, quantity, user, task);
 			return material;
 		}
 	}
@@ -1294,6 +1256,13 @@ public class IOTaskService {
 		synchronized (Lock.OUT_REGULAR_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packListItemId);
+			if (packingListItem == null) {
+				throw new OperationException("扫码错误，任务条目不存在");
+			}
+			Task task = Task.dao.findById(packingListItem.getTaskId());
+			if (!TaskItemRedisDAO.getTaskStatus(task.getId())) {
+				throw new OperationException("扫码无效，任务处于暂停状态！");
+			}
 			// 通过套料单记录获取物料类型id
 			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
 			// 通过物料类型获取对应的供应商id
@@ -1345,21 +1314,21 @@ public class IOTaskService {
 			if (remainderQuantity.intValue() != quantity) {
 				throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
 			}
+			//计算出库效率
+			Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), material.getBox(), user.getUid());
+			System.out.println("end:" + userLastOperationTime);
+			int outOperationType = 1;
+			int boxType = 0;
+			if (materialType.getRadius().equals(7)) {
+				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, outOperationType, task.getId(), material.getBox());
+			}else {
+				boxType = 1;
+				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, outOperationType, task.getId(), material.getBox());
+			}
 			// 扫码出库后，将料盘设置为不在盒内
 			material.setIsInBox(false).setStatus(MaterialStatus.OUTTING).update();
-
-			Task task = Task.dao.findById(packingListItem.getTaskId());
-			// 写入一条出库任务日志
-			TaskLog taskLog = new TaskLog();
-			taskLog.setPackingListItemId(packingListItem.getId());
-			taskLog.setMaterialId(material.getId());
-			taskLog.setQuantity(quantity);
-			taskLog.setOperator(user.getUid());
-			// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
-			taskLog.setAuto(false);
-			taskLog.setTime(new Date());
-			taskLog.setDestination(task.getDestination());
-			return taskLog.save();
+			createTaskLog(packListItemId, materialId, quantity, user, task);
+			return true;
 		}
 	}
 
@@ -1534,54 +1503,7 @@ public class IOTaskService {
 			if (cycle == null || cycle.trim().equals("") || cycle.trim().equals("无")) {
 				cycle = "无";
 			}
-			if (material != null) {
-				material.setBox(null);
-				material.setRow(null);
-				material.setCol(null);
-				material.setRemainderQuantity(quantity);
-				material.setProductionTime(productionTime);
-				material.setCycle(cycle);
-				material.setStatus(MaterialStatus.INING);
-				if (printTime != null) {
-					material.setPrintTime(printTime);
-				}
-				try {
-					material.setStoreTime(getDateTime());
-				} catch (ParseException e) {
-					e.printStackTrace();
-					throw new OperationException("入库日期转化失败,入库失败！");
-				}
-				material.setIsInBox(false);
-				material.update();
-			} else {
-				material = new Material();
-				material.setId(materialId);
-				material.setType(packingListItem.getMaterialTypeId());
-				material.setBox(null);
-				material.setRow(null);
-				material.setCol(null);
-				material.setCycle(cycle);
-				material.setRemainderQuantity(quantity);
-				material.setProductionTime(productionTime);
-				material.setStatus(MaterialStatus.INING);
-				if (printTime != null) {
-					material.setPrintTime(printTime);
-				}
-				try {
-					material.setStoreTime(getDateTime());
-				} catch (ParseException e) {
-					e.printStackTrace();
-					throw new OperationException("入库日期转化失败,入库失败！");
-				}
-				if (manufacturer == null || manufacturer.equals("")) {
-					material.setManufacturer("无");
-				} else {
-					material.setManufacturer(manufacturer);
-				}
-				material.setIsInBox(false);
-				material.setIsRepeated(false);
-				material.save();
-			}
+			putInMaterialToDb(material, materialId, null, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.INING);
 			// 写入库日志
 			createTaskLog(packingListItem.getId(), materialId, quantity, user, task);
 			return material;
@@ -1590,7 +1512,7 @@ public class IOTaskService {
 
 
 	// 写贵重仓出库任务日志
-	public boolean outPrecious(Integer packingListItemId, String materialId, Integer quantity, String supplierName, User user) {
+	public boolean outPrecious(Integer packingListItemId, String materialId, Integer quantity, String supplierName, User user, Boolean isForced) {
 		synchronized (Lock.OUT_PRECIOUS_IOTASK_LOCK) {
 			// 通过任务条目id获取套料单记录
 			PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
@@ -1624,18 +1546,18 @@ public class IOTaskService {
 			if (!packingListItem.getMaterialTypeId().equals(material.getType())) {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库料号，不能对其进行出库操作！");
 			}
-			// 判断是否存在更旧的料盘
-			Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
-
-			if (materialTemp1 != null) {
-				throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
-			}
-		
 			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
-			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packingListItem.getId()).size() != 0) {
+			if (TaskLog.dao.findFirst(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packingListItem.getId()) != null) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
 			}
+			// 判断是否存在更旧的料盘
+			if (isForced == null || !isForced) {
+				Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 
+				if (materialTemp1 != null) {
+					throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
+				}
+			}
 			// 判断物料二维码中包含的料盘数量信息是否与数据库中的料盘剩余数相匹配
 			Integer remainderQuantity = material.getRemainderQuantity();
 			if (!remainderQuantity.equals(quantity)) {
@@ -1675,8 +1597,16 @@ public class IOTaskService {
 			if (sampleOutRecord != null) {
 				throw new OperationException("抽检出库或者丢失的料盘入库后，禁止删除！");
 			}
+			MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
 			Db.update(DELETE_TASK_LOG_SQL, packListItemId, materialId);
+			int boxType = 0;
+			int operationType = 0;
+			if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
+				boxType = 1;
+			}
+			putAndReduceDishNumToDb(boxType, taskLog.getOperator(), operationType);
 			Material.dao.deleteById(materialId);
+			
 			return material;
 		} else { // 若是出库任务，删除掉出库记录；若已经执行过删除操作，则将物料实体表对应的料盘记录还原
 			TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packListItemId, materialId);
@@ -1684,7 +1614,14 @@ public class IOTaskService {
 			if (record != null && !record.getDate("production_time").equals(material.getProductionTime())) {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库记录中最新的料盘，禁止删除！");
 			}
+			MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
 			material.setIsInBox(true).setStatus(MaterialStatus.NORMAL).update();
+			int boxType = 0;
+			int operationType = 1;
+			if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
+				boxType = 1;
+			}
+			putAndReduceDishNumToDb(boxType, taskLog.getOperator(), operationType);
 			TaskLog.dao.deleteById(taskLog.getId());
 			// 判断删除的是否是截料的那一盘，是的话，消除其截料状态
 			record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
@@ -2163,7 +2100,7 @@ public class IOTaskService {
 		if (TaskItemRedisDAO.getTaskStatus(taskId)) {
 			throw new OperationException("任务未处于暂停状态，无法指定或更改仓口！");
 		}
-		List<Window> windows = Window.dao.find(GET_WINDOW_BY_TASK, task.getId());
+		List<Window> windows = Window.dao.find(SQL.GET_WINDOW_BY_TASK, task.getId());
 		if (task.getType().equals(TaskType.COUNT)) {
 			List<InventoryLog> logs = InventoryLog.dao.find(InventoryTaskSQL.GET_UN_INVENTORY_LOG_BY_TASKID, taskId);
 			if (logs.size() == 0 && windows.isEmpty()) {
@@ -2295,6 +2232,7 @@ public class IOTaskService {
 			if (window == null) {
 				throw new OperationException("任务没有绑定仓口，任务无法开始！");
 			}
+			EfficiencyRedisDAO.putTaskStartTime(taskId, new Date().getTime());
 		}
 		TaskItemRedisDAO.setTaskStatus(taskId, flag);
 		return "操作成功";
@@ -2318,8 +2256,18 @@ public class IOTaskService {
 		}
 		TaskItemRedisDAO.removeTaskItemByTaskId(task.getId());
 		for (Window window : windows) {
+			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOW, window.getId());
+			if (!goodsLocations.isEmpty()) {
+				for (GoodsLocation goodsLocation : goodsLocations) {
+					TaskItemRedisDAO.delLocationStatus(window.getId(), goodsLocation.getId());
+				}
+			}
 			window.setBindTaskId(null).update();
 		}
+		EfficiencyRedisDAO.removeTaskBoxArrivedTimeByTask(taskId);
+		EfficiencyRedisDAO.removeTaskLastOperationUserByTask(taskId);
+		EfficiencyRedisDAO.removeTaskLastOperationTimeByTask(taskId);
+		EfficiencyRedisDAO.removeTaskStartTimeByTask(taskId);
 	}
 	
 	
@@ -2342,18 +2290,97 @@ public class IOTaskService {
 	 * @return
 	 * @throws ParseException
 	 */
-	private Date getDateTime() throws ParseException {
+	private Date getDateTime(){
 		Date date = new Date();
 		SimpleDateFormat sFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String dateString = sFormat.format(date) + " 00:00:00";
-		return sFormat.parse(dateString);
+		try {
+			return sFormat.parse(dateString);
+		} catch (ParseException e) {
+			return date;
+		}
 	}
 	
 	
-	/*
-	 * private void putEfficiencyTime(Long time) { if (time == null || time == -1 ||
-	 * time == -2) {
-	 * 
-	 * } }
-	 */
+	
+	private void putEfficiencyTimeToDb(Long time, Integer boxType, User user, Integer operationType, Integer taskId, Integer boxId) {
+		Calendar calendar = Calendar.getInstance();
+		System.out.println("now:" + calendar.getTime());
+		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH), user.getUid(), boxType, operationType);
+		if (efficiency != null) {
+			if (time == null || time == -1 || time == -2) {
+				efficiency.setDishNum(efficiency.getDishNum() + 1).update();
+			}else {
+				if (calendar.getTimeInMillis() - time < 0) {
+					efficiency.setDishNum(efficiency.getDishNum() + 1).update();
+				}else {
+					efficiency.setDeltaTime(efficiency.getDeltaTime() + calendar.getTimeInMillis() - time).setDishNum(efficiency.getDishNum() + 1).update();
+				}
+			}
+		}else {
+			efficiency = new Efficiency();
+			efficiency.setUid(user.getUid()).setMonth(calendar.get(Calendar.MONTH)).setOperationType(operationType).setBoxType(boxType);
+			if (time == null || time == -1 || time == -2) {
+				efficiency.setDishNum(1).save();
+			}else {
+				if (calendar.getTimeInMillis() - time < 0) {
+					efficiency.setDishNum(1).save();
+				}else {
+					efficiency.setDeltaTime(calendar.getTimeInMillis() - time).setDishNum(1).save();
+				}
+			}
+		}
+		EfficiencyRedisDAO.putTaskLastOperationTime(taskId, calendar.getTimeInMillis());
+		EfficiencyRedisDAO.putTaskLastOperationUser(taskId, user.getUid());
+		EfficiencyRedisDAO.putUserLastOperationTime(user.getUid(), calendar.getTimeInMillis());
+	}
+	
+	
+	private void putAndReduceDishNumToDb(Integer boxType, String userId, Integer operationType) {
+		Calendar calendar = Calendar.getInstance();
+		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH), userId, boxType, operationType);
+		if (efficiency != null) {
+			efficiency.setDishNum(efficiency.getDishNum() - 1).update();
+		}
+	}
+	
+	public Material putInMaterialToDb(Material material, String materialId, Integer boxId, Integer quantity, Date productionTime, Date printTime, Integer materialTypeId, String cycle, String manufacturer, Integer materialStatus) {
+		if (material != null) {
+			material.setBox(boxId);
+			material.setRow(-1);
+			material.setCol(-1);
+			material.setRemainderQuantity(quantity);
+			material.setCycle(cycle);
+			material.setProductionTime(productionTime);
+			material.setPrintTime(printTime);
+			material.setStoreTime(getDateTime());
+			material.setStatus(materialStatus);
+			material.setIsInBox(true);
+			material.setIsRepeated(false);
+			material.update();
+		} else {
+			material = new Material();
+			material.setId(materialId);
+			material.setType(materialTypeId);
+			material.setBox(boxId);
+			material.setRow(-1);
+			material.setCol(-1);
+			material.setRemainderQuantity(quantity);
+			material.setCycle(cycle);
+			material.setProductionTime(productionTime);
+			material.setPrintTime(printTime);
+			material.setStoreTime(getDateTime());
+			material.setStatus(materialStatus);
+			if (manufacturer == null || manufacturer.equals("")) {
+				material.setManufacturer("无");
+			} else {
+				material.setManufacturer(manufacturer);
+			}
+			material.setIsInBox(true);
+			material.setIsRepeated(false);
+			material.save();
+		}
+		return material;
+	}
+	 
 }

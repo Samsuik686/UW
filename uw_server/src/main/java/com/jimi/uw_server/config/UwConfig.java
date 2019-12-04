@@ -38,8 +38,10 @@ import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
 import com.jimi.uw_server.interceptor.ErrorLogInterceptor;
 import com.jimi.uw_server.model.MappingKit;
+import com.jimi.uw_server.service.EfficiencyService;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
+import com.jimi.uw_server.util.VisualSerializer;
 
 /**
  * 全局配置
@@ -103,7 +105,7 @@ public class UwConfig extends JFinalConfig {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("d_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("d_robotInfoURI"));
 			}
-
+			EfficiencyService.initTaskEfficiency();
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
@@ -130,7 +132,6 @@ public class UwConfig extends JFinalConfig {
 		if (isProductionEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("p_url"), PropKit.get("p_user"), PropKit.get("p_password"));
 			rp = new RedisPlugin("uw", PropKit.get("p_redisIp"), 6379, PropKit.get("p_redisPassword"));
-
 			System.out.println("System is in production envrionment");
 		} else if (isTestEnvironment()) {
 			dp = new DruidPlugin(PropKit.get("t_url"), PropKit.get("t_user"), PropKit.get("t_password"));
@@ -141,6 +142,7 @@ public class UwConfig extends JFinalConfig {
 			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379, PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
+		rp.setSerializer(new VisualSerializer());
 		me.add(dp);
 		me.add(rp);
 		// 配置ORM

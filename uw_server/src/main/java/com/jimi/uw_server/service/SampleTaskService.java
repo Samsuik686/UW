@@ -12,12 +12,14 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
+import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
@@ -873,12 +875,19 @@ public class SampleTaskService {
 		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
 		Boolean status;
-		for (Record res : result.getList()) {
-			status = false;
-			if (res.getInt("state").equals(TaskState.PROCESSING)) {
-				status = TaskItemRedisDAO.getTaskStatus(res.getInt("id"));
+		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
+		Set<Integer> windowBindTaskSet = new HashSet<>();
+		if (!windows.isEmpty()) {
+			for (Window window : windows) {
+				windowBindTaskSet.add(window.getBindTaskId());
 			}
-			TaskVO t = new TaskVO(res.get("id"), res.get("state"), res.get("type"), res.get("file_name"), res.get("create_time"), res.get("priority"), res.get("supplier"), res.get("remarks"), status);
+		}
+		for (Record record : result.getList()) {
+			status = false;
+			if (record.getInt("state").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("id"))) {
+				status = TaskItemRedisDAO.getTaskStatus(record.getInt("id"));
+			}
+			TaskVO t = new TaskVO(record.get("id"), record.get("state"), record.get("type"), record.get("file_name"), record.get("create_time"), record.get("priority"), record.get("supplier"), record.get("remarks"), status);
 			taskVOs.add(t);
 		}
 
@@ -925,6 +934,35 @@ public class SampleTaskService {
 	}
 
 
+	/**
+	 * <p>Description:强制解绑仓口，仅有作废任务可以解绑 <p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2019年11月27日
+	 */
+	public void forceUnbundlingWindow(Integer taskId) {
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getState().equals(TaskState.CANCELED)) {
+			throw new OperationException("仓口绑定任务未处于作废状态，无法解绑！");
+		}
+		List<Window> windows = Window.dao.find(SQL.GET_WINDOW_BY_TASK, task.getId());
+		if (windows == null || windows.isEmpty()) {
+			throw new OperationException("任务并未绑定仓口，无需解绑！");
+		}
+		TaskItemRedisDAO.removeSampleTaskItemByTaskId(task.getId());
+		for (Window window : windows) {
+			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOW, window.getId());
+			if (!goodsLocations.isEmpty()) {
+				for (GoodsLocation goodsLocation : goodsLocations) {
+					TaskItemRedisDAO.delLocationStatus(window.getId(), goodsLocation.getId());
+				}
+			}
+			window.setBindTaskId(null).update();
+		}
+	}
+	
+	
 	public String getTaskName(Integer taskId) {
 
 		Task task = Task.dao.findById(taskId);

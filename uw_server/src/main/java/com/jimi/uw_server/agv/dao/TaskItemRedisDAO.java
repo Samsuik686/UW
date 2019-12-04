@@ -1,7 +1,6 @@
 package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.jfinal.json.Json;
@@ -34,12 +33,10 @@ public class TaskItemRedisDAO {
 	public synchronized static void addIOTaskItem(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
 		appendIOTaskItems(taskId, ioTaskItems);
 		ioTaskItems.sort(new PriorityComparator());
-		List<byte[]> items = new ArrayList<>();
-		for (AGVIOTaskItem item : ioTaskItems) {
-			items.add(Json.getJson().toJson(item).getBytes());
-		}
 		cache.del("IO_TASK_" + taskId);
-		cache.lpush("IO_TASK_" + taskId, items.toArray());
+		for (AGVIOTaskItem item : ioTaskItems) {
+			cache.lpush("IO_TASK_" + taskId, Json.getJson().toJson(item));
+		}
 	}
 
 
@@ -48,8 +45,8 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void removeUnAssignedTaskItemByTaskId(int taskId) {
 		for (int i = 0; i < cache.llen("IO_TASK_" + taskId); i++) {
-			byte[] item = cache.lindex("IO_TASK_" + taskId, i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			String item = cache.lindex("IO_TASK_" + taskId, i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(item, AGVIOTaskItem.class);
 			if (agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
 				cache.lrem("IO_TASK_" + taskId, 1, item);
 				i--;
@@ -71,8 +68,8 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void removeTaskItemByPackingListId(Integer taskId, int packingListId) {
 		for (int i = 0; i < cache.llen("IO_TASK_" + taskId); i++) {
-			byte[] item = cache.lindex("IO_TASK_" + taskId, i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
+			String item = cache.lindex("IO_TASK_" + taskId, i);
+			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(item, AGVIOTaskItem.class);
 			if (agvioTaskItem.getId().intValue() == packingListId) {
 				cache.lrem("IO_TASK_" + taskId, 1, item);
 				i--;
@@ -86,7 +83,7 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish, Boolean isCut) {
 		for (int i = 0; i < cache.llen("IO_TASK_" + taskItem.getTaskId()); i++) {
-			byte[] item = cache.lindex("IO_TASK_" + taskItem.getTaskId(), i);
+			String item = cache.lindex("IO_TASK_" + taskItem.getTaskId(), i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if (agvioTaskItem.getId().intValue() == taskItem.getId().intValue()) {
 				if (state != null) {
@@ -110,7 +107,7 @@ public class TaskItemRedisDAO {
 				if (isCut != null) {
 					agvioTaskItem.setIsCut(isCut);
 				}
-				cache.lset("IO_TASK_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem).getBytes());
+				cache.lset("IO_TASK_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem));
 				break;
 			}
 		}
@@ -131,9 +128,9 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVIOTaskItem> appendIOTaskItems(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
-		List<byte[]> items = cache.lrange("IO_TASK_" + taskId, 0, -1);
-		for (byte[] item : items) {
-			ioTaskItems.add(Json.getJson().parse(new String(item), AGVIOTaskItem.class));
+		List<String> items = cache.lrange("IO_TASK_" + taskId, 0, -1);
+		for (String item : items) {
+			ioTaskItems.add(Json.getJson().parse(item, AGVIOTaskItem.class));
 		}
 		return ioTaskItems;
 	}
@@ -143,9 +140,12 @@ public class TaskItemRedisDAO {
 	 * 获取一个新的CmdId
 	 */
 	public synchronized static int getCmdId() {
-		int cmdid = 0;
+		Integer cmdid = 0;
 		try {
-			cmdid = cache.get("cmdid");
+			String cmdidStr = cache.get("cmdid");
+			if (cmdidStr != null) {
+				cmdid = Integer.valueOf(cmdidStr);
+			}
 		} catch (NullPointerException e) {
 		}
 		cmdid %= 999999;
@@ -160,13 +160,13 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addBuildTaskItem(List<AGVBuildTaskItem> buildTaskItems) {
 		appendBuildTaskItems(buildTaskItems);
-		List<byte[]> items = new ArrayList<>();
-		for (AGVBuildTaskItem item : buildTaskItems) {
-			items.add(Json.getJson().toJson(item).getBytes());
-		}
-		Collections.reverse(buildTaskItems);
 		cache.del("tilOfBuild");
-		cache.lpush("tilOfBuild", items.toArray());
+		for (AGVBuildTaskItem item : buildTaskItems) {
+			cache.lpush("tilOfBuild", Json.getJson().toJson(item));
+		}
+		
+		
+		
 	}
 
 
@@ -175,9 +175,9 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVBuildTaskItem> appendBuildTaskItems(List<AGVBuildTaskItem> buildTaskItems) {
-		List<byte[]> items = cache.lrange("tilOfBuild", 0, -1);
-		for (byte[] item : items) {
-			buildTaskItems.add(Json.getJson().parse(new String(item), AGVBuildTaskItem.class));
+		List<String> items = cache.lrange("tilOfBuild", 0, -1);
+		for (String item : items) {
+			buildTaskItems.add(Json.getJson().parse(item, AGVBuildTaskItem.class));
 		}
 		return buildTaskItems;
 	}
@@ -197,8 +197,8 @@ public class TaskItemRedisDAO {
 	 */
 	public static void removeBuildTaskItemBySrcPosition(String srcPosition) {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
-			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			String item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getSrcPosition().equals(srcPosition)) {
 				cache.lrem("tilOfBuild", 1, item);
 				i--;
@@ -212,8 +212,8 @@ public class TaskItemRedisDAO {
 	 */
 	public static void removeBuildTaskItemByBoxId(int boxId) {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
-			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			String item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getBoxId().intValue() == boxId) {
 				cache.lrem("tilOfBuild", 1, item);
 				i--;
@@ -227,11 +227,11 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void updateBuildTaskItemRobot(AGVBuildTaskItem buildTaskItem, int robotid) {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
-			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			String item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()) {
 				agvBuildTaskItem.setRobotId(robotid);
-				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
+				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem));
 				break;
 			}
 		}
@@ -243,11 +243,11 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void updateBuildTaskItemState(AGVBuildTaskItem buildTaskItem, int state) {
 		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			byte[] item = cache.lindex("tilOfBuild", i);
-			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(new String(item), AGVBuildTaskItem.class);
+			String item = cache.lindex("tilOfBuild", i);
+			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()) {
 				agvBuildTaskItem.setState(state);
-				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem).getBytes());
+				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem));
 				break;
 			}
 		}
@@ -263,9 +263,10 @@ public class TaskItemRedisDAO {
 
 
 	public synchronized static Boolean getAgvWebSocketStatus() {
-		Boolean flag = cache.get("agvWebSocketStatus");
-		if (flag == null) {
-			flag = true;
+		String flagStr = cache.get("agvWebSocketStatus");
+		Boolean flag = false;
+		if (flagStr != null && flagStr.equals("true")) {
+			 flag= true;
 			cache.set("agvWebSocketStatus", true);
 		}
 		return flag;
@@ -277,12 +278,12 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addInventoryTaskItem(Integer taskId, List<AGVInventoryTaskItem> agvInventoryTaskItem) {
 		appendInventoryTaskItems(taskId, agvInventoryTaskItem);
-		List<byte[]> items = new ArrayList<>();
-		for (AGVInventoryTaskItem item : agvInventoryTaskItem) {
-			items.add(Json.getJson().toJson(item).getBytes());
-		}
 		cache.del("InvTask_" + taskId);
-		cache.lpush("InvTask_" + taskId, items.toArray());
+		for (AGVInventoryTaskItem item : agvInventoryTaskItem) {
+			cache.lpush("InvTask_" + taskId, Json.getJson().toJson(item));
+		}
+		
+		
 	}
 
 
@@ -299,8 +300,8 @@ public class TaskItemRedisDAO {
 	 */
 	public static void removeInventoryTaskItemById(Integer taskId, Integer boxId) {
 		for (int i = 0; i < cache.llen("InvTask_" + taskId); i++) {
-			byte[] item = cache.lindex("InvTask_" + taskId, i);
-			AGVInventoryTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVInventoryTaskItem.class);
+			String item = cache.lindex("InvTask_" + taskId, i);
+			AGVInventoryTaskItem agvioTaskItem = Json.getJson().parse(item, AGVInventoryTaskItem.class);
 			if (agvioTaskItem.getGroupId().equals(taskId + "@" + boxId)) {
 				cache.lrem("InvTask_" + taskId, 1, item);
 				i--;
@@ -314,8 +315,8 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void updateInventoryTaskItemInfo(AGVInventoryTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
 		for (int i = 0; i < cache.llen("InvTask_" + taskItem.getTaskId()); i++) {
-			byte[] item = cache.lindex("InvTask_" + taskItem.getTaskId(), i);
-			AGVInventoryTaskItem agvInventoryTaskItem = Json.getJson().parse(new String(item), AGVInventoryTaskItem.class);
+			String item = cache.lindex("InvTask_" + taskItem.getTaskId(), i);
+			AGVInventoryTaskItem agvInventoryTaskItem = Json.getJson().parse(item, AGVInventoryTaskItem.class);
 			if (agvInventoryTaskItem.getGroupId().equals(taskItem.getGroupId())) {
 				if (state != null) {
 					agvInventoryTaskItem.setState(state);
@@ -332,7 +333,7 @@ public class TaskItemRedisDAO {
 				if (isForceFinish != null) {
 					agvInventoryTaskItem.setIsForceFinish(isForceFinish);
 				}
-				cache.lset("InvTask_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvInventoryTaskItem).getBytes());
+				cache.lset("InvTask_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvInventoryTaskItem));
 				break;
 			}
 		}
@@ -353,9 +354,9 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVInventoryTaskItem> appendInventoryTaskItems(Integer taskId, List<AGVInventoryTaskItem> agvInventoryTaskItem) {
-		List<byte[]> items = cache.lrange("InvTask_" + taskId, 0, -1);
-		for (byte[] item : items) {
-			agvInventoryTaskItem.add(Json.getJson().parse(new String(item), AGVInventoryTaskItem.class));
+		List<String> items = cache.lrange("InvTask_" + taskId, 0, -1);
+		for (String item : items) {
+			agvInventoryTaskItem.add(Json.getJson().parse(item, AGVInventoryTaskItem.class));
 		}
 		return agvInventoryTaskItem;
 	}
@@ -366,12 +367,11 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addSampleTaskItem(Integer taskId, List<AGVSampleTaskItem> agvSampleTaskItems) {
 		appendSampleTaskItems(taskId, agvSampleTaskItems);
-		List<byte[]> items = new ArrayList<>();
-		for (AGVSampleTaskItem item : agvSampleTaskItems) {
-			items.add(Json.getJson().toJson(item).getBytes());
-		}
 		cache.del("SamTask_" + taskId);
-		cache.lpush("SamTask_" + taskId, items.toArray());
+		for (AGVSampleTaskItem item : agvSampleTaskItems) {
+			cache.lpush("SamTask_" + taskId, Json.getJson().toJson(item));
+		}
+		
 	}
 
 
@@ -388,8 +388,8 @@ public class TaskItemRedisDAO {
 	 */
 	public static void removeSampleTaskItemById(Integer taskId, Integer boxId) {
 		for (int i = 0; i < cache.llen("SamTask_" + taskId); i++) {
-			byte[] item = cache.lindex("SamTask_" + taskId, i);
-			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			String item = cache.lindex("SamTask_" + taskId, i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(item, AGVSampleTaskItem.class);
 			if (agvSampleTaskItem.getGroupId().equals(taskId + "#" + boxId)) {
 				cache.lrem("SamTask_" + taskId, 1, item);
 				i--;
@@ -448,8 +448,8 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void updateSampleTaskItemInfo(AGVSampleTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
 		for (int i = 0; i < cache.llen("SamTask_" + taskItem.getTaskId()); i++) {
-			byte[] item = cache.lindex("SamTask_" + taskItem.getTaskId(), i);
-			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			String item = cache.lindex("SamTask_" + taskItem.getTaskId(), i);
+			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(item, AGVSampleTaskItem.class);
 			if (agvSampleTaskItem.getGroupId().equals(taskItem.getGroupId())) {
 				if (state != null) {
 					agvSampleTaskItem.setState(state);
@@ -466,7 +466,7 @@ public class TaskItemRedisDAO {
 				if (isForceFinish != null) {
 					agvSampleTaskItem.setIsForceFinish(isForceFinish);
 				}
-				cache.lset("SamTask_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvSampleTaskItem).getBytes());
+				cache.lset("SamTask_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvSampleTaskItem));
 				break;
 			}
 		}
@@ -487,8 +487,8 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVSampleTaskItem> appendSampleTaskItems(Integer taskId, List<AGVSampleTaskItem> agvSampleTaskItems) {
-		List<byte[]> items = cache.lrange("SamTask_" + taskId, 0, -1);
-		for (byte[] item : items) {
+		List<String> items = cache.lrange("SamTask_" + taskId, 0, -1);
+		for (String item : items) {
 			agvSampleTaskItems.add(Json.getJson().parse(new String(item), AGVSampleTaskItem.class));
 		}
 		return agvSampleTaskItems;
@@ -516,8 +516,8 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void removeUnAssignedSampleTaskItemByTaskId(int taskId) {
 		for (int i = 0; i < cache.llen("SamTask_" + taskId); i++) {
-			byte[] item = cache.lindex("SamTask_" + taskId, i);
-			AGVSampleTaskItem agvSampleTaskItems = Json.getJson().parse(new String(item), AGVSampleTaskItem.class);
+			String item = cache.lindex("SamTask_" + taskId, i);
+			AGVSampleTaskItem agvSampleTaskItems = Json.getJson().parse(item, AGVSampleTaskItem.class);
 			if (agvSampleTaskItems.getTaskId().intValue() == taskId && (agvSampleTaskItems.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
 				cache.lrem("SamTask_" + taskId, 1, item);
 				i--;
@@ -531,12 +531,14 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static Integer getLocationStatus(Integer windowId, Integer goodsLocId) {
 		Integer status = 0;
-		status = cache.get("Location_" + windowId + "_" + goodsLocId);
-		if (status == null) {
+		String statusStr = cache.get("Location_" + windowId + "_" + goodsLocId);
+		if (statusStr == null) {
 			status = 0;
 			cache.set("Location_" + windowId + "_" + goodsLocId, 0);
-
+		}else {
+			status = Integer.valueOf(statusStr);
 		}
+		
 		return status;
 	}
 
@@ -559,12 +561,13 @@ public class TaskItemRedisDAO {
 
 
 	public synchronized static Boolean getTaskStatus(Integer taskId) {
-		Boolean status = false;
-		status = cache.get("Status_" + taskId);
-		if (status == null) {
-			status = true;
-			cache.set("Status_" + taskId, true);
+		String statusStr = cache.get("Status_" + taskId);
+		Boolean status = true;
+		if (statusStr != null && statusStr.equals("false")) {
+			status = false;
+			return status;
 		}
+		cache.set("Status_" + taskId, true);
 		return status;
 	}
 

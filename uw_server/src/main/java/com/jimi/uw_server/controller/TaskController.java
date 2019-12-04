@@ -285,7 +285,7 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}， 打印时间{printTime}")
+	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}，生产日期为{productionTime}， 打印时间为{printTime}， 产商为{manufacturer}， 周期是{cycle}")
 	public void inRegular(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -302,7 +302,7 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}， 打印时间{printTime}")
+	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}，生产日期为{productionTime}， 打印时间为{printTime}， 产商为{manufacturer}， 周期是{cycle}")
 	public void inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -352,15 +352,15 @@ public class TaskController extends Controller {
 	}
 	
 	// 物料出库
-	@Log("贵重仓出库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，料号为{no}，出入库数量为{quantity}，供应商名为{supplierName}")
-	public void outPrecious(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
+	@Log("贵重仓出库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，料号为{no}，出入库数量为{quantity}，供应商名为{supplierName}, 是否强制出库：{isForced}")
+	public void outPrecious(Integer packingListItemId, String materialId, Integer quantity, String supplierName, Boolean isForced) {
 		if (packingListItemId == null || materialId == null || quantity == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.outPrecious(packingListItemId, materialId, quantity, supplierName, user)) {
+		if (taskService.outPrecious(packingListItemId, materialId, quantity, supplierName, user, isForced)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -565,7 +565,7 @@ public class TaskController extends Controller {
 	 * @author trjie
 	 * @Time 2019年11月27日
 	 */
-	@Log("强制解绑仓口，任务ID：{taskId}")
+	@Log("强制解绑仓口，出入库任务ID：{taskId}")
 	public void forceUnbundlingWindow(Integer taskId) {
 		
 		if (taskId == null) {

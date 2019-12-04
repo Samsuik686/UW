@@ -90,9 +90,9 @@ public class MaterialController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新普通仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}")
-	public void updateRegularMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius) {
-		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, null);
+	@Log("更新普通仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}， 规格为{specification}")
+	public void updateRegularMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String specification) {
+		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, null, specification);
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -101,9 +101,9 @@ public class MaterialController extends Controller {
 	}
 
 
-	@Log("更新贵重仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}， 行号为{designator}")
-	public void updatePreciousMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String designator) {
-		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, designator);
+	@Log("更新贵重仓物料类型号为{id}的物料类型,传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)，厚度为{thickness}，半径为{radius}， 行号为{designator}， 规格为{specification}")
+	public void updatePreciousMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String designator, String specification) {
+		String resultString = materialService.updateMaterialType(id, enabled, thickness, radius, designator, specification);
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

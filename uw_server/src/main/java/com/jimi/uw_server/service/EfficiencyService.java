@@ -3,10 +3,15 @@
 */  
 package com.jimi.uw_server.service;
 
+import java.util.List;
+
 import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.model.ActionLog;
 import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.model.TaskLog;
+import com.jimi.uw_server.model.Window;
 
 /**  
  * <p>Title: EfficiencyService</p>  
@@ -19,16 +24,35 @@ import com.jimi.uw_server.model.TaskLog;
  */
 public class EfficiencyService {
 	
-	private String GET_USER_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? ORDER BY task_log.time DESC";
+	private String GET_USER_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE task_log.operator = ? ORDER BY task_log.time DESC";
+	
+	private String GET_TASK_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ?  AND task_log.operator IS NOT NULL ORDER BY task_log.time DESC";
 	
 	private String GET_TASK_LAST_START_TIME = "SELECT * FROM action_log WHERE action_log.action = ? AND result_code = 200 ORDER BY time DESC";
 	
-	private String GET_BOX_ARRIVED_TIME = "SELECT * FROM socket_log WHERE cmdcode = 'status' AND json like ? AND time < ? AND json like '%status\":2}' ORDER BY time DESC";
+	private String GET_BOX_ARRIVED_TIME = "SELECT * FROM socket_log WHERE cmdcode = 'status' AND json like ? AND json like '%status\":2}' ORDER BY time DESC";
+	
+	public static void initTaskEfficiency() {
+		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
+		if (!windows.isEmpty()) {
+			for (Window window : windows) {
+				TaskItemRedisDAO.delTaskStatus(window.getBindTaskId());
+			}
+		}
+		EfficiencyRedisDAO.removeTaskBoxArrivedTime();
+		EfficiencyRedisDAO.removeTaskStartTime();
+		EfficiencyRedisDAO.removeTaskLastOperationUser();
+		EfficiencyRedisDAO.removeTaskLastOperationTime();
+		EfficiencyRedisDAO.removeUserLastOperationTime();
+	}
 	
 	public Long getUserLastOperationTime(Integer taskId, Integer boxId, String uid) {
-		Long userLastOperationTime = EfficiencyRedisDAO.getUserLastOperationTime(taskId, uid);
+		Long TaskLastOperationTime = EfficiencyRedisDAO.getTaskLastOperationTime(taskId);
 		Long taskBoxArrivedTime = EfficiencyRedisDAO.getTaskBoxArrivedTime(taskId, boxId);
 		Long taskLastStartTime = EfficiencyRedisDAO.getTaskStartTime(taskId);
+		Long userLastOperationTime = EfficiencyRedisDAO.getUserLastOperationTime(uid);
+		
+		String taskLastOperationUser = EfficiencyRedisDAO.getTaskLastOperationUser(taskId);
 		if (taskBoxArrivedTime == null) {
 			SocketLog socketLog = SocketLog.dao.findFirst(GET_BOX_ARRIVED_TIME, "%:" + boxId + ":" + taskId + "_S%");
 			if (socketLog != null) {
@@ -42,36 +66,54 @@ public class EfficiencyService {
 				taskLastStartTime = actionLog.getTime().getTime();
 				EfficiencyRedisDAO.putTaskStartTime(taskId, actionLog.getTime().getTime());
 			}else {
-				taskLastStartTime = (long) -1;
-				EfficiencyRedisDAO.putTaskStartTime(taskId, (long)-1);
+				taskLastStartTime = (long) 0;
+				EfficiencyRedisDAO.putTaskStartTime(taskId, (long) 0);
+			}
+		}
+		TaskLog taskLog = null;
+		if (taskLastOperationUser == null) {
+			taskLog = TaskLog.dao.findFirst(GET_TASK_LAST_SCAN_MATERIAL_TIME, taskId);
+			if (taskLog != null) {
+				taskLastOperationUser = taskLog.getOperator();
+				EfficiencyRedisDAO.putTaskLastOperationUser(taskId, taskLog.getOperator());
 			}
 		}
 		if (userLastOperationTime == null) {
-			//获取该任务最后一次出入库操作的时间
-			TaskLog taskLog = TaskLog.dao.findFirst(GET_USER_LAST_SCAN_MATERIAL_TIME, taskId);
-			if (taskLog != null && taskLog.getOperator().equals(uid)) {
-				userLastOperationTime = taskLog.getTime().getTime();
-				EfficiencyRedisDAO.putUserLastOperationTime(taskId, uid, taskLog.getTime().getTime());
-			}else if (taskLog != null && !taskLog.getOperator().equals(uid)) {
-				//中途切换人员操作后没有暂停过任务
-				if (taskLastStartTime != null && taskLog.getTime().getTime() > taskLastStartTime) {
-					userLastOperationTime = (long) -2;
-				}
+			TaskLog userLastTaskLog = TaskLog.dao.findFirst(GET_USER_LAST_SCAN_MATERIAL_TIME, uid);
+			if (userLastTaskLog != null) {
+				userLastOperationTime = userLastTaskLog.getTime().getTime();
 			}
 		}
-		
-		if (taskBoxArrivedTime != null && userLastOperationTime != null && userLastOperationTime.intValue() != -2) {
-			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime, userLastOperationTime);
+		if (TaskLastOperationTime == null && taskLastOperationUser != null) {
+			//获取该任务最后一次出入库操作的时间
+			if (taskLog == null) {
+				taskLog = TaskLog.dao.findFirst(GET_TASK_LAST_SCAN_MATERIAL_TIME, taskId);
+			}
+			if (taskLog != null) {
+				TaskLastOperationTime = taskLog.getTime().getTime();
+				EfficiencyRedisDAO.putTaskLastOperationTime(taskId, taskLog.getTime().getTime());
+			}
 		}
-		if (taskBoxArrivedTime != null && userLastOperationTime != null && userLastOperationTime.intValue() == -2) {
-			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime);
-		}
-		if (taskBoxArrivedTime != null && userLastOperationTime == null) {
-			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime);
-		}
+		System.out.println("arrived:" + taskBoxArrivedTime);
+		System.out.println("task_last:" + TaskLastOperationTime);
+		System.out.println("user_last:" + userLastOperationTime);
+		System.out.println("start：" + taskLastStartTime);
 		if (taskBoxArrivedTime == null) {
 			return null;
 		}
+		if (TaskLastOperationTime != null && userLastOperationTime == null) {
+			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime, TaskLastOperationTime);
+		}
+		if (TaskLastOperationTime != null && userLastOperationTime != null) {
+			return getBiggerTime(getBiggerTime(taskLastStartTime, taskBoxArrivedTime, TaskLastOperationTime), userLastOperationTime);
+		}
+		if (TaskLastOperationTime == null && userLastOperationTime != null) {
+			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime, userLastOperationTime);
+		}
+		if (TaskLastOperationTime == null && userLastOperationTime == null) {
+			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime);
+		}
+		
 		
 		return null;
 		
