@@ -8,8 +8,6 @@ import java.util.List;
 import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.constant.sql.SQL;
-import com.jimi.uw_server.model.ActionLog;
-import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;
 
@@ -27,16 +25,12 @@ public class EfficiencyService {
 	private String GET_USER_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE task_log.operator = ? ORDER BY task_log.time DESC";
 	
 	private String GET_TASK_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ?  AND task_log.operator IS NOT NULL ORDER BY task_log.time DESC";
-	
-	private String GET_TASK_LAST_START_TIME = "SELECT * FROM action_log WHERE action_log.action = ? AND result_code = 200 ORDER BY time DESC";
-	
-	private String GET_BOX_ARRIVED_TIME = "SELECT * FROM socket_log WHERE cmdcode = 'status' AND json like ? AND json like '%status\":2}' ORDER BY time DESC";
-	
+			
 	public static void initTaskEfficiency() {
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
 		if (!windows.isEmpty()) {
 			for (Window window : windows) {
-				TaskItemRedisDAO.delTaskStatus(window.getBindTaskId());
+				TaskItemRedisDAO.setTaskStatus(window.getBindTaskId(), false);
 			}
 		}
 		EfficiencyRedisDAO.removeTaskBoxArrivedTime();
@@ -53,24 +47,11 @@ public class EfficiencyService {
 		Long userLastOperationTime = EfficiencyRedisDAO.getUserLastOperationTime(uid);
 		
 		String taskLastOperationUser = EfficiencyRedisDAO.getTaskLastOperationUser(taskId);
-		if (taskBoxArrivedTime == null) {
-			SocketLog socketLog = SocketLog.dao.findFirst(GET_BOX_ARRIVED_TIME, "%:" + boxId + ":" + taskId + "_S%");
-			if (socketLog != null) {
-				taskBoxArrivedTime = socketLog.getTime().getTime();
-				EfficiencyRedisDAO.putTaskBoxArrivedTime(taskId, boxId, socketLog.getTime().getTime());
-			}
-		}
-		if (taskLastStartTime == null) {
-			ActionLog actionLog = ActionLog.dao.findFirst(GET_TASK_LAST_START_TIME, getTaskStartAction(taskId));
-			if (actionLog != null) {
-				taskLastStartTime = actionLog.getTime().getTime();
-				EfficiencyRedisDAO.putTaskStartTime(taskId, actionLog.getTime().getTime());
-			}else {
-				taskLastStartTime = (long) 0;
-				EfficiencyRedisDAO.putTaskStartTime(taskId, (long) 0);
-			}
-		}
+		
 		TaskLog taskLog = null;
+		if (taskLastStartTime == null) {
+			taskLastStartTime = (long) 0;
+		}
 		if (taskLastOperationUser == null) {
 			taskLog = TaskLog.dao.findFirst(GET_TASK_LAST_SCAN_MATERIAL_TIME, taskId);
 			if (taskLog != null) {
@@ -118,11 +99,6 @@ public class EfficiencyService {
 		return null;
 		
 	}
-
-	private String getTaskStartAction(Integer taskId) {
-		return "开始/暂停任务" + taskId + "，Flagtrue";
-	}
-	
 	
 	private Long getBiggerTime(Long t1, Long t2) {
 		if (t1 > t2) {

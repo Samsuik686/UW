@@ -186,9 +186,9 @@ public class TaskPool extends Thread {
 					if (item.getBoxId().equals(0) && boxId != 0) {
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
 					} else if (!item.getBoxId().equals(0) && !boxId.equals(item.getBoxId())) {
-
+						//防止任务条目在叉车回库已经分配了到站的料盒，导致再次修改料盒
 						synchronized (Lock.IO_TASK_REDIS_LOCK) {
-							for (AGVIOTaskItem tempItem : TaskItemRedisDAO.appendIOTaskItems(task.getId(), ioTaskItems)) {
+							for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
 								if (tempItem.getGroupId().equals(item.getGroupId())) {
 									if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
 										TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
@@ -514,7 +514,7 @@ public class TaskPool extends Thread {
 		 * window : windows) { if
 		 * (window.getBindTaskId().equals(packingListItem.getTaskId())) { continue; }
 		 * for (AGVIOTaskItem redisTaskItem :
-		 * TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId())) { if
+		 * TaskItemRedisDAO.get(window.getBindTaskId())) { if
 		 * (redisTaskItem.getState() > IOTaskItemState.WAIT_ASSIGN &&
 		 * redisTaskItem.getIsForceFinish().equals(false)) {
 		 * boxs.add(redisTaskItem.getBoxId().intValue()); } } }

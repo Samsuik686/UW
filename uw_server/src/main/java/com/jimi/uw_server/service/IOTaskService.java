@@ -144,8 +144,7 @@ public class IOTaskService {
 	private InventoryTaskService inventoryTaskService = Aop.get(InventoryTaskService.class);
 	
 	private static final String GET_CUTTING_MATERIAL_SQL = "SELECT material.id as materialId, material.remainder_quantity AS materialQuantity, task_log.quantity AS outQuantity, material.manufacturer AS manufacturer, material.production_time AS productionTime , material.cycle AS cycle, material_type.`no` AS `no`, material_type.specification AS specification, supplier.`name` AS supplierName, task_log.packing_list_item_id AS packingListItemId, task_log.id AS taskLogId FROM material INNER JOIN material_type INNER JOIN supplier INNER JOIN task_log ON material.type = material_type.id AND material_type.supplier = supplier.id AND material.cut_task_log_id = task_log.id WHERE material.status = ? AND material.remainder_quantity > 0 AND material_type .type = ? AND material_type.enabled = 1 AND supplier.enabled = 1";
-
-
+	
 	// 创建出入库/退料任务
 	public String createIOTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType) throws Exception {
 		String resultString = "添加成功！";
@@ -1151,8 +1150,6 @@ public class IOTaskService {
 			}
 			
 			Integer reelNum = 0;
-			int inOperationType = 0;
-			int boxType = 0;
 			if (materialType.getRadius().equals(7)) {
 				List<Material> materials = Material.dao.find(GET_MATERIAL_BY_BOX_SQL, boxId);
 				reelNum = materials.size();
@@ -1161,8 +1158,7 @@ public class IOTaskService {
 				}
 			}
 			material = putInMaterialToDb(material, materialId, boxId, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.NORMAL);
-			Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), boxId, user.getUid());
-			System.out.println("end:" + userLastOperationTime);
+			
 			if (materialType.getRadius().equals(7)) {
 
 				if (reelNum > 0) {
@@ -1176,12 +1172,20 @@ public class IOTaskService {
 						MaterialHelper.getMaterialLocation(material, false);
 					}
 				}
-				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
-			}else {
-				boxType = 1;
-				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
 			}
-			
+			Integer efficiencySwitch = PropKit.use("properties.ini").getInt("efficiencySwitch");
+			if (efficiencySwitch != null && efficiencySwitch == 1) {
+				int inOperationType = 0;
+				int boxType = 0;
+				Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), boxId, user.getUid());
+				System.out.println("end:" + userLastOperationTime);
+				if (materialType.getRadius().equals(7)) {
+					putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
+				}else {
+					boxType = 1;
+					putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
+				}
+			}
 			createTaskLog(packListItemId, materialId, quantity, user, task);
 			return material;
 		}
@@ -1315,16 +1319,20 @@ public class IOTaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘数量与数据库中记录的料盘剩余数量不一致，请扫描正确的料盘二维码！");
 			}
 			//计算出库效率
-			Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), material.getBox(), user.getUid());
-			System.out.println("end:" + userLastOperationTime);
-			int outOperationType = 1;
-			int boxType = 0;
-			if (materialType.getRadius().equals(7)) {
-				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, outOperationType, task.getId(), material.getBox());
-			}else {
-				boxType = 1;
-				putEfficiencyTimeToDb(userLastOperationTime, boxType , user, outOperationType, task.getId(), material.getBox());
+			Integer efficiencySwitch = PropKit.use("properties.ini").getInt("efficiencySwitch");
+			if (efficiencySwitch != null && efficiencySwitch == 1) {
+				Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), material.getBox(), user.getUid()); 
+				System.out.println("end:" + userLastOperationTime); 
+				int outOperationType = 1; int boxType = 0; 
+				if(materialType.getRadius().equals(7)) {
+					putEfficiencyTimeToDb(userLastOperationTime, boxType , user, outOperationType, task.getId(), material.getBox()); 
+				}else { 
+					boxType = 1;
+					putEfficiencyTimeToDb(userLastOperationTime, boxType , user,outOperationType, task.getId(), material.getBox());
+				}
 			}
+			
+			 
 			// 扫码出库后，将料盘设置为不在盒内
 			material.setIsInBox(false).setStatus(MaterialStatus.OUTTING).update();
 			createTaskLog(packListItemId, materialId, quantity, user, task);
@@ -1599,12 +1607,16 @@ public class IOTaskService {
 			}
 			MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
 			Db.update(DELETE_TASK_LOG_SQL, packListItemId, materialId);
-			int boxType = 0;
-			int operationType = 0;
-			if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
-				boxType = 1;
+			Integer efficiencySwitch = PropKit.use("properties.ini").getInt("efficiencySwitch");
+			if (efficiencySwitch != null && efficiencySwitch == 1) {
+				int boxType = 0;
+				int operationType = 0;
+				if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
+					boxType = 1;
+				}
+				putAndReduceDishNumToDb(taskId, material.getBox(), boxType, taskLog.getOperator(), operationType);
+				
 			}
-			putAndReduceDishNumToDb(boxType, taskLog.getOperator(), operationType);
 			Material.dao.deleteById(materialId);
 			
 			return material;
@@ -1616,12 +1628,15 @@ public class IOTaskService {
 			}
 			MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
 			material.setIsInBox(true).setStatus(MaterialStatus.NORMAL).setCutTaskLogId(null).update();
-			int boxType = 0;
-			int operationType = 1;
-			if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
-				boxType = 1;
+			Integer efficiencySwitch = PropKit.use("properties.ini").getInt("efficiencySwitch");
+			if (efficiencySwitch != null && efficiencySwitch == 1) {
+				int boxType = 0;
+				int operationType = 1;
+				if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
+					boxType = 1;
+				}
+				putAndReduceDishNumToDb(taskId, material.getBox(), boxType, taskLog.getOperator(), operationType);
 			}
-			putAndReduceDishNumToDb(boxType, taskLog.getOperator(), operationType);
 			TaskLog.dao.deleteById(taskLog.getId());
 			// 判断删除的是否是截料的那一盘，是的话，消除其截料状态
 			record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
@@ -2306,41 +2321,46 @@ public class IOTaskService {
 	private void putEfficiencyTimeToDb(Long time, Integer boxType, User user, Integer operationType, Integer taskId, Integer boxId) {
 		Calendar calendar = Calendar.getInstance();
 		System.out.println("now:" + calendar.getTime());
-		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH), user.getUid(), boxType, operationType);
-		if (efficiency != null) {
-			if (time == null || time == -1 || time == -2) {
-				efficiency.setDishNum(efficiency.getDishNum() + 1).update();
-			}else {
-				if (calendar.getTimeInMillis() - time < 0) {
+		if (time != null && !time.equals((long) 0)) {	
+			Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH) + 1 , user.getUid(), boxType, operationType);
+			if (efficiency != null) {
+				if (time == null || time == -1 || time == -2) {
 					efficiency.setDishNum(efficiency.getDishNum() + 1).update();
 				}else {
-					efficiency.setDeltaTime(efficiency.getDeltaTime() + calendar.getTimeInMillis() - time).setDishNum(efficiency.getDishNum() + 1).update();
+					if (calendar.getTimeInMillis() - time < 0) {
+						efficiency.setDishNum(efficiency.getDishNum() + 1).update();
+					}else {
+						efficiency.setDeltaTime(efficiency.getDeltaTime() + calendar.getTimeInMillis() - time).setDishNum(efficiency.getDishNum() + 1).update();
+					}
 				}
-			}
-		}else {
-			efficiency = new Efficiency();
-			efficiency.setUid(user.getUid()).setMonth(calendar.get(Calendar.MONTH)).setOperationType(operationType).setBoxType(boxType);
-			if (time == null || time == -1 || time == -2) {
-				efficiency.setDishNum(1).save();
 			}else {
-				if (calendar.getTimeInMillis() - time < 0) {
+				efficiency = new Efficiency();
+				efficiency.setUid(user.getUid()).setMonth(calendar.get(Calendar.MONTH) + 1 ).setOperationType(operationType).setBoxType(boxType);
+				if (time == null || time == -1 || time == -2) {
 					efficiency.setDishNum(1).save();
 				}else {
-					efficiency.setDeltaTime(calendar.getTimeInMillis() - time).setDishNum(1).save();
+					if (calendar.getTimeInMillis() - time < 0) {
+						efficiency.setDishNum(1).save();
+					}else {
+						efficiency.setDeltaTime(calendar.getTimeInMillis() - time).setDishNum(1).save();
+					}
 				}
 			}
 		}
+		
 		EfficiencyRedisDAO.putTaskLastOperationTime(taskId, calendar.getTimeInMillis());
 		EfficiencyRedisDAO.putTaskLastOperationUser(taskId, user.getUid());
 		EfficiencyRedisDAO.putUserLastOperationTime(user.getUid(), calendar.getTimeInMillis());
 	}
 	
 	
-	private void putAndReduceDishNumToDb(Integer boxType, String userId, Integer operationType) {
+	private void putAndReduceDishNumToDb(Integer taskId, Integer boxId, Integer boxType, String userId, Integer operationType) {
 		Calendar calendar = Calendar.getInstance();
-		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH), userId, boxType, operationType);
+		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH) + 1, userId, boxType, operationType);
 		if (efficiency != null) {
-			efficiency.setDishNum(efficiency.getDishNum() - 1).update();
+			if (EfficiencyRedisDAO.getTaskBoxArrivedTime(taskId, boxId) != null && efficiency.getDishNum() > 0) {
+				efficiency.setDishNum(efficiency.getDishNum() - 1).update();
+			}
 		}
 	}
 	

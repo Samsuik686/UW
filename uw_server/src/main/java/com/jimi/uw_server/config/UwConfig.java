@@ -48,10 +48,9 @@ import com.jimi.uw_server.util.VisualSerializer;
  *
  */
 public class UwConfig extends JFinalConfig {
-
 	@Override
 	public void configConstant(Constants me) {
-		me.setDevMode(true);
+		me.setDevMode(false);
 		me.setJsonFactory(new MixedJsonFactory());
 	}
 
@@ -105,11 +104,15 @@ public class UwConfig extends JFinalConfig {
 				AGVMainSocket.init(PropKit.use("properties.ini").get("d_agvServerURI"));
 				RobotInfoSocket.init(PropKit.use("properties.ini").get("d_robotInfoURI"));
 			}
-			EfficiencyService.initTaskEfficiency();
+			Integer efficiencySwitch = PropKit.use("properties.ini").getInt("efficiencySwitch");
+			if (efficiencySwitch != null && efficiencySwitch == 1) {
+				EfficiencyService.initTaskEfficiency();
+				System.out.println("效率统计开启，初始化成功！");
+			}
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
-			System.out.println("Uw Server is Running now...");
+			System.out.println("UW智能仓储系统开启完毕！！！");
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());
 			e.printStackTrace();

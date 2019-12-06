@@ -19,7 +19,6 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
-import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;

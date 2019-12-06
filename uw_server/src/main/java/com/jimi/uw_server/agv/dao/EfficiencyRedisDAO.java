@@ -116,7 +116,7 @@ public class EfficiencyRedisDAO {
 	
 	
 	public static Long getTaskBoxArrivedTime(Integer taskId, Integer boxId) {
-		String timeStr = cache.hget(TASK_BOX_ARRIVED_TIME_MAP, taskId);
+		String timeStr = cache.hget(TASK_BOX_ARRIVED_TIME_MAP, taskId + "_" + boxId);
 		if (timeStr != null) {
 			Long time = Long.valueOf(timeStr);
 			return time;
