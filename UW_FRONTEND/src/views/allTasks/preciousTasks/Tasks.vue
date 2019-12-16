@@ -132,6 +132,8 @@
         <task-details></task-details>
         <check-task-details></check-task-details>
         <change-window :is-change.sync="isChange" :edit-data="editData"></change-window>
+        <set-nonexistent-material></set-nonexistent-material>
+        <edit-material></edit-material>
     </div>
 </template>
 
@@ -152,9 +154,14 @@
     import EditStatus from "./comp/EditStatus";
     import CheckTaskDetails from "./comp/CheckTaskDetails";
     import ChangeWindow from "./comp/ChangeWindow";
+    import SetNonexistentMaterial from "./comp/SetNonexistentMaterial";
+    import EditMaterial from "./comp/EditMaterial";
     export default {
         name: "Tasks",
-        components: {ChangeWindow, CheckTaskDetails, EditStatus, EditRemarks, SetPriority, AddTask,TaskDetails},
+        components: {
+            EditMaterial,
+            SetNonexistentMaterial,
+            ChangeWindow, CheckTaskDetails, EditStatus, EditRemarks, SetPriority, AddTask,TaskDetails},
         data(){
             return{
                 tasksInfo:{
