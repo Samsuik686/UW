@@ -344,7 +344,9 @@
                         this.isForced = false;
                         this.isPending = false;
                         this.select(i);
-                    } else {
+                    } else if(response.data.data.includes('扫描数量足够')){
+                        this.textToSpeak('已扫够');
+                    }else {
                         this.failAudioPlay();
                         errHandler(response.data);
                     }
@@ -371,7 +373,9 @@
                         this.$alertSuccess('操作成功');
                         this.isPending = false;
                         this.select(i);
-                    } else {
+                    } else if(response.data.data.includes('扫描数量足够')){
+                        this.textToSpeak('已扫够');
+                    }else {
                         this.failAudioPlay();
                         errHandler(response.data);
                     }

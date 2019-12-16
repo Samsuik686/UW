@@ -42,6 +42,7 @@
 </template>
 
 <script>
+    import Bus from '../../../../utils/bus.js'
     import axios from '../../../../plugins/http'
     import {mapGetters} from 'vuex'
     import {
@@ -130,10 +131,21 @@
                     formData.append('supplier', this.supplier);
                     formData.append('remarks',this.remarks);
                     formData.append('#TOKEN#', this.token);
+                    formData.append('isForced',false);
                     this.isPending = true;
                     axios.post(taskCreatePreciousIOTaskUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('创建成功');
+                            this.cancel();
+                        }else if(res.data.result === 413){
+                            let task = {};
+                            if(this.destination)task['destination']=this.destination;
+                            if(this.taskType)task['type']=this.taskType;
+                            if(this.thisFile)task['file']=this.thisFile;
+                            if(this.supplier)task['supplier']=this.supplier;
+                            if(this.remarks)task['remarks']=this.remarks;
+                            if(this.token)task['#TOKEN#']=this.token;
+                            Bus.$emit('setPreciousNonexistentMaterial', this.fileName, this.suppliers,task,res.data.data);
                             this.cancel();
                         }else{
                             errHandler(res.data);
