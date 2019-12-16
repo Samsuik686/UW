@@ -307,7 +307,7 @@
                             this.$alertSuccess(res.data.data);
                             this.isPending = false;
                             this.select();
-                            //this.confirmFinishTask();
+                            this.confirmFinishTask();
                         }else{
                             errHandler(res.data);
                         }
@@ -342,7 +342,8 @@
                     let options = {
                         url: finishInventoryRegularTaskUrl,
                         data: {
-                            taskId: this.taskId
+                            taskId: this.taskId,
+                            whId:0
                         }
                     };
                     axiosPost(options).then(res => {
