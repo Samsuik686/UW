@@ -3,6 +3,7 @@ package com.jimi.uw_server.controller;
 import java.io.IOException;
 
 import com.jfinal.core.Controller;
+import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.PrinterService;
@@ -17,6 +18,7 @@ public class PrinterController extends Controller {
 	private static PrinterService printerService = PrinterService.me;
 
 
+	@Log("截料远程打印， 打印机IP地址:{ip}，料盘时间戳：{materialId}，任务条目Id：{packingListItemId}")
 	public void print(String ip, String materialId, Integer packingListItemId) {
 		if (materialId == null || ip == null || packingListItemId == null) {
 			throw new ParameterException("参数不能为空");
@@ -37,6 +39,7 @@ public class PrinterController extends Controller {
 	}
 	
 	
+	@Log("普通远程打印， 打印机IP地址:{ip}，料盘时间戳：{materialId}，数量：{quantity}")
 	public void printSingle(String ip, String materialId, Integer quantity) {
 		if (materialId == null || ip == null || quantity == null) {
 			throw new ParameterException("参数不能为空");

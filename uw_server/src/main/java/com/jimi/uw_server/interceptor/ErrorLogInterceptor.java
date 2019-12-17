@@ -10,6 +10,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.jfinal.aop.Interceptor;
 import com.jfinal.aop.Invocation;
+import com.jimi.uw_server.exception.FormDataValidateFailedException;
 import com.jimi.uw_server.model.ErrorLog;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -48,7 +49,11 @@ public class ErrorLogInterceptor implements Interceptor {
 			errorLog.setMessage(e.getClass().getSimpleName() + ":" + e.getMessage());
 			errorLog.save();
 			logger.error(e.getClass().getSimpleName() + ":" + e.getMessage());
-			invocation.getController().renderJson(ResultUtil.failed(result, e.getMessage()));
+			if (result == 413) {
+				invocation.getController().renderJson(ResultUtil.failed(result, ((FormDataValidateFailedException)e).getData()));
+			}else {
+				invocation.getController().renderJson(ResultUtil.failed(result, e.getMessage()));
+			}
 		}
 	}
 
@@ -67,6 +72,9 @@ public class ErrorLogInterceptor implements Interceptor {
 			break;
 		case "OperationException":
 			result = 412;
+			break;
+		case "FormDataValidateFailedException":
+			result = 413;
 			break;
 		default:
 			result = 500;

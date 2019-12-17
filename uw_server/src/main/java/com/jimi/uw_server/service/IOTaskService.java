@@ -40,6 +40,7 @@ import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.constant.sql.SampleTaskSQL;
 import com.jimi.uw_server.constant.sql.TaskSQL;
+import com.jimi.uw_server.exception.FormDataValidateFailedException;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.Efficiency;
@@ -146,15 +147,15 @@ public class IOTaskService {
 	private static final String GET_CUTTING_MATERIAL_SQL = "SELECT material.id as materialId, material.remainder_quantity AS materialQuantity, task_log.quantity AS outQuantity, material.manufacturer AS manufacturer, material.production_time AS productionTime , material.cycle AS cycle, material_type.`no` AS `no`, material_type.specification AS specification, supplier.`name` AS supplierName, task_log.packing_list_item_id AS packingListItemId, task_log.id AS taskLogId FROM material INNER JOIN material_type INNER JOIN supplier INNER JOIN task_log ON material.type = material_type.id AND material_type.supplier = supplier.id AND material.cut_task_log_id = task_log.id WHERE material.status = ? AND material.remainder_quantity > 0 AND material_type .type = ? AND material_type.enabled = 1 AND supplier.enabled = 1";
 	
 	// 创建出入库/退料任务
-	public String createIOTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType) throws Exception {
-		String resultString = "添加成功！";
+	public void createIOTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType, Boolean isForced) throws Exception {
+		String resultString = "";
 
 		// 如果文件格式不对，则提示检查文件格式
 		if (!(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
 			// 清空upload目录下的文件
 			deleteTempFileAndTaskRecords(file, null);
 			resultString = "创建任务失败，请检查套料单的文件格式是否正确！";
-			return resultString;
+			throw new OperationException(resultString);
 		}
 
 		Map<Integer, Integer> taskDetailsMap = new LinkedHashMap<>();
@@ -164,42 +165,45 @@ public class IOTaskService {
 		if (items == null || items.size() == 0) {
 			deleteTempFileAndTaskRecords(file, null);
 			resultString = "创建任务失败，请检查套料单的表头是否正确以及套料单表格中是否有效的任务记录！";
-			return resultString;
+			throw new OperationException(resultString);
 		} else {
 			synchronized (Lock.CREATE_REGULAR_IOTASK_LOCK) {
 				// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
+				
 				if (Task.dao.find(GET_FILE_NAME_SQL, fileName).size() > 0) {
 					// 清空upload目录下的文件
 					deleteTempFileAndTaskRecords(file, null);
 					resultString = "创建任务失败，已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
-					return resultString;
+					throw new OperationException(resultString);
 				}
 
 				// 从套料单电子表格第四行开始有任务记录
 				int i = 4;
 				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
+				List<PackingListItemBO> validationFailedRecords = new ArrayList<>(items.size());
 				for (PackingListItemBO item : items) {
 					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 
 						if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
 							deleteTempFileAndTaskRecords(file, null);
 							resultString = "创建任务失败，请检查套料单表格第" + i + "行的料号或需求数列是否填写了准确信息！";
-							return resultString;
+							throw new OperationException(resultString);
 						}
 
 						if (item.getQuantity() <= 0) {
 							deleteTempFileAndTaskRecords(file, null);
 							resultString = "创建任务失败，套料单表格第" + i + "行的需求数为" + item.getQuantity() + "，需求数必须大于0！";
-							return resultString;
+							throw new OperationException(resultString);
 						}
 
 						// 根据料号找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, item.getNo(), supplier, warehouseType);
+						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, item.getNo().trim(), supplier, warehouseType);
 						// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 						if (mType == null) {
-							deleteTempFileAndTaskRecords(file, null);
-							resultString = "插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是供应商与料号对应不上！";
-							return resultString;
+							if (!isForced) {
+								validationFailedRecords.add(item);
+							}
+							continue;
 						}
 						if (taskDetailsMap.get(mType.getId()) == null) {
 							taskDetailsMap.put(mType.getId(), item.getQuantity());
@@ -210,14 +214,22 @@ public class IOTaskService {
 					} else if (i == 4) { // 若第四行就没有序号，则说明套料单表格没有一条任务记录
 						deleteTempFileAndTaskRecords(file, null);
 						resultString = "创建任务失败，套料单表格没有任何有效的物料信息记录！";
-						return resultString;
+						throw new OperationException(resultString);
 					} else {
 						break;
 					}
 
 				}
-
-				// 创建一条新的任务记录
+				
+				if (!validationFailedRecords.isEmpty()) {
+					deleteTempFileAndTaskRecords(file, null);
+					throw new FormDataValidateFailedException("表格校验存在问题！", validationFailedRecords);
+				}
+				if (taskDetailsMap.isEmpty()) {
+					deleteTempFileAndTaskRecords(file, null);
+					resultString = "创建任务失败，套料单表格没有任何有效的物料信息记录！";
+					throw new OperationException(resultString);
+				}
 				Task task = new Task();
 				task.setType(type);
 				task.setFileName(fileName);
@@ -231,7 +243,7 @@ public class IOTaskService {
 					if (inventoryTaskId == null) {
 						deleteTempFileAndTaskRecords(file, null);
 						resultString = "创建任务失败，未选择盘点期间申补单所绑定的盘点任务！";
-						return resultString;
+						throw new OperationException(resultString);
 					}
 					task.setInventoryTaskId(inventoryTaskId);
 				} else {
@@ -256,8 +268,6 @@ public class IOTaskService {
 				deleteTempFileAndTaskRecords(file, null);
 			}
 		}
-
-		return resultString;
 	}
 
 
@@ -1511,6 +1521,10 @@ public class IOTaskService {
 			if (cycle == null || cycle.trim().equals("") || cycle.trim().equals("无")) {
 				cycle = "无";
 			}
+			TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
+			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") > packingListItem.getQuantity()) {
+				throw new OperationException("扫描数量足够！");
+			}
 			putInMaterialToDb(material, materialId, null, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.INING);
 			// 写入库日志
 			createTaskLog(packingListItem.getId(), materialId, quantity, user, task);
@@ -1557,6 +1571,10 @@ public class IOTaskService {
 			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
 			if (TaskLog.dao.findFirst(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packingListItem.getId()) != null) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
+			}
+			TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
+			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") > packingListItem.getQuantity()) {
+				throw new OperationException("扫描数量足够！");
 			}
 			// 判断是否存在更旧的料盘
 			if (isForced == null || !isForced) {

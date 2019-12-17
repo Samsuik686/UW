@@ -14,7 +14,6 @@ import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
-import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.Task;
@@ -38,62 +37,40 @@ public class TaskController extends Controller {
 
 
 	// 创建出入库/退料任务
-	@Log("创建普通仓任务类型为{type}的任务，供应商编号为{supplier}，目的地{destination}， 是否申补{isInventoryApply}， 申补任务{inventoryTaskId}， 备注{remarks}")
-	public void createRegularIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks) throws Exception {
+	@Log("创建普通仓任务类型为：{type}的任务，供应商编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
+	public void createRegularIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
 		if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
+		}
+		if (isForced == null) {
+			isForced = false;
 		}
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			file = getFile();
 			String fileName = file.getFileName();
-			String resultString = taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR);
-
-			if (resultString.equals("添加成功！")) {
-				renderJson(ResultUtil.succeed());
-			} else {
-				throw new OperationException(resultString);
-			}
+			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR, isForced);
+			renderJson(ResultUtil.succeed());
 		}
-
-		else if (type == TaskType.COUNT) { // 如果是创建「盘点任务」
-			renderJson(ResultUtil.failed("该功能尚在开发中！"));
-		}
-
-		else if (type == TaskType.POSITION_OPTIZATION) { // 如果是创建「位置优化任务」
-			renderJson(ResultUtil.failed("该功能尚在开发中！"));
-		}
-
 	}
 
 
 	// 创建出入库/退料任务
-	@Log("创建贵重仓任务类型为{type}的任务，供应商编号为{supplier}，目的地{destination}， 是否申补{isInventoryApply}， 申补任务{inventoryTaskId}， 备注{remarks}")
-	public void createPreciousIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks) throws Exception {
+	@Log("创建贵重仓任务类型为：{type}的任务，供应商编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
+	public void createPreciousIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
 		if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
+		}
+		if (isForced == null) {
+			isForced = false;
 		}
 		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
 			file = getFile();
 			String fileName = file.getFileName();
-			String resultString = taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS);
-
-			if (resultString.equals("添加成功！")) {
-				renderJson(ResultUtil.succeed());
-			} else {
-				throw new OperationException(resultString);
-			}
+			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS, isForced);
+			renderJson(ResultUtil.succeed());	
 		}
-
-		else if (type == TaskType.COUNT) { // 如果是创建「盘点任务」
-			renderJson(ResultUtil.failed("该功能尚在开发中！"));
-		}
-
-		else if (type == TaskType.POSITION_OPTIZATION) { // 如果是创建「位置优化任务」
-			renderJson(ResultUtil.failed("该功能尚在开发中！"));
-		}
-
 	}
 
 
