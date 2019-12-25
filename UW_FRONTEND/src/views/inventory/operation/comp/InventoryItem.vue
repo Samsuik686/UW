@@ -13,6 +13,9 @@
                         min-width="120"
                         prop="materialId"
                         label="料盘号">
+                    <template slot-scope="scope">
+                        <span :class="{redColor:scope.row.urExceptionString !== '正常'}">{{scope.row.materialId}}</span>
+                    </template>
                 </el-table-column>
                 <el-table-column
                         min-width="120"
@@ -61,6 +64,7 @@
         <div class="item-box" v-if="inventoryItem.boxId !== null">
             <material-box :col="col" :row="row" :id="inventoryItem.boxId"></material-box>
         </div>
+        <show-error :is-error.sync="isError" :error="error"></show-error>
     </div>
 </template>
 
@@ -72,14 +76,17 @@
     import {backInventoryBoxUrl, printUrl} from "../../../../plugins/globalUrl";
     import {errHandler} from "../../../../utils/errorHandler";
     import MaterialBox from "./subscomp/MaterialBox";
+    import ShowError from "./subscomp/ShowError";
     export default {
         name: "InventoryItem",
-        components: {MaterialBox, QuantityInput},
+        components: {ShowError, MaterialBox, QuantityInput},
         data(){
             return{
                 isLoading:false,
                 col:-1,
-                row:-1
+                row:-1,
+                isError:false,
+                error:''
             }
         },
         computed:{
@@ -90,6 +97,9 @@
             activeMaterialId:String,
             activeQuantity:Number,
             thisWindow:String
+        },
+        mounted(){
+            this.handleError();
         },
         watch:{
             activeMaterialId:function (val) {
@@ -106,6 +116,9 @@
                     this.col = -1;
                     this.row = -1;
                 }
+            },
+            inventoryItem:function(){
+                this.handleError();
             }
         },
         methods:{
@@ -246,6 +259,32 @@
             setPosition:function(col,row){
                 this.col = col;
                 this.row = row;
+            },
+            failAudioPlay: function () {
+                let audio = document.getElementById('fAudio');
+                if (audio !== null) {
+                    if (audio.paused) {
+                        audio.play();
+                    }
+                }
+            },
+            handleError:function(){
+               let list = JSON.parse(JSON.stringify(this.inventoryItem.list));
+               let isError = false;
+               for(let i =0;i<list.length;i++){
+                    if(list[i].urExceptionString !== '正常'){
+                        isError = true;
+                        if(this.isError === false){
+                            this.isError = true;
+                            this.failAudioPlay();
+                        }
+                        this.error =list[i].materialId + '：'+ list[i].urExceptionString;
+                        break;
+                    }
+               }
+               if(isError === false){
+                   this.isError = false;
+               }
             }
         }
     }
@@ -260,5 +299,8 @@
             width:200px;
             margin-left:20px;
         }
+    }
+    .redColor{
+        color:red;
     }
 </style>
