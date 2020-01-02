@@ -45,13 +45,4 @@ public abstract class BaseWindow<M extends BaseWindow<M>> extends Model<M> imple
 		return getInt("size");
 	}
 
-	public M setAuto(java.lang.Boolean auto) {
-		set("auto", auto);
-		return (M)this;
-	}
-	
-	public java.lang.Boolean getAuto() {
-		return get("auto");
-	}
-
 }

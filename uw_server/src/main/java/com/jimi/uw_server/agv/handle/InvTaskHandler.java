@@ -1,6 +1,5 @@
 package com.jimi.uw_server.agv.handle;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.jfinal.json.Json;
@@ -12,19 +11,10 @@ import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.handle.base.BaseTaskHandler;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Window;
-import com.jimi.uw_server.ur.dao.UrInvTaskBoxInfoDAO;
-import com.jimi.uw_server.ur.dao.UrInvTaskInfoDAO;
-import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
-import com.jimi.uw_server.ur.entity.SessionBox;
-import com.jimi.uw_server.ur.entity.UrMaterialInfo;
-import com.jimi.uw_server.ur.handler.assist.PackSender;
-import com.jimi.uw_server.ur.processor.ProcessorExecutor;
 
 
 public class InvTaskHandler extends BaseTaskHandler {
@@ -122,45 +112,13 @@ public class InvTaskHandler extends BaseTaskHandler {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
 		// 匹配groupid
-		Integer taskId = Integer.valueOf(groupid.split("@")[1]);
-		for (AGVInventoryTaskItem item : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
+		for (AGVInventoryTaskItem item : TaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split("@")[1]))) {
 			if (groupid.trim().equals(item.getGroupId())) {
 
 				// 判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
 				if (item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {// LS执行完成时
 					// 更改taskitems里对应item状态为2（已拣料到站）***
 					TaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
-					int boxId = item.getBoxId();
-					Window window = Window.dao.findById(item.getWindowId());
-					if (window.getAuto()) {
-						List<Material> materials = Material.dao.find(SQL.GET_MATERIAL_BY_BOX, boxId);
-						
-						if (!materials.isEmpty()) {
-							List<UrMaterialInfo> urMaterialInfos = new ArrayList<UrMaterialInfo>();
-							for (Material material : materials) {
-								UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), boxId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 1);
-								urMaterialInfos.add(urMaterialInfo);
-							}
-							UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
-						}
-						//发送ready包
-						Runnable runnable = new Runnable() {
-							
-							@Override
-							public void run() {
-								ForkliftReachPackage pack = new ForkliftReachPackage(taskId, boxId);
-								Boolean flag = PackSender.sendPackage("robot1", pack);
-								if (!flag) {
-									UrInvTaskBoxInfoDAO.putUrTaskBoxArrivedPack("robot1", pack);
-									SessionBox.remove("robot1");
-								}
-							}
-						};
-						ProcessorExecutor.me.submit(runnable);
-						
-					}
-					
-					
 					break;
 				} else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {// SL执行完成时：
 					// 更改taskitems里对应item状态为4（已回库完成）***

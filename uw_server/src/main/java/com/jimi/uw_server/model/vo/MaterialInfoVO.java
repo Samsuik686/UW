@@ -37,11 +37,7 @@ public class MaterialInfoVO {
 
 	private Integer isOuted;
 
-	private Integer urExceptionCode;
-	
-	private String urExceptionString;
-	
-	
+
 	public String getMaterialId() {
 		return materialId;
 	}
@@ -171,47 +167,4 @@ public class MaterialInfoVO {
 		this.col = col;
 	}
 
-
-	public Integer getUrExceptionCode() {
-		return urExceptionCode;
-	}
-
-
-	public void setUrExceptionCode(Integer urExceptionCode) {
-		this.urExceptionCode = urExceptionCode;
-		switch (urExceptionCode) {
-		case 0:
-			this.setUrExceptionString("正常");
-			break;
-		case 1:
-			this.setUrExceptionString("机械臂夹空");
-			break;
-		case 2:
-			this.setUrExceptionString("机械臂夹取物料码与位置不对应");
-			break;
-		case 3:
-			this.setUrExceptionString("扫码出错，数量异常（找不到，或者数量小于0）");
-			break;
-		case 4:
-			this.setUrExceptionString("机械臂夹取物料码与系统记录的数量不匹配");
-			break;
-		case 5:
-			this.setUrExceptionString("机械臂异常");
-			break;
-		default:
-			break;
-		}
-	}
-
-
-	public String getUrExceptionString() {
-		return urExceptionString;
-	}
-
-
-	public void setUrExceptionString(String urExceptionString) {
-		this.urExceptionString = urExceptionString;
-	}
-
-	
 }

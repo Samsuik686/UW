@@ -108,33 +108,6 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 		return get("end_time");
 	}
 
-	public M setUwCheckedOperatior(java.lang.String uwCheckedOperatior) {
-		set("uw_checked_operatior", uwCheckedOperatior);
-		return (M)this;
-	}
-	
-	public java.lang.String getUwCheckedOperatior() {
-		return getStr("uw_checked_operatior");
-	}
-
-	public M setUwCheckedTime(java.util.Date uwCheckedTime) {
-		set("uw_checked_time", uwCheckedTime);
-		return (M)this;
-	}
-	
-	public java.util.Date getUwCheckedTime() {
-		return get("uw_checked_time");
-	}
-
-	public M setUwChecked(java.lang.Boolean uwChecked) {
-		set("uw_checked", uwChecked);
-		return (M)this;
-	}
-	
-	public java.lang.Boolean getUwChecked() {
-		return get("uw_checked");
-	}
-
 	public M setIsInventoryApply(java.lang.Boolean isInventoryApply) {
 		set("is_inventory_apply", isInventoryApply);
 		return (M)this;
@@ -151,33 +124,6 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 	
 	public java.lang.Integer getInventoryTaskId() {
 		return getInt("inventory_task_id");
-	}
-
-	public M setEwhCheckedOperatior(java.lang.String ewhCheckedOperatior) {
-		set("ewh_checked_operatior", ewhCheckedOperatior);
-		return (M)this;
-	}
-	
-	public java.lang.String getEwhCheckedOperatior() {
-		return getStr("ewh_checked_operatior");
-	}
-
-	public M setEwhCheckedTime(java.util.Date ewhCheckedTime) {
-		set("ewh_checked_time", ewhCheckedTime);
-		return (M)this;
-	}
-	
-	public java.util.Date getEwhCheckedTime() {
-		return get("ewh_checked_time");
-	}
-
-	public M setEwhChecked(java.lang.Boolean ewhChecked) {
-		set("ewh_checked", ewhChecked);
-		return (M)this;
-	}
-	
-	public java.lang.Boolean getEwhChecked() {
-		return get("ewh_checked");
 	}
 
 	public M setRemarks(java.lang.String remarks) {

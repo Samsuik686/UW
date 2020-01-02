@@ -63,6 +63,33 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 		return getInt("remainder_quantity");
 	}
 
+	public M setManufacturer(java.lang.String manufacturer) {
+		set("manufacturer", manufacturer);
+		return (M)this;
+	}
+	
+	public java.lang.String getManufacturer() {
+		return getStr("manufacturer");
+	}
+
+	public M setCycle(java.lang.String cycle) {
+		set("cycle", cycle);
+		return (M)this;
+	}
+	
+	public java.lang.String getCycle() {
+		return getStr("cycle");
+	}
+
+	public M setPrintTime(java.util.Date printTime) {
+		set("print_time", printTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getPrintTime() {
+		return get("print_time");
+	}
+
 	public M setProductionTime(java.util.Date productionTime) {
 		set("production_time", productionTime);
 		return (M)this;
@@ -99,24 +126,6 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 		return get("is_repeated");
 	}
 
-	public M setManufacturer(java.lang.String manufacturer) {
-		set("manufacturer", manufacturer);
-		return (M)this;
-	}
-	
-	public java.lang.String getManufacturer() {
-		return getStr("manufacturer");
-	}
-
-	public M setCycle(java.lang.String cycle) {
-		set("cycle", cycle);
-		return (M)this;
-	}
-	
-	public java.lang.String getCycle() {
-		return getStr("cycle");
-	}
-
 	public M setStatus(java.lang.Integer status) {
 		set("status", status);
 		return (M)this;
@@ -124,15 +133,6 @@ public abstract class BaseMaterial<M extends BaseMaterial<M>> extends Model<M> i
 	
 	public java.lang.Integer getStatus() {
 		return getInt("status");
-	}
-
-	public M setPrintTime(java.util.Date printTime) {
-		set("print_time", printTime);
-		return (M)this;
-	}
-	
-	public java.util.Date getPrintTime() {
-		return get("print_time");
 	}
 
 	public M setCutTaskLogId(java.lang.Integer cutTaskLogId) {

@@ -105,7 +105,7 @@ public class IOTaskService {
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
-	private static final String GET_TASK_LOG_BY_TASK_ID_SQL = "SELECT task_log.* FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? AND task_log.material_id IS NOT NULL";
+	private static final String GET_TASK_LOG_BY_TASK_ID_SQL = "SELECT task_log.* FROM task_log INNNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? AND task_log.material_id IS NOT NULL";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id IS NOT NULL";
 
@@ -134,11 +134,7 @@ public class IOTaskService {
 	private static final String GET_OLDER_MATERIAL_BY_BOX_AND_TIME = "select * from material where box = ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
 
 	private static final String GET_OLDER_MATERIAL_BY_NO_BOX_AND_TIME = "select * from material where box != ? and type = ? and production_time < ? and remainder_quantity > 0 and is_in_box = 1 ORDER BY production_time asc";
-	
-	private static final String GET_OLDEST_MATERIAL_BY_TYPE = "SELECT * FROM material WHERE type = ? AND remainder_quantity > 0 AND is_in_box = 1 ORDER BY production_time ASC";
-	
-	private static final String GET_MATERIAL_BY_BOX_AND_TYPE_AND_TIME = "SELECT * FROM material WHERE box = ? AND type = ? AND remainder_quantity > 0 AND is_in_box = 1 AND production_time = ? ORDER BY remainder_quantity ASC";
-	
+
 	private static final String GET_FORMER_SUPPLIER_SQL = "SELECT * FROM former_supplier WHERE former_name = ? and supplier_id = ?";
 
 	private static final String GET_TASK_BY_TYPE = "SELECT * FROM task WHERE task.type = ? AND task.state = ? AND warehouse_type = ?";
@@ -824,39 +820,24 @@ public class IOTaskService {
 						Integer acturallyNum = 0;
 						String operatior = "";
 						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASKLOG_BY_PACKINGITEMID, packingListItem.getId());
-						if (!taskLogs.isEmpty()) {
-							for (TaskLog taskLog : taskLogs) {
-								acturallyNum = acturallyNum + taskLog.getQuantity();
-								if (operatior.equals("")) {
-									operatior = taskLog.getOperator();
-								}
-								Material material = Material.dao.findById(taskLog.getMaterialId());
-								if (material.getRemainderQuantity() > 0) {
-									int remainderQuantity = material.getRemainderQuantity() - taskLog.getQuantity();
-									// 若该料盘没有库存了，则将物料实体表记录置为无效
-									if (remainderQuantity <= 0) {
-										material.setRow(-1);
-										material.setCol(-1);
-										material.setRemainderQuantity(0);
-										material.setIsInBox(false);
-										material.update();
-									}
+						for (TaskLog taskLog : taskLogs) {
+							acturallyNum = acturallyNum + taskLog.getQuantity();
+							if (operatior.equals("")) {
+								operatior = taskLog.getOperator();
+							}
+							Material material = Material.dao.findById(taskLog.getMaterialId());
+							if (material.getRemainderQuantity() > 0) {
+								int remainderQuantity = material.getRemainderQuantity() - taskLog.getQuantity();
+								// 若该料盘没有库存了，则将物料实体表记录置为无效
+								if (remainderQuantity <= 0) {
+									material.setRow(-1);
+									material.setCol(-1);
+									material.setRemainderQuantity(0);
+									material.setIsInBox(false);
+									material.update();
 								}
 							}
-						}else {
-							// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
-							TaskLog taskLog = new TaskLog();
-							taskLog.setPackingListItemId(item.getId());
-							taskLog.setMaterialId(null);
-							taskLog.setQuantity(0);
-							taskLog.setOperator(null);
-							// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
-							taskLog.setAuto(false);
-							taskLog.setTime(new Date());
-							taskLog.setDestination(task.getDestination());
-							taskLog.save();
 						}
-						
 						if (!packingListItem.getQuantity().equals(acturallyNum)) {
 
 							if (packingListItem.getQuantity() < acturallyNum) {
@@ -1102,7 +1083,7 @@ public class IOTaskService {
 							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
 						}
 					}
-					List<Material> materials1 = Material.dao.find(SQL.GET_MATERIAL_BY_TYPE_AND_BOX, redisTaskItem.getMaterialTypeId(), redisTaskItem.getBoxId());
+					List<Material> materials1 = Material.dao.find(SQL.GET_MATERIAL_BY_BOX, redisTaskItem.getMaterialTypeId(), redisTaskItem.getBoxId());
 					Integer reelNum = materials1.size();
 					List<Material> materials2 = null;
 					if (reelNum > 0 && task.getType().equals(TaskType.OUT)) {
@@ -1169,10 +1150,6 @@ public class IOTaskService {
 			Material material = Material.dao.findById(materialId);
 			if (material != null && !material.getIsRepeated()) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已入过库，请勿重复入库！");
-			}
-			TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
-			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") > packingListItem.getQuantity()) {
-				throw new OperationException("扫描数量足够！");
 			}
 			// 新增物料表记录
 			int boxId = 0;
@@ -1601,7 +1578,7 @@ public class IOTaskService {
 			}
 			// 判断是否存在更旧的料盘
 			if (isForced == null || !isForced) {
-				Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_STATUS_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
+				Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 
 				if (materialTemp1 != null) {
 					throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
@@ -2327,43 +2304,14 @@ public class IOTaskService {
 	}
 	
 	
-	/**
-	 * <p>Description: <p>
-	 * @return
-	 * @exception
-	 * @author trjie
-	 * @Time 2019年12月27日
-	 */
-	public void urOutRegularTaskMaterial(Integer taskId, String materialId, Integer quantity) {
-		synchronized (Lock.OUT_REGULAR_IOTASK_LOCK) {
-			// 通过任务条目id获取套料单记录
-			Material material = Material.dao.findById(materialId);
-			PackingListItem packingListItem = PackingListItem.dao.findFirst(TaskSQL.GET_PACKING_LIST_ITEM_BY_TASKID, material.getType());
-			Task task = Task.dao.findById(taskId);
-			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
-			if (TaskLog.dao.findFirst(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packingListItem.getId()) != null) {
-				return ;
-			}
-			// 扫码出库后，将料盘设置为不在盒内
-			material.setIsInBox(false).setStatus(MaterialStatus.OUTTING).update();
-			createTaskLog(packingListItem.getId(), materialId, quantity, null, task);
-			return ;
-		}
-
-	}
-	
 	private void createTaskLog(Integer packListItemId, String materialId, Integer quantity, User user, Task task) {
 		TaskLog taskLog = new TaskLog();
 		taskLog.setPackingListItemId(packListItemId);
 		taskLog.setMaterialId(materialId);
 		taskLog.setQuantity(quantity);
-		if (user != null) {
-			taskLog.setOperator(user.getUid());
-			taskLog.setAuto(false);
-		}else {
-			taskLog.setAuto(true);
-		}
+		taskLog.setOperator(user.getUid());
 		// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成人工操作
+		taskLog.setAuto(false);
 		taskLog.setTime(new Date());
 		taskLog.setDestination(task.getDestination());
 		taskLog.save();
@@ -2434,7 +2382,6 @@ public class IOTaskService {
 		}
 	}
 	
-	
 	public Material putInMaterialToDb(Material material, String materialId, Integer boxId, Integer quantity, Date productionTime, Date printTime, Integer materialTypeId, String cycle, String manufacturer, Integer materialStatus) {
 		if (material != null) {
 			material.setBox(boxId);
@@ -2474,27 +2421,4 @@ public class IOTaskService {
 		return material;
 	}
 	 
-	
-	public Material getOlderMaterial(Integer boxId, Integer typeId, Integer quantity) {
-		Material material = Material.dao.findFirst(GET_OLDEST_MATERIAL_BY_TYPE, typeId);
-		if (material != null) {
-			if (material.getBox().equals(boxId)) {
-				List<Material> materials = Material.dao.find(GET_MATERIAL_BY_BOX_AND_TYPE_AND_TIME, boxId, typeId);
-				if (materials.size() == 1) {
-					return material;
-				}else {
-					for (Material material2 : materials) {
-						if (material2.getRemainderQuantity() > quantity) {
-							return material2;
-						}
-						material = material2;
-					}
-					return material;
-				}
-			}
-			
-		} 
-		return material;
-	}
-	
 }

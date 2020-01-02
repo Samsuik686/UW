@@ -81,4 +81,13 @@ public abstract class BaseTaskLog<M extends BaseTaskLog<M>> extends Model<M> imp
 		return getInt("destination");
 	}
 
+	public M setIsCleared(java.lang.Boolean isCleared) {
+		set("is_cleared", isCleared);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getIsCleared() {
+		return get("is_cleared");
+	}
+
 }
