@@ -5,7 +5,9 @@ public class SQL {
 	// 根据仓口ID查询货位
 	public static final String GET_GOODSLOCATION_BY_WINDOWID = "SELECT DISTINCT * FROM goods_location WHERE window_id = ? ORDER BY id ASC";
 	// 根据料盒计算料盘数
-	public static final String GET_MATERIAL_BY_BOX = "SELECT * FROM material WHERE material.type = ? AND material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 ORDER BY production_time ASC";
+	public static final String GET_MATERIAL_BY_TYPE_AND_BOX = "SELECT * FROM material WHERE material.type = ? AND material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 ORDER BY production_time ASC";
+
+	public static final String GET_MATERIAL_BY_BOX = "SELECT * FROM material WHERE material.box = ? AND material.remainder_quantity > 0 ORDER BY row, col ASC";
 
 	public static final String GET_MATERIALS_BY_TIME_AND_BOX = "SELECT * FROM material WHERE material.type = ? AND material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 AND production_time = ?";
 	// 根据任务条目ID查询相应的日志和物料记录（用于停泊条目阶段，此时物料数量暂未清零）

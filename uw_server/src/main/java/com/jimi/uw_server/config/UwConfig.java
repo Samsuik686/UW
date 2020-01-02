@@ -1,6 +1,7 @@
 package com.jimi.uw_server.config;
 
 import java.io.File;
+import java.text.ParseException;
 
 import com.jfinal.config.Constants;
 import com.jfinal.config.Handlers;
@@ -39,6 +40,7 @@ import com.jimi.uw_server.interceptor.CORSInterceptor;
 import com.jimi.uw_server.interceptor.ErrorLogInterceptor;
 import com.jimi.uw_server.model.MappingKit;
 import com.jimi.uw_server.service.EfficiencyService;
+import com.jimi.uw_server.ur.boot.RestaurantBootStrap;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
 import com.jimi.uw_server.util.VisualSerializer;
@@ -112,6 +114,23 @@ public class UwConfig extends JFinalConfig {
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
+			Thread urThread = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						RestaurantBootStrap.strap.start();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
+			urThread.setName("UR_SERVER");
+			urThread.start();
 			System.out.println("UW智能仓储系统开启完毕！！！");
 		} catch (Exception e) {
 			ErrorLogWritter.save(e.getClass().getSimpleName() + ":" + e.getMessage());

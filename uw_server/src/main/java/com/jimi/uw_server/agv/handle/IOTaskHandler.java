@@ -19,7 +19,13 @@ import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.GoodsLocation;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
+import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.MaterialService;
+import com.jimi.uw_server.ur.dao.UrInvTaskBoxInfoDAO;
+import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
+import com.jimi.uw_server.ur.entity.SessionBox;
+import com.jimi.uw_server.ur.handler.assist.PackSender;
+import com.jimi.uw_server.ur.processor.ProcessorExecutor;
 import com.jimi.uw_server.service.IOTaskService;
 
 
@@ -134,6 +140,22 @@ public class IOTaskHandler extends BaseTaskHandler {
 				// 更改taskitems里对应item状态为2（已拣料到站）***
 				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null, null, null);
 				EfficiencyRedisDAO.putTaskBoxArrivedTime(item.getTaskId(), item.getBoxId(), new Date().getTime());
+				Window window = Window.dao.findById(item.getWindowId());
+				if (window.getAuto()) {
+					Runnable runnable = new Runnable() {
+						
+						@Override
+						public void run() {
+							ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
+							Boolean flag = PackSender.sendPackage("robot1", pack);
+							if (!flag) {
+								UrInvTaskBoxInfoDAO.putUrTaskBoxArrivedPack("robot1", pack);
+								SessionBox.remove("robot1");
+							}
+						}
+					};
+					ProcessorExecutor.me.submit(runnable);
+				}
 				break;
 			} else if (item.getState() == TaskItemState.BACK_BOX && item.getBoxId().equals(Integer.valueOf(groupid.split(":")[1])) && missionGroupId.contains("B")) {// SL执行完成时：
 				// 更改taskitems里对应item状态为4（已回库完成）***

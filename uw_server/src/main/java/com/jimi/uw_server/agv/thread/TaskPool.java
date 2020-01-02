@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +22,7 @@ import com.jimi.uw_server.agv.handle.InvTaskHandler;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.BuildTaskItemState;
+import com.jimi.uw_server.constant.MaterialBoxType;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
@@ -108,8 +110,8 @@ public class TaskPool extends Thread {
 						}
 					}
 				}
-
 				robotBOs = countFreeRobot();
+				
 				List<AGVBuildTaskItem> buildTaskItems = new ArrayList<>();
 				TaskItemRedisDAO.appendBuildTaskItems(buildTaskItems);
 				if (buildTaskItems.isEmpty() || robotBOs.size() == 0) {
@@ -123,9 +125,10 @@ public class TaskPool extends Thread {
 		}
 	}
 
-
+	
 	public void sendIOCmds(Task task, Window window) throws Exception {
-
+		//出入库暂不使用机械臂
+		
 		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
 		TaskItemRedisDAO.appendIOTaskItems(task.getId(), ioTaskItems);
 		int i = 0;
@@ -145,19 +148,12 @@ public class TaskPool extends Thread {
 
 			}
 			i = goodsLocations.size();
-			for (AGVIOTaskItem item : ioTaskItems) {
+			if (window.getAuto() && task.getType().equals(TaskType.OUT)) {
+				for (AGVIOTaskItem item : ioTaskItems) {
 
-				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
-					Integer taskType = task.getType();
-					Integer boxId = 0;
-
-					// 对于入库和退料入库，根据类型和挑盒子算法获取最佳盒号
-					if (taskType == TaskType.IN || taskType == TaskType.SEND_BACK) {
-						boxId = getMaximumCapacityBox(item.getMaterialTypeId(), item.getTaskId());
-					}
-					// 对于出库， 根据类型获取最旧物料实体的盒号
-					else if (taskType == TaskType.OUT) {
-						// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
+					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						Integer boxId = 0;
+							// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
 						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 						if (remainderQuantity == 0 && !item.getIsForceFinish().equals(true)) {
 							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
@@ -179,50 +175,131 @@ public class TaskPool extends Thread {
 							boxId = getOldestMaterialBox(item.getMaterialTypeId(), item.getId());
 						}
 
-					}
-					MaterialBox materialBox = MaterialBox.dao.findById(boxId);
-					// 3. 将盒号填入item并update到Redis
+						
+						MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+						// 3. 将盒号填入item并update到Redis
 
-					if (item.getBoxId().equals(0) && boxId != 0) {
-						TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
-					} else if (!item.getBoxId().equals(0) && !boxId.equals(item.getBoxId())) {
-						//防止任务条目在叉车回库已经分配了到站的料盒，导致再次修改料盒
-						synchronized (Lock.IO_TASK_REDIS_LOCK) {
-							for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
-								if (tempItem.getGroupId().equals(item.getGroupId())) {
-									if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
-										TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+						if (item.getBoxId().equals(0) && boxId != 0) {
+							TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+						} else if (!item.getBoxId().equals(0) && !boxId.equals(item.getBoxId())) {
+							//防止任务条目在叉车回库已经分配了到站的料盒，导致再次修改料盒
+							synchronized (Lock.IO_TASK_REDIS_LOCK) {
+								for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
+									if (tempItem.getGroupId().equals(item.getGroupId())) {
+										if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
+											TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+										}
 									}
 								}
 							}
 						}
-					}
-					// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
-					if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf() && !goodsLocations.isEmpty()) {
-						// 5. 发送LS指令
-						if (task.getPriority().equals(0)) {
-							ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-						} else {
-							if (i > Math.floor(windowSize / 2)) {
+						// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
+						if (materialBox.getType().equals(MaterialBoxType.STANDARD) && boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf() && !goodsLocations.isEmpty()) {
+							// 5. 发送LS指令
+							if (task.getPriority().equals(0)) {
 								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
 							} else {
-								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								if (i > Math.floor(windowSize / 2)) {
+									ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+								} else {
+									ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								}
+							}
+
+							goodsLocations.remove(0);
+							if (i > 0) {
+								i--;
 							}
 						}
-
-						goodsLocations.remove(0);
-						if (i > 0) {
-							i--;
+					} else if (item.getState().intValue() == TaskItemState.LACK) { // 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
+						// 根据物料类型号获取物料库存数量
+						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+						if (remainderQuantity > 0) {
+							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, false, null);
 						}
 					}
-				} else if (item.getState().intValue() == TaskItemState.LACK) { // 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
-					// 根据物料类型号获取物料库存数量
-					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
-					if (remainderQuantity > 0) {
-						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, false, null);
+				}
+			}else {
+				for (AGVIOTaskItem item : ioTaskItems) {
+
+					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						Integer taskType = task.getType();
+						Integer boxId = 0;
+
+						// 对于入库和退料入库，根据类型和挑盒子算法获取最佳盒号
+						if (taskType == TaskType.IN || taskType == TaskType.SEND_BACK) {
+							boxId = getMaximumCapacityBox(item.getMaterialTypeId(), item.getTaskId());
+						}
+						// 对于出库， 根据类型获取最旧物料实体的盒号
+						else if (taskType == TaskType.OUT) {
+							// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
+							Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+							if (remainderQuantity == 0 && !item.getIsForceFinish().equals(true)) {
+								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
+
+								// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
+								TaskLog taskLog = new TaskLog();
+								taskLog.setPackingListItemId(item.getId());
+								taskLog.setMaterialId(null);
+								taskLog.setQuantity(0);
+								taskLog.setOperator(null);
+								// 区分出库操作人工还是机器操作,目前的版本暂时先统一写成机器操作
+								taskLog.setAuto(false);
+								taskLog.setTime(new Date());
+								taskLog.setDestination(task.getDestination());
+								taskLog.save();
+								ioTaskHandler.clearTask(task.getId());
+								continue;
+							} else {
+								boxId = getOldestMaterialBox(item.getMaterialTypeId(), item.getId());
+							}
+
+						}
+						MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+						// 3. 将盒号填入item并update到Redis
+
+						if (item.getBoxId().equals(0) && boxId != 0) {
+							TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+						} else if (!item.getBoxId().equals(0) && !boxId.equals(item.getBoxId())) {
+							//防止任务条目在叉车回库已经分配了到站的料盒，导致再次修改料盒
+							synchronized (Lock.IO_TASK_REDIS_LOCK) {
+								for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
+									if (tempItem.getGroupId().equals(item.getGroupId())) {
+										if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
+											TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+										}
+									}
+								}
+							}
+						}
+						// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
+						if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf() && !goodsLocations.isEmpty()) {
+							// 5. 发送LS指令
+							if (task.getPriority().equals(0)) {
+								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+							} else {
+								if (i > Math.floor(windowSize / 2)) {
+									ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+								} else {
+									ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								}
+							}
+
+							goodsLocations.remove(0);
+							if (i > 0) {
+								i--;
+							}
+						}
+					} else if (item.getState().intValue() == TaskItemState.LACK) { // 对于缺料的任务条目，若对应的物料已经补完库且该任务未结束，则将对应的任务条目更新为“等待分配”
+						// 根据物料类型号获取物料库存数量
+						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
+						if (remainderQuantity > 0) {
+							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, false, null);
+						}
 					}
 				}
 			}
+			
 
 		}
 	}
@@ -232,8 +309,10 @@ public class TaskPool extends Thread {
 
 		List<AGVInventoryTaskItem> agvInventoryTaskItems = new ArrayList<>();
 		TaskItemRedisDAO.appendInventoryTaskItems(task.getId(), agvInventoryTaskItems);
-		int i = 0;
 		int windowSize = window.getSize();
+		int i = 0;
+		
+		
 		if (!agvInventoryTaskItems.isEmpty()) {
 			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, window.getId());
 			if (goodsLocations.isEmpty()) {
@@ -248,36 +327,72 @@ public class TaskPool extends Thread {
 				}
 			}
 			i = goodsLocations.size();
-			for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
-				if (goodsLocations.isEmpty()) {
-					return;
-				}
-				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
-					if (materialBox.getIsOnShelf()) {
-						if (task.getPriority().equals(0)) {
-							invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-						} else {
-							if (i > Math.floor(windowSize / 2)) {
+			if (!window.getAuto()) {
+				//不使用机械臂的仓口
+				for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
+					if (goodsLocations.isEmpty()) {
+						return;
+					}
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						if (materialBox.getIsOnShelf()) {
+							if (task.getPriority().equals(0)) {
 								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
 							} else {
-								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								if (i > Math.floor(windowSize / 2)) {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+								} else {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								}
 							}
-						}
-						goodsLocations.remove(0);
-						if (i > 0) {
-							i--;
+							goodsLocations.remove(0);
+							if (i > 0) {
+								i--;
+							}
 						}
 					}
 				}
-
+			}else {
+				//使用机械臂盘点
+				for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
+					if (goodsLocations.isEmpty()) {
+						return;
+					}
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					//只有标准料盒才使用机械臂盘点
+					if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
+						continue;
+					}
+					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						if (materialBox.getIsOnShelf()) {
+							if (task.getPriority().equals(0)) {
+								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+							} else {
+								if (i > Math.floor(windowSize / 2)) {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+								} else {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								}
+							}
+							goodsLocations.remove(0);
+							if (i > 0) {
+								i--;
+							}
+						}
+					}
+				}
 			}
+			
+			
 		}
 	}
 
 
 	public void sendSampleTaskItemCmds(Task task, Window window) throws Exception {
-
+		//抽检暂不使用机械臂
+		if (window.getAuto()) {
+			return ;
+		}
 		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
 		TaskItemRedisDAO.appendSampleTaskItems(task.getId(), agvSampleTaskItems);
 		int i = 0;
