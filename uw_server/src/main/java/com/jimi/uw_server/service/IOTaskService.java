@@ -105,7 +105,7 @@ public class IOTaskService {
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
-	private static final String GET_TASK_LOG_BY_TASK_ID_SQL = "SELECT task_log.* FROM task_log INNNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? AND task_log.material_id IS NOT NULL";
+	private static final String GET_TASK_LOG_BY_TASK_ID_SQL = "SELECT task_log.* FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? AND task_log.material_id IS NOT NULL";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id IS NOT NULL";
 
@@ -820,24 +820,37 @@ public class IOTaskService {
 						Integer acturallyNum = 0;
 						String operatior = "";
 						List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASKLOG_BY_PACKINGITEMID, packingListItem.getId());
-						for (TaskLog taskLog : taskLogs) {
-							acturallyNum = acturallyNum + taskLog.getQuantity();
-							if (operatior.equals("")) {
-								operatior = taskLog.getOperator();
-							}
-							Material material = Material.dao.findById(taskLog.getMaterialId());
-							if (material.getRemainderQuantity() > 0) {
-								int remainderQuantity = material.getRemainderQuantity() - taskLog.getQuantity();
-								// 若该料盘没有库存了，则将物料实体表记录置为无效
-								if (remainderQuantity <= 0) {
-									material.setRow(-1);
-									material.setCol(-1);
-									material.setRemainderQuantity(0);
-									material.setIsInBox(false);
-									material.update();
+						if (!taskLogs.isEmpty()) {
+							for (TaskLog taskLog : taskLogs) {
+								acturallyNum = acturallyNum + taskLog.getQuantity();
+								if (operatior.equals("")) {
+									operatior = taskLog.getOperator();
+								}
+								Material material = Material.dao.findById(taskLog.getMaterialId());
+								if (material.getRemainderQuantity() > 0) {
+									int remainderQuantity = material.getRemainderQuantity() - taskLog.getQuantity();
+									// 若该料盘没有库存了，则将物料实体表记录置为无效
+									if (remainderQuantity <= 0) {
+										material.setRow(-1);
+										material.setCol(-1);
+										material.setRemainderQuantity(0);
+										material.setIsInBox(false);
+										material.update();
+									}
 								}
 							}
+						}else {
+							TaskLog taskLog = new TaskLog();
+							taskLog.setPackingListItemId(item.getId());
+							taskLog.setMaterialId(null);
+							taskLog.setQuantity(0);
+							taskLog.setOperator(null);
+							taskLog.setAuto(false);
+							taskLog.setTime(new Date());
+							taskLog.setDestination(task.getDestination());
+							taskLog.save();
 						}
+						
 						if (!packingListItem.getQuantity().equals(acturallyNum)) {
 
 							if (packingListItem.getQuantity() < acturallyNum) {
@@ -1158,7 +1171,10 @@ public class IOTaskService {
 					boxId = item.getBoxId().intValue();
 				}
 			}
-			
+            TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
+            if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") >= packingListItem.getQuantity()) {
+                throw new OperationException("扫描数量足够！");
+            }
 			Integer reelNum = 0;
 			if (materialType.getRadius().equals(7)) {
 				List<Material> materials = Material.dao.find(GET_MATERIAL_BY_BOX_SQL, boxId);
@@ -1522,7 +1538,7 @@ public class IOTaskService {
 				cycle = "无";
 			}
 			TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
-			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") > packingListItem.getQuantity()) {
+			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") >= packingListItem.getQuantity()) {
 				throw new OperationException("扫描数量足够！");
 			}
 			putInMaterialToDb(material, materialId, null, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.INING);
@@ -1573,7 +1589,7 @@ public class IOTaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
 			}
 			TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
-			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") > packingListItem.getQuantity()) {
+			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") >= packingListItem.getQuantity()) {
 				throw new OperationException("扫描数量足够！");
 			}
 			// 判断是否存在更旧的料盘
