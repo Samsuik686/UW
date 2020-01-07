@@ -22,8 +22,6 @@ public class LogController extends Controller {
 			renderJson(ResultUtil.succeed(logService.selectActionLog(table, pageNo, pageSize, ascBy, descBy, filter)));
 		} else if (table.equals("task_log")) { // 查询「任务日志」b
 			renderJson(ResultUtil.succeed(logService.selectTaskLog(pageNo, pageSize, ascBy, descBy, filter)));
-		} else if (table.equals("position_log")) { // 查询「物料位置转移日志」
-			renderJson(ResultUtil.succeed(logService.selectPositionLog(table, pageNo, pageSize, ascBy, descBy, filter)));
 		}
 
 	}

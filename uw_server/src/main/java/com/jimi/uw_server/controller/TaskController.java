@@ -182,15 +182,16 @@ public class TaskController extends Controller {
 		}
 	}
 
-	@Log("完成{packingListItemId}的任务条目")
-	public void finishPreciousTaskItem(Integer packingListItemId) {
-		if (packingListItemId == null) {
+	@Log("完成{taskId}的贵重仓任务")
+	public void finishPreciousTask(Integer taskId) {
+		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		if (taskService.finishPreciousTaskItem(packingListItemId)) {
+		String result = taskService.finishPreciousTask(taskId);
+		if (result.equals("操作成功")) {
 			renderJson(ResultUtil.succeed());
 		} else {
-			renderJson(ResultUtil.failed());
+			renderJson(ResultUtil.failed(412, result));
 		}
 	}
 
@@ -386,19 +387,6 @@ public class TaskController extends Controller {
 			throw new ParameterException("数量必须为正整数！");
 		}
 		renderJson(ResultUtil.succeed(taskService.modifyRegularOutQuantity(taskLogId, packingListItemId, materialId, quantity)));
-	}
-
-
-	@Log("修改贵重仓任务条目{packingListItemId}的出库记录{taskLogId}，料盘码{materialId}的出库数量为{quantity}")
-	public void modifyPreciousOutQuantity(Integer taskLogId, Integer packingListItemId, String materialId, Integer quantity) {
-
-		if (taskLogId == null || packingListItemId == null || quantity == null || materialId == null) {
-			throw new ParameterException("参数不能为空！");
-		}
-		if (quantity <= 0) {
-			throw new ParameterException("数量必须为正整数！");
-		}
-		renderJson(ResultUtil.succeed(taskService.modifyPreciosOutQuantity(taskLogId, packingListItemId, materialId, quantity)));
 	}
 
 

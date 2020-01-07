@@ -498,7 +498,7 @@ public class IOTaskService {
 						}
 						List<Record> unfinshRecords = Db.find(TaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, task.getId());
 						for (Record record : unfinshRecords) {
-							List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, record.getInt("id"));
+							List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("id"));
 							for (Material material : materials) {
 								material.setStatus(MaterialStatus.NORMAL).update();
 							}
@@ -542,7 +542,7 @@ public class IOTaskService {
 						if (lackRecords != null) {
 							String packingListItemIds = "";
 							for (Record record : lackRecords) {
-								List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
+								List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
 								boolean flag = false;
 								if (materials != null) {
 									for (Material material : materials) {
@@ -1129,7 +1129,7 @@ public class IOTaskService {
 		List<Record> taskInfoRecords = Db.find(TaskSQL.GET_PRECIOUS_IOTASK_INFOS, taskId, taskId);
 		List<Record> uwStoreRecords = Db.find(TaskSQL.GET_PRECIOUS_IO_TASK_UW_STORE, taskId);
 		List<Record> oldestMaterialRecords = Db.find(TaskSQL.GET_OLDEST_MATERIAL_UW_STORE, taskId);
-		List<IOTaskInfo> infos = IOTaskInfo.fillList(taskInfoRecords, uwStoreRecords, oldestMaterialRecords);
+		List<IOTaskInfo> infos = IOTaskInfo.fillList(task, taskInfoRecords, uwStoreRecords, oldestMaterialRecords);
 		return infos;
 	}
 
@@ -1588,9 +1588,13 @@ public class IOTaskService {
 			if (TaskLog.dao.findFirst(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packingListItem.getId()) != null) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个出库任务中重复扫描同一个料盘！");
 			}
-			TaskLog taskLog = TaskLog.dao.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
-			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") >= packingListItem.getQuantity()) {
-				throw new OperationException("扫描数量足够！");
+			Record outRecord = Db.findFirst(SQL.GET_OUT_QUANTITY_BY_PACKINGITEMID, packingListItem.getId());
+			int outQuantity = 0;
+			if (outRecord != null && outRecord.getInt("totalQuantity") != null) {
+				 if (outRecord.getInt("totalQuantity") >= packingListItem.getQuantity()) {
+					 throw new OperationException("扫描数量足够！");
+				}
+				outQuantity = outRecord.getInt("totalQuantity");
 			}
 			// 判断是否存在更旧的料盘
 			if (isForced == null || !isForced) {
@@ -1608,7 +1612,13 @@ public class IOTaskService {
 			// 扫码出库后，将料盘设置为不在盒内
 			material.setStatus(MaterialStatus.OUTTING);
 			material.update();
-			createTaskLog(packingListItem.getId(), materialId, quantity, user, task);
+			
+			TaskLog taskLog = createTaskLog(packingListItem.getId(), materialId, quantity, user, task);
+			//判断物料是否需要截料
+			if (outQuantity + quantity > packingListItem.getQuantity()) {
+				taskLog.setQuantity(packingListItem.getQuantity() - outQuantity).update();
+				material.setStatus(MaterialStatus.CUTTING).setCutTaskLogId(taskLog.getId()).update();
+			}
 			return true;
 		}
 	}
@@ -1890,41 +1900,6 @@ public class IOTaskService {
 	}
 
 
-	public String modifyPreciosOutQuantity(Integer taskLogId, Integer packListItemId, String materialId, Integer quantity) {
-		String result = "操作成功";
-		Material material = Material.dao.findById(materialId);
-		// 对于不在已到站料盒的物料，禁止对其进行操作
-		if (material.getRemainderQuantity() <= 0) {
-			throw new OperationException("时间戳为" + materialId + "的料盘不存在，禁止修改！");
-		}
-		if (material.getRemainderQuantity() < quantity) {
-			throw new OperationException("时间戳为" + materialId + "的料盘的修改数量大于实际数量，修改失败！");
-		}
-		TaskLog taskLog = TaskLog.dao.findById(taskLogId);
-		if (!taskLog.getPackingListItemId().equals(packListItemId) || !taskLog.getMaterialId().equals(material.getId())) {
-			throw new OperationException("找不到当前任务条目时间戳为" + materialId + "的料盘的出库记录，修改失败！");
-		}
-		TaskLog taskLog2 = TaskLog.dao.findFirst(TaskSQL.GET_PRECIOUS_OUT_MATERIAL_SQL, taskLog.getPackingListItemId());
-		if (!taskLog2.getStr("materialId").equals(material.getId())) {
-			throw new OperationException("时间戳为" + materialId + "并非当前料盒出库料盘中的最新料盘，请修改出库的最后一盘物料！");
-		}
-
-		Record record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
-		if (record != null && !record.getStr("material_id").equals(materialId)) {
-			throw new OperationException("当前该料号已存在截料的料盘，无法再次进行截料，禁止修改！");
-		}
-		taskLog.setQuantity(quantity).update();
-		record = Db.findFirst(SQL.GET_CUT_MATERIAL_RECORD_SQL, packListItemId);
-		if (record != null) {
-			material.setStatus(MaterialStatus.CUTTING).setCutTaskLogId(taskLogId).update();
-		} else {
-			material.setStatus(MaterialStatus.OUTTING).setCutTaskLogId(null).update();
-		}
-		result = "操作成功";
-		return result;
-	}
-
-
 	// 将普通仓截料后剩余的物料置为在盒内
 	public Material backRegularAfterCutting(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
 		// 通过任务条目id获取套料单记录
@@ -1973,9 +1948,9 @@ public class IOTaskService {
 		} else if (taskLog == null || !material.getStatus().equals(MaterialStatus.CUTTING)) {
 			throw new OperationException("扫错料盘，该料盘未处于截料状态!");
 		} else if ((material.getRemainderQuantity() - taskLog.getQuantity()) != quantity) {
-			throw new OperationException("请扫描修改出库数时所打印出的新料盘二维码!");
+			throw new OperationException("扫描错误，请扫描截料返库的料盘二维码!");
 		} else if (material.getRemainderQuantity() == 0) {
-			throw new OperationException("该料盘已全部出库!");
+			throw new OperationException("扫描错误，该料盘已全部出库!");
 		} else {
 			material.setStatus(MaterialStatus.OUTTING).setCutTaskLogId(null).update();
 			return material;
@@ -2021,7 +1996,7 @@ public class IOTaskService {
 			if (problemRecord != null) {
 				continue;
 			}
-			List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
+			List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
 			boolean flag = false;
 			if (materials != null && materials.size() > 0) {
 				for (Material material : materials) {
@@ -2061,78 +2036,70 @@ public class IOTaskService {
 	 * @param isForce
 	 * @return
 	 */
-	public Boolean finishPreciousTaskItem(Integer packingListItemId) {
-		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
-		if (packingListItem == null || packingListItem.getFinishTime() != null) {
-			throw new OperationException("该任务条目不存在或者已经完成！");
+	public String finishPreciousTask(Integer taskId) {
+		Task task = Task.dao.findById(taskId);
+		if (task == null) {
+			throw new OperationException("任务不存在！");
 		}
-		Task task = Task.dao.findById(packingListItem.getTaskId());
 		if (!task.getState().equals(TaskState.PROCESSING)) {
-			throw new OperationException("任务未处于进行中状态，无法完成该任务条目");
+			throw new OperationException("任务未处于进行中状态！");
 		}
 		if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
-			Record problemRecord = Db.findFirst(TaskSQL.GET_UNFINISH_PRECIOUS_IOTASK_ITEM_BY_ID, packingListItem.getId());
-			if (problemRecord != null) {
-				throw new OperationException("该入库条目尚未达到可完成的条件，请继续入库！");
+			//完成已经可以完成（数量一致）的任务条目
+			List<PackingListItem> canFinishTaskItems = PackingListItem.dao.find(TaskSQL.GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID, taskId);
+			if (!canFinishTaskItems.isEmpty()) {
+				for (PackingListItem taskItem : canFinishTaskItems) {
+					taskItem.setFinishTime(new Date()).update();
+					List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, taskItem.getId());
+					for (Material material : materials) {
+						material.setStatus(MaterialStatus.NORMAL).update();
+					}
+				}
 			}
-			List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, packingListItem.getId());
-			for (Material material : materials) {
-				material.setStatus(MaterialStatus.NORMAL).update();
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(TaskSQL.GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+			if (packingListItem != null) {
+				return "存在入库数量不符条目，请先完成后再操作";
 			}
-			packingListItem.setFinishTime(new Date()).update();
+			task.setState(TaskState.FINISHED).setEndTime(new Date()).update();
 		} else {
-			Record cuttingRecord = Db.findFirst(TaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM_BY_ID, packingListItem.getId());
-			if (cuttingRecord != null) {
-				throw new OperationException("该出库条目存在截料情况，请处理后继续出库！");
+			List<PackingListItem> cutPackingListItems =  PackingListItem.dao.find(TaskSQL.GET_CUTTING_PACKING_LIST_ITEM_BY_TASK_ID, taskId);
+			Set<Integer> cutPackingListItemsIdSet = new HashSet<>();
+			if (!cutPackingListItems.isEmpty()) {
+				for (PackingListItem cutPackingListItem : cutPackingListItems) {
+					cutPackingListItemsIdSet.add(cutPackingListItem.getId());
+				}
 			}
-			Record problemRecord = Db.findFirst(TaskSQL.GET_PROBLEM_PRECIOUS_IOTASK_ITEM_BY_ID, packingListItem.getId());
-			if (problemRecord != null) {
-				throw new OperationException("该出库条目存在超发情况，请处理后继续出库！");
-			}
-			Record storeRecord = Db.findFirst(MaterialTypeSQL.GET_MATERIAL_STORE_BY_MATERIAL_TYPE_AND_STATUS, MaterialStatus.NORMAL, packingListItem.getMaterialTypeId());
-			if (storeRecord == null || storeRecord.getInt("quantity") == null || storeRecord.getInt("quantity") == 0) {
-				List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, packingListItem.getId());
-				Record lackRecord = Db.findFirst(TaskSQL.GET_UNFINISH_PRECIOUS_IOTASK_ITEM_BY_ID, packingListItem.getId());
-				if (lackRecord != null) {
-					for (Material material : materials) {
-						if (!material.getRemainderQuantity().equals(material.getInt("outQuantity"))) {
-							throw new OperationException("该出库条目存在缺发情况，请处理后继续出库！");
-						}
+			//完成已经可以完成（数量一致）的任务条目
+			List<PackingListItem> canFinishTaskItems = PackingListItem.dao.find(TaskSQL.GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID, taskId);
+			if (!canFinishTaskItems.isEmpty()) {
+				for (PackingListItem taskItem : canFinishTaskItems) {
+					if (cutPackingListItemsIdSet.contains(taskItem.getId())) {
+						continue;
 					}
-
-				}
-				if (materials != null) {
+					taskItem.setFinishTime(new Date()).update();
+					List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, taskItem.getId());
 					for (Material material : materials) {
-						material.setRemainderQuantity(material.getRemainderQuantity() - material.getInt("outQuantity"));
-						material.setStatus(MaterialStatus.NORMAL).update();
-					}
-				}
-			} else {
-				Record lackRecord = Db.findFirst(TaskSQL.GET_UNFINISH_PRECIOUS_IOTASK_ITEM_BY_ID, packingListItem.getId());
-				if (lackRecord != null) {
-					throw new OperationException("该出库条目存在缺发情况，请处理后继续出库！");
-				}
-				List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, packingListItem.getId());
-				if (materials != null) {
-					for (Material material : materials) {
-						material.setRemainderQuantity(material.getRemainderQuantity() - material.getInt("outQuantity"));
-						material.setStatus(MaterialStatus.NORMAL).update();
+						material.setStatus(MaterialStatus.NORMAL).setRemainderQuantity(material.getRemainderQuantity() - material.getInt("outQuantity")).update();
 					}
 				}
 			}
-			packingListItem.setFinishTime(new Date()).update();
+			if (!cutPackingListItems.isEmpty()) {
+				return "存在未截料的物料，请进行截料后再完成任务";
+			}
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(TaskSQL.GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+			if (packingListItem != null) {
+				return "存在出库数量不符条目，请先完成后再操作";
+			}
 		}
-		PackingListItem packingListItem2 = PackingListItem.dao.findFirst(TaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, packingListItem.getTaskId());
-		if (packingListItem2 == null) {
-			Record problemRecord = Db.findFirst(TaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, packingListItem.getTaskId());
-			if (problemRecord != null) {
-				task.setState(TaskState.EXIST_LACK);
-			} else {
-				task.setState(TaskState.FINISHED);
-			}
-			task.update();
+		Record problemRecord = Db.findFirst(TaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+		if (problemRecord != null) {
+			task.setState(TaskState.EXIST_LACK);
+		} else {
+			task.setState(TaskState.FINISHED);
 		}
-		return true;
+		task.update();
+	
+		return "操作成功";
 	}
 
 
@@ -2320,7 +2287,7 @@ public class IOTaskService {
 	}
 	
 	
-	private void createTaskLog(Integer packListItemId, String materialId, Integer quantity, User user, Task task) {
+	private TaskLog createTaskLog(Integer packListItemId, String materialId, Integer quantity, User user, Task task) {
 		TaskLog taskLog = new TaskLog();
 		taskLog.setPackingListItemId(packListItemId);
 		taskLog.setMaterialId(materialId);
@@ -2331,6 +2298,7 @@ public class IOTaskService {
 		taskLog.setTime(new Date());
 		taskLog.setDestination(task.getDestination());
 		taskLog.save();
+		return taskLog;
 	}
 
 

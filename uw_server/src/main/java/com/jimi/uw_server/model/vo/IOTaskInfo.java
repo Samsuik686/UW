@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.constant.MaterialStatus;
+import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.model.Task;
 
 
 public class IOTaskInfo {
@@ -32,6 +35,10 @@ public class IOTaskInfo {
 	public Integer scanNum;
 
 	public Date oldestMaterialDate;
+	
+	public Boolean cutBoolean;
+	
+	public String cutString;
 
 	List<IOTaskItemInfo> infos;
 
@@ -156,12 +163,34 @@ public class IOTaskInfo {
 	}
 
 
-	public static List<IOTaskInfo> fillList(List<Record> taskInfoRecords, List<Record> uwStoreRecords, List<Record> oldestMaterialRecords) {
+	public Boolean getCutBoolean() {
+		return cutBoolean;
+	}
+
+
+	public void setCutBoolean(Boolean cutBoolean) {
+		this.cutBoolean = cutBoolean;
+	}
+
+
+	public String getCutString() {
+		return cutString;
+	}
+
+
+	public void setCutString(String cutString) {
+		this.cutString = cutString;
+	}
+
+
+	public static List<IOTaskInfo> fillList(Task task, List<Record> taskInfoRecords, List<Record> uwStoreRecords, List<Record> oldestMaterialRecords) {
 		Map<Integer, IOTaskInfo> map = new HashMap<>();
 		for (Record record : taskInfoRecords) {
 			IOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
 			if (info == null) {
 				info = new IOTaskInfo();
+				info.setCutBoolean(false);
+				info.setCutString("否");
 				info.setPackingListItemId(record.getInt("PackingListItem_Id"));
 				info.setPlanQuantity(record.getInt("PackingListItem_Quantity"));
 				info.setDesignator(record.getStr("MaterialType_Designator"));
@@ -172,22 +201,42 @@ public class IOTaskInfo {
 				if (record.getInt("TaskLog_Id") != null) {
 					info.setActuallyQuantity(record.getInt("TaskLog_Quantity"));
 					List<IOTaskItemInfo> itemInfos = new ArrayList<>();
+					if (record.getInt("Material_Status") != null && record.getInt("Material_Status").equals(MaterialStatus.CUTTING)) {
+						info.setCutBoolean(true);
+						info.setCutString("是");
+					}
 					itemInfos.add(IOTaskItemInfo.fill(record));
 					info.setInfos(itemInfos);
 					info.setScanNum(1);
-					info.setLackQuantity(record.getInt("PackingListItem_Quantity") - record.getInt("TaskLog_Quantity"));
+					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
+						info.setLackQuantity(info.getActuallyQuantity() - info.getPlanQuantity());
+					}else if (task.getType().equals(TaskType.OUT)) {
+						info.setLackQuantity(info.getPlanQuantity() - info.getActuallyQuantity());
+					}
 				} else {
-					info.setLackQuantity(record.getInt("PackingListItem_Quantity"));
 					info.setActuallyQuantity(0);
+					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
+						info.setLackQuantity(info.getActuallyQuantity() - info.getPlanQuantity());
+					}else if (task.getType().equals(TaskType.OUT)) {
+						info.setLackQuantity(info.getPlanQuantity() - info.getActuallyQuantity());
+					}
 					info.setScanNum(0);
 				}
 				map.put(record.getInt("PackingListItem_Id"), info);
 			} else {
 				if (record.getInt("TaskLog_Id") != null) {
+					if (record.getInt("Material_Status") != null && record.getInt("Material_Status").equals(MaterialStatus.CUTTING)) {
+						info.setCutBoolean(true);
+						info.setCutString("是");
+					}
 					info.setActuallyQuantity(record.getInt("TaskLog_Quantity") + info.getActuallyQuantity());
 					info.getInfos().add(IOTaskItemInfo.fill(record));
 					info.setScanNum(info.getScanNum() + 1);
-					info.setLackQuantity(info.getActuallyQuantity() - record.getInt("PackingListItem_Quantity") );
+					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
+						info.setLackQuantity(info.getActuallyQuantity() - info.getPlanQuantity());
+					}else if (task.getType().equals(TaskType.OUT)) {
+						info.setLackQuantity(info.getPlanQuantity() - info.getActuallyQuantity());
+					}
 				}
 			}
 		}

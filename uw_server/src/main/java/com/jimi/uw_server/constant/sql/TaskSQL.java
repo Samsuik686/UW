@@ -18,6 +18,12 @@ public class TaskSQL {
 
 	public static final String GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.task_id = ? GROUP BY packing_list_item.id HAVING SUM(task_log.quantity) < packing_list_item.quantity OR SUM(task_log.quantity) IS NULL";
 
+	public static final String GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID = "SELECT packing_list_item.* FROM packing_list_item INNER JOIN task_log ON packing_list_item.id = task_log.packing_list_item_id WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL GROUP BY packing_list_item.id HAVING SUM(task_log.quantity) = packing_list_item.quantity";
+
+	public static final String GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL GROUP BY packing_list_item.id HAVING SUM(task_log.quantity) != packing_list_item.quantity OR SUM(task_log.quantity) IS NULL";
+
+	public static final String GET_CUTTING_PACKING_LIST_ITEM_BY_TASK_ID = "SELECT packing_list_item.* FROM material INNER JOIN task_log INNER JOIN packing_list_item ON task_log.material_id = material.id AND packing_list_item.id = task_log.packing_list_item_id WHERE material.cut_task_log_id IS NOT NULL AND packing_list_item.task_id = ?";
+	
 	public static final String GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL GROUP BY packing_list_item.id HAVING SUM(task_log.quantity) != packing_list_item.quantity";
 
 	public static final String GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL HAVING SUM(task_log.quantity) > packing_list_item.quantity";
@@ -34,10 +40,12 @@ public class TaskSQL {
 
 	public static final String GET_PROBLEM_PRECIOUS_IOTASK_ITEM_BY_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.id = ? HAVING SUM(task_log.quantity) > packing_list_item.quantity";
 
-	public static final String GET_UNFINISH_PRECIOUS_IOTASK_ITEM_BY_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.id = ? HAVING SUM(task_log.quantity) != packing_list_item.quantity OR SUM(task_log.quantity) IS NULL";
+	public static final String GET_UNFINISH_PRECIOUS_IOTASK_ITEM_BY_TASK_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log ON packing_list_item.id = task_log.packing_list_item_id WHERE packing_list_item.task_id = ? GROUP BY packing_list_item.id HAVING SUM(task_log.quantity) != packing_list_item.quantity OR SUM(task_log.quantity) IS NULL";
 
-	public static final String GET_MATERIAL_BY_PACKING_LIST_ITEM_ID = "SELECT material.*, task_log.quantity AS outQuantity FROM material INNER JOIN task_log ON task_log.material_id = material.id WHERE task_log.packing_list_item_id = ?";
+	public static final String GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID = "SELECT material.*, task_log.quantity AS outQuantity FROM material INNER JOIN task_log ON task_log.material_id = material.id WHERE task_log.packing_list_item_id = ?";
 
+	public static final String GET_MATERIAL_BY_PACKING_LIST_ITEM_ID = "SELECT material.* FROM material INNER JOIN task_log ON task_log.material_id = material.id WHERE task_log.packing_list_item_id = ?";
+	
 	public static final String GET_UNFINISH_PACKING_LIST_ITEM = "SELECT * FROM packing_list_item WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL";
 
 	public static final String GET_OLDEST_MATERIAL_UW_STORE = "SELECT material.*, packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item ON packing_list_item.material_type_id = material.type WHERE remainder_quantity > 0 AND packing_list_item.task_id = ? AND status = 0 ORDER BY type, production_time ASC";

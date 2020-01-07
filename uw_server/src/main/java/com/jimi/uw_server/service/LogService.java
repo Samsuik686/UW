@@ -9,7 +9,6 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.ActionLogVO;
-import com.jimi.uw_server.model.vo.PositionLogVO;
 import com.jimi.uw_server.model.vo.TaskLogVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
@@ -59,24 +58,6 @@ public class LogService extends SelectService {
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setTotalRow(result.getTotalRow());
 		pagePaginate.setList(taskLogVOs);
-
-		return pagePaginate;
-	}
-
-
-	// 查询物料位置转移日志
-	public Object selectPositionLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		Page<Record> result = selectService.select(new String[] {table, "material_type", "material"}, new String[] {"position_log.material_id = material.id", "material.type = material_type.id"}, pageNo, pageSize, ascBy, descBy, filter);
-		List<PositionLogVO> positionLogVOs = new ArrayList<PositionLogVO>();
-		for (Record res : result.getList()) {
-			PositionLogVO p = new PositionLogVO(res.get("PositionLog_Id"), res.get("PositionLog_TaskId"), res.get("PositionLog_MaterialId"), res.get("MaterialType_No"), res.get("PositionLog_OldArea"), res.get("PositionLog_OldRow"), res.get("PositionLog_OldCol"), res.get("PositionLog_OldHeight"), res.get("PositionLog_NewArea"), res.get("PositionLog_NewRow"), res.get("PositionLog_NewCol"), res.get("PositionLog_NewHeight"), res.get("PositionLog_Time"));
-			positionLogVOs.add(p);
-		}
-		PagePaginate pagePaginate = new PagePaginate();
-		pagePaginate.setPageSize(pageSize);
-		pagePaginate.setPageNumber(pageNo);
-		pagePaginate.setTotalRow(result.getTotalRow());
-		pagePaginate.setList(positionLogVOs);
 
 		return pagePaginate;
 	}
