@@ -17,6 +17,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
+import com.alibaba.druid.sql.ast.statement.SQLIfStatement.Else;
 import com.jfinal.json.Json;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
@@ -27,6 +28,7 @@ import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.ExceptionHandler;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
+import com.jimi.uw_server.agv.handle.PositionTaskHandler;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.model.SocketLog;
 import com.jimi.uw_server.util.ErrorLogWritter;
@@ -62,6 +64,7 @@ public class AGVMainSocket {
 
 	private static SampleTaskHandler samTaskHandler = SampleTaskHandler.getInstance();
 
+	private static PositionTaskHandler positionTaskHandler = PositionTaskHandler.getInstance();
 
 	public static void init(String uri) throws Exception {
 		// 初始化
@@ -114,7 +117,9 @@ public class AGVMainSocket {
 						} else if (statusCmd.getMissiongroupid().contains("#")) {
 							// 抽检任务
 							samTaskHandler.handleStatus(statusCmd);
-						} else {
+						} else if (statusCmd.getMissiongroupid().startsWith("pt_")) {
+							positionTaskHandler.handleStatus(statusCmd);
+						}else {
 							BuildHandler.handleStatus(message);
 						}
 					} else if (message.contains("\"cmdcode\":\"loadexception\"")) {// 判断是否是loadexception指令

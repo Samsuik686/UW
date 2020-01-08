@@ -19,6 +19,7 @@ import com.jfinal.template.Engine;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.agv.thread.TaskPool;
+import com.jimi.uw_server.controller.BoxPositionTaskController;
 import com.jimi.uw_server.controller.BuildController;
 import com.jimi.uw_server.controller.DestinationController;
 import com.jimi.uw_server.controller.ExternalWhController;
@@ -87,6 +88,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manualTask", ManualTaskController.class);
 		me.add("/faq", FAQController.class);
 		me.add("/task/printer", PrinterController.class);
+		me.add("/positionTask", BoxPositionTaskController.class);
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
+import com.jimi.uw_server.agv.dao.PositionTaskRobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
@@ -92,7 +93,7 @@ public class TaskPool extends Thread {
 					for (Window window : windows) {
 						Task task = Task.dao.findById(window.getBindTaskId());
 						// 获取出入库任务
-						if (task == null || (task.getState() != TaskState.PROCESSING && task.getState() != TaskState.CANCELED) || (TaskItemRedisDAO.getTaskStatus(task.getId()) != null && !TaskItemRedisDAO.getTaskStatus(task.getId()))) {
+						if (PositionTaskRobotInfoRedisDAO.getPositionTaskStatus() || task == null || (task.getState() != TaskState.PROCESSING && task.getState() != TaskState.CANCELED) || (TaskItemRedisDAO.getTaskStatus(task.getId()) != null && !TaskItemRedisDAO.getTaskStatus(task.getId()))) {
 							continue;
 						}
 						if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.OUT) || task.getType().equals(TaskType.SEND_BACK)) {

@@ -105,7 +105,7 @@ public class IOTaskService {
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id = ?";
 
-	private static final String GET_TASK_LOG_BY_TASK_ID_SQL = "SELECT task_log.* FROM task_log INNNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? AND task_log.material_id IS NOT NULL";
+	private static final String GET_TASK_LOG_BY_TASK_ID_SQL = "SELECT task_log.* FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ? AND task_log.material_id IS NOT NULL";
 
 	private static final String GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_SQL = "SELECT * FROM task_log WHERE packing_list_item_id = ? AND material_id IS NOT NULL";
 
