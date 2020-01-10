@@ -52,7 +52,7 @@
                 }
                 let configData = JSON.parse(JSON.stringify(this.configData));
                 configData['printerIP'] = this.configInfo.printerIP;
-                window.sessionStorage.setItem('configData', JSON.stringify(configData));
+                window.localStorage.setItem('configData', JSON.stringify(configData));
                 this.setConfigData(configData);
                 this.$alertSuccess("保存成功");
             }

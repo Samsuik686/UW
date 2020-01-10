@@ -1,10 +1,11 @@
 const webpack = require('webpack');
 module.exports = {
     publicPath: '/uw_system',
+    productionSourceMap: false,
     devServer: {
         open: true,
         host: '0.0.0.0',
-        port: 1015,
+        port: 10086,
         proxy: {
             '/api': {
                 target: '<url>',

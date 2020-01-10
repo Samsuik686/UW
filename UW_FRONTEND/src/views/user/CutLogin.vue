@@ -6,9 +6,11 @@
                      :model="loginInfo"
                      class="login-form"
                      :rules="rules"
-                     status-icon>
+                     status-icon
+                     @submit.native.prevent="login('loginForm')">
                 <el-form-item prop="uid">
                     <el-input v-model.trim="loginInfo.uid"
+                              ref="login-input"
                               placeholder="用户名"
                               prefix-icon="el-icon-user"
                               size="large"
@@ -28,7 +30,7 @@
                 <el-form-item>
                     <el-button type="primary"
                                style="width:100%;"
-                               @click="login('loginForm')">登录
+                               native-type="submit">登录
                     </el-button>
                 </el-form-item>
             </el-form>
@@ -65,6 +67,11 @@
         },
         components: {
             Copyright
+        },
+        mounted() {
+            this.$nextTick(() => {
+                this.$refs['login-input'].focus();
+            })
         },
         methods: {
             ...mapActions(['setToken', 'setUser']),

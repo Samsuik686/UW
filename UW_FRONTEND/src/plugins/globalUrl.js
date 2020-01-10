@@ -64,6 +64,15 @@ export const taskSelectUrl = url + '/task/select';
 export const taskCreateRegularIOTaskUrl = url + '/task/createRegularIOTask';
 //创建贵重仓任务
 export const taskCreatePreciousIOTaskUrl = url + '/task/createPreciousIOTask';
+//创建搬料盒任务
+export const taskCarryBoxUrl = url + '/positionTask';
+export const taskCreateCarryBoxesTaskUrl = url + '/positionTask/createMoveTask';
+export const taskCarryBoxesTaskStartUrl = url + '/positionTask/start';
+export const taskCarryBoxesTaskSwitchUrl = url + '/positionTask/switchTask';
+export const taskCarryBoxesTaskCancelUrl = url + '/positionTask/cancelTask';
+export const taskCarryBoxesTaskSelectUrl = url + '/positionTask/listBoxPositionTask';
+export const taskCarryBoxesTaskSelectDetailsUrl = url + '/positionTask/listBoxPositionTaskItem';
+
 
 export const taskCheckUrl = url + '/task/check';
 export const taskGetIOTaskDetailsUrl = url + '/task/getIOTaskDetails';
@@ -118,8 +127,10 @@ export const setTaskWindowUrl = url + '/task/setTaskWindow';
 
 //完成所有缺料条目
 export const finishPreciousTaskLackItemUrl = url + '/task/finishPreciousTaskLackItem';
-//完成任务条目
+//完成任务条目(旧)
 export const finishPreciousTaskItemUrl = url + '/task/finishPreciousTaskItem';
+//完成任务条目(新)
+export const finishAllPreciousTaskItemUrl = url + '/task/finishPreciousTask';
 //强制解绑仓口
 export const forceUnbundlingWindowUrl = url + '/task/forceUnbundlingWindow';
 

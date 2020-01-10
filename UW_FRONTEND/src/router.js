@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+
 Vue.use(Router);
 import store from './store'
 
@@ -61,6 +62,8 @@ import AllTasks from './views/allTasks/AllTasks';
 import RegularTasks from './views/allTasks/regularTasks/Tasks'
 //贵重料任务
 import PreciousTasks from './views/allTasks/preciousTasks/Tasks'
+//搬料盒任务
+import CarryBoxes from './views/allTasks/carryBoxes/Tasks'
 //紧急出库操作
 import OutEmergency from "./views/io/outEmergency/OutEmergency";
 
@@ -105,266 +108,277 @@ const router = new Router({
   mode: 'hash',
   base: window.g.SYSTEM_PATH,
   routes: [
-      {
-          path:'/',
-          redirect:'/login'
+    {
+      path: '/',
+      redirect: '/login'
+    },
+    {
+      path: '/login',
+      name: "Login",
+      component: Login
+    },
+    {
+      path: '/main',
+      name: 'Main',
+      component: Main,
+      redirect: '/material',
+      meta: {
+        requireAuth: true
       },
-      {
-          path:'/login',
-          name:"Login",
-          component:Login
-      },
-      {
-          path:'/main',
-          name:'Main',
-          component:Main,
-          redirect:'/material',
-          meta: {
-              requireAuth: true
-          },
-          children:[
-              {
-                  path:'/material',
-                  name:'Material',
-                  component:Material,
-                  children: [
-                      {
-                          path:'uwMaterial',
-                          component:MaterialUwMaterial
-                      },
-                      {
-                          path:'ewhMaterial',
-                          component:MaterialEwhMaterial
-                      },
-                      {
-                          path:'boxes',
-                          component:MaterialBoxes
-                      },
-                      {
-                          path:'supplier',
-                          component:MaterialSupplier
-                      },
-                      {
-                          path:'destination',
-                          component:MaterialDestination
-                      },
-                      {
-                          path:'precious',
-                          component:MaterialPrecious
-                      }
-                  ]
-              },
-              {
-                  path:'/tasks',
-                  name:'Tasks',
-                  component:AllTasks,
-                  children:[
-                      {
-                          path:'regularTasks',
-                          component:RegularTasks
-                      },
-                      {
-                          path:'preciousTasks',
-                          component:PreciousTasks
-                      }
-                  ]
-              },
-              {
-                  path:'/logs',
-                  name:'Logs',
-                  component:Logs,
-                  children:[
-                      {
-                          path:'taskLog',
-                          component:LogsTaskLog
-                      },
-                      {
-                          path:'actionLog',
-                          component:LogsActionLog
-                      },
-                      /*{
-                          path:'positionLog',
-                          component:LogsPositionLog
-                      }*/
-                  ]
-              },
-              {
-                  path:'/robot',
-                  name:'Robot',
-                  component:Robot
-              },
-              {
-                  path:'/io',
-                  name:'Io',
-                  component:Io,
-                  children: [
-                      {
-                          path:'preview',
-                          component:IoPreview
-                      },
-                      {
-                          path:'call',
-                          component:IoCall
-                      },
-                      {
-                          path:'inNow',
-                          component:IoInNow
-                      },
-                      {
-                          path:'outNow',
-                          component:IoOutNow
-                      },
-                      {
-                          path:'returnNow',
-                          component:IoInNow
-                      },
-                      {
-                          path:'preciousNow',
-                          component:PreciousNow
-                      },
-                      {
-                          path:'outEmergency',
-                          component:OutEmergency
-                      }
-                  ]
-              },
-              {
-                  path: '/inventory',
-                  name: 'Inventory',
-                  component: Inventory,
-                  children: [
-                      {
-                          path: 'tasks',
-                          component: InventoryTasks
-                      },
-                      {
-                          path: 'operation',
-                          component: InventoryOperation
-                      },
-                      {
-                          path: 'uwDetails',
-                          component: InventoryUwDetails
-                      },
-                      {
-                          path: 'ewhDetails',
-                          component: InventoryEwhDetails
-                      },
-                      {
-                          path:'preciousTasks',
-                          component:InventoryPreciousTasks
-                      },
-                      {
-                          path:'preciousDetails',
-                          component:InventoryPreciousDetails
-                      }
-                  ]
-              },
-              {
-                  path: '/sample',
-                  name: 'Sample',
-                  component: Sample,
-                  children: [
-                      {
-                          path: 'tasks',
-                          component: SampleTasks
-                      },
-                      {
-                          path: 'operation',
-                          component: SampleOperation
-                      },
-                      {
-                          path: 'preciousTasks',
-                          component: SamplePreciousTasks
-                      },
-                      {
-                          path: 'preciousOperation',
-                          component: SamplePreciousOperation
-                      }
-                  ]
-              },
-              {
-                  path:'/config',
-                  name:'Config',
-                  component:Config
-              },
-              {
-                  path:'/build',
-                  name:'Build',
-                  component:Build
-              },
-              {
-                  path:'/user',
-                  name:'User',
-                  component:User
-              },
-              {
-                  path:'/help',
-                  name:'Help',
-                  component:Help,
-                  children: [
-                      {
-                          path: 'write',
-                          component: Write
-                      },
-                      {
-                          path: 'read',
-                          component: Read
-                      }
-                  ]
-              }
+      children: [
+        {
+          path: '/material',
+          name: 'Material',
+          component: Material,
+          children: [
+            {
+              path: 'uwMaterial',
+              component: MaterialUwMaterial
+            },
+            {
+              path: 'ewhMaterial',
+              component: MaterialEwhMaterial
+            },
+            {
+              path: 'boxes',
+              component: MaterialBoxes
+            },
+            {
+              path: 'supplier',
+              component: MaterialSupplier
+            },
+            {
+              path: 'destination',
+              component: MaterialDestination
+            },
+            {
+              path: 'precious',
+              component: MaterialPrecious
+            }
           ]
-      },
-      {
-          path:'/cut',
-          name:"CutMaterial",
-          component:CutMaterial,
-          meta: {
-              requireAuth: true
-          }
-      },
-      {
-          path:'/cutLogin',
-          name:"CutLogin",
-          component:CutLogin
+        },
+        {
+          path: '/tasks',
+          name: 'Tasks',
+          component: AllTasks,
+          children: [
+            {
+              path: 'regularTasks',
+              component: RegularTasks
+            },
+            {
+              path: 'preciousTasks',
+              component: PreciousTasks
+            },
+            {
+              path: 'carryBoxes',
+              component: CarryBoxes
+            }
+          ]
+        },
+        {
+          path: '/logs',
+          name: 'Logs',
+          component: Logs,
+          children: [
+            {
+              path: 'taskLog',
+              component: LogsTaskLog
+            },
+            {
+              path: 'actionLog',
+              component: LogsActionLog
+            },
+            /*{
+                path:'positionLog',
+                component:LogsPositionLog
+            }*/
+          ]
+        },
+        {
+          path: '/robot',
+          name: 'Robot',
+          component: Robot
+        },
+        {
+          path: '/io',
+          name: 'Io',
+          component: Io,
+          children: [
+            {
+              path: 'preview',
+              component: IoPreview
+            },
+            {
+              path: 'call',
+              component: IoCall
+            },
+            {
+              path: 'inNow',
+              component: IoInNow
+            },
+            {
+              path: 'outNow',
+              component: IoOutNow
+            },
+            {
+              path: 'returnNow',
+              component: IoInNow
+            },
+            {
+              path: 'preciousNow',
+              component: PreciousNow
+            },
+            {
+              path: 'outEmergency',
+              component: OutEmergency
+            }
+          ]
+        },
+        {
+          path: '/inventory',
+          name: 'Inventory',
+          component: Inventory,
+          children: [
+            {
+              path: 'tasks',
+              component: InventoryTasks
+            },
+            {
+              path: 'operation',
+              component: InventoryOperation
+            },
+            {
+              path: 'uwDetails',
+              component: InventoryUwDetails
+            },
+            {
+              path: 'ewhDetails',
+              component: InventoryEwhDetails
+            },
+            {
+              path: 'preciousTasks',
+              component: InventoryPreciousTasks
+            },
+            {
+              path: 'preciousDetails',
+              component: InventoryPreciousDetails
+            }
+          ]
+        },
+        {
+          path: '/sample',
+          name: 'Sample',
+          component: Sample,
+          children: [
+            {
+              path: 'tasks',
+              component: SampleTasks
+            },
+            {
+              path: 'operation',
+              component: SampleOperation
+            },
+            {
+              path: 'preciousTasks',
+              component: SamplePreciousTasks
+            },
+            {
+              path: 'preciousOperation',
+              component: SamplePreciousOperation
+            }
+          ]
+        },
+        {
+          path: '/config',
+          name: 'Config',
+          component: Config
+        },
+        {
+          path: '/build',
+          name: 'Build',
+          component: Build
+        },
+        {
+          path: '/user',
+          name: 'User',
+          component: User
+        },
+        {
+          path: '/help',
+          name: 'Help',
+          component: Help,
+          children: [
+            {
+              path: 'write',
+              component: Write
+            },
+            {
+              path: 'read',
+              component: Read
+            }
+          ]
+        }
+      ]
+    },
+    {
+      path: '/cut',
+      name: "CutMaterial",
+      component: CutMaterial,
+      meta: {
+        requireAuth: true
       }
+    },
+    {
+      path: '/cutLogin',
+      name: "CutLogin",
+      component: CutLogin
+    }
   ]
 });
 
 if (window.sessionStorage.getItem('token')) {
-    store.commit('setToken', window.sessionStorage.getItem('token'))
+  store.commit('setToken', window.sessionStorage.getItem('token'))
 }
 if (window.sessionStorage.getItem('user')) {
-    store.commit('setUser', JSON.parse(window.sessionStorage.getItem('user')));
+  store.commit('setUser', JSON.parse(window.sessionStorage.getItem('user')));
 }
-if (window.sessionStorage.getItem('configData')) {
-    store.commit('setConfigData', JSON.parse(window.sessionStorage.getItem("configData")));
+if (window.localStorage.getItem('configData')) {
+  store.commit('setConfigData', JSON.parse(window.localStorage.getItem("configData")));
 }
 
 
 router.beforeEach((to, from, next) => {
-    if(to.path === '/login'){
-        window.sessionStorage.clear();
-        store.commit('setToken','');
-        store.commit('setUser',{});
-    }
-    if(to.path === '/cutLogin'){
-        window.sessionStorage.clear();
-        store.commit('setToken','');
-        store.commit('setUser',{});
+  if (to.path === '/login') {
+    window.sessionStorage.clear();
+    store.commit('setToken', '');
+    store.commit('setUser', {});
+  }
+  if (to.path === '/cutLogin') {
+    window.sessionStorage.clear();
+    store.commit('setToken', '');
+    store.commit('setUser', {});
+    next();
+  } else {
+    if (to.matched.some(r => r.meta.requireAuth)) {
+      if (store.state.token) {
         next();
-    }else{
-        if (to.matched.some(r => r.meta.requireAuth)) {
-            if (store.state.token) {
-                next();
-            } else {
-                next({
-                    path: '/login',
-                })
-            }
+      } else {
+        if (to.path === '/cut') {
+          next({
+            path: '/cutLogin'
+          })
         } else {
-            next();
+          next({
+            path: '/login',
+          })
         }
+
+      }
+    } else {
+      next();
     }
+  }
 });
 export default router;
 
