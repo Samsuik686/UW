@@ -24,7 +24,7 @@
             <el-form-item label="库存">
               <span>{{taskItem.storeQuantity}}</span>
             </el-form-item>
-            <el-form-item label="本次缺发数量/超发数量">
+            <el-form-item label="本次缺发数量">
               <span>{{taskItem.lackQuantity}}</span>
             </el-form-item>
             <el-form-item label="已扫料盘">
