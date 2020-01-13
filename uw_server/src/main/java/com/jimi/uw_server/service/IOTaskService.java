@@ -484,17 +484,9 @@ public class IOTaskService {
 			} else {
 				if (task.getWarehouseType().equals(WarehouseType.PRECIOUS)) {
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
-						List<Record> problemRecords = Db.find(TaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
+						Record problemRecords = Db.findFirst(TaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
 						if (problemRecords != null) {
-							String packingListItemIds = "";
-							for (Record record : problemRecords) {
-								if (packingListItemIds.equals("")) {
-									packingListItemIds = String.valueOf(record.getInt("PackingListItem_Id"));
-								} else {
-									packingListItemIds = packingListItemIds + "," + record.getInt("PackingListItem_Id");
-								}
-								throw new OperationException("该任务存在入料与需求数不符的情况，[" + packingListItemIds + "]");
-							}
+							throw new OperationException("该任务存在入料与需求数不符的情况！");
 						}
 						List<Record> unfinshRecords = Db.find(TaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, task.getId());
 						for (Record record : unfinshRecords) {
@@ -508,66 +500,18 @@ public class IOTaskService {
 
 						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
 					} else if (task.getType().equals(TaskType.OUT)) {
-						List<Record> cuttingRecords = Db.find(TaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM, task.getId());
-						if (cuttingRecords != null) {
-							String packingListItemIds = "";
-							for (Record record : cuttingRecords) {
-								if (packingListItemIds.equals("")) {
-									packingListItemIds = String.valueOf(record.getInt("PackingListItem_Id"));
-								} else {
-									packingListItemIds = packingListItemIds + "," + record.getInt("PackingListItem_Id");
-								}
-							}
-							if (!packingListItemIds.equals("")) {
-								throw new OperationException("该任务存在截料待处理的情况，[" + packingListItemIds + "]");
-							}
+						Record cuttingRecord = Db.findFirst(TaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM, task.getId());
+						if (cuttingRecord != null) {
+							throw new OperationException("该任务存在截料待处理的情况！");
 						}
-						List<Record> problemRecords = Db.find(TaskSQL.GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
-						if (problemRecords != null) {
-							String packingListItemIds = "";
-							for (Record record : problemRecords) {
-								if (record.getInt("actuallyQuantity") != null && record.getInt("actuallyQuantity") > record.getInt("PlanQuantity")) {
-									if (packingListItemIds.equals("")) {
-										packingListItemIds = String.valueOf(record.getInt("PackingListItem_Id"));
-									} else {
-										packingListItemIds = packingListItemIds + "," + record.getInt("PackingListItem_Id");
-									}
-								}
-							}
-							if (!packingListItemIds.equals("")) {
-								throw new OperationException("该任务存在发料超发的情况，[" + packingListItemIds + "]");
-							}
+						Record overQuantityRecord = Db.findFirst(TaskSQL.GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
+						if (overQuantityRecord != null) {
+							throw new OperationException("该任务存在发料超发的情况！");
 						}
-						List<Record> lackRecords = Db.find(TaskSQL.GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
-						if (lackRecords != null) {
-							String packingListItemIds = "";
-							for (Record record : lackRecords) {
-								List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
-								boolean flag = false;
-								if (materials != null) {
-									for (Material material : materials) {
-										if (!material.getRemainderQuantity().equals(material.getInt("outQuantity"))) {
-											flag = true;
-											break;
-										}
-									}
-									if (flag) {
-										if (packingListItemIds.equals("")) {
-											packingListItemIds = String.valueOf(record.getInt("PackingListItem_Id"));
-										} else {
-											packingListItemIds = packingListItemIds + "," + record.getInt("PackingListItem_Id");
-										}
-									}
-								}
-							}
-							if (!packingListItemIds.equals("")) {
-								throw new OperationException("该任务存在发料缺发的情况，[" + packingListItemIds + "]");
-							}
-						}
-						List<Record> taskInfoRecords = Db.find(TaskSQL.GET_DIFFERENCE_QUANTITY_OF_IOTASK, task.getId());
-						for (Record record : taskInfoRecords) {
-							Material material = Material.dao.findById(record.getStr("id"));
-							material.setRemainderQuantity(record.getInt("quantity")).setStatus(MaterialStatus.NORMAL).update();
+						Record lackRecord = Db.findFirst(TaskSQL.GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
+						if (lackRecord != null) {
+							throw new OperationException("该任务存在发料缺发的情况！");
+							
 						}
 					}
 					task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
@@ -1736,6 +1680,7 @@ public class IOTaskService {
 				throw new OperationException("时间戳为" + materialId + "的料盘并非当前出库记录中最新的料盘，禁止删除！");
 			}
 			material.setStatus(MaterialStatus.NORMAL);
+			material.setCutTaskLogId(null);
 			material.update();
 			TaskLog.dao.deleteById(taskLog.getId());
 			return material;

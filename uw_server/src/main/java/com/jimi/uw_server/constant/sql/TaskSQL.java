@@ -30,9 +30,9 @@ public class TaskSQL {
 
 	public static final String GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS actuallyQuantity FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL HAVING SUM(task_log.quantity) < packing_list_item.quantity OR SUM(task_log.quantity) IS NULL";
 
-	public static final String GET_IOTASK_CUTTING_PACKING_LIST_ITEM = "SELECT packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item INNER JOIN task_log ON task_log.material_id = material.id AND packing_list_item.id = task_log.packing_list_item_id WHERE packing_list_item.task_id = ? AND material.status = 1";
+	public static final String GET_IOTASK_CUTTING_PACKING_LIST_ITEM = "SELECT packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item INNER JOIN task_log ON task_log.material_id = material.id AND packing_list_item.id = task_log.packing_list_item_id AND task_log.id = material.cut_task_log_id WHERE packing_list_item.task_id = ? AND material.status = 1";
 
-	public static final String GET_IOTASK_CUTTING_PACKING_LIST_ITEM_BY_ID = "SELECT packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item INNER JOIN task_log ON task_log.material_id = material.id AND packing_list_item.id = task_log.packing_list_item_id WHERE packing_list_item.id = ? AND material.status = 1";
+	public static final String GET_IOTASK_CUTTING_PACKING_LIST_ITEM_BY_ID = "SELECT packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item INNER JOIN task_log ON task_log.material_id = material.id AND packing_list_item.id = task_log.packing_list_item_id  AND task_log.id = material.cut_task_log_id WHERE packing_list_item.id = ? AND material.status = 1";
 
 	public static final String GET_DIFFERENCE_QUANTITY_OF_IOTASK = "select material.id, (material.remainder_quantity - task_log.quantity) AS quantity from task_log INNER JOIN material INNER JOIN packing_list_item ON packing_list_item.id = task_log.packing_list_item_id AND task_log.material_id = material.id WHERE packing_list_item.task_id = ? AND packing_list_item.finish_time IS NULL";
 
