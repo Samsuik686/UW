@@ -22,7 +22,7 @@ public class MaterialInfoBO {
 	@Excel(col = 2, head = "料号")
 	private String no;
 
-	@Excel(col = 3, head = "供应商")
+	@Excel(col = 3, head = "客户")
 	private String supplier;
 
 	@Excel(col = 4, head = "数量")

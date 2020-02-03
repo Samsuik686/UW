@@ -3,7 +3,7 @@ package com.jimi.uw_server.controller;
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
-import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.service.DestinationService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -20,42 +20,39 @@ public class DestinationController extends Controller {
 
 
 	// 添加发料目的地
-	@Log("添加名为{name}的发料目的地")
-	public void add(String name) {
-		String resultString = destinationService.add(name);
-		if (resultString.equals("添加成功！")) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			throw new OperationException(resultString);
+	@Log("添加名为{name}, 公司ID为{companyId}的发料目的地")
+	public void add(String name, Integer companyId) {
+		if (name == null || companyId == null) {
+			throw new ParameterException("参数不能为空！");
 		}
+		destinationService.add(name, companyId);
+		renderJson(ResultUtil.succeed());
+		
 	}
-
-	// @Log("更新发料目的地号为{id}的信息，传递的发料目的地名参数为{name}")
-	// public void update(Integer id, String name) {
-	// String resultString = destinationService.update(id, name);
-	// if(resultString.equals("更新成功！")) {
-	// renderJson(ResultUtil.succeed());
-	// } else {
-	// throw new OperationException(resultString);
-	// }
-	// }
 
 
 	// 删除发料目的地
-	@Log("更新发料目的地号为{id}的启/禁用状态，传递的enabeld值为{enabled}(0表示执行删除,1表示不执行删除操作)")
-	public void delete(Integer id, Boolean enabled) {
-		String resultString = destinationService.delete(id, enabled);
-		if (resultString.equals("删除成功！")) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			throw new OperationException(resultString);
+	@Log("删除发料目的地号为{id}")
+	public void delete(Integer id) {
+		if (id == null) {
+			throw new ParameterException("参数不能为空！");
 		}
+		destinationService.delete(id);
+		renderJson(ResultUtil.succeed());
 	}
 
+	
+	@Log("修改发料目的地名称，ID：{id}， 名称：{name}")
+	public void update(Integer id, String name) {
+		if (id == null || name == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		destinationService.update(id, name);
+	}
 
 	// 查询发料目的地
-	public void get(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		renderJson(ResultUtil.succeed(destinationService.get(pageNo, pageSize, ascBy, descBy, filter)));
+	public void getDestinations(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
+		renderJson(ResultUtil.succeed(destinationService.select(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
 }

@@ -4,7 +4,6 @@ import java.util.Date;
 
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.model.User;
 
 
 /**
@@ -22,7 +21,7 @@ public class TaskLogVO extends TaskLog {
 	private String operatorName;
 
 
-	public TaskLogVO(Integer id, Integer packingListItemId, Integer type, String materialId, String materialNo, Integer quantity, String operator, boolean auto, Date time) {
+	public TaskLogVO(Integer id, Integer packingListItemId, Integer type, String materialId, String materialNo, Integer quantity, String operator, String operatorName, boolean auto, Date time) {
 		this.setId(id);
 		this.set("packingListItemId", packingListItemId);
 		this.setTaskTypeString(type);
@@ -33,7 +32,7 @@ public class TaskLogVO extends TaskLog {
 		this.setOperator(operator);
 		this.setAutoString(auto);
 		this.set("auto", getAutoString());
-		this.setOperatorName(operator);
+		this.setOperatorName(operatorName);
 		this.set("operatorName", getOperatorName());
 		this.setTime(time);
 	}
@@ -85,14 +84,12 @@ public class TaskLogVO extends TaskLog {
 	}
 
 
-	public String setOperatorName(String operator) {
-		if (operator != null) {
-			User user = User.dao.findById(operator);
-			operatorName = user.getName();
+	public void setOperatorName(String operatorName) {
+		if (operatorName != null) {
+			this.operatorName = operatorName;
 		} else {
-			operatorName = "缺料记录";
+			this.operatorName = "缺料记录";
 		}
-		return operatorName;
 	}
 
 

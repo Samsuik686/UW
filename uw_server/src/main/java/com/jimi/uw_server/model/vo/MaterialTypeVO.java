@@ -1,10 +1,9 @@
 package com.jimi.uw_server.model.vo;
 
-import com.jfinal.aop.Aop;
-import com.jimi.uw_server.constant.WarehouseType;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.service.MaterialService;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.jfinal.plugin.activerecord.Record;
 
 
 /**
@@ -12,77 +11,148 @@ import com.jimi.uw_server.service.MaterialService;
  * @author HardyYao
  * @createTime 2018年7月5日 上午11:25:16 
  */
-@SuppressWarnings("serial")
-public class MaterialTypeVO extends MaterialType {
+public class MaterialTypeVO{
 
-	private static MaterialService materialService = Aop.get(MaterialService.class);
-
-	private String enabledString;
-
-	private Integer quantity;
-
+	private Integer id;
+	
+	private String no;
+	
+	private String specification;
+	
+	private Integer supplier;
+	
 	private String supplierName;
 
+	private Integer thickness;
+	
+	private Integer radius;
+	
+	private Integer type;
 
-	public MaterialTypeVO(Integer id, String no, String specification, Integer supplier, Integer thickness, Integer radius, Boolean enabled, String designator, Integer type) {
-		this.setId(id);
-		this.setNo(no);
-		this.setSpecification(specification);
-		this.setSupplier(supplier);
-		this.setSupplierName(supplier);
-		this.set("supplierName", getSupplierName());
-		this.setThickness(thickness);
-		this.setRadius(radius);
-		this.setEnabled(enabled);
-		this.setEnabledString(enabled);
-		this.setType(type);
-		this.set("enabledString", getEnabledString());
-		this.setQuantity(id, type);
-		this.set("quantity", getQuantity());
-		this.set("designator", designator);
+	private String designator;
+	
+	/**
+	 * <p>Title<p>
+	 * <p>Description<p>
+	 */
+	public MaterialTypeVO() {
 	}
-
-
-	public String getEnabledString() {
-		return enabledString;
-	}
-
-
-	public void setEnabledString(Boolean enabled) {
-		if (enabled) {
-			this.enabledString = "是";
-		} else {
-			this.enabledString = "否";
-		}
-	}
-
-
-	public Integer getQuantity() {
-		return quantity;
-	}
-
-
-	public void setQuantity(Integer id, Integer type) {
-		Integer remainderQuantity = 0;
-		if (type.equals(WarehouseType.REGULAR)) {
-			remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(id);
-		} else if (type.equals(WarehouseType.PRECIOUS)) {
-			remainderQuantity = materialService.countPreciousQuantityByMaterialTypeId(id);
-		}
-
-		this.quantity = remainderQuantity;
-	}
-
+	
 
 	public String getSupplierName() {
 		return supplierName;
 	}
 
 
-	public void setSupplierName(Integer supplier) {
-		Supplier s = Supplier.dao.findById(supplier);
-		String name = s.getName();
-		this.supplierName = name;
+	public void setSupplierName(String supplierName) {
+		this.supplierName = supplierName;
 	}
 
+	
+	public Integer getId() {
+		return id;
+	}
+
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+
+	public String getNo() {
+		return no;
+	}
+
+
+	public void setNo(String no) {
+		this.no = no;
+	}
+
+
+	public String getSpecification() {
+		return specification;
+	}
+
+
+	public void setSpecification(String specification) {
+		this.specification = specification;
+	}
+
+
+	public Integer getSupplier() {
+		return supplier;
+	}
+
+
+	public void setSupplier(Integer supplier) {
+		this.supplier = supplier;
+	}
+
+
+	public Integer getThickness() {
+		return thickness;
+	}
+
+
+	public void setThickness(Integer thickness) {
+		this.thickness = thickness;
+	}
+
+
+	public Integer getRadius() {
+		return radius;
+	}
+
+
+	public void setRadius(Integer radius) {
+		this.radius = radius;
+	}
+
+	public Integer getType() {
+		return type;
+	}
+
+
+	public void setType(Integer type) {
+		this.type = type;
+	}
+	
+	
+	public String getDesignator() {
+		return designator;
+	}
+
+
+	public void setDesignator(String designator) {
+		this.designator = designator;
+	}
+
+
+	/**
+	 * <p>Description: <p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2020年1月10日
+	 */
+	public static List<MaterialTypeVO> fillList(List<Record> records) {
+		List<MaterialTypeVO> materialTypeVOs = new ArrayList<MaterialTypeVO>();
+		if (!records.isEmpty()) {
+			for (Record record : records) {
+				MaterialTypeVO materialTypeVO = new MaterialTypeVO();
+				materialTypeVO.setId(record.getInt("id"));
+				materialTypeVO.setNo(record.getStr("no"));
+				materialTypeVO.setSpecification(record.getStr("specification"));
+				materialTypeVO.setRadius(record.getInt("radius"));
+				materialTypeVO.setThickness(record.getInt("thickness"));
+				materialTypeVO.setType(record.getInt("type"));
+				materialTypeVO.setSupplier(record.getInt("supplier"));
+				materialTypeVO.setSupplierName(record.getStr("supplierName"));
+				materialTypeVO.setDesignator(record.getStr("designator"));
+				materialTypeVOs.add(materialTypeVO);
+			}
+		}
+		return materialTypeVOs;
+	}
+	
 }

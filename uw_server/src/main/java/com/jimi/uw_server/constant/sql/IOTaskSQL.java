@@ -1,6 +1,6 @@
 package com.jimi.uw_server.constant.sql;
 
-public class TaskSQL {
+public class IOTaskSQL {
 
 	public static final String GET_PACKING_LIST_ITEM_BY_TASKID = "SELECT * FROM packing_list_item WHERE packing_list_item.task_id = ?";
 

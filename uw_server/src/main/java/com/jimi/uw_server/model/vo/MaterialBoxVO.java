@@ -1,5 +1,10 @@
 package com.jimi.uw_server.model.vo;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.jfinal.plugin.activerecord.Record;
+
 /**
  * 料盒表示层对象
  * @author HardyYao
@@ -23,17 +28,11 @@ public class MaterialBoxVO {
 	private String supplierName;
 
 	private String typeName;
+	
+	private String companyName;
 
 
-	public MaterialBoxVO(Integer id, String area, Integer row, Integer col, Integer height, Boolean isOnShelf, Integer type, String supplierName) {
-		this.setId(id);
-		this.setArea(area);
-		this.setRow(row);
-		this.setCol(col);
-		this.setHeight(height);
-		this.setIsOnShelfString(isOnShelf);
-		this.setTypeName(type);
-		this.setSupplierName(supplierName);
+	public MaterialBoxVO() {
 	}
 
 
@@ -123,6 +122,35 @@ public class MaterialBoxVO {
 
 	public void setHeight(Integer height) {
 		this.height = height;
+	}
+
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+	
+	
+	public static List<MaterialBoxVO> fillList(List<Record> records){
+		List<MaterialBoxVO> materialBoxVOs = new ArrayList<MaterialBoxVO>(records.size());
+		for (Record record : records) {
+			MaterialBoxVO materialBoxVO = new MaterialBoxVO();
+			materialBoxVO.setId(record.getInt("MaterialBox_Id"));
+			materialBoxVO.setArea(record.getStr("MaterialBox_Area"));
+			materialBoxVO.setCol(record.getInt("MaterialBox_Col"));
+			materialBoxVO.setRow(record.getInt("MaterialBox_Row"));
+			materialBoxVO.setHeight(record.getInt("MaterialBox_Height"));
+			materialBoxVO.setSupplierName(record.getStr("Supplier_Name"));
+			materialBoxVO.setCompanyName(record.getStr("Company_Nickname"));
+			materialBoxVO.setTypeName(record.getInt("MaterialBox_Type"));
+			materialBoxVO.setIsOnShelfString(record.getBoolean("MaterialBox_IsOnShelf"));
+			materialBoxVOs.add(materialBoxVO);
+		}
+		return materialBoxVOs;
 	}
 
 }

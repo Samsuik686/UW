@@ -35,11 +35,11 @@ import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.sql.IOTaskSQL;
 import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.constant.sql.SampleTaskSQL;
-import com.jimi.uw_server.constant.sql.TaskSQL;
 import com.jimi.uw_server.exception.FormDataValidateFailedException;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
@@ -324,7 +324,7 @@ public class IOTaskService {
 			// 根据仓口id查找对应的仓口记录
 			Task task = Task.dao.findById(id);
 			// 任务仓库为普通UW仓
-			if (task.getWarehouseType().equals(WarehouseType.REGULAR) && !task.getType().equals(TaskType.EMERGENCY_OUT)) {
+			if (task.getWarehouseType().equals(WarehouseType.REGULAR.getId()) && !task.getType().equals(TaskType.EMERGENCY_OUT)) {
 				if (window != null) {
 					Window windowDao = Window.dao.findById(window);
 					// 判断仓口是否被占用
@@ -332,13 +332,13 @@ public class IOTaskService {
 						throw new OperationException("该仓口已被占用，请选择其它仓口！");
 					} else {
 
-						Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR);
+						Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR.getId());
 						InventoryLog inventoryLog = null;
 						if (inventoryTask != null) {
 							inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
 						}
 						if (inventoryTask != null && inventoryLog != null) {
-							throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");
+							throw new OperationException("当前客户存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");
 						}
 						int state = task.getState();
 						// 判断任务状态是否为“未开始”
@@ -390,14 +390,14 @@ public class IOTaskService {
 			// 根据仓口id查找对应的仓口记录
 			Task task = Task.dao.findById(id);
 			// 任务仓库为贵重仓
-			if (task.getWarehouseType().equals(WarehouseType.PRECIOUS)) {
-				Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS);
+			if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
+				Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS.getId());
 				InventoryLog inventoryLog = null;
 				if (inventoryTask != null) {
 					inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
 				}
 				if (inventoryTask != null && inventoryLog != null) {
-					throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");
+					throw new OperationException("当前客户存在进行中的UW仓盘点任务，请等待任务结束后再开始出入库任务!");
 				}
 				int state = task.getState();
 				// 判断任务状态是否为“未开始”
@@ -423,7 +423,7 @@ public class IOTaskService {
 			} else if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
 				throw new OperationException("该任务已作废！");
 			} else {
-				if (task.getWarehouseType().equals(WarehouseType.REGULAR) && !task.getType().equals(TaskType.EMERGENCY_OUT)) {
+				if (task.getWarehouseType().equals(WarehouseType.REGULAR.getId()) && !task.getType().equals(TaskType.EMERGENCY_OUT)) {
 					
 					boolean untiedWindowflag = true;
 					// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
@@ -445,7 +445,7 @@ public class IOTaskService {
 					task.setState(TaskState.CANCELED).update();
 					ioTaskHandler.clearTask(task.getId());
 					return true;
-				}else if (task.getWarehouseType().equals(WarehouseType.REGULAR) && task.getType().equals(TaskType.EMERGENCY_OUT)) {
+				}else if (task.getWarehouseType().equals(WarehouseType.REGULAR.getId()) && task.getType().equals(TaskType.EMERGENCY_OUT)) {
 					List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_LOG_BY_TASK_ID_SQL, task.getId());
 					List<Material> materials = new ArrayList<>();
 					if (!taskLogs.isEmpty()) {
@@ -482,15 +482,15 @@ public class IOTaskService {
 			} else if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
 				throw new OperationException("该任务已作废！");
 			} else {
-				if (task.getWarehouseType().equals(WarehouseType.PRECIOUS)) {
+				if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
-						Record problemRecords = Db.findFirst(TaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
+						Record problemRecords = Db.findFirst(IOTaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
 						if (problemRecords != null) {
 							throw new OperationException("该任务存在入料与需求数不符的情况！");
 						}
-						List<Record> unfinshRecords = Db.find(TaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, task.getId());
+						List<Record> unfinshRecords = Db.find(IOTaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, task.getId());
 						for (Record record : unfinshRecords) {
-							List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("id"));
+							List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("id"));
 							for (Material material : materials) {
 								material.setStatus(MaterialStatus.NORMAL).update();
 							}
@@ -499,26 +499,26 @@ public class IOTaskService {
 						}
 
 						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
+						return true;
 					} else if (task.getType().equals(TaskType.OUT)) {
-						Record cuttingRecord = Db.findFirst(TaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM, task.getId());
+						Record cuttingRecord = Db.findFirst(IOTaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM, task.getId());
 						if (cuttingRecord != null) {
 							throw new OperationException("该任务存在截料待处理的情况！");
 						}
-						Record overQuantityRecord = Db.findFirst(TaskSQL.GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
+						Record overQuantityRecord = Db.findFirst(IOTaskSQL.GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
 						if (overQuantityRecord != null) {
 							throw new OperationException("该任务存在发料超发的情况！");
 						}
-						Record lackRecord = Db.findFirst(TaskSQL.GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
+						Record lackRecord = Db.findFirst(IOTaskSQL.GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
 						if (lackRecord != null) {
 							throw new OperationException("该任务存在发料缺发的情况！");
-							
 						}
+						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
+						return true;
 					}
-					task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
-					return true;
 				}
-				return false;
 			}
+			return false;
 		}
 
 	}
@@ -633,7 +633,7 @@ public class IOTaskService {
 				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"), actualQuantity, 0, packingListItem.get("PackingListItem_FinishTime"), type);
 				MaterialType materialType = MaterialType.dao.findById(packingListItem.getInt("MaterialType_Id"));
 				int uwStoreNum = 0;
-				if (materialType.getType().equals(WarehouseType.REGULAR)) {
+				if (materialType.getType().equals(WarehouseType.REGULAR.getId())) {
 					uwStoreNum = materialService.countAndReturnRemainderQuantityByMaterialTypeId(materialType.getId());
 				} else {
 					uwStoreNum = materialService.countPreciousQuantityByMaterialTypeId(materialType.getId());
@@ -716,11 +716,11 @@ public class IOTaskService {
 	// 查询所有任务
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		if (filter == null) {
-			filter = "task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7";
+			filter = "task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7#&#supplier.enabled=1";
 		} else {
-			filter = filter + "#&#task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7";
+			filter = filter + "#&#task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7#&#supplier.enabled=1";
 		}
-		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] {"task", "supplier"}, new String[] {"task.supplier=supplier.id"}, pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
 		Boolean status;
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
@@ -732,10 +732,10 @@ public class IOTaskService {
 		}
 		for (Record record : result.getList()) {
 			status = false;
-			if (record.getInt("state").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("id"))) {
-				status = TaskItemRedisDAO.getTaskStatus(record.getInt("id"));
+			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
+				status = TaskItemRedisDAO.getTaskStatus(record.getInt("Task_Id"));
 			}
-			TaskVO t = new TaskVO(record.get("id"), record.get("state"), record.get("type"), record.get("file_name"), record.get("create_time"), record.get("priority"), record.get("supplier"), record.get("remarks"), status);
+			TaskVO t = new TaskVO(record.get("Task_Id"), record.get("Task_State"), record.get("Task_Type"), record.get("Task_FileName"), record.get("Task_CreateTime"), record.get("Task_Priority"), record.get("Task_Supplier"), record.get("Task_Remarks"), status);
 			taskVOs.add(t);
 		}
 
@@ -834,7 +834,7 @@ public class IOTaskService {
 										}
 									} else {
 										int storeNum = 0;
-										List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR, task.getDestination());
+										List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR.getId(), task.getDestination());
 										if (inventoryTasks.size() > 0) {
 											storeNum = externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination(), inventoryTasks.get(0).getCreateTime());
 										} else {
@@ -1070,9 +1070,9 @@ public class IOTaskService {
 		if (task == null || !task.getState().equals(TaskState.PROCESSING)) {
 			throw new OperationException("任务不存在或者任务未处于进行中状态");
 		}
-		List<Record> taskInfoRecords = Db.find(TaskSQL.GET_PRECIOUS_IOTASK_INFOS, taskId, taskId);
-		List<Record> uwStoreRecords = Db.find(TaskSQL.GET_PRECIOUS_IO_TASK_UW_STORE, taskId);
-		List<Record> oldestMaterialRecords = Db.find(TaskSQL.GET_OLDEST_MATERIAL_UW_STORE, taskId);
+		List<Record> taskInfoRecords = Db.find(IOTaskSQL.GET_PRECIOUS_IOTASK_INFOS, taskId, taskId);
+		List<Record> uwStoreRecords = Db.find(IOTaskSQL.GET_PRECIOUS_IO_TASK_UW_STORE, taskId);
+		List<Record> oldestMaterialRecords = Db.find(IOTaskSQL.GET_OLDEST_MATERIAL_UW_STORE, taskId);
 		List<IOTaskInfo> infos = IOTaskInfo.fillList(task, taskInfoRecords, uwStoreRecords, oldestMaterialRecords);
 		return infos;
 	}
@@ -1092,14 +1092,14 @@ public class IOTaskService {
 			}
 			// 通过套料单记录获取物料类型id
 			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-			// 通过物料类型获取对应的供应商id
+			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
-			// 通过供应商id获取供应商名
+			// 通过客户id获取客户名
 			String sName = Supplier.dao.findById(supplierId).getName();
 			int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
-				throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
+				throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
 			}
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
@@ -1175,7 +1175,7 @@ public class IOTaskService {
 		SqlPara sqlPara = new SqlPara();
 		sqlPara.setSql(GET_CUTTING_MATERIAL_SQL);
 		sqlPara.addPara(MaterialStatus.CUTTING);
-		sqlPara.addPara(WarehouseType.REGULAR);
+		sqlPara.addPara(WarehouseType.REGULAR.getId());
 		List<Record> list = Db.find(sqlPara);
 		for (Record record : list) {
 			if (cutitingMaterialMap.get(record.getInt("packingListItemId")) != null) {
@@ -1201,7 +1201,7 @@ public class IOTaskService {
 	 * @return
 	 */
 	public List<Task> getCuttingTask() {
-		List<Task> tasks = Task.dao.find(GET_TASK_BY_TYPE, TaskType.OUT, TaskState.PROCESSING, WarehouseType.REGULAR);
+		List<Task> tasks = Task.dao.find(GET_TASK_BY_TYPE, TaskType.OUT, TaskState.PROCESSING, WarehouseType.REGULAR.getId());
 		Set<Integer> taskIdSet = new HashSet<>();
 		if (!tasks.isEmpty()) {
 			for (Task task : tasks) {
@@ -1239,13 +1239,13 @@ public class IOTaskService {
 			}
 			// 通过套料单记录获取物料类型id
 			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-			// 通过物料类型获取对应的供应商id
+			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
-			// 通过供应商id获取供应商名
+			// 通过客户id获取客户名
 			String sName = Supplier.dao.findById(supplierId).getName();
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
-				throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
+				throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
 			}
 			Material material = Material.dao.findById(materialId);
 			// 若扫描的料盘记录不存在于数据库中或不在盒内，则抛出OperationException
@@ -1318,22 +1318,22 @@ public class IOTaskService {
 			if (task ==null || !task.getType().equals(TaskType.EMERGENCY_OUT)) {
 				throw new OperationException("任务不存在，或者任务非紧急手动出库任务！");
 			}
-			MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, no.trim().toUpperCase(), task.getSupplier(), WarehouseType.REGULAR);
+			MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, no.trim().toUpperCase(), task.getSupplier(), WarehouseType.REGULAR.getId());
 			if (materialType == null) {
 				throw new OperationException("普通仓不存在该物料类型");
 			}
 			// 通过任务条目id获取套料单记录
-			PackingListItem packingListItem = PackingListItem.dao.findFirst(TaskSQL.GET_PACKING_LIST_ITEM_BY_TASKID_AND_NO, taskId, no.trim().toUpperCase(), WarehouseType.REGULAR);
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(IOTaskSQL.GET_PACKING_LIST_ITEM_BY_TASKID_AND_NO, taskId, no.trim().toUpperCase(), WarehouseType.REGULAR.getId());
 			if (packingListItem == null) {
 				throw new OperationException("任务条目不存在，该物料不需要出库");
 			}
-			// 通过物料类型获取对应的供应商id
+			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
-			// 通过供应商id获取供应商名
+			// 通过客户id获取客户名
 			String sName = Supplier.dao.findById(supplierId).getName();
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
-				throw new OperationException("扫码错误，供应商 " + supplierName + " 非该任务所属的供应商！");
+				throw new OperationException("扫码错误，客户 " + supplierName + " 非该任务所属的客户！");
 			}
 			Material material = Material.dao.findById(materialId);
 			if (material != null) {
@@ -1367,8 +1367,8 @@ public class IOTaskService {
 		}
 		String taskName = task.getFileName() + "_入库";
 		Task newTask = new Task();
-		newTask.setState(TaskState.PROCESSING).setSupplier(task.getSupplier()).setRemarks(task.getRemarks()).setStartTime(task.getStartTime()).setType(TaskType.IN).setFileName(taskName).setCreateTime(task.getCreateTime()).setWarehouseType(WarehouseType.REGULAR).save();
-		List<PackingListItem> packingListItems = PackingListItem.dao.find(TaskSQL.GET_PACKING_LIST_ITEM_BY_TASKID, taskId);
+		newTask.setState(TaskState.PROCESSING).setSupplier(task.getSupplier()).setRemarks(task.getRemarks()).setStartTime(task.getStartTime()).setType(TaskType.IN).setFileName(taskName).setCreateTime(task.getCreateTime()).setWarehouseType(WarehouseType.REGULAR.getId()).save();
+		List<PackingListItem> packingListItems = PackingListItem.dao.find(IOTaskSQL.GET_PACKING_LIST_ITEM_BY_TASKID, taskId);
 		if (!packingListItems.isEmpty()) {
 			for (PackingListItem packingListItem : packingListItems) {
 				PackingListItem newPackingListItem = new PackingListItem();
@@ -1414,7 +1414,7 @@ public class IOTaskService {
 							int lackNum = packingListItem.getQuantity() - quantity;
 							
 							int storeNum = 0;
-							List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR, task.getDestination());
+							List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR.getId(), task.getDestination());
 							if (inventoryTasks.size() > 0) {
 								storeNum = externalWhLogService.getEWhMaterialQuantity(packingListItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(packingListItem.getMaterialTypeId(), task.getDestination(), inventoryTasks.get(0).getCreateTime());
 
@@ -1444,7 +1444,7 @@ public class IOTaskService {
 	
 	
 	public List<Task> getEmergencyRegularTasks(){
-		List<Task> tasks = Task.dao.find(GET_TASK_BY_TYPE, TaskType.EMERGENCY_OUT, TaskState.PROCESSING, WarehouseType.REGULAR);
+		List<Task> tasks = Task.dao.find(GET_TASK_BY_TYPE, TaskType.EMERGENCY_OUT, TaskState.PROCESSING, WarehouseType.REGULAR.getId());
 		return tasks;
 	}
 
@@ -1457,18 +1457,18 @@ public class IOTaskService {
 				throw new OperationException("任务不存在，入库失败！");
 			}
 			Task task = Task.dao.findById(packingListItem.getTaskId());
-			if (task == null || !task.getState().equals(TaskState.PROCESSING) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS)) {
+			if (task == null || !task.getState().equals(TaskState.PROCESSING) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
 				throw new OperationException("任务不存在或未处于进行中，入库失败！");
 			}
 			// 通过套料单记录获取物料类型id
 			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-			// 通过物料类型获取对应的供应商id
+			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
-			// 通过供应商id获取供应商名
+			// 通过客户id获取客户名
 			String sName = Supplier.dao.findById(supplierId).getName();
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
-				throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本界面进行任务，" + "本界面已绑定 " + sName + " 的任务单！");
+				throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本界面进行任务，" + "本界面已绑定 " + sName + " 的任务单！");
 			}
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packingListItem.getId()).size() != 0) {
 				throw new OperationException("时间戳为" + materialId + "的料盘已在同一个任务中被扫描过，请勿在同一个入库任务中重复扫描同一个料盘！");
@@ -1502,20 +1502,20 @@ public class IOTaskService {
 				throw new OperationException("任务不存在，出库失败！");
 			}
 			Task task = Task.dao.findById(packingListItem.getTaskId());
-			if (task == null || !task.getState().equals(TaskState.PROCESSING) || !task.getType().equals(TaskType.OUT) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS)) {
+			if (task == null || !task.getState().equals(TaskState.PROCESSING) || !task.getType().equals(TaskType.OUT) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
 				throw new OperationException("任务不存在或未处于进行中，出库失败！");
 			}
 
 			// 通过套料单记录获取物料类型id
 			MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
 
-			// 通过物料类型获取对应的供应商id
+			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
-			// 通过供应商id获取供应商名
+			// 通过客户id获取客户名
 			String sName = Supplier.dao.findById(supplierId).getName();
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
-				throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
+				throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
 			}
 
 			// 对于不在已到站料盒的物料，禁止对其进行操作
@@ -1542,7 +1542,7 @@ public class IOTaskService {
 			}
 			// 判断是否存在更旧的料盘
 			if (isForced == null || !isForced) {
-				Material materialTemp1 = Material.dao.findFirst(TaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
+				Material materialTemp1 = Material.dao.findFirst(IOTaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 
 				if (materialTemp1 != null) {
 					throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
@@ -1765,7 +1765,7 @@ public class IOTaskService {
 								}
 							} else {
 								int storeNum = 0;
-								List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR, task.getDestination());
+								List<Task> inventoryTasks = InventoryTaskService.me.getUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR.getId(), task.getDestination());
 								if (inventoryTasks.size() > 0) {
 									storeNum = externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(item.getMaterialTypeId(), task.getDestination(), inventoryTasks.get(0).getCreateTime());
 
@@ -1851,15 +1851,15 @@ public class IOTaskService {
 		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
 		// 通过套料单记录获取物料类型id
 		MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-		// 通过物料类型获取对应的供应商id
+		// 通过物料类型获取对应的客户id
 		Integer supplierId = materialType.getSupplier();
-		// 通过供应商id获取供应商名
+		// 通过客户id获取客户名
 		String sName = Supplier.dao.findById(supplierId).getName();
 		FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packingListItemId, materialId);
 		Material material = Material.dao.findById(materialId);
 		if (!supplierName.equals(sName) && formerSupplier == null) {
-			throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
+			throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
 		} else if (taskLog == null) {
 			throw new OperationException("扫错料盘，该料盘不需要放回该料盒!");
 		} else if (material.getRemainderQuantity().intValue() != quantity) {
@@ -1881,15 +1881,15 @@ public class IOTaskService {
 		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
 		// 通过套料单记录获取物料类型id
 		MaterialType materialType = MaterialType.dao.findById(packingListItem.getMaterialTypeId());
-		// 通过物料类型获取对应的供应商id
+		// 通过物料类型获取对应的客户id
 		Integer supplierId = materialType.getSupplier();
-		// 通过供应商id获取供应商名
+		// 通过客户id获取客户名
 		String sName = Supplier.dao.findById(supplierId).getName();
 		FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 		TaskLog taskLog = TaskLog.dao.findFirst(GET_TASK_LOG_BY_PACKING_LIST_ITEM_ID_AND_MATERIAL_ID_SQL, packingListItemId, materialId);
 		Material material = Material.dao.findById(materialId);
 		if (!supplierName.equals(sName) && formerSupplier == null) {
-			throw new OperationException("扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本界面进行任务，" + "本界面已绑定 " + sName + " 的任务单！");
+			throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本界面进行任务，" + "本界面已绑定 " + sName + " 的任务单！");
 		} else if (taskLog == null || !material.getStatus().equals(MaterialStatus.CUTTING)) {
 			throw new OperationException("扫错料盘，该料盘未处于截料状态!");
 		} else if ((material.getRemainderQuantity() - taskLog.getQuantity()) != quantity) {
@@ -1932,16 +1932,16 @@ public class IOTaskService {
 	 */
 	public Boolean finishPreciousTaskLackItem(Integer taskId) {
 		Task task = Task.dao.findById(taskId);
-		if (task == null || !task.getType().equals(TaskType.OUT) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS) || !task.getState().equals(TaskState.PROCESSING)) {
+		if (task == null || !task.getType().equals(TaskType.OUT) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId()) || !task.getState().equals(TaskState.PROCESSING)) {
 			throw new OperationException("出库任务不存在或者任务未处于进行中状态");
 		}
-		List<Record> unfinishLackRecoed = Db.find(TaskSQL.GET_ALL_UNFINISH_LACK_PRECIOUS_IOTASK_ITEM, taskId);
+		List<Record> unfinishLackRecoed = Db.find(IOTaskSQL.GET_ALL_UNFINISH_LACK_PRECIOUS_IOTASK_ITEM, taskId);
 		for (Record record : unfinishLackRecoed) {
-			Record problemRecord = Db.findFirst(TaskSQL.GET_PROBLEM_PRECIOUS_IOTASK_ITEM_BY_ID, record.getInt("PackingListItem_Id"));
+			Record problemRecord = Db.findFirst(IOTaskSQL.GET_PROBLEM_PRECIOUS_IOTASK_ITEM_BY_ID, record.getInt("PackingListItem_Id"));
 			if (problemRecord != null) {
 				continue;
 			}
-			List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
+			List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
 			boolean flag = false;
 			if (materials != null && materials.size() > 0) {
 				for (Material material : materials) {
@@ -1961,9 +1961,9 @@ public class IOTaskService {
 			PackingListItem packingListItem = PackingListItem.dao.findById(record.getInt("PackingListItem_Id"));
 			packingListItem.setFinishTime(new Date()).update();
 		}
-		PackingListItem packingListItem2 = PackingListItem.dao.findFirst(TaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, taskId);
+		PackingListItem packingListItem2 = PackingListItem.dao.findFirst(IOTaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, taskId);
 		if (packingListItem2 == null) {
-			Record problemRecord = Db.findFirst(TaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+			Record problemRecord = Db.findFirst(IOTaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
 			if (problemRecord != null) {
 				task.setState(TaskState.EXIST_LACK);
 			} else {
@@ -1991,23 +1991,23 @@ public class IOTaskService {
 		}
 		if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
 			//完成已经可以完成（数量一致）的任务条目
-			List<PackingListItem> canFinishTaskItems = PackingListItem.dao.find(TaskSQL.GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID, taskId);
+			List<PackingListItem> canFinishTaskItems = PackingListItem.dao.find(IOTaskSQL.GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID, taskId);
 			if (!canFinishTaskItems.isEmpty()) {
 				for (PackingListItem taskItem : canFinishTaskItems) {
 					taskItem.setFinishTime(new Date()).update();
-					List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, taskItem.getId());
+					List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, taskItem.getId());
 					for (Material material : materials) {
 						material.setStatus(MaterialStatus.NORMAL).update();
 					}
 				}
 			}
-			PackingListItem packingListItem = PackingListItem.dao.findFirst(TaskSQL.GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(IOTaskSQL.GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
 			if (packingListItem != null) {
 				return "存在入库数量不符条目，请先完成后再操作";
 			}
 			task.setState(TaskState.FINISHED).setEndTime(new Date()).update();
 		} else {
-			List<PackingListItem> cutPackingListItems =  PackingListItem.dao.find(TaskSQL.GET_CUTTING_PACKING_LIST_ITEM_BY_TASK_ID, taskId);
+			List<PackingListItem> cutPackingListItems =  PackingListItem.dao.find(IOTaskSQL.GET_CUTTING_PACKING_LIST_ITEM_BY_TASK_ID, taskId);
 			Set<Integer> cutPackingListItemsIdSet = new HashSet<>();
 			if (!cutPackingListItems.isEmpty()) {
 				for (PackingListItem cutPackingListItem : cutPackingListItems) {
@@ -2015,14 +2015,14 @@ public class IOTaskService {
 				}
 			}
 			//完成已经可以完成（数量一致）的任务条目
-			List<PackingListItem> canFinishTaskItems = PackingListItem.dao.find(TaskSQL.GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID, taskId);
+			List<PackingListItem> canFinishTaskItems = PackingListItem.dao.find(IOTaskSQL.GET_CAN_FINSH_IOTASK_ITEM_BY_TASK_ID, taskId);
 			if (!canFinishTaskItems.isEmpty()) {
 				for (PackingListItem taskItem : canFinishTaskItems) {
 					if (cutPackingListItemsIdSet.contains(taskItem.getId())) {
 						continue;
 					}
 					taskItem.setFinishTime(new Date()).update();
-					List<Material> materials = Material.dao.find(TaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, taskItem.getId());
+					List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, taskItem.getId());
 					for (Material material : materials) {
 						material.setStatus(MaterialStatus.NORMAL).setRemainderQuantity(material.getRemainderQuantity() - material.getInt("outQuantity")).update();
 					}
@@ -2031,12 +2031,12 @@ public class IOTaskService {
 			if (!cutPackingListItems.isEmpty()) {
 				return "存在未截料的物料，请进行截料后再完成任务";
 			}
-			PackingListItem packingListItem = PackingListItem.dao.findFirst(TaskSQL.GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+			PackingListItem packingListItem = PackingListItem.dao.findFirst(IOTaskSQL.GET_UNFINSH_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
 			if (packingListItem != null) {
 				return "存在出库数量不符条目，请先完成后再操作";
 			}
 		}
-		Record problemRecord = Db.findFirst(TaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
+		Record problemRecord = Db.findFirst(IOTaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
 		if (problemRecord != null) {
 			task.setState(TaskState.EXIST_LACK);
 		} else {

@@ -1,6 +1,7 @@
 package com.jimi.uw_server.controller;
 
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.ExternalWhTaskService;
@@ -34,7 +35,7 @@ public class ExternalWhController extends Controller {
 	private static ExternalWhTaskService externalWhTaskService = Aop.get(ExternalWhTaskService.class);
 
 
-	@Log("导入物料仓任务，供应商ID为{supplierId}，源物料仓ID为{sourceWhId}，目的物料仓ID为{destinationwhId}, 备注{remarks}")
+	@Log("导入物料仓任务，客户ID为{supplierId}，源物料仓ID为{sourceWhId}，目的物料仓ID为{destinationwhId}, 备注{remarks}")
 	public void importTask(UploadFile file, Integer supplierId, Integer sourceWhId, Integer destinationwhId, String remarks) {
 
 		if (file == null || supplierId == null || sourceWhId == null || destinationwhId == null || remarks == null || remarks.equals("")) {
@@ -52,7 +53,7 @@ public class ExternalWhController extends Controller {
 	}
 
 
-	@Log("导入物料仓损耗任务，供应商ID为{supplierId}，物料仓ID为{whId}, 备注{remarks}")
+	@Log("导入物料仓损耗任务，客户ID为{supplierId}，物料仓ID为{whId}, 备注{remarks}")
 	public void importWastageTask(UploadFile file, Integer supplierId, Integer whId, String remarks) {
 
 		if (file == null || supplierId == null || whId == null) {
@@ -111,15 +112,18 @@ public class ExternalWhController extends Controller {
 	}
 
 
-	@Log("查询物料仓记录，页码为{pageNo}， 页容量为{pageSize}，物料仓ID为{whId}，供应商ID为{supplierId}，料号为{no}")
-	public void selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy) {
+	@Log("查询物料仓记录，页码为{pageNo}， 页容量为{pageSize}，物料仓ID为{whId}，客户ID为{supplierId}，料号为{no}")
+	public void selectExternalWhInfo(Integer companyId, Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy) {
+		if (companyId == null) {
+			throw new OperationException("参数不能为空！");
+		}
 		if (pageNo == null || pageSize == null) {
 			throw new ParameterException("参数不能为空");
 		}
 		if (pageNo <= 0 || pageSize <= 0) {
 			throw new ParameterException("页码和页容量必须大于0");
 		}
-		PagePaginate result = externalWhTaskService.selectExternalWhInfo(pageNo, pageSize, whId, supplierId, no, ascBy, descBy);
+		PagePaginate result = externalWhTaskService.selectExternalWhInfo(companyId, pageNo, pageSize, whId, supplierId, no, ascBy, descBy);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -138,8 +142,11 @@ public class ExternalWhController extends Controller {
 	}
 
 
-	@Log("导出物料仓库存报表")
-	public void exportEWhReport(Integer whId, Integer supplierId, String no) {
+	@Log("导出物料仓库存报表， 公司ID：{companyId}，仓库ID:{whId},客户ID：{supplierId}， 料号:{no}")
+	public void exportEWhReport(Integer companyId, Integer whId, Integer supplierId, String no) {
+		if (companyId == null) {
+			throw new OperationException("参数不能为空！");
+		}
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
@@ -149,7 +156,7 @@ public class ExternalWhController extends Controller {
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			externalWhTaskService.exportEWhReport(whId, supplierId, no, fileName, output);
+			externalWhTaskService.exportEWhReport(companyId, whId, supplierId, no, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {

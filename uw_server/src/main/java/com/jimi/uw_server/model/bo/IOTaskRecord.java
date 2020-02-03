@@ -9,7 +9,7 @@ import java.util.Date;
  * @createTime 2018年11月14日  下午2:38:54
  */
 
-public class RecordItem {
+public class IOTaskRecord {
 
 	private Integer materialTypeId;
 
@@ -26,7 +26,7 @@ public class RecordItem {
 	private Date ioTime;
 
 
-	public RecordItem(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, String operator, Date ioTime) {
+	public IOTaskRecord(Integer materialTypeId, Integer planQuantity, String fileName, Integer type, Integer actualQuantity, String operator, Date ioTime) {
 		this.materialTypeId = materialTypeId;
 		this.fileName = fileName;
 		this.setTaskType(type);

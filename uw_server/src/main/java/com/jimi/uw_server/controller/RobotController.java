@@ -65,7 +65,7 @@ public class RobotController extends Controller {
 
 
 	// 入库前扫料盘，发LS指令给叉车
-	@Log("料号为{no}的物料需要入库，该物料对应的供应商为{supplierName}，发送LS指令让叉车取托盘到仓口{id}")
+	@Log("料号为{no}的物料需要入库，该物料对应的客户为{supplierName}，发送LS指令让叉车取托盘到仓口{id}")
 	public void call(Integer id, String no, String supplierName) throws Exception {
 		if (id == null || no == null || supplierName == null) {
 			throw new OperationException("参数不能为空");

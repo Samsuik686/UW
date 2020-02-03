@@ -77,7 +77,7 @@ public class ExternalWhLogService {
 
 
 	/**
-	 * 根据同个供应商每个周转仓的库存，计算每个物料的总库存
+	 * 根据同个客户每个周转仓的库存，计算每个物料的总库存
 	 * @param materialTypeId
 	 * @param whId
 	 * @return

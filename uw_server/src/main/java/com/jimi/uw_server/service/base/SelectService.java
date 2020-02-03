@@ -38,9 +38,7 @@ public class SelectService {
 		dp.start();
 		arp.start();
 		SelectService selectService = new SelectService();
-		String result = selectService.select("material", null, null, null, null, null).getList().toString();
-		System.out.println(result);
-		result = selectService.select(new String[] {"material_type", "material"}, new String[] {"material.type=material_type.id"}, null, null, null, null, null).getList().toString();
+		String result = selectService.select(new String[] {"material", "material_type","material_box", "supplier", "company"}, new String[] {"material.type=material_type.id", "material_type.supplier=supplier.id", "supplier.company_id=company.id", "material_box.id=material.box"}, null, null, null, null, null).getList().toString();
 		System.out.println(result);
 	}
 

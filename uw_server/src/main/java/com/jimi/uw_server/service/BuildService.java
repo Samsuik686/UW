@@ -66,7 +66,7 @@ public class BuildService extends SelectService {
 		List<AGVBuildTaskItem> buildTaskItems = new ArrayList<AGVBuildTaskItem>();
 		Supplier supplier = Supplier.dao.findById(supplierId);
 		if (supplier == null) {
-			throw new OperationException("供应商不存在，请重新选择供应商");
+			throw new OperationException("客户不存在，请重新选择客户");
 		}
 		if (isStandard) {
 			for (int z = startZ; z < 4; z++) {

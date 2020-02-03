@@ -29,6 +29,7 @@ import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
+import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
@@ -45,7 +46,7 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.model.bo.SampleTaskItemBO;
-import com.jimi.uw_server.model.vo.MaterialInfoVO;
+import com.jimi.uw_server.model.vo.MaterialDetialsVO;
 import com.jimi.uw_server.model.vo.PackingSampleInfoVO;
 import com.jimi.uw_server.model.vo.SampleTaskDetialsVO;
 import com.jimi.uw_server.model.vo.TaskVO;
@@ -62,8 +63,6 @@ import com.jimi.uw_server.util.ExcelWritter;
  */
 
 public class SampleTaskService {
-
-	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND type= ? AND supplier = ? AND enabled = 1";
 
 	private static final String GET_SAMPLETASKITEM_BY_TASK = "SELECT * FROM sample_task_item WHERE task_id = ?";
 
@@ -110,6 +109,11 @@ public class SampleTaskService {
 
 	public String createSampleTask(File file, Integer supplierId, String remarks, Integer warehouseType) {
 		String resultString = "操作成功";
+		
+		Supplier supplier = Supplier.dao.findById(supplierId);
+		if (supplier == null) {
+			throw new OperationException("客户不存在！");
+		}
 		synchronized (Lock.IMPORT_SAMPLE_TASK_FILE_LOCK) {
 			try {
 				ExcelHelper excelHelper = ExcelHelper.from(file);
@@ -124,12 +128,12 @@ public class SampleTaskService {
 						if (item.getNo() == null || item.getNo().replaceAll(" ", "").equals("")) {
 							throw new OperationException("创建任务失败，请检查套料单表格第" + i + "行的料号是否填写了准确信息！");
 						}
-
+						String no = item.getNo().trim().toUpperCase();
 						// 根据料号找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), warehouseType, supplierId);
+						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, no, supplierId, warehouseType );
 						// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 						if (mType == null) {
-							throw new OperationException("插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是供应商与料号对应不上！");
+							throw new OperationException("插入套料单失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是客户与料号对应不上！");
 						}
 						materialTypeSet.add(mType.getId());
 					} else {
@@ -139,7 +143,6 @@ public class SampleTaskService {
 				if (materialTypeSet.isEmpty()) {
 					throw new OperationException("创建任务失败，请检查表格中是否有效的任务记录！");
 				}
-				Supplier supplier = Supplier.dao.findById(supplierId);
 				Date date = new Date();
 				Task task = new Task();
 				task.setFileName(getSampleTaskName(date, warehouseType, supplier.getName()));
@@ -178,13 +181,13 @@ public class SampleTaskService {
 			if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
 				throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
 			}
-			Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR);
+			Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR.getId());
 			InventoryLog inventoryLog = null;
 			if (inventoryTask != null) {
 				inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
 			}
 			if (inventoryTask != null && inventoryLog != null) {
-				throw new OperationException("当前供应商存在进行中的UW仓盘点任务，请等待任务结束后再开抽检任务!");
+				throw new OperationException("当前客户存在进行中的UW仓盘点任务，请等待任务结束后再开抽检任务!");
 			}
 			List<Window> wList = new ArrayList<>();
 			String[] windowArr = windows.split(",");
@@ -207,11 +210,11 @@ public class SampleTaskService {
 					throw new OperationException("仓口参数不能为空，请检查参数及其格式");
 				}
 			}
-			Material material = Material.dao.findFirst(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR, false);
+			Material material = Material.dao.findFirst(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR.getId(), false);
 			if (material != null) {
 				throw new OperationException("该抽检任务所抽检的物料类型存在不在料盒内的物料，请检查！");
 			}
-			List<Material> materials = Material.dao.find(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR, true);
+			List<Material> materials = Material.dao.find(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR.getId(), true);
 			List<SampleTaskMaterialRecord> sampleTaskMaterialRecords = new ArrayList<>();
 			for (Material material2 : materials) {
 				SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
@@ -260,11 +263,11 @@ public class SampleTaskService {
 			if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
 				throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
 			}
-			Material material = Material.dao.findFirst(GET_PROBLEM_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS, MaterialStatus.NORMAL);
+			Material material = Material.dao.findFirst(GET_PROBLEM_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS.getId(), MaterialStatus.NORMAL);
 			if (material != null) {
 				throw new OperationException("该抽检任务所抽检的物料类型存在处于出库、入库或截料状态的物料，请检查！");
 			}
-			List<Material> materials = Material.dao.find(GET_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS, MaterialStatus.NORMAL);
+			List<Material> materials = Material.dao.find(GET_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS.getId(), MaterialStatus.NORMAL);
 			for (Material material2 : materials) {
 				SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
 				record.setMaterialId(material2.getId());
@@ -403,7 +406,7 @@ public class SampleTaskService {
 					if (material == null || material.getRemainderQuantity() <= 0 || !material.getIsInBox()) {
 						throw new OperationException("料盘不存在或者已经出库！");
 					}
-					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR);
+					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR.getId());
 					if (sampleTaskItem == null) {
 						throw new OperationException("该料盘不在本次抽检范围内！");
 					}
@@ -449,7 +452,7 @@ public class SampleTaskService {
 			if (!material.getStatus().equals(MaterialStatus.NORMAL)) {
 				throw new OperationException("该料盘目前不属于正常状态，可能出库、入库或者截料中！");
 			}
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS);
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("该料盘不在本次抽检范围内！");
 			}
@@ -485,7 +488,7 @@ public class SampleTaskService {
 					if (material == null || material.getRemainderQuantity() <= 0 || !material.getIsInBox()) {
 						throw new OperationException("料盘不存在或者已经出库！");
 					}
-					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR);
+					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR.getId());
 					if (sampleTaskItem == null) {
 						throw new OperationException("该料盘不在本次抽检范围内！");
 					}
@@ -531,7 +534,7 @@ public class SampleTaskService {
 			if (!material.getStatus().equals(MaterialStatus.NORMAL)) {
 				throw new OperationException("该料盘目前不属于正常状态，可能出库、入库或者截料中！");
 			}
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS);
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("该料盘不在本次抽检范围内！");
 			}
@@ -568,7 +571,7 @@ public class SampleTaskService {
 					if (material == null || material.getRemainderQuantity() <= 0 || !material.getIsInBox()) {
 						throw new OperationException("料盘不存在或者已经出库！");
 					}
-					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR);
+					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR.getId());
 					if (sampleTaskItem == null) {
 						throw new OperationException("该料盘不在本次抽检范围内！");
 					}
@@ -618,7 +621,7 @@ public class SampleTaskService {
 			if (!material.getStatus().equals(MaterialStatus.NORMAL)) {
 				throw new OperationException("该料盘目前不属于正常状态，可能出库、入库或者截料中！");
 			}
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS);
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("该料盘不在本次抽检范围内！");
 			}
@@ -669,7 +672,7 @@ public class SampleTaskService {
 			throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
 		} else {
 
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.REGULAR);
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.REGULAR.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("本次抽检抽检范围不包含该料盘！");
 			}
@@ -697,7 +700,7 @@ public class SampleTaskService {
 		if (record.getIsScaned()) {
 			throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
 		} else {
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS);
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("本次抽检抽检范围不包含该料盘！");
 			}
@@ -732,20 +735,20 @@ public class SampleTaskService {
 				if (info.getBoxId() != null) {
 					throw new OperationException("仓口 " + windowId + "的货位" + agvSampleTaskItem.getGoodsLocationId() + "有一个以上的到站任务条目，请检查!");
 				}
-				List<MaterialInfoVO> materialInfoVOs = new ArrayList<>();
+				List<MaterialDetialsVO> materialInfoVOs = new ArrayList<>();
 
 				List<Record> unOutRecords = Db.find(SQL.GET_REGULAR_UN_OUT_SAMPLE_TAKS_MATERIAL, boxId, window.getBindTaskId());
 				Integer totalNum = unOutRecords.size();
 				Integer scanNum = 0;
 				for (Record record : unOutRecords) {
-					MaterialInfoVO materialInfoVO = new MaterialInfoVO();
-					materialInfoVO.setMaterailTypeId(record.getInt("material_type_id"));
+					MaterialDetialsVO materialInfoVO = new MaterialDetialsVO();
+					materialInfoVO.setMaterialTypeId(record.getInt("material_type_id"));
 					materialInfoVO.setMaterialId(record.getStr("id"));
 					materialInfoVO.setNo(record.getStr("no"));
 					materialInfoVO.setSpecification(record.getStr("specification"));
 					materialInfoVO.setStoreNum(record.getInt("quantity"));
 					materialInfoVO.setSupplierId(record.getInt("supplier_id"));
-					materialInfoVO.setSupplier(record.getStr("supplier_name"));
+					materialInfoVO.setSupplierName(record.getStr("supplier_name"));
 					materialInfoVO.setProductionTime(record.getDate("production_time"));
 					materialInfoVO.setActualNum(0);
 					materialInfoVO.setIsScaned(record.getBoolean("is_scaned"));
@@ -761,14 +764,14 @@ public class SampleTaskService {
 				totalNum += OutRecords.size();
 				Integer outNum = 0;
 				for (Record record : OutRecords) {
-					MaterialInfoVO materialInfoVO = new MaterialInfoVO();
-					materialInfoVO.setMaterailTypeId(record.getInt("material_type_id"));
+					MaterialDetialsVO materialInfoVO = new MaterialDetialsVO();
+					materialInfoVO.setMaterialTypeId(record.getInt("material_type_id"));
 					materialInfoVO.setMaterialId(record.getStr("id"));
 					materialInfoVO.setNo(record.getStr("no"));
 					materialInfoVO.setSpecification(record.getStr("specification"));
 					materialInfoVO.setStoreNum(record.getInt("quantity"));
 					materialInfoVO.setSupplierId(record.getInt("supplier_id"));
-					materialInfoVO.setSupplier(record.getStr("supplier_name"));
+					materialInfoVO.setSupplierName(record.getStr("supplier_name"));
 					materialInfoVO.setProductionTime(record.getDate("production_time"));
 					materialInfoVO.setIsScaned(true);
 					materialInfoVO.setIsOuted(record.getInt("out_type"));
@@ -796,19 +799,19 @@ public class SampleTaskService {
 
 	public PackingSampleInfoVO getSampleTaskMaterialInfo(Integer taskId) {
 		PackingSampleInfoVO infoVO = new PackingSampleInfoVO();
-		List<MaterialInfoVO> materialInfoVOs = new ArrayList<>();
+		List<MaterialDetialsVO> materialInfoVOs = new ArrayList<>();
 		List<Record> unOutRecords = Db.find(SQL.GET_PRECIOUS_UN_OUT_SAMPLE_TAKS_MATERIAL, MaterialStatus.NORMAL, taskId);
 		Integer totalNum = unOutRecords.size();
 		Integer scanNum = 0;
 		for (Record record : unOutRecords) {
-			MaterialInfoVO materialInfoVO = new MaterialInfoVO();
-			materialInfoVO.setMaterailTypeId(record.getInt("material_type_id"));
+			MaterialDetialsVO materialInfoVO = new MaterialDetialsVO();
+			materialInfoVO.setMaterialTypeId(record.getInt("material_type_id"));
 			materialInfoVO.setMaterialId(record.getStr("id"));
 			materialInfoVO.setNo(record.getStr("no"));
 			materialInfoVO.setSpecification(record.getStr("specification"));
 			materialInfoVO.setStoreNum(record.getInt("quantity"));
 			materialInfoVO.setSupplierId(record.getInt("supplier_id"));
-			materialInfoVO.setSupplier(record.getStr("supplier_name"));
+			materialInfoVO.setSupplierName(record.getStr("supplier_name"));
 			materialInfoVO.setProductionTime(record.getDate("production_time"));
 			materialInfoVO.setActualNum(0);
 			materialInfoVO.setIsScaned(record.getBoolean("is_scaned"));
@@ -824,14 +827,14 @@ public class SampleTaskService {
 		totalNum += OutRecords.size();
 		Integer outNum = 0;
 		for (Record record : OutRecords) {
-			MaterialInfoVO materialInfoVO = new MaterialInfoVO();
-			materialInfoVO.setMaterailTypeId(record.getInt("material_type_id"));
+			MaterialDetialsVO materialInfoVO = new MaterialDetialsVO();
+			materialInfoVO.setMaterialTypeId(record.getInt("material_type_id"));
 			materialInfoVO.setMaterialId(record.getStr("id"));
 			materialInfoVO.setNo(record.getStr("no"));
 			materialInfoVO.setSpecification(record.getStr("specification"));
 			materialInfoVO.setStoreNum(record.getInt("quantity"));
 			materialInfoVO.setSupplierId(record.getInt("supplier_id"));
-			materialInfoVO.setSupplier(record.getStr("supplier_name"));
+			materialInfoVO.setSupplierName(record.getStr("supplier_name"));
 			materialInfoVO.setProductionTime(record.getDate("production_time"));
 			materialInfoVO.setIsScaned(true);
 			materialInfoVO.setIsOuted(record.getInt("out_type"));
@@ -871,7 +874,7 @@ public class SampleTaskService {
 		} else {
 			filter = filter + "#&#task.type=7";
 		}
-		Page<Record> result = selectService.select("task", pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] {"task", "supplier"}, new String[] {"task.supplier=supplier.id"}, pageNo, pageSize, ascBy, descBy, filter);
 		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
 		Boolean status;
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
@@ -883,10 +886,10 @@ public class SampleTaskService {
 		}
 		for (Record record : result.getList()) {
 			status = false;
-			if (record.getInt("state").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("id"))) {
-				status = TaskItemRedisDAO.getTaskStatus(record.getInt("id"));
+			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
+				status = TaskItemRedisDAO.getTaskStatus(record.getInt("Task_Id"));
 			}
-			TaskVO t = new TaskVO(record.get("id"), record.get("state"), record.get("type"), record.get("file_name"), record.get("create_time"), record.get("priority"), record.get("supplier"), record.get("remarks"), status);
+			TaskVO t = new TaskVO(record.get("Task_Id"), record.get("Task_State"), record.get("Task_Type"), record.get("Task_FileName"), record.get("Task_CreateTime"), record.get("Task_Priority"), record.get("Task_Supplier"), record.get("Task_Remarks"), status);
 			taskVOs.add(t);
 		}
 
@@ -903,9 +906,9 @@ public class SampleTaskService {
 
 	public String getSampleTaskName(Date date, Integer warehouseType, String supplierName) {
 		String fileName = "";
-		if (warehouseType.equals(WarehouseType.REGULAR)) {
+		if (warehouseType.equals(WarehouseType.REGULAR.getId())) {
 			fileName = "抽检_";
-		} else if (warehouseType.equals(WarehouseType.PRECIOUS)) {
+		} else if (warehouseType.equals(WarehouseType.PRECIOUS.getId())) {
 			fileName = supplierName + "贵重仓抽检_";
 		}
 
@@ -922,7 +925,7 @@ public class SampleTaskService {
 			String[] field = null;
 			String[] head = null;
 			field = new String[] {"supplier_name", "no", "store_quantity", "scan_quantity", "regular_out_quantity", "singular_out_quantity"};
-			head = new String[] {"供应商", "料号", "库存数量", "抽检数量", "抽检出库数量", "异常出库数量"};
+			head = new String[] {"客户", "料号", "库存数量", "抽检数量", "抽检出库数量", "异常出库数量"};
 			ExcelWritter writter = ExcelWritter.create(true);
 			writter.fill(records, fileName, field, head);
 			writter.write(output, true);

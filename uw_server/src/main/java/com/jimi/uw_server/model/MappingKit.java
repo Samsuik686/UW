@@ -18,6 +18,7 @@ public class MappingKit {
 	public static void mapping(ActiveRecordPlugin arp) {
 		arp.addMapping("action_log", "id", ActionLog.class);
 		arp.addMapping("box_type", "id", BoxType.class);
+		arp.addMapping("company", "id", Company.class);
 		arp.addMapping("destination", "id", Destination.class);
 		arp.addMapping("efficiency", "id", Efficiency.class);
 		arp.addMapping("error_log", "id", ErrorLog.class);
@@ -34,6 +35,7 @@ public class MappingKit {
 		arp.addMapping("material_type", "id", MaterialType.class);
 		arp.addMapping("packing_list_item", "id", PackingListItem.class);
 		arp.addMapping("pda_upload_log", "id", PdaUploadLog.class);
+		arp.addMapping("position_log", "id", PositionLog.class);
 		arp.addMapping("sample_out_record", "id", SampleOutRecord.class);
 		arp.addMapping("sample_task_item", "id", SampleTaskItem.class);
 		arp.addMapping("sample_task_material_record", "id", SampleTaskMaterialRecord.class);

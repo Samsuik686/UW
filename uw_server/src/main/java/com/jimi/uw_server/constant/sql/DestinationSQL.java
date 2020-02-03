@@ -1,6 +1,11 @@
 package com.jimi.uw_server.constant.sql;
 
 public class DestinationSQL {
+	
+	public static final String GET_DESTINATION_SQL = "SELECT * FROM destination WHERE enabled = 1";
 
-	public static String GET_DESTINATION_BY_NAME = "SELECT * FROM destination WHERE name = ? AND enabled = 1";
+	public static final String gET_DESTINATION_BY_NAME_SQL = "SELECT * FROM destination WHERE name = ? AND enabled = 1";
+
+	public static final String GET_ENABLED_DESTINATION_BY_NAME_AND_COMPANY_SQL = "SELECT * FROM destination WHERE name = ? AND company_id = ? AND enabled = 1";
+
 }

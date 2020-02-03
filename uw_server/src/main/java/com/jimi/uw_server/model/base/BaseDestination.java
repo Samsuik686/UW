@@ -36,4 +36,13 @@ public abstract class BaseDestination<M extends BaseDestination<M>> extends Mode
 		return get("enabled");
 	}
 
+	public M setCompanyId(java.lang.Integer companyId) {
+		set("company_id", companyId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getCompanyId() {
+		return getInt("company_id");
+	}
+
 }

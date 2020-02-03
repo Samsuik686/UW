@@ -37,7 +37,7 @@ public class InventoryTaskController extends Controller {
 	private InventoryTaskService inventoryTaskService = InventoryTaskService.me;
 
 
-	@Log("创建普通仓盘点任务，供应商编号为{supplierId}， 盘点仓库{destinationIds}")
+	@Log("创建普通仓盘点任务，客户编号为{supplierId}， 盘点仓库{destinationIds}")
 	public void createRegularTask(Integer supplierId, String destinationIds) {
 
 		if (supplierId == null) {
@@ -48,8 +48,8 @@ public class InventoryTaskController extends Controller {
 	}
 
 
-	@Log("创建贵重仓盘点任务，供应商编号为{supplierId}")
-	public void createPreciousTask(Integer supplierId) {
+	@Log("创建贵重仓盘点任务，客户编号为{supplierId}")
+	public void createPreciousTask( Integer supplierId) {
 
 		if (supplierId == null) {
 			throw new ParameterException("参数不能为空！");
@@ -384,7 +384,7 @@ public class InventoryTaskController extends Controller {
 
 
 	/**
-	 * 根据供应商获取盘点任务(下拉框使用)
+	 * 根据客户获取盘点任务(下拉框使用)
 	 * @param supplierId
 	 * @return
 	 */

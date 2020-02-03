@@ -20,7 +20,7 @@ import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
-import com.jimi.uw_server.constant.sql.TaskSQL;
+import com.jimi.uw_server.constant.sql.IOTaskSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.ExternalWhLog;
@@ -47,7 +47,7 @@ public class ExternalWhTaskService {
 
 	private static final String GET_MATERIAL_TYPE_BY_NO_SQL = "SELECT * FROM material_type WHERE no = ? AND supplier = ? AND enabled = 1";
 
-	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 AND material_type.enabled = 1 GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 AND material_type.enabled = 1 GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id";
+	private static final String GET_EXTERIALWH_MATERIAL_TYPE_SQL = "SELECT a.*,destination.`name` as wh_name FROM destination INNER JOIN ( SELECT material_type_id AS material_type_id, destination AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name  FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE destination != 0 and destination != -1 AND material_type.enabled = 1 AND supplier.company_id = ? GROUP BY material_type_id, destination UNION SELECT material_type_id AS material_type_id, source_wh AS wh_id, material_type.`no` as `no`, material_type.specification as `specification`, material_type.supplier as supplier_id, supplier.`name` as supplier_name FROM external_wh_log INNER JOIN material_type INNER JOIN supplier ON external_wh_log.material_type_id = material_type.id AND material_type.supplier = supplier.id WHERE source_wh != 0 and source_wh != -1 AND material_type.enabled = 1 AND supplier.company_id = ? GROUP BY material_type_id, source_wh ) a ON destination.id = a.wh_id";
 
 	private static final String GET_WEH_MATERIAL_DETAILS_SQL = "SELECT e.*, material_return_record.quantity as return_num FROM((SELECT external_wh_log.*, a.name as `source_wh_name`, b.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination a INNER JOIN destination b INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = a.id AND external_wh_log.destination = b.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ?) UNION (SELECT external_wh_log.*, c.name as `source_wh_name`, d.name as `destination_name`, task.file_name as `task_name`, task.type as `task_type`, task.remarks as remarks, material_type.`no` as `no` FROM external_wh_log INNER JOIN destination c INNER JOIN destination d INNER JOIN task INNER JOIN material_type ON external_wh_log.source_wh = c.id AND external_wh_log.destination = d.id AND material_type_id = material_type.id AND task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ?)) e LEFT JOIN material_return_record ON e.task_id = material_return_record.task_id AND e.material_type_id = material_return_record.material_type_id AND e.source_wh = material_return_record.wh_id ORDER BY e.operation_time ASC";
 
@@ -72,7 +72,7 @@ public class ExternalWhTaskService {
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = file.getName();
-		Task tempTask = Task.dao.findFirst(TaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
 		if (tempTask != null) {
 			throw new OperationException("文件名重复，请进行修改！");
 		}
@@ -82,7 +82,7 @@ public class ExternalWhTaskService {
 			List<TaskItemBO> items = fileReader.unfill(TaskItemBO.class, 0);
 			int i = 2;
 			List<ExternalWhLog> externalWhLogs = new ArrayList<>();
-			Set<Integer> materailTypeIdSet = new HashSet<>();
+			Set<Integer> materialTypeIdSet = new HashSet<>();
 			if (items == null) {
 				throw new OperationException("表格无有效数据或者表格格式不正确！");
 			}
@@ -107,15 +107,15 @@ public class ExternalWhTaskService {
 					MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), supplierId);
 					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 					if (mType == null) {
-						resultString = "导入失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是供应商与料号对应不上！";
+						resultString = "导入失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是客户与料号对应不上！";
 						return resultString;
 					}
-					if (materailTypeIdSet.contains(mType.getId())) {
+					if (materialTypeIdSet.contains(mType.getId())) {
 						resultString = "导入失败，料号为" + item.getNo() + "的物料表中存在重复项！";
 						return resultString;
 					}
-					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR, destinationWhId);
-					materailTypeIdSet.add(mType.getId());
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR.getId(), destinationWhId);
+					materialTypeIdSet.add(mType.getId());
 					if (sourceWhId != 0 && sourceWhId != -1) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
@@ -185,7 +185,7 @@ public class ExternalWhTaskService {
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = file.getName();
-		Task tempTask = Task.dao.findFirst(TaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
 		if (tempTask != null) {
 			throw new OperationException("文件名重复，请进行修改！");
 		}
@@ -197,7 +197,7 @@ public class ExternalWhTaskService {
 				throw new OperationException("表格无有效数据或者表格格式不正确！");
 			}
 			int i = 0;
-			Set<Integer> materailTypeIdSet = new HashSet<>();
+			Set<Integer> materialTypeIdSet = new HashSet<>();
 			List<ExternalWhLog> externalWhLogs = new ArrayList<>();
 			for (TaskItemBO item : items) {
 				if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
@@ -216,15 +216,15 @@ public class ExternalWhTaskService {
 					MaterialType mType = MaterialType.dao.findFirst(GET_MATERIAL_TYPE_BY_NO_SQL, item.getNo(), supplierId);
 					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 					if (mType == null) {
-						resultString = "导入失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是供应商与料号对应不上！";
+						resultString = "导入失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是客户与料号对应不上！";
 						return resultString;
 					}
-					if (materailTypeIdSet.contains(mType.getId())) {
+					if (materialTypeIdSet.contains(mType.getId())) {
 						resultString = "导入失败，料号为" + item.getNo() + "的物料表中存在重复项！";
 						return resultString;
 					}
-					materailTypeIdSet.add(mType.getId());
-					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR, whId);
+					materialTypeIdSet.add(mType.getId());
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR.getId(), whId);
 					if (whId != 0) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
@@ -289,7 +289,7 @@ public class ExternalWhTaskService {
 			resultString = "目的仓不存在，请确认系统中存在该物料类型！";
 			return resultString;
 		}
-		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseType.REGULAR, whId);
+		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseType.REGULAR.getId(), whId);
 		if (whId != 0) {
 			int storeNum = 0;
 			if (inventoryTask != null) {
@@ -351,32 +351,24 @@ public class ExternalWhTaskService {
 	}
 
 
-	public PagePaginate selectExternalWhInfo(Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy) {
+	public PagePaginate selectExternalWhInfo(Integer companyId, Integer pageNo, Integer pageSize, Integer whId, Integer supplierId, String no, String ascBy, String descBy) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
 		List<ExternalWhInfoVO> externalWhInfoVOs = new ArrayList<>();
 		sql.append(GET_EXTERIALWH_MATERIAL_TYPE_SQL);
+		sqlPara.addPara(companyId);
+		sqlPara.addPara(companyId);
 		if (whId != null) {
-			sql.append(" WHERE a.wh_id = ? ");
+			sql.append(" AND a.wh_id = ? ");
 			sqlPara.addPara(whId);
 		}
 		if (supplierId != null) {
-			if (whId == null) {
-				sql.append(" WHERE  a.supplier_id = ? ");
-				sqlPara.addPara(supplierId);
-			} else {
-				sql.append(" AND a.supplier_id = ? ");
-				sqlPara.addPara(supplierId);
-			}
+			sql.append(" AND a.supplier_id = ? ");
+			sqlPara.addPara(supplierId);
 		}
 		if (no != null) {
-			if (whId == null && supplierId == null) {
-				sql.append(" WHERE  a.no like ? ");
-				sqlPara.addPara("%" + no + "%");
-			} else {
-				sql.append(" AND  a.no like ? ");
-				sqlPara.addPara("%" + no + "%");
-			}
+			sql.append(" AND  a.no like ? ");
+			sqlPara.addPara("%" + no + "%");
 		}
 		if ((ascBy == null || ascBy.equals("")) && (descBy == null || descBy.equals(""))) {
 			sql.append(" ORDER BY a.wh_id,a.no ASC");
@@ -406,7 +398,7 @@ public class ExternalWhTaskService {
 			if (unStartInvTasks.containsKey(key)) {
 				inventoryTask = unStartInvTasks.get(key);
 			} else {
-				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR, record.getInt("wh_id"));
+				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR.getId(), record.getInt("wh_id"));
 				unStartInvTasks.put(key, inventoryTask);
 			}
 			if (inventoryTask != null) {
@@ -428,31 +420,23 @@ public class ExternalWhTaskService {
 
 
 	// 导出物料仓库存报表
-	public void exportEWhReport(Integer whId, Integer supplierId, String no, String fileName, OutputStream output) throws IOException {
+	public void exportEWhReport(Integer companyId, Integer whId, Integer supplierId, String no, String fileName, OutputStream output) throws IOException {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
 		sql.append(GET_EXTERIALWH_MATERIAL_TYPE_SQL);
+		sqlPara.addPara(companyId);
+		sqlPara.addPara(companyId);
 		if (whId != null) {
-			sql.append(" WHERE a.wh_id = ? ");
+			sql.append(" AND a.wh_id = ? ");
 			sqlPara.addPara(whId);
 		}
 		if (supplierId != null) {
-			if (whId == null) {
-				sql.append(" WHERE  a.supplier_id = ? ");
-				sqlPara.addPara(supplierId);
-			} else {
-				sql.append(" AND a.supplier_id = ? ");
-				sqlPara.addPara(supplierId);
-			}
+			sql.append(" AND a.supplier_id = ? ");
+			sqlPara.addPara(supplierId);
 		}
 		if (no != null) {
-			if (whId == null && supplierId == null) {
-				sql.append(" WHERE  a.no like ? ");
-				sqlPara.addPara("%" + no + "%");
-			} else {
-				sql.append(" AND  a.no like ? ");
-				sqlPara.addPara("%" + no + "%");
-			}
+			sql.append(" AND  a.no like ? ");
+			sqlPara.addPara("%" + no + "%");
 		}
 		sql.append(" ORDER BY a.wh_id,a.no ASC");
 		sqlPara.setSql(sql.toString());
@@ -463,39 +447,31 @@ public class ExternalWhTaskService {
 		String[] field = null;
 		String[] head = null;
 		field = new String[] {"wh_name", "no", "specification", "supplier_name", "quantity"};
-		head = new String[] {"仓库名", "料号", "规格", "供应商", "库存"};
+		head = new String[] {"仓库名", "料号", "规格", "客户", "库存"};
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(records, fileName, field, head);
 		writter.write(output, true);
 	}
 
 
-	public List<ExternalWhInfoVO> selectExternalWhInfo(Integer whId, Integer supplierId, String no, Task task) {
+	public List<ExternalWhInfoVO> selectExternalWhInfo(Integer companyId, Integer whId, Integer supplierId, String no, Task task) {
 		SqlPara sqlPara = new SqlPara();
 		StringBuffer sql = new StringBuffer();
 		List<ExternalWhInfoVO> externalWhInfoVOs = new ArrayList<>();
 		sql.append(GET_EXTERIALWH_MATERIAL_TYPE_SQL);
+		sqlPara.addPara(companyId);
+		sqlPara.addPara(companyId);
 		if (whId != null) {
-			sql.append(" WHERE a.wh_id = ? ");
+			sql.append(" AND a.wh_id = ? ");
 			sqlPara.addPara(whId);
 		}
 		if (supplierId != null) {
-			if (whId == null) {
-				sql.append(" WHERE  a.supplier_id = ? ");
-				sqlPara.addPara(supplierId);
-			} else {
-				sql.append(" AND a.supplier_id = ? ");
-				sqlPara.addPara(supplierId);
-			}
+			sql.append(" AND a.supplier_id = ? ");
+			sqlPara.addPara(supplierId);
 		}
 		if (no != null) {
-			if (whId == null && supplierId == null) {
-				sql.append(" WHERE  a.no like ? ");
-				sqlPara.addPara("%" + no + "%");
-			} else {
-				sql.append(" AND  a.no like ? ");
-				sqlPara.addPara("%" + no + "%");
-			}
+			sql.append(" AND  a.no like ? ");
+			sqlPara.addPara("%" + no + "%");
 		}
 		sql.append(" ORDER BY a.no ASC");
 		sqlPara.setSql(sql.toString());

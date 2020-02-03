@@ -80,4 +80,5 @@ public abstract class BaseTaskLog<M extends BaseTaskLog<M>> extends Model<M> imp
 	public java.lang.Integer getDestination() {
 		return getInt("destination");
 	}
+
 }

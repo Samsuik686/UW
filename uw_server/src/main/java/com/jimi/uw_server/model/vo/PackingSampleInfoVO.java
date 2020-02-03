@@ -31,7 +31,7 @@ public class PackingSampleInfoVO {
 
 	private Integer totalNum;
 
-	private List<MaterialInfoVO> list;
+	private List<MaterialDetialsVO> list;
 
 
 	public PackingSampleInfoVO() {
@@ -76,12 +76,12 @@ public class PackingSampleInfoVO {
 	}
 
 
-	public List<MaterialInfoVO> getList() {
+	public List<MaterialDetialsVO> getList() {
 		return list;
 	}
 
 
-	public void setList(List<MaterialInfoVO> list) {
+	public void setList(List<MaterialDetialsVO> list) {
 		this.list = list;
 	}
 

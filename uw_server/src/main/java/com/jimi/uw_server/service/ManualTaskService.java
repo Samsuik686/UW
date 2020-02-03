@@ -34,13 +34,13 @@ public class ManualTaskService {
 
 	public Integer create(String supplierName, Integer type, String destinationName) {
 
-		Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME, supplierName);
+		Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME_SQL, supplierName);
 		if (supplier == null) {
-			throw new OperationException("供应商不存在！");
+			throw new OperationException("客户不存在！");
 		}
 		Task task = new Task();
 		if (type == 1) {
-			Destination destination = Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME, destinationName);
+			Destination destination = Destination.dao.findFirst(DestinationSQL.gET_DESTINATION_BY_NAME_SQL, destinationName);
 			if (destination == null) {
 				throw new OperationException("目的仓库不存在！");
 			}
@@ -67,9 +67,9 @@ public class ManualTaskService {
 		List<ManualTaskRecord> records = info.getRecords();
 		if (!records.isEmpty()) {
 			for (ManualTaskRecord record : records) {
-				Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME, record.getSupplierName());
+				Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME_SQL, record.getSupplierName());
 				if (supplier == null) {
-					problemString += "[供应商 " + record.getSupplierName() + " 不存在]\n";
+					problemString += "[客户 " + record.getSupplierName() + " 不存在]\n";
 					continue;
 				}
 				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, record.getNo(), supplier.getId(), WarehouseType.REGULAR);

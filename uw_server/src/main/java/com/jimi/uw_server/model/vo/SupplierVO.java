@@ -1,26 +1,72 @@
 package com.jimi.uw_server.model.vo;
 
-import com.jimi.uw_server.model.Supplier;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.jfinal.plugin.activerecord.Record;
 
 
 /**
- * 供应商实体类
+ * 客户实体类
  * @author HardyYao
  * @createTime 2018年11月22日  下午4:39:50
  */
 
-@SuppressWarnings("serial")
-public class SupplierVO extends Supplier {
+public class SupplierVO{
 
+	private Integer id;
+	
+	private String name;
+	
+	private String companyName;
+	
+	private Boolean enabled;
+	
 	private String enabledString;
 
 
-	public SupplierVO(Integer id, String name, Boolean enabled) {
-		this.setId(id);
-		this.setName(name);
-		this.setEnabled(enabled);
-		this.setEnabledString(enabled);
-		this.set("enabledString", getEnabledString());
+	public SupplierVO() {
+		
+	}
+	
+	
+	public Integer getId() {
+		return id;
+	}
+	
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+
+	public String getName() {
+		return name;
+	}
+
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+
+	public Boolean getEnabled() {
+		return enabled;
+	}
+
+
+	public void setEnabled(Boolean enabled) {
+		this.enabled = enabled;
 	}
 
 
@@ -35,6 +81,21 @@ public class SupplierVO extends Supplier {
 		} else {
 			this.enabledString = "否";
 		}
+	}
+	
+	
+	public static List<SupplierVO> fillList(List<Record> records) {
+		List<SupplierVO> supplierVOs = new ArrayList<SupplierVO>(records.size());
+		for (Record record : records) {
+			SupplierVO supplierVO = new SupplierVO();
+			supplierVO.setId(record.getInt("Supplier_Id"));
+			supplierVO.setName(record.getStr("Supplier_Name"));
+			supplierVO.setCompanyName(record.getStr("Company_Nickname"));
+			supplierVO.setEnabled(record.getBoolean("Supplier_Enabled"));
+			supplierVO.setEnabledString(record.getBoolean("Supplier_Enabled"));
+			supplierVOs.add(supplierVO);
+		}
+		return supplierVOs;
 	}
 
 }

@@ -20,13 +20,16 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.agv.thread.TaskPool;
 import com.jimi.uw_server.controller.BuildController;
+import com.jimi.uw_server.controller.CompanyController;
 import com.jimi.uw_server.controller.DestinationController;
 import com.jimi.uw_server.controller.ExternalWhController;
 import com.jimi.uw_server.controller.FAQController;
 import com.jimi.uw_server.controller.InventoryTaskController;
 import com.jimi.uw_server.controller.LogController;
 import com.jimi.uw_server.controller.ManualTaskController;
+import com.jimi.uw_server.controller.MaterialBoxController;
 import com.jimi.uw_server.controller.MaterialController;
+import com.jimi.uw_server.controller.MaterialTypeController;
 import com.jimi.uw_server.controller.PrinterController;
 import com.jimi.uw_server.controller.RobotController;
 import com.jimi.uw_server.controller.SampleTaskController;
@@ -87,6 +90,9 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manualTask", ManualTaskController.class);
 		me.add("/faq", FAQController.class);
 		me.add("/task/printer", PrinterController.class);
+		me.add("/manage/company", CompanyController.class);
+		me.add("/manage/materialType", MaterialTypeController.class);
+		me.add("/manage/materialBox", MaterialBoxController.class);
 	}
 
 	@Override
@@ -151,7 +157,7 @@ public class UwConfig extends JFinalConfig {
 		// 配置ORM
 		ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
 		arp.setDialect(new MysqlDialect()); // 用什么数据库，就设置什么Dialect
-		arp.setShowSql(false);
+		arp.setShowSql(true);
 		MappingKit.mapping(arp);
 		me.add(arp);
 	}

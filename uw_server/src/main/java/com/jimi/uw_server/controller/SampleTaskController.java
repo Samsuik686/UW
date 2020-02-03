@@ -33,13 +33,13 @@ public class SampleTaskController extends Controller {
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
-	@Log("创建普通仓抽检任务，供应商{supplierId}， 备注{remarks}")
+	@Log("创建普通仓抽检任务，客户{supplierId}， 备注{remarks}")
 	public void createRegularSampleTask(UploadFile file, Integer supplierId, String remarks) {
 		try {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.REGULAR);
+			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.REGULAR.getId());
 			renderJson(ResultUtil.succeed(result));
 		} finally {
 			file.getFile().delete();
@@ -48,13 +48,13 @@ public class SampleTaskController extends Controller {
 	}
 
 
-	@Log("创建贵重仓抽检任务，供应商{supplierId}， 备注{remarks}")
+	@Log("创建贵重仓抽检任务，客户{supplierId}， 备注{remarks}")
 	public void createPreciousSampleTask(UploadFile file, Integer supplierId, String remarks) {
 		try {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.PRECIOUS);
+			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.PRECIOUS.getId());
 			renderJson(ResultUtil.succeed(result));
 		} finally {
 			file.getFile().delete();

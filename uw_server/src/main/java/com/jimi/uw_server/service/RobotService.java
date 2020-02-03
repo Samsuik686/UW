@@ -313,17 +313,17 @@ public class RobotService extends SelectService {
 					return resultString;
 				}
 
-				// 通过物料类型获取对应的供应商id
+				// 通过物料类型获取对应的客户id
 				Integer supplierId = task.getSupplier();
-				// 通过供应商id获取供应商名
+				// 通过客户id获取客户名
 				FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, supplierId);
 				String sName = Supplier.dao.findById(supplierId).getName();
 				if (!supplierName.equals(sName) && formerSupplier == null) {
-					resultString = "扫码错误，供应商 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！";
+					resultString = "扫码错误，客户 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！";
 					return resultString;
 				}
-				// 通过任务id，料号和供应商获取套料单条目
-				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no.trim(), supplierId, WarehouseType.REGULAR);
+				// 通过任务id，料号和客户获取套料单条目
+				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no.trim(), supplierId, WarehouseType.REGULAR.getId());
 
 				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 				if (item == null) {

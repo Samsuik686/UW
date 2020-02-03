@@ -55,9 +55,9 @@ public class PrinterService {
 			}
 			try {
 				if (materialType.getType().equals(WarehouseType.REGULAR)) {
-					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString);
+					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
 				}else {
-					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity() - taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString);
+					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity() - taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
 				}
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
@@ -68,7 +68,7 @@ public class PrinterService {
 			
 			if (taskLog != null && taskLog.getQuantity() != null && !taskLog.getQuantity().equals(0)) {
 				try {
-					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString);
+					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString, material.getCompanyId());
 					
 				} catch (Exception e) {
 					PrintServerSocket.getResults().remove(id.toString());
@@ -134,7 +134,7 @@ public class PrinterService {
 				printTimeString = dateFormat.format(material.getPrintTime());
 			}
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString);
+				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString, material.getCompanyId());
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();

@@ -6,89 +6,80 @@ import java.util.List;
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.constant.sql.DestinationSQL;
+import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Destination;
-import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.DestinationVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 
-
 /**
  * 发料目的地业务层
+ * 
  * @author HardyYao
- * @createTime 2019年3月11日  上午11:36:05
+ * @createTime 2019年3月11日 上午11:36:05
  */
 
 public class DestinationService {
 
-	private static SelectService selectService = Aop.get(SelectService.class);
-
-	private static final String GET_ENABLED_DESTINATION_BY_NAME_SQL = "SELECT * FROM destination WHERE name = ? AND enabled = 1";
-
 	private static final String GET_TASK_BY_DESTINATION_ID_SQL = "SELECT * FROM task WHERE destination = ?";
 
+	private static SelectService selectService = Aop.get(SelectService.class);
 
 	// 添加发料目的地
-	public String add(String name) {
-		String resultString = "添加成功！";
-		if (Supplier.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() != 0) {
-			resultString = "该发料目的地已存在，请勿重复添加！";
-			return resultString;
+	public void add(String name, Integer companyId) {
+		if (Destination.dao.findFirst(DestinationSQL.gET_DESTINATION_BY_NAME_SQL, name) != null) {
+			throw new OperationException("该发料目的地名称重复，请勿更改！");
 		} else {
 			Destination destination = new Destination();
 			destination.setName(name);
+			destination.setCompanyId(companyId);
 			destination.setEnabled(true);
 			destination.save();
-			return resultString;
 		}
 	}
 
-
-	// 删除发料目的地
-	public String delete(Integer id, Boolean enabled) {
-		String resultString = "删除成功！";
+	
+	//修改目的仓库名称
+	public void update(Integer id, String name) {
 		Destination destination = Destination.dao.findById(id);
-		if (!enabled) {
-			Task t = Task.dao.findFirst(GET_TASK_BY_DESTINATION_ID_SQL, id);
-			if (t != null) {
-				resultString = "该发料目的地已绑定了某个任务，禁止删除！";
-				return resultString;
+		if (!destination.getName().equals(name)) {
+			if (Destination.dao.find(DestinationSQL.gET_DESTINATION_BY_NAME_SQL, name) != null) {
+				throw new OperationException("该目的地名称冲突！");
 			}
 		}
-		destination.setEnabled(enabled);
+		destination.setName(name);
 		destination.update();
-		return resultString;
 	}
 
-	// public String update(Integer id, String name) {
-	// String resultString = "更新成功！";
-	// Destination destination = Destination.dao.findById(id);
-	// if(!destination.getName().equals(name)) {
-	// if (Destination.dao.find(GET_ENABLED_DESTINATION_BY_NAME_SQL, name).size() !=
-	// 0) {
-	// resultString = "该供应商已存在，请勿重复添加！";
-	// return resultString;
-	// }
-	// }
-	// destination.setName(name);
-	// destination.update();
-	// return resultString;
-	// }
+	
+	// 删除发料目的地
+	public void delete(Integer id) {
+		Destination destination = Destination.dao.findById(id);
+		Task t = Task.dao.findFirst(GET_TASK_BY_DESTINATION_ID_SQL, id);
+		if (t != null) {
+			throw new OperationException("该发料目的地已绑定了某个任务，禁止删除！");
+		}
+		destination.setEnabled(false);
+		destination.update();
+	}
 
-
+	
 	// 查询发料目的地
-	public Object get(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
+	public PagePaginate select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
 		if (filter != null) {
-			filter = filter.concat("#&#enabled=1");
+			filter = filter.concat("#&#destination.enabled=1#&#company.enabled=1");
 		} else {
-			filter = "enabled=1";
+			filter = "destination.enabled=1#&#company.enabled=1";
 		}
-		Page<Record> result = selectService.select("destination", pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] { "destination", "company" },
+				new String[] { "destination.company_id=company.id" }, pageNo, pageSize, ascBy, descBy, filter);
 		List<DestinationVO> destinationVOs = new ArrayList<DestinationVO>();
 		for (Record res : result.getList()) {
-			DestinationVO s = new DestinationVO(res.get("id"), res.get("name"), res.get("enabled"));
+			DestinationVO s = new DestinationVO(res.get("Destination_Id"), res.get("Destination_Name"),
+					res.getStr("Company_NickName"), res.get("Destination_Enabled"));
 			destinationVOs.add(s);
 		}
 		PagePaginate pagePaginate = new PagePaginate();

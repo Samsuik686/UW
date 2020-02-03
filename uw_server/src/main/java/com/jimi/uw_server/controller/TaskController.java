@@ -37,7 +37,7 @@ public class TaskController extends Controller {
 
 
 	// 创建出入库/退料任务
-	@Log("创建普通仓任务类型为：{type}的任务，供应商编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
+	@Log("创建普通仓任务类型为：{type}的任务，客户编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
 	public void createRegularIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
 		if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
@@ -49,14 +49,14 @@ public class TaskController extends Controller {
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			file = getFile();
 			String fileName = file.getFileName();
-			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR, isForced);
+			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR.getId(), isForced);
 			renderJson(ResultUtil.succeed());
 		}
 	}
 
 
 	// 创建出入库/退料任务
-	@Log("创建贵重仓任务类型为：{type}的任务，供应商编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
+	@Log("创建贵重仓任务类型为：{type}的任务，客户编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
 	public void createPreciousIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
 		if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
@@ -68,7 +68,7 @@ public class TaskController extends Controller {
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
 			file = getFile();
 			String fileName = file.getFileName();
-			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS, isForced);
+			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced);
 			renderJson(ResultUtil.succeed());	
 		}
 	}
@@ -263,7 +263,7 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}，生产日期为{productionTime}， 打印时间为{printTime}， 产商为{manufacturer}， 周期是{cycle}")
+	@Log("将id号为{packingListItemId}的任务条目进行扫码入库，料盘时间戳为{materialId}，入库数量为{quantity}，客户名为{supplierName}，生产日期为{productionTime}， 打印时间为{printTime}， 产商为{manufacturer}， 周期是{cycle}")
 	public void inRegular(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -280,7 +280,7 @@ public class TaskController extends Controller {
 
 
 	// 物料入库
-	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，供应商名为{supplierName}，生产日期为{productionTime}， 打印时间为{printTime}， 产商为{manufacturer}， 周期是{cycle}")
+	@Log("贵重仓入库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，入库数量为{quantity}，客户名为{supplierName}，生产日期为{productionTime}， 打印时间为{printTime}， 产商为{manufacturer}， 周期是{cycle}")
 	public void inPrecious(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (packingListItemId == null || materialId == null || quantity == null || productionTime == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -297,7 +297,7 @@ public class TaskController extends Controller {
 
 
 	// 物料出库
-	@Log("将id号为{packingListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}，供应商名为{supplierName}")
+	@Log("将id号为{packingListItemId}的任务条目进行扫码出库，料盘时间戳为{materialId}，出入库数量为{quantity}，客户名为{supplierName}")
 	public void outRegular(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
 		if (packingListItemId == null || materialId == null || quantity == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -314,7 +314,7 @@ public class TaskController extends Controller {
 	
 	
 	// 物料出库
-	@Log("发料区紧急出库：将任务id号为{taskId}的任务进行扫码出库，料盘时间戳为{materialId}，出库数量为{quantity}，供应商名为{supplierName}， 料号为{no}，生产日期为{productionTime}， 周期为{cycle}， 产商为{manufacturer}， 打印日期为{printTime}")
+	@Log("发料区紧急出库：将任务id号为{taskId}的任务进行扫码出库，料盘时间戳为{materialId}，出库数量为{quantity}，客户名为{supplierName}， 料号为{no}，生产日期为{productionTime}， 周期为{cycle}， 产商为{manufacturer}， 打印日期为{printTime}")
 	public void outEmergencyRegular(String taskId, String no, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
 		if (taskId == null || materialId == null || quantity == null || supplierName == null || productionTime == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -330,7 +330,7 @@ public class TaskController extends Controller {
 	}
 	
 	// 物料出库
-	@Log("贵重仓出库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，料号为{no}，出入库数量为{quantity}，供应商名为{supplierName}, 是否强制出库：{isForced}")
+	@Log("贵重仓出库，任务条目ID{packingListItemId}，料盘时间戳为{materialId}，料号为{no}，出入库数量为{quantity}，客户名为{supplierName}, 是否强制出库：{isForced}")
 	public void outPrecious(Integer packingListItemId, String materialId, Integer quantity, String supplierName, Boolean isForced) {
 		if (packingListItemId == null || materialId == null || quantity == null || supplierName == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -391,7 +391,7 @@ public class TaskController extends Controller {
 
 
 	// 料盘截料后重新入库
-	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId}，料盘剩余数量为{quantity}，供应商名为{supplierName}")
+	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的任务条目id为{packingListItemId}，料盘剩余数量为{quantity}，客户名为{supplierName}")
 	public void backRegularAfterCutting(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
 		if (packingListItemId == null || materialId == null || quantity == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
@@ -401,7 +401,7 @@ public class TaskController extends Controller {
 	}
 
 
-	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的贵重仓任务条目id为{packingListItemId}，料盘剩余数量为{quantity}，供应商名为{supplierName}")
+	@Log("料盘时间戳为{materialId}的料盘截料完毕，扫码重新入库，该料盘绑定的贵重仓任务条目id为{packingListItemId}，料盘剩余数量为{quantity}，客户名为{supplierName}")
 	public void backPreciousAfterCutting(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
 		if (packingListItemId == null || materialId == null || quantity == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
