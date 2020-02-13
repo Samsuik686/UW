@@ -1,20 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -23,43 +8,25 @@ import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
-import com.jimi.uw_server.constant.MaterialStatus;
-import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
-import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
-import com.jimi.uw_server.constant.sql.MaterialBoxSQL;
-import com.jimi.uw_server.constant.sql.MaterialSQL;
-import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
-import com.jimi.uw_server.constant.sql.SQL;
-import com.jimi.uw_server.constant.sql.WindowSQL;
+import com.jimi.uw_server.constant.*;
+import com.jimi.uw_server.constant.sql.*;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.Destination;
-import com.jimi.uw_server.model.ExternalInventoryLog;
-import com.jimi.uw_server.model.ExternalWhLog;
-import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.InventoryLog;
-import com.jimi.uw_server.model.InventoryTaskBaseInfo;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.EWhInventoryRecordBO;
-import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
-import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
-import com.jimi.uw_server.model.vo.InventoryTaskVO;
-import com.jimi.uw_server.model.vo.MaterialDetialsVO;
-import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
+import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.MaterialHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /**
@@ -431,11 +398,63 @@ public class InventoryTaskService {
 			if (materialBox == null) {
 				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
 			}
-			Window window = Window.dao.findById(windowId);
-			if (window == null) {
-				throw new OperationException("当前盘点的仓口不存在，请检查参数是否正确!");
+			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
+				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
+					try {
+						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
+						if (goodsLocation != null) {
+							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
+						} else {
+							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
+						}
+						TaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
+					} catch (Exception e) {
+						e.printStackTrace();
+						throw new OperationException(e.getMessage());
+					}
+					break;
+				}
 			}
+			for (InventoryLog inventoryLog : inventoryLogs) {
+				if (!inventoryLog.getBeforeNum().equals(inventoryLog.getActuralNum())) {
+					// 改变实际库存
+					Material material = Material.dao.findById(inventoryLog.getMaterialId());
+					material.setRemainderQuantity(inventoryLog.getActuralNum());
+					if (inventoryLog.getActuralNum().equals(0)) {
+						material.setRow(-1);
+						material.setCol(-1);
+						material.setIsInBox(false);
+					}
+					material.update();
 
+				}
+			}
+		}
+		return "操作成功";
+	}
+
+
+	public String backUrInventoryRegularUWBox(Integer taskId, Integer boxId, String user) {
+		synchronized (Lock.INV_TASK_BACK_LOCK) {
+			Task task = Task.dao.findById(taskId);
+			if (task == null) {
+				throw new OperationException("任务不存在，请检查参数是否正确!");
+			}
+			List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_BOX_AND_TASKID, boxId, taskId);
+			for (InventoryLog inventoryLog : inventoryLogs) {
+				if (inventoryLog.getActuralNum() == null) {
+					inventoryLog.setActuralNum(inventoryLog.getBeforeNum());
+					inventoryLog.setDifferentNum(0);
+					inventoryLog.setEnabled(true);
+					inventoryLog.setInventoryOperatior(user);
+					inventoryLog.setInventoryTime(new Date());
+					inventoryLog.update();
+				}
+			}
+			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+			if (materialBox == null) {
+				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
+			}
 			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
 				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
 					try {
@@ -491,11 +510,11 @@ public class InventoryTaskService {
 		}
 		Material material = Material.dao.findById(materialId);
 		// 改变盘点记录
-		inventoryLog.setActuralNum(acturalNum);
-		inventoryLog.setDifferentNum(acturalNum - inventoryLog.getBeforeNum());
-		inventoryLog.setInventoryOperatior(user.getUid());
-		inventoryLog.setInventoryTime(new Date());
-		inventoryLog.update();
+		inventoryLog.setActuralNum(acturalNum)
+				.setDifferentNum(acturalNum - inventoryLog.getBeforeNum())
+				.setInventoryOperatior(user.getUid())
+				.setInventoryTime(new Date())
+				.update();
 		if (MaterialType.dao.findById(material.getType()).getRadius().equals(7)) {
 			if ((material.getRow().equals(-1) || material.getCol().equals(-1)) && acturalNum > 0) {
 				MaterialHelper.getMaterialLocation(material, true);
@@ -509,6 +528,25 @@ public class InventoryTaskService {
 			}
 		}
 		return material;
+	}
+
+
+	/**
+	 * 机械臂盘点UW物料
+	 * @param materialId
+	 * @param boxId
+	 * @param taskId
+	 * @return
+	 */
+	public void inventoryUrRegularUWMaterial(String materialId, Integer boxId, Integer taskId) {
+		InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, taskId, materialId);
+		Material material = Material.dao.findById(materialId);
+		// 改变盘点记录
+		inventoryLog.setActuralNum(material.getRemainderQuantity())
+				.setDifferentNum(0)
+				.setInventoryOperatior("robot")
+				.setInventoryTime(new Date())
+				.update();
 	}
 
 
@@ -672,7 +710,6 @@ public class InventoryTaskService {
 
 	/**
 	 * 一键平仓UW
-	 * @param materialTypeId
 	 * @param taskId
 	 * @param user
 	 * @return
@@ -748,7 +785,6 @@ public class InventoryTaskService {
 
 	/**
 	 * 物料仓一键批量平仓
-	 * @param materialTypeId
 	 * @param taskId
 	 * @param user
 	 * @return
@@ -1348,7 +1384,7 @@ public class InventoryTaskService {
 		ExternalInventoryLog log1 = ExternalInventoryLog.dao.findFirst(GET_UNCOVER_EWH_INVENTORY_LOG_BY_TASKID, taskId, whId);
 		InventoryLog log2 = InventoryLog.dao.findFirst(GET_UNCOVER_INVENTORY_LOG_BY_TASKID, taskId);
 		if (log1 == null && log2 == null) {
-			info.setFinishTime(new Date()).setFinishOperator(user.getUid()).update();
+
 			
 			List<ExternalInventoryLog> externalInventoryLogs = ExternalInventoryLog.dao.find(GET_ALL_EWH_INVENTORY_LOG_BY_TASK, taskId, whId);
 			List<ExternalWhLog> newExternalLogs = new ArrayList<>(externalInventoryLogs.size());
@@ -1364,11 +1400,13 @@ public class InventoryTaskService {
 				externalWhLog.setOperationTime(new Date());
 				newExternalLogs.add(externalWhLog);
 			}
+
 			Db.batchSave(newExternalLogs, batchSize);
+			info.setFinishTime(new Date()).setFinishOperator(user.getUid()).update();
 			List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
 			boolean flag = true;
 			for (InventoryTaskBaseInfo inventoryTaskBaseInfo : infos) {
-				if (inventoryTaskBaseInfo.getFinishTime() == null) {
+				if (!info.getId().equals(inventoryTaskBaseInfo.getId()) && inventoryTaskBaseInfo.getFinishTime() == null) {
 					flag = false;
 				}
 			}

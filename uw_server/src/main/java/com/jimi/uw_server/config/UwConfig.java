@@ -1,13 +1,6 @@
 package com.jimi.uw_server.config;
 
-import java.io.File;
-
-import com.jfinal.config.Constants;
-import com.jfinal.config.Handlers;
-import com.jfinal.config.Interceptors;
-import com.jfinal.config.JFinalConfig;
-import com.jfinal.config.Plugins;
-import com.jfinal.config.Routes;
+import com.jfinal.config.*;
 import com.jfinal.json.MixedJsonFactory;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -19,32 +12,19 @@ import com.jfinal.template.Engine;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.agv.thread.TaskPool;
-import com.jimi.uw_server.controller.BuildController;
-import com.jimi.uw_server.controller.CompanyController;
-import com.jimi.uw_server.controller.DestinationController;
-import com.jimi.uw_server.controller.ExternalWhController;
-import com.jimi.uw_server.controller.FAQController;
-import com.jimi.uw_server.controller.InventoryTaskController;
-import com.jimi.uw_server.controller.LogController;
-import com.jimi.uw_server.controller.ManualTaskController;
-import com.jimi.uw_server.controller.MaterialBoxController;
-import com.jimi.uw_server.controller.MaterialController;
-import com.jimi.uw_server.controller.MaterialTypeController;
-import com.jimi.uw_server.controller.PrinterController;
-import com.jimi.uw_server.controller.RobotController;
-import com.jimi.uw_server.controller.SampleTaskController;
-import com.jimi.uw_server.controller.SupplierController;
-import com.jimi.uw_server.controller.TaskController;
-import com.jimi.uw_server.controller.UserController;
+import com.jimi.uw_server.controller.*;
 import com.jimi.uw_server.interceptor.AccessInterceptor;
 import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
 import com.jimi.uw_server.interceptor.ErrorLogInterceptor;
 import com.jimi.uw_server.model.MappingKit;
 import com.jimi.uw_server.service.EfficiencyService;
+import com.jimi.uw_server.ur.boot.RestaurantBootStrap;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
 import com.jimi.uw_server.util.VisualSerializer;
+
+import java.io.File;
 
 /**
  * 全局配置
@@ -115,6 +95,20 @@ public class UwConfig extends JFinalConfig {
 				EfficiencyService.initTaskEfficiency();
 				System.out.println("效率统计开启，初始化成功！");
 			}
+            Thread urThread = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        RestaurantBootStrap.strap.start();
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            });
+            urThread.setName("UR_SERVER");
+            urThread.start();
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
@@ -130,6 +124,7 @@ public class UwConfig extends JFinalConfig {
 		TokenBox.stop();
 		AGVMainSocket.stop();
 		RobotInfoSocket.stop();
+		RestaurantBootStrap.stop();
 	}
 
 	@Override
@@ -148,7 +143,7 @@ public class UwConfig extends JFinalConfig {
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379, PropKit.get("d_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6079, PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		rp.setSerializer(new VisualSerializer());

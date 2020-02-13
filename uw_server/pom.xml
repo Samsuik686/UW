@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>3.6.5</version>
+	<version>3.9.0</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -32,7 +32,7 @@
 			<!-- Maven 自带的中央仓库使用的Id为central 如果其他的仓库声明也是用该Id 就会覆盖中央仓库的配置 -->
 			<id>nexus</id>
 			<name>nexus</name>
-			<url>http://10.10.11.90:8081/repository/maven-releases/</url>
+			<url>http://183.236.111.164:6081/repository/maven-releases/</url>
 		</repository>
 	</repositories>
 
@@ -145,6 +145,13 @@
 			<artifactId>fst</artifactId>
 			<version>2.50</version>
 		</dependency>
+
+
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>4.1.41.Final</version>
+		</dependency>
 		
 	</dependencies>
 	<build>
@@ -159,13 +166,6 @@
 					<target>1.8</target>
 					<compilerArgument>-parameters</compilerArgument>
 				</configuration>
-			</plugin>
-
-			<!-- tomcat插件 -->
-			<plugin>
-				<groupId>org.apache.tomcat.maven</groupId>
-				<artifactId>tomcat7-maven-plugin</artifactId>
-				<version>2.2</version>
 			</plugin>
 
 		</plugins>
