@@ -30,7 +30,7 @@ public class MaterialSQL {
 	
 	public static final String GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL = " FROM material INNER JOIN material_box INNER JOIN material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? AND material.remainder_quantity > 0  AND material_box.enabled = 1 AND material_type.enabled = 1 AND material_type.supplier = ?";
 
-	public static final String GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL = " FROM material INNER JOIN material_box INNER JOIN material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.box = ? AND material.remainder_quantity > 0 AND material_box.enabled = 1 AND material_type.enabled = 1 AND material_box_supplier = ?";
+	public static final String GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL = " FROM material INNER JOIN material_box INNER JOIN material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.box = ? AND material.remainder_quantity > 0 AND material_box.enabled = 1 AND material_type.enabled = 1 AND material_box.supplier = ?";
 
 	public static final String GET_ENTITIES_BY_TYPE_AND_BOX_EXCEPT_SELECT_SQL = " FROM material join material_box join  material_type ON material_type.id = material.type AND material.box = material_box.id WHERE material.type = ? and material.box = ? AND material.remainder_quantity > 0 AND material.company_id = ? AND material_box.enabled = 1";
 

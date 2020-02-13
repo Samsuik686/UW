@@ -80,7 +80,7 @@ public class MaterialTypeController extends Controller {
 
 	@Log("批量删除普通仓物料类型号为[{filter}]的物料类型")
 	public void deleteRegularMaterialByIds(String ids) {
-		if (ids == null || ids.equals("")) {
+		if (ids == null || ids.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
 		String resultString = materialTypeService.deleteByIds(ids);
@@ -94,7 +94,7 @@ public class MaterialTypeController extends Controller {
 
 	@Log("批量删除贵重仓物料类型号为[{filter}]的物料类型")
 	public void deletePreciousMaterialByIds(String ids) {
-		if (ids == null || ids.equals("")) {
+		if (ids == null || ids.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
 		String resultString = materialTypeService.deleteByIds(ids);
@@ -135,7 +135,7 @@ public class MaterialTypeController extends Controller {
 		if (supplierId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		if (pageNo == null || pageSize == 0) {
+		if (pageNo == null || pageSize == null) {
 			throw new OperationException("页码和页容量不能为空！");
 		}
 		if (pageNo <= 0 || pageSize <= 0) {

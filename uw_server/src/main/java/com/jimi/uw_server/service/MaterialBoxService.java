@@ -3,11 +3,6 @@
 */  
 package com.jimi.uw_server.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -17,13 +12,17 @@ import com.jimi.uw_server.constant.MaterialBoxType;
 import com.jimi.uw_server.constant.sql.MaterialBoxSQL;
 import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.model.Company;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.MaterialBoxVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 /**  
  * <p>Title: MaterialBoxService</p>  
@@ -64,11 +63,8 @@ public class MaterialBoxService {
 
 
 	// 手动添加料盒
-	public void addBox(Integer companyId, String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
-		Company company = Company.dao.findById(companyId);
-		if (company == null) {
-			throw new OperationException("添加失败，公司不存在！");
-		}
+	public void addBox(String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
+
 		Supplier supplier = Supplier.dao.findById(supplierId);
 		if (supplier == null) {
 			throw new OperationException("添加失败，客户不存在！");
@@ -91,7 +87,7 @@ public class MaterialBoxService {
 		materialBox.setEnabled(true);
 		materialBox.setSupplier(supplierId);
 		materialBox.setStatus(BoxState.EMPTY);
-		materialBox.setCompanyId(companyId);
+		materialBox.setCompanyId(supplier.getCompanyId());
 		materialBox.setUpdateTime(new Date());
 		materialBox.save();
 	}
@@ -105,15 +101,12 @@ public class MaterialBoxService {
 	}
 		
 		
-	public void editBoxOfSupplier(String ids, Integer supplierId, Integer companyId) {
+	public void editBoxOfSupplier(String ids, Integer supplierId) {
 		String[] idStringArr = ids.split(",");
 		List<Integer> idIntegerArr = new ArrayList<>(idStringArr.length);
 		List<MaterialBox> materialBoxs = new ArrayList<>(idStringArr.length);
 		Supplier supplier = Supplier.dao.findById(supplierId);
-		Company company = Company.dao.findById(companyId);
-		if (company == null) {
-			throw new OperationException("修改失败，公司不存在！");
-		}
+
 		if (supplier == null) {
 			throw new OperationException("修改失败，客户不存在!");
 		}
@@ -134,7 +127,7 @@ public class MaterialBoxService {
 					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒不在架！");
 				}
 				materialBox.setSupplier(supplier.getId());
-				materialBox.setCompanyId(companyId);
+				materialBox.setCompanyId(supplier.getCompanyId());
 				materialBoxs.add(materialBox);
 			}
 		} catch (NumberFormatException e) {
