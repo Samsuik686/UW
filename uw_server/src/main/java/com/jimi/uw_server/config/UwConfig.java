@@ -1,13 +1,6 @@
 package com.jimi.uw_server.config;
 
-import java.io.File;
-
-import com.jfinal.config.Constants;
-import com.jfinal.config.Handlers;
-import com.jfinal.config.Interceptors;
-import com.jfinal.config.JFinalConfig;
-import com.jfinal.config.Plugins;
-import com.jfinal.config.Routes;
+import com.jfinal.config.*;
 import com.jfinal.json.MixedJsonFactory;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -19,23 +12,7 @@ import com.jfinal.template.Engine;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.agv.socket.RobotInfoSocket;
 import com.jimi.uw_server.agv.thread.TaskPool;
-import com.jimi.uw_server.controller.BuildController;
-import com.jimi.uw_server.controller.CompanyController;
-import com.jimi.uw_server.controller.DestinationController;
-import com.jimi.uw_server.controller.ExternalWhController;
-import com.jimi.uw_server.controller.FAQController;
-import com.jimi.uw_server.controller.InventoryTaskController;
-import com.jimi.uw_server.controller.LogController;
-import com.jimi.uw_server.controller.ManualTaskController;
-import com.jimi.uw_server.controller.MaterialBoxController;
-import com.jimi.uw_server.controller.MaterialController;
-import com.jimi.uw_server.controller.MaterialTypeController;
-import com.jimi.uw_server.controller.PrinterController;
-import com.jimi.uw_server.controller.RobotController;
-import com.jimi.uw_server.controller.SampleTaskController;
-import com.jimi.uw_server.controller.SupplierController;
-import com.jimi.uw_server.controller.TaskController;
-import com.jimi.uw_server.controller.UserController;
+import com.jimi.uw_server.controller.*;
 import com.jimi.uw_server.interceptor.AccessInterceptor;
 import com.jimi.uw_server.interceptor.ActionLogInterceptor;
 import com.jimi.uw_server.interceptor.CORSInterceptor;
@@ -45,6 +22,8 @@ import com.jimi.uw_server.service.EfficiencyService;
 import com.jimi.uw_server.util.ErrorLogWritter;
 import com.jimi.uw_server.util.TokenBox;
 import com.jimi.uw_server.util.VisualSerializer;
+
+import java.io.File;
 
 /**
  * 全局配置

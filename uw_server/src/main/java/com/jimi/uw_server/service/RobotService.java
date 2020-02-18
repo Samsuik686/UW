@@ -1,10 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
@@ -15,29 +10,19 @@ import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
-import com.jimi.uw_server.constant.BoxState;
-import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.*;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.ExternalWhLog;
-import com.jimi.uw_server.model.FormerSupplier;
-import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialReturnRecord;
-import com.jimi.uw_server.model.PackingListItem;
-import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
 import com.jimi.uw_server.service.base.SelectService;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -192,7 +177,7 @@ public class RobotService extends SelectService {
 						}
 						// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
 						if (task.getType() == TaskType.OUT) {
-							taskService.updateOutQuantityAndMaterialInfo(agvioTaskItem, afterCut, user);
+							taskService.updateOutQuantityAndMaterialInfo(agvioTaskItem, afterCut, packingListItem, user);
 						}
 					} else {
 						resultString = "该任务条目已发送过回库指令，请勿重复发送回库指令！";

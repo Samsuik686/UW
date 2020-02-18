@@ -1,8 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import com.alibaba.fastjson.JSONObject;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
@@ -11,6 +8,10 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.service.base.SelectService;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -86,6 +87,7 @@ public class BuildService extends SelectService {
 					materialBox.setEnabled(true);
 					materialBox.setStatus(BoxState.EMPTY);
 					materialBox.setUpdateTime(new Date());
+					materialBox.setCompanyId(supplier.getCompanyId());
 					materialBox.save();
 					AGVBuildTaskItem bt = new AGVBuildTaskItem(materialBox.getId(), srcPosition);
 					buildTaskItems.add(bt);
@@ -117,6 +119,7 @@ public class BuildService extends SelectService {
 					materialBox.setEnabled(true);
 					materialBox.setStatus(BoxState.EMPTY);
 					materialBox.setUpdateTime(new Date());
+					materialBox.setCompanyId(supplier.getCompanyId());
 					materialBox.save();
 					AGVBuildTaskItem bt = new AGVBuildTaskItem(materialBox.getId(), srcPosition);
 					buildTaskItems.add(bt);

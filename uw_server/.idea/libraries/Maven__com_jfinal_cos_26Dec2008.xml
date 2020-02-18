@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: com.jfinal:cos:26Dec2008">
     <CLASSES>
-      <root url="jar://D:/Program Files/apache/apache-maven-3.6.0/.m2/repository/com/jfinal/cos/26Dec2008/cos-26Dec2008.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/jfinal/cos/26Dec2008/cos-26Dec2008.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://D:/Program Files/apache/apache-maven-3.6.0/.m2/repository/com/jfinal/cos/26Dec2008/cos-26Dec2008-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/jfinal/cos/26Dec2008/cos-26Dec2008-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://D:/Program Files/apache/apache-maven-3.6.0/.m2/repository/com/jfinal/cos/26Dec2008/cos-26Dec2008-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/jfinal/cos/26Dec2008/cos-26Dec2008-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

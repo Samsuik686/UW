@@ -444,6 +444,9 @@ public class IOTaskService {
 				throw new OperationException("该任务已完成，禁止作废！");
 			} else if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
 				throw new OperationException("该任务已作废！");
+			} else if (state < TaskState.PROCESSING){
+				task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
+				return true;
 			} else {
 				if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
@@ -457,8 +460,8 @@ public class IOTaskService {
 							for (Material material : materials) {
 								material.setStatus(MaterialStatus.NORMAL).update();
 							}
-							PackingListItem packingListItem = PackingListItem.dao.findById(record.getInt("id"));
-							packingListItem.setFinishTime(new Date()).update();
+							/*PackingListItem packingListItem = PackingListItem.dao.findById(record.getInt("id"));
+							packingListItem.setFinishTime(new Date()).update();*/
 						}
 
 						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
@@ -1654,7 +1657,7 @@ public class IOTaskService {
 
 
 	// 更新标准料盘出库数量以及料盘信息
-	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, Boolean afterCut, User user) {
+	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, Boolean afterCut, PackingListItem packingListItem, User user) {
 		synchronized (UPDATEOUTQUANTITYANDMATERIALINFO_LOCK) {
 			int acturallyNum = 0;
 			List<Record> records = Db.find(SQL.GET_TASKLOG_BY_ITEM_ID_SQL, item.getId());
@@ -1689,8 +1692,6 @@ public class IOTaskService {
 
 			// 出库超发，欠发的记录写入外仓
 			if (!item.getIsCut() && item.getIsForceFinish()) {
-
-				PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
 				if (!packingListItem.getQuantity().equals(acturallyNum)) {
 					Task task = Task.dao.findById(item.getTaskId());
 					if (packingListItem.getQuantity() < acturallyNum) {
