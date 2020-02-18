@@ -126,7 +126,7 @@ public class MaterialService extends SelectService {
 		if (!supplier.getCompanyId().equals(company.getId())) {
 			throw new OperationException("料盒所属客户的公司与料盒所属公司冲突！");
 		}
-		Page<Record> page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId, company.getId());
+		Page<Record> page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId, supplier.getId());
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageNumber(page.getPageNumber());
 		pagePaginate.setPageSize(page.getPageSize());

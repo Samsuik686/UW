@@ -88,3 +88,5 @@ processor/
 uw_server/.idea/uw_server.iml
 uw_server/.idea/workspace.xml
 uw_server/.idea/artifacts/uw_server_war_exploded.xml
+uw_server/.idea/
+uw_server/uw_server.iml
