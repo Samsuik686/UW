@@ -7,7 +7,7 @@
         <packaging>war</packaging>
       </options>
     </properties>
-    <root id="archive" name="uw_server-3.6.8.war">
+    <root id="archive" name="uw_server-3.6.9.war">
       <element id="artifact" artifact-name="uw_server:war exploded" />
     </root>
   </artifact>

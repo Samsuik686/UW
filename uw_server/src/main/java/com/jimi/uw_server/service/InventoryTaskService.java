@@ -1,20 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -23,39 +8,26 @@ import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
-import com.jimi.uw_server.constant.MaterialStatus;
-import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.*;
 import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.Destination;
-import com.jimi.uw_server.model.ExternalInventoryLog;
-import com.jimi.uw_server.model.ExternalWhLog;
-import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.InventoryLog;
-import com.jimi.uw_server.model.InventoryTaskBaseInfo;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.EWhInventoryRecordBO;
-import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
-import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
-import com.jimi.uw_server.model.vo.InventoryTaskVO;
-import com.jimi.uw_server.model.vo.MaterialInfoVO;
-import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
+import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.MaterialHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /**
@@ -1372,7 +1344,7 @@ public class InventoryTaskService {
 			List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
 			boolean flag = true;
 			for (InventoryTaskBaseInfo inventoryTaskBaseInfo : infos) {
-				if (inventoryTaskBaseInfo.getFinishTime() == null) {
+				if (!inventoryTaskBaseInfo.getId().equals(info.getId()) && inventoryTaskBaseInfo.getFinishTime() == null) {
 					flag = false;
 				}
 			}
