@@ -102,9 +102,8 @@ public class UrInvTaskInfoDAO {
 		rp.setSerializer(new VisualSerializer());
 	    rp.start();
 	    cache = Redis.use();
-	    List<UrMaterialInfo> b = getAllUrMaterialInfos();
-	    UrMaterialInfo urMaterialInfo1 = new UrMaterialInfo("123", 1, 2,4,5,1,1, true,1);
-	    UrMaterialInfo urMaterialInfo2 = new UrMaterialInfo("124", 2, 2,3,4,4,1,true,1);
+	    UrMaterialInfo urMaterialInfo1 = new UrMaterialInfo("123", 1, 2,4,5,1,1, true,1,100);
+	    UrMaterialInfo urMaterialInfo2 = new UrMaterialInfo("124", 2, 2,3,4,4,1,true,1,100);
 	    List<UrMaterialInfo> urMaterialInfos = new ArrayList<>();
 	    urMaterialInfos.add(urMaterialInfo1);
 	    urMaterialInfos.add(urMaterialInfo2);

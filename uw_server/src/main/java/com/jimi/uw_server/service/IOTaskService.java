@@ -1040,7 +1040,7 @@ public class IOTaskService {
 							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
 						}
 					}
-					List<Material> materials1 = Material.dao.find(SQL.GET_MATERIAL_BY_BOX, redisTaskItem.getMaterialTypeId(), redisTaskItem.getBoxId());
+					List<Material> materials1 = Material.dao.find(SQL.GET_MATERIAL_BY_TYPE_AND_BOX, redisTaskItem.getMaterialTypeId(), redisTaskItem.getBoxId());
 					Integer reelNum = materials1.size();
 					List<Material> materials2 = null;
 					if (reelNum > 0 && task.getType().equals(TaskType.OUT)) {

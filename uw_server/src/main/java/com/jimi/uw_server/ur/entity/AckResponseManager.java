@@ -6,10 +6,8 @@ import java.util.concurrent.CountDownLatch;
 
 
 public class AckResponseManager {
-
-	public static AckResponseManager manager = new AckResponseManager();
 	
-	class AckResponseInfo{
+	static class AckResponseInfo{
 		
 		private Boolean flag;
 		
@@ -54,11 +52,16 @@ public class AckResponseManager {
 	}
 	
 
-	public synchronized static Boolean GetAndreduce(Integer id) {
+	public synchronized static Boolean GetAndRemove(Integer id) {
 		AckResponseInfo ackResponseInfo = ackMap.get(id);
 		ackMap.remove(id);
 		if (ackResponseInfo != null) {
-			return ackResponseInfo.getFlag();
+			if (ackResponseInfo.getFlag()) {
+				return true;
+			}else {
+				System.out.println("获取回复包失败：" + id);
+			}
+			
 		}
 		return false;
 		
@@ -66,6 +69,6 @@ public class AckResponseManager {
 
 
 	public synchronized static void putAckResponse(Integer id, CountDownLatch l) {
-		ackMap.put(id, manager.new AckResponseInfo(l));
+		ackMap.put(id, new AckResponseInfo(l));
 	}
 }

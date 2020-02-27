@@ -25,7 +25,7 @@ public class PackSender {
 
 	public static Boolean sendPackage(String urName, UrBasePackage pack){
 		ChannelHandlerContext ctx = SessionBox.getChannelHandlerContext(urName);
-		if (ctx != null && ctx.channel().isActive()) {
+		if (ctx != null) {
 			try {
 				Thread.sleep(300);
 			} catch (InterruptedException e) {
@@ -38,12 +38,12 @@ public class PackSender {
 			AckResponseManager.putAckResponse(cmdId, l);
 			ctx.writeAndFlush(pack);
 			try {
-				l.await(3000, TimeUnit.MILLISECONDS);
+				l.await(10000, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return AckResponseManager.GetAndreduce(cmdId);
+			return AckResponseManager.GetAndRemove(cmdId);
 		}else {
 			return false;
 		}

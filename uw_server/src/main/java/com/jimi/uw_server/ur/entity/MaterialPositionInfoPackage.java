@@ -23,7 +23,8 @@ public class MaterialPositionInfoPackage extends UrBasePackage {
 	
 	private Integer yPosition;
 
-
+	private Integer quantity;
+	
 	public MaterialPositionInfoPackage() {
 		this.cmdCode = "material_position_info";
 	}
@@ -87,5 +88,17 @@ public class MaterialPositionInfoPackage extends UrBasePackage {
 	public void setType(Integer type) {
 		this.type = type;
 	}
+
+
+	public Integer getQuantity() {
+		return quantity;
+	}
+
+
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+	
+	
 	
 }

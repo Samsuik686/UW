@@ -109,6 +109,7 @@ public class UwConfig extends JFinalConfig {
             });
             urThread.setName("UR_SERVER");
             urThread.start();
+            System.out.println("UW机械臂服务开启完毕！！！");
 			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
@@ -143,7 +144,7 @@ public class UwConfig extends JFinalConfig {
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6079, PropKit.get("d_redisPassword"));
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379, PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		rp.setSerializer(new VisualSerializer());
@@ -152,7 +153,7 @@ public class UwConfig extends JFinalConfig {
 		// 配置ORM
 		ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
 		arp.setDialect(new MysqlDialect()); // 用什么数据库，就设置什么Dialect
-		arp.setShowSql(true);
+		arp.setShowSql(false);
 		MappingKit.mapping(arp);
 		me.add(arp);
 	}

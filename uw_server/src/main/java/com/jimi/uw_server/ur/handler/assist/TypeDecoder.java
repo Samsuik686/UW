@@ -9,8 +9,6 @@ import com.jimi.uw_server.ur.entity.AckPackage;
 import com.jimi.uw_server.ur.entity.AskPostionPackage;
 import com.jimi.uw_server.ur.entity.ReadyPackage;
 import com.jimi.uw_server.ur.entity.ScanMaterialExceptionPackage;
-import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
-import com.jimi.uw_server.ur.entity.MaterialPositionInfoPackage;
 import com.jimi.uw_server.ur.entity.LoginPackage;
 import com.jimi.uw_server.ur.entity.ScanMaterialInfoPackage;
 import com.jimi.uw_server.ur.entity.base.UrBasePackage;

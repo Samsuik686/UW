@@ -33,6 +33,8 @@ public class UrMaterialInfo implements Serializable{
 	
 	private Integer boxId;
 	
+	private Integer quantity;
+	
 	private Integer windowId;
 	
 	private Integer goodsLocationId;
@@ -43,7 +45,7 @@ public class UrMaterialInfo implements Serializable{
 	 * <p>Title<p>
 	 * <p>Description<p>
 	 */
-	public UrMaterialInfo(String materialId, Integer xPosition, Integer yPosition, Integer taskId, Integer boxId, Integer windowId, Integer goodsLocationId, Boolean isScaned, Integer exceptionCode) {
+	public UrMaterialInfo(String materialId, Integer xPosition, Integer yPosition, Integer taskId, Integer boxId, Integer windowId, Integer goodsLocationId, Boolean isScaned, Integer exceptionCode, Integer quantity) {
 		this.materialId = materialId;
 		this.xPosition = xPosition;
 		this.yPosition = yPosition;
@@ -53,6 +55,7 @@ public class UrMaterialInfo implements Serializable{
 		this.goodsLocationId = goodsLocationId;
 		this.isScaned = isScaned;
 		this.exceptionCode = exceptionCode;
+		this.quantity = quantity;
 	}
 
 	public String getMaterialId() {
@@ -125,6 +128,14 @@ public class UrMaterialInfo implements Serializable{
 
 	public void setGoodsLocationId(Integer goodsLocationId) {
 		this.goodsLocationId = goodsLocationId;
+	}
+
+	public Integer getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
 	}
 	
 	

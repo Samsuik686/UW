@@ -138,7 +138,7 @@ public class InvTaskHandler extends BaseTaskHandler {
 						if (!materials.isEmpty()) {
 							List<UrMaterialInfo> urMaterialInfos = new ArrayList<UrMaterialInfo>();
 							for (Material material : materials) {
-								UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), boxId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 1);
+								UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity());
 								urMaterialInfos.add(urMaterialInfo);
 							}
 							UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
@@ -156,7 +156,7 @@ public class InvTaskHandler extends BaseTaskHandler {
 								}
 							}
 						};
-						ProcessorExecutor.me.submit(runnable);
+						ProcessorExecutor.me.execute(runnable);
 
 					}
 					break;

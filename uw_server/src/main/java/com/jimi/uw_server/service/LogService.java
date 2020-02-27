@@ -8,7 +8,6 @@ import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
-import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.ActionLogVO;
 import com.jimi.uw_server.model.vo.TaskLogVO;

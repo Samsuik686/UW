@@ -1,7 +1,6 @@
 package com.jimi.uw_server.ur.processor;
 
 import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.service.InventoryTaskService;
 import com.jimi.uw_server.ur.constant.Constant;
@@ -40,7 +39,6 @@ public class MessageHandler {
                 }
                 if (isScanFlag) {
                     UrInvTaskInfoDAO.putUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(), urMaterialInfos);
-                    Material material = Material.dao.findById(scanMaterialInfoPackage.getMaterialId());
                     InventoryTaskService.me.inventoryUrRegularUWMaterial(scanMaterialInfoPackage.getMaterialId(), scanMaterialInfoPackage.getBoxId(), scanMaterialInfoPackage.getTaskId());
                     UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
                 }
@@ -72,9 +70,17 @@ public class MessageHandler {
                 materialPositionInfoPackage.setType(Constant.UR_INVENTORY_TASK);
                 materialPositionInfoPackage.setxPosition(urMaterialInfo.getxPosition());
                 materialPositionInfoPackage.setyPosition(urMaterialInfo.getyPosition());
+                materialPositionInfoPackage.setQuantity(urMaterialInfo.getQuantity());
                 UrOperationMaterialInfoDAO.putUrTaskBoxArrivedPack("robot1", urMaterialInfo);
-                PackSender.sendPackage("robot1", materialPositionInfoPackage);
+                Runnable runnable = new Runnable() {
 
+					@Override
+					public void run() {
+						PackSender.sendPackage("robot1", materialPositionInfoPackage);
+					}
+				};
+                ProcessorExecutor.me.execute(runnable);
+                break;
             }
         }
     }
@@ -96,7 +102,7 @@ public class MessageHandler {
                 urMaterialInfo.setExceptionCode(scanMaterialExceptionPackage.getExceptionCode());
                 UrMaterialInfo urMaterialInfoTemp = UrOperationMaterialInfoDAO.getUrOperationMaterialInfoByUrName("robot1");
                 if (urMaterialInfoTemp.getMaterialId().equals(scanMaterialExceptionPackage.getMaterialId())) {
-                    UrOperationMaterialInfoDAO.putUrTaskBoxArrivedPack("robot", urMaterialInfo);
+                    UrOperationMaterialInfoDAO.putUrTaskBoxArrivedPack("robot1", urMaterialInfo);
                 }
             }
             if (flag) {

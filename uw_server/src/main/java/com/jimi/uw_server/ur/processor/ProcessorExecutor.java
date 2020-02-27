@@ -16,16 +16,11 @@ public class ProcessorExecutor {
         public Thread newThread(Runnable r) {
             Thread thread = new Thread(r);
             thread.setName("UR_HANDLER" + atomicInteger.incrementAndGet());
-            return null;
+            return thread;
         }
     }, new ThreadPoolExecutor.AbortPolicy());
 
     private ProcessorExecutor(){}
-
-    public Future submit(Runnable r) {
-       Future future = pool.submit(r);
-       return future;
-    }
 
     public void execute(Runnable r) {
         pool.execute(r);
@@ -38,5 +33,4 @@ public class ProcessorExecutor {
     public void stopNow(){
         pool.shutdownNow();
     }
-
 }
