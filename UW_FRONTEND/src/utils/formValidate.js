@@ -144,10 +144,10 @@ export const handleEditQuantity = function(obj){
         return '盘点数量必须为非负整数';
     }
     if(obj.returnNum === '' || obj.returnNum === null){
-        return '盘点盈亏不能为空';
+        return '调拨多出数量不能为空';
     }
     if(!judge(obj.returnNum) && Number(obj.returnNum) !== 0 ){
-        return '盘点盈亏必须为非负整数';
+        return '调拨多出数量必须为非负整数';
     }
     return '';
 };

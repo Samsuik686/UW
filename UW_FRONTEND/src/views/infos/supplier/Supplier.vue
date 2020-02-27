@@ -83,7 +83,8 @@
                 isEditing:false,
                 editData:{},
                 ascBy:'',
-                descBy:''
+                descBy:'',
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
             }
         },
         mounted(){
@@ -142,9 +143,10 @@
             },
             setFilter:function(){
                 if(this.supplierInfo.name !== ''){
-                    this.filter = 'name' + 'like' + this.supplierInfo.name;
+                    this.filter = 'supplier.name' + 'like' + this.supplierInfo.name;
+                    this.filter += ('#&#supplier.company_id=' + this.activeCompanyId);
                 }else{
-                    this.filter = '';
+                    this.filter = ('supplier.company_id=' + this.activeCompanyId);
                 }
                 this.pageNo = 1;
                 this.pageSize = 20;

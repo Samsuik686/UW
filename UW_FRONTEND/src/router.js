@@ -40,14 +40,19 @@ import IoInNow from './views/io/inNow/InNow';
 import IoOutNow from './views/io/outNow/OutNow';
 //芯片仓出入库
 import PreciousNow from "./views/io/preciousNow/PreciousNow";
+//基础信息主界面
+import Infos from "./views/infos/Infos";
+//公司
+import InfosFactory from './views/infos/factory/Factory';
+//料盒
+import InfosBoxes from './views/infos/boxes/Boxes';
+//供应商
+import InfosSupplier from './views/infos/supplier/Supplier';
+//发料目的地
+import InfosDestination from './views/infos/destination/Destination';
+
 //物料主界面
 import Material from './views/material/Material';
-//料盒
-import MaterialBoxes from './views/material/boxes/Boxes';
-//供应商
-import MaterialSupplier from './views/material/supplier/Supplier';
-//发料目的地
-import MaterialDestination from './views/material/destination/Destination';
 //UW仓物料
 import MaterialUwMaterial from './views/material/uwMaterial/UwMaterial';
 //物料仓物料
@@ -62,8 +67,7 @@ import AllTasks from './views/allTasks/AllTasks';
 import RegularTasks from './views/allTasks/regularTasks/Tasks'
 //贵重料任务
 import PreciousTasks from './views/allTasks/preciousTasks/Tasks'
-//搬料盒任务
-import CarryBoxes from './views/allTasks/carryBoxes/Tasks'
+
 //紧急出库操作
 import OutEmergency from "./views/io/outEmergency/OutEmergency";
 
@@ -121,11 +125,34 @@ const router = new Router({
       path: '/main',
       name: 'Main',
       component: Main,
-      redirect: '/material',
+      redirect: '/infos',
       meta: {
         requireAuth: true
       },
       children: [
+        {
+          path: '/infos',
+          name: 'Infos',
+          component: Infos,
+          children: [
+            {
+              path: 'factory',
+              component: InfosFactory
+            },
+            {
+              path: 'boxes',
+              component: InfosBoxes
+            },
+            {
+              path: 'supplier',
+              component: InfosSupplier
+            },
+            {
+              path: 'destination',
+              component: InfosDestination
+            },
+          ]
+        },
         {
           path: '/material',
           name: 'Material',
@@ -138,18 +165,6 @@ const router = new Router({
             {
               path: 'ewhMaterial',
               component: MaterialEwhMaterial
-            },
-            {
-              path: 'boxes',
-              component: MaterialBoxes
-            },
-            {
-              path: 'supplier',
-              component: MaterialSupplier
-            },
-            {
-              path: 'destination',
-              component: MaterialDestination
             },
             {
               path: 'precious',
@@ -169,10 +184,6 @@ const router = new Router({
             {
               path: 'preciousTasks',
               component: PreciousTasks
-            },
-            {
-              path: 'carryBoxes',
-              component: CarryBoxes
             }
           ]
         },

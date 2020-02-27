@@ -106,7 +106,8 @@
                 endTime:'',
                 times:[],
                 destinations:[],
-                isClear:false
+                isClear:false,
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
             }
         },
         created(){
@@ -178,7 +179,9 @@
             selectDestination:function(){
                 let options = {
                     url: destinationSelectUrl,
-                    data: {}
+                    data: {
+                        filter: 'company.id=' + this.activeCompanyId
+                    }
                 };
                 axiosPost(options).then(res => {
                     if(res.data.result === 200){

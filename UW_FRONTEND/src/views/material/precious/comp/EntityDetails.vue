@@ -7,25 +7,25 @@
             <el-table-column
                     min-width="120"
                     label="料盘唯一码"
-                    prop="id">
+                    prop="materialId">
             </el-table-column>
-            <el-table-column
-                    label="类型"
-                    prop="type">
-            </el-table-column>
+<!--            <el-table-column-->
+<!--                    label="类型"-->
+<!--                    prop="type">-->
+<!--            </el-table-column>-->
             <el-table-column
                     min-width="150"
                     label="料号"
-                    prop="materialNo">
+                    prop="no">
             </el-table-column>
             <el-table-column
                     label="剩余数量"
-                    prop="remainderQuantity">
+                    prop="quantity">
             </el-table-column>
             <el-table-column
                     label="入库日期"
                     min-width="160"
-                    prop="store_time">
+                    prop="storeTime">
             </el-table-column>
         </el-table>
         <div class="block">
@@ -45,7 +45,7 @@
 </template>
 
 <script>
-    import {materialEntityUrl} from "../../../../plugins/globalUrl";
+    import {materialEntityByTypeUrl, materialEntityUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
 
@@ -71,7 +71,7 @@
                 if(!this.isPending){
                     this.isPending = true;
                     let options = {
-                        url: materialEntityUrl,
+                        url: materialEntityByTypeUrl,
                         data: {
                             materialTypeId: this.type,
                             pageNo:this.pageNo,

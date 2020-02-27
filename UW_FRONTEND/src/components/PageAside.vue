@@ -41,22 +41,33 @@
         showData: [],
         navData: [
           {
+            index: 'infos',
+            name: '信息',
+            icon: 'el-icon-s-operation',
+            children: [
+              {
+                index: '/infos/factory',
+                name: '公司管理'
+              },
+              {
+                index: '/infos/supplier',
+                name: '客户管理'
+              },
+              {
+                index: '/infos/boxes',
+                name: '料盒管理'
+              },
+              {
+                index: '/infos/destination',
+                name: '发料目的地管理'
+              },
+            ]
+          },
+          {
             index: 'material',
             name: '物料',
             icon: 'el-icon-coke-table',
             children: [
-              {
-                index: '/material/boxes',
-                name: '料盒管理'
-              },
-              {
-                index: '/material/supplier',
-                name: '客户管理'
-              },
-              {
-                index: '/material/destination',
-                name: '发料目的地管理'
-              },
               {
                 index: '/material/uwMaterial',
                 name: 'UW仓物料管理'
@@ -83,10 +94,6 @@
               {
                 index: '/tasks/preciousTasks',
                 name: '贵重仓任务'
-              },
-              {
-                index: '/tasks/carryBoxes',
-                name: '搬料盒'
               }
             ]
           },

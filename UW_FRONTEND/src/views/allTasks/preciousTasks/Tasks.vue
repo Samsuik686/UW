@@ -216,7 +216,8 @@
                     }]
                 },
                 ascBy:'',
-                descBy:'create_time'
+                descBy:'create_time',
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
             }
         },
         created(){
@@ -312,10 +313,11 @@
                         copyTasksInfo[i] = this.tasksInfo[i];
                     }
                 }
-                let isFirst = true;
+                //let isFirst = true;
                 let filter = '';
+                filter += ('supplier.company_id=' + this.activeCompanyId);
                 for(let i in copyTasksInfo){
-                    if(isFirst === true){
+                  /*  if(isFirst === true){
                         if(i === 'file_name'){
                             filter = filter + (i + "like" +  copyTasksInfo[i]);
                         }else if(i === 'create_time'){
@@ -324,7 +326,7 @@
                             filter = filter + (i + "=" +  copyTasksInfo[i]);
                         }
                         isFirst = false;
-                    }else{
+                    }else{*/
                         if(i === 'file_name'){
                             filter = filter + ("#&#" + i + "like" +  copyTasksInfo[i]);
                         }else if(i === 'create_time'){
@@ -332,7 +334,7 @@
                         }else{
                             filter = filter + ("#&#" + i + "=" +  copyTasksInfo[i]);
                         }
-                    }
+                   // }
                 }
                 this.filter = filter;
                 this.pageNo = 1;
@@ -340,18 +342,16 @@
                 this.select();
             },
             initForm:function(){
-                this.tasksInfo.create_time = '';
-                this.tasksInfo.file_name = '';
-                this.tasksInfo.state = '';
-                this.tasksInfo.supplier = '';
-                this.tasksInfo.type = '';
+                Object.assign(this.$data.tasksInfo, this.$options.data().tasksInfo);
                 this.times = [];
                 this.filter = '';
             },
             selectSupplier:function(){
                 let options = {
                     url: supplierSelectUrl,
-                    data: {}
+                    data: {
+                        filter: 'company.id=' + this.activeCompanyId
+                    }
                 };
                 axiosPost(options).then(res => {
                     if(res.data.result === 200){

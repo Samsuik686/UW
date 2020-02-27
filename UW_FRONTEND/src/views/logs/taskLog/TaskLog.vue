@@ -1,18 +1,18 @@
 <template>
     <div class="task-log" v-loading="isLoading">
         <el-form :inline="true" :model="taskLogInfo" class="task-log-form">
-            <el-form-item label="任务ID">
-                <el-input v-model.trim="taskLogInfo.packing_list_item_id" placeholder="任务ID"></el-input>
-            </el-form-item>
+<!--            <el-form-item label="任务ID">-->
+<!--                <el-input v-model.trim="taskLogInfo.packing_list_item_id" placeholder="任务ID"></el-input>-->
+<!--            </el-form-item>-->
             <el-form-item label="操作员ID">
                 <el-input v-model.trim="taskLogInfo.operator" placeholder="操作员ID"></el-input>
             </el-form-item>
             <el-form-item label="料盘唯一码">
                 <el-input v-model.trim="taskLogInfo.material_id" placeholder="料盘唯一码"></el-input>
             </el-form-item>
-            <el-form-item label="料号">
-                <el-input v-model.trim="taskLogInfo.no" placeholder="料号"></el-input>
-            </el-form-item>
+<!--            <el-form-item label="料号">-->
+<!--                <el-input v-model.trim="taskLogInfo.no" placeholder="料号"></el-input>-->
+<!--            </el-form-item>-->
             <el-form-item label="时间">
                 <el-date-picker
                         :clearable="isClear"

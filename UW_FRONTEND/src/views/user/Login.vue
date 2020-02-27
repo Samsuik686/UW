@@ -96,7 +96,7 @@
                   this.setUser(data);
                   window.sessionStorage.setItem("token", data['#TOKEN#']);
                   window.sessionStorage.setItem("user", JSON.stringify(data));
-                  this.$router.replace('/material/uwMaterial');
+                  this.$router.replace('/infos/factory');
                 } else {
                   errHandler(response.data);
                 }

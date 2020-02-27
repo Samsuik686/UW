@@ -30,7 +30,11 @@
                                :name="item.boxId === null?item.goodsLocationId:item.boxId">
                 <div v-if="item.id !== null">
                     <cut-item-details  :taskItem="item" v-if="item.isForceFinish === true" :col="col" :row="row"></cut-item-details>
-                    <task-item-details :taskItem="item"  @refreshData="refreshData" v-else></task-item-details>
+                    <task-item-details
+                      :identity="index"
+                      :taskItem="item"
+                      @refreshData="refreshData"
+                      v-else></task-item-details>
                 </div>
             </el-collapse-item>
         </el-collapse>

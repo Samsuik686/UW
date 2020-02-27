@@ -5,40 +5,43 @@ if (process.env.NODE_ENV === 'production') {
     url = window.g.LOCAL_URL
 }
 
+const turl = url;
+
 //build
 export const buildUrl = url + '/build';
 
 //material manage
-export const materialCountUrl = url + '/manage/material/count';
-export const materialEntityUrl = url + '/manage/material/getEntities';
+export const materialCountUrl = url + '/manage/material/countMaterials';
+export const materialEntityUrl = url + '/manage/material/getMaterialsByBox';
+export const materialEntityByTypeUrl = url + '/manage/material/getMaterialsByMaterialType';
 
 //添加普通仓物料类型
-export const addRegularMaterialTypeUrl = url + '/manage/material/addRegularMaterialType';
+export const addRegularMaterialTypeUrl = url + '/manage/materialType/addRegularMaterialType';
 //添加贵重仓物料类型
-export const addPreciousMaterialTypeUrl = url + '/manage/material/addPreciousMaterialType';
+export const addPreciousMaterialTypeUrl = url + '/manage/materialType/addPreciousMaterialType';
 //更新普通仓物料类型
-export const updateRegularMaterialTypeUrl = url + '/manage/material/updateRegularMaterialType';
+export const updateRegularMaterialTypeUrl = url + '/manage/materialType/updateRegularMaterialType';
 //更新贵重仓物料类型
-export const updatePreciousMaterialTypeUrl = url + '/manage/material/updatePreciousMaterialType';
+export const updatePreciousMaterialTypeUrl = url + '/manage/materialType/updatePreciousMaterialType';
 //批量删除普通仓物料类型
-export const deleteRegularMaterialByIdsUrl = url + '/manage/material/deleteRegularMaterialByIds';
+export const deleteRegularMaterialByIdsUrl = url + '/manage/materialType/deleteRegularMaterialByIds';
 //批量删除贵重仓物料类型
-export const deletePreciousMaterialByIdsUrl = url + '/manage/material/deletePreciousMaterialByIds';
+export const deletePreciousMaterialByIdsUrl = url + '/manage/materialType/deletePreciousMaterialByIds';
 
-export const getBoxesUrl = url + '/manage/material/getBoxes';
-export const addBoxUrl = url + '/manage/material/addBox';
-export const updateBoxUrl = url + '/manage/material/updateBox';
-export const deleteBoxUrl = url + '/manage/material/deleteBox';
+export const getBoxesUrl = url + '/manage/materialBox/getBoxes';
+export const addBoxUrl = url + '/manage/materialBox/addBox';
+export const updateBoxUrl = url + '/manage/materialBox/updateBox';
+export const deleteBoxUrl = url + '/manage/materialBox/deleteBox';
 export const exportReportUrl = url + '/manage/material/exportMaterialReport';
-export const getMaterialRecordsUrl = url + '/manage/material/getMaterialRecords';
-export const importRegularMaterialTypeFileUrl = url + '/manage/material/importRegularMaterialTypeFile';
-export const importPreicousMaterialTypeFileUrl = url + '/manage/material/importPreicousMaterialTypeFile';
+export const getMaterialRecordsUrl = url + '/manage/material/getMaterialIOTaskRecords';
+export const importRegularMaterialTypeFileUrl = url + '/manage/materialType/importRegularMaterialTypeFile';
+export const importPreciousMaterialTypeFileUrl = url + '/manage/materialType/importPreciousMaterialTypeFile';
 export const getOverdueMaterialUrl = url + '/manage/material/getOverdueMaterial';
 
 //批量修改料盒客户
-export const editBoxOfSupplierUrl = url + '/manage/material/editBoxOfSupplier';
+export const editBoxOfSupplierUrl = url + '/manage/materialBox/editBoxOfSupplier';
 //批量修改料盒类型
-export const editBoxOfTypeUrl = url + '/manage/material/editBoxOfType';
+export const editBoxOfTypeUrl = url + '/manage/materialBox/editBoxOfType';
 
 //log
 export const logsUrl = url + '/log/select';
@@ -153,6 +156,13 @@ export const robotPauseUrl = url + '/manage/robot/pause';
 export const robotBackUrl = url + '/manage/robot/back';
 export const robotCallUrl = url + '/manage/robot/call';
 
+//公司管理
+export const companyAddUrl = turl + '/manage/company/add';
+export const companyUpdateUrl = turl + '/manage/company/update';
+export const companySelectUrl = turl + '/manage/company/getCompanies';
+export const companyDeleteUrl = turl + '/manage/company/delete';
+
+
 //supplier manage
 export const supplierAddUrl = url + '/manage/supplier/add';
 export const supplierUpdateUrl = url + '/manage/supplier/update';
@@ -161,7 +171,7 @@ export const supplierChangeNameUrl = url + '/manage/supplier/changeName';
 //destination manage
 export const destinationAddUrl = url + '/manage/destination/add';
 export const destinationDeleteUrl = url + '/manage/destination/delete';
-export const destinationSelectUrl = url + '/manage/destination/get';
+export const destinationSelectUrl = url + '/manage/destination/getDestinations';
 
 //externalWh manage
 export const externalWhImportTaskUrl = url + '/manage/externalWh/importTask';

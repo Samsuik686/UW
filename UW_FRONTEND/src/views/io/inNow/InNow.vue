@@ -33,6 +33,7 @@
             :taskItem="item"
             v-if="item.id !== null"
             :id="index"
+            :identity="index"
             :col="col"
             :row="row"
             @refreshData="refreshData">

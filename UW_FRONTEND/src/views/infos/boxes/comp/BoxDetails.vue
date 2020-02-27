@@ -12,26 +12,42 @@
             <el-table-column
                     label="料盘唯一码"
                     width="140"
-                    prop="id"
+                    prop="materialId"
             >
             </el-table-column>
-            <el-table-column
+          <!--  <el-table-column
                     label="类型"
                     prop="type">
-            </el-table-column>
+            </el-table-column>-->
             <el-table-column
                     label="料号"
                     width="160"
-                    prop="materialNo">
+                    prop="no">
             </el-table-column>
             <el-table-column
-                    label="所在料盒"
-                    prop="box">
+                    label="物料类型码"
+                    width="90"
+                    prop="materialTypeId">
             </el-table-column>
             <el-table-column
+                    label="所在料盒编号"
+                    width="80"
+                    prop="boxId">
+            </el-table-column>
+            <el-table-column
+                    label="供应商"
+                    width="80"
+                    prop="supplierName">
+            </el-table-column>
+            <el-table-column
+                    label="产商"
+                    width="80"
+                    prop="manufacturer">
+            </el-table-column>
+       <!--     <el-table-column
                     label="料盒所在区域"
                     prop="boxArea">
-            </el-table-column>
+            </el-table-column>-->
             <el-table-column
                     label="盒内行号"
                     prop="row">
@@ -41,13 +57,22 @@
                     prop="col">
             </el-table-column>
             <el-table-column
+                    label="位号"
+                    prop="designator">
+            </el-table-column>
+            <el-table-column
                     label="剩余数量"
-                    prop="remainderQuantity">
+                    prop="quantity">
+            </el-table-column>
+            <el-table-column
+                    label="生产日期"
+                    width="160"
+                    prop="productionTime">
             </el-table-column>
             <el-table-column
                     label="入库日期"
                     width="160"
-                    prop="store_time">
+                    prop="storeTime">
             </el-table-column>
         </el-table>
         <div class="block">
@@ -67,7 +92,7 @@
 </template>
 
 <script>
-    import Bus from './../../../../utils/bus'
+    import Bus from '../../../../utils/bus'
     import {materialEntityUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
@@ -104,7 +129,7 @@
                     let options = {
                         url: materialEntityUrl,
                         data: {
-                            box: this.box,
+                            boxId: this.box,
                             pageNo: this.pageNo,
                             pageSize: this.pageSize
                         }

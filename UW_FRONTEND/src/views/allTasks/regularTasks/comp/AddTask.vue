@@ -77,7 +77,8 @@
                 inventoryTaskId:'',
                 inventoryTasks:[],
                 isDestinationShow:false,
-                destinationTip:'目的地'
+                destinationTip:'目的地',
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
             }
         },
         computed:{
@@ -190,7 +191,9 @@
             selectDestination:function(){
                 let options = {
                     url: destinationSelectUrl,
-                    data: {}
+                    data: {
+                        filter: 'company.id=' + this.activeCompanyId
+                    }
                 };
                 axiosPost(options).then(res => {
                     if(res.data.result === 200){

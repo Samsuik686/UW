@@ -7,7 +7,7 @@
           :visible.sync="isShowPosition"
           width="30%">
             <p>请把料盘从图示位置取出</p>
-            <canvas id="myCanvas" :width="width*2" :height="height*20" class="myCanvas"></canvas>
+            <canvas :id="'canvas-tips-' + identity" :width="width*2" :height="height*20" class="myCanvas"></canvas>
         <span slot="footer" class="dialog-footer">
             <el-button type="primary" @click="cancel" size="small">确定</el-button>
         </span>
@@ -28,7 +28,8 @@
         props:{
             col:Number,
             row:Number,
-            isShowPosition:Boolean
+            isShowPosition:Boolean,
+            identity: Number
         },
         watch:{
             isShowPosition:function (val) {
@@ -41,7 +42,7 @@
         },
         methods:{
             showPosition:function(col,row){
-                let myCanvas = document.getElementById('myCanvas');
+                let myCanvas = document.getElementById('canvas-tips-' + this.identity);
                 if(myCanvas === null){
                     return;
                 }

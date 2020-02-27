@@ -4,10 +4,10 @@
         <div class="con-wrap" :class="{conCollapse: isCollapse}">
             <page-header></page-header>
             <div class="page-component-wrap">
-                <router-view></router-view>
+                <router-view v-if="isRouterAlive"></router-view>
             </div>
         </div>
-        <show-robot-status v-if="user.type !== 5"></show-robot-status>
+<!--        <show-robot-status v-if="user.type !== 5"></show-robot-status>-->
     </el-container>
 </template>
 
@@ -25,6 +25,24 @@
             ShowRobotStatus,
             PageAside,
             PageHeader
+        },
+        provide() {
+            return {
+                reloadAll: this.reload
+            }
+        },
+        data() {
+            return {
+                isRouterAlive: true
+            }
+        },
+        methods: {
+            reload: function () {
+                this.isRouterAlive = false;
+                this.$nextTick(function () {
+                    this.isRouterAlive = true;
+                })
+            }
         }
     }
 </script>

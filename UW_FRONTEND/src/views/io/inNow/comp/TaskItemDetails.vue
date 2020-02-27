@@ -83,7 +83,7 @@
       </el-table-column>
     </el-table>
     <finish-tip :task-item="taskItem" :state="state" :isFinishTip.sync="isFinishTip"></finish-tip>
-    <show-position :is-show-position.sync="isShowPosition" :col="delCol" :row="delRow"></show-position>
+    <show-position :is-show-position.sync="isShowPosition" :col="delCol" :row="delRow" :identity="identity"></show-position>
   </div>
 </template>
 
@@ -104,7 +104,8 @@
     props:{
       taskItem:Object,
       col:Number,
-      row:Number
+      row:Number,
+      identity: Number
     },
     components:{
       FinishTip,

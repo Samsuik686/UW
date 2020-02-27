@@ -189,7 +189,9 @@
                         this.handlePrintMaterialArr(row.materialId);
                         return;
                     }
-                    this.printBarcode(row,actualNum);
+                    //this.printBarcode(row,actualNum);
+
+                    this.handlePrintMaterialArr(row.materialId); //临时补丁
                 }
             },
             printBarcode: function (row,actualNum) {

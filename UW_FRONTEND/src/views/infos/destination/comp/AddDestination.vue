@@ -33,7 +33,8 @@
             return{
                 isCloseOnModal:false,
                 isPending:false,
-                name:''
+                name:'',
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
             }
         },
         methods:{
@@ -55,7 +56,8 @@
                     let options = {
                         url:destinationAddUrl,
                         data: {
-                            name:this.name
+                            name:this.name,
+                            companyId: this.activeCompanyId
                         }
                     };
                     axiosPost(options).then(res => {

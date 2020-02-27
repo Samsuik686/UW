@@ -28,7 +28,7 @@
 <script>
     import axios from './../../../../plugins/http'
     import {mapGetters} from 'vuex'
-    import {importPreicousMaterialTypeFileUrl} from "../../../../plugins/globalUrl";
+    import {importPreciousMaterialTypeFileUrl} from "../../../../plugins/globalUrl";
     import {errHandler} from "../../../../utils/errorHandler";
     export default {
         name: "UploadMaterial",
@@ -70,7 +70,7 @@
                     formData.append('file', this.thisFile);
                     formData.append('supplierId', this.supplierId);
                     formData.append('#TOKEN#',this.token);
-                    axios.post(importPreicousMaterialTypeFileUrl, formData).then(res => {
+                    axios.post(importPreciousMaterialTypeFileUrl, formData).then(res => {
                         if (res.data.result === 200) {
                             this.$alertSuccess('导入成功');
                             this.cancel();

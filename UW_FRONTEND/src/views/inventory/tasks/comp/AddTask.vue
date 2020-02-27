@@ -38,7 +38,8 @@
                 isCloseOnModal:false,
                 supplierId:'',
                 destinations:[],
-                selectDestinations:[]
+                selectDestinations:[],
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
             }
         },
         props:{
@@ -86,7 +87,9 @@
             getDestinations:function(){
                 let options = {
                     url:destinationSelectUrl,
-                    data:{}
+                    data: {
+                        filter: 'company.id=' + this.activeCompanyId
+                    }
                 };
                 axiosPost(options).then(res => {
                     if(res.data.result === 200){
