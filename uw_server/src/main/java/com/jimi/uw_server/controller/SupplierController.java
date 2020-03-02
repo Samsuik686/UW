@@ -4,6 +4,7 @@ import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.service.SupplierService;
 import com.jimi.uw_server.util.ResultUtil;
 
@@ -22,6 +23,9 @@ public class SupplierController extends Controller {
 	// 添加客户
 	@Log("添加公司为{companyId},名为{name}的客户")
 	public void add(String name, Integer companyId) {
+		if (companyId == null || name == null){
+			throw  new ParameterException("参数不能为空");
+		}
 		String resultString = supplierService.add(name, companyId);
 		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());

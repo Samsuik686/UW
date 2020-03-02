@@ -43,7 +43,6 @@ public class RestaurantBootStrap extends ChannelInitializer<SocketChannel> {
 			serverBootstrap.childHandler(this);
 			// 开启端口监听，阻塞直到开启后返回
 			future = serverBootstrap.bind(PropKit.use("properties.ini").getInt("ur_port")).sync();
-			System.out.println("机械臂服务开启");
 			future.channel().closeFuture().sync();
 		} finally {
 			bossGroup.shutdownGracefully();

@@ -1,8 +1,5 @@
 package com.jimi.uw_server.agv.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
@@ -12,6 +9,9 @@ import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.comparator.PriorityComparator;
 import com.jimi.uw_server.constant.TaskItemState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -24,6 +24,22 @@ public class TaskItemRedisDAO {
 
 	public static final String UNDEFINED = "undefined";
 
+	private static final String UW_IO_TASK_SUFFIX = "UW_IO_TASK_";
+
+	private static final String UW_INVENTORY_TASK_SUFFIX = "UW_INVENTORY_TASK_";
+
+	private static final String UW_SAMPLE_TASK_SUFFIX = "UW_SAMPLE_TASK_";
+
+	private static final String UW_BUILD_TASK_SUFFIX = "UW_BUILD_TASK_";
+
+	private static final String UW_LOCATION_SUFFIX = "UW_LOCATION_";
+
+	private static final String UW_AGV_LINK_SWITCH = "UW_AGV_LINK_SWITCH";
+
+	private static final String UW_CMDID= "UW_CMDID";
+
+	private static final String UW_TASK_STATUS_SUFFIX = "UW_TASK_STATUS_";
+
 	private static Cache cache = Redis.use();
 
 
@@ -33,9 +49,9 @@ public class TaskItemRedisDAO {
 	public synchronized static void addIOTaskItem(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
 		appendIOTaskItems(taskId, ioTaskItems);
 		ioTaskItems.sort(new PriorityComparator());
-		cache.del("IO_TASK_" + taskId);
+		cache.del(UW_IO_TASK_SUFFIX + taskId);
 		for (AGVIOTaskItem item : ioTaskItems) {
-			cache.lpush("IO_TASK_" + taskId, Json.getJson().toJson(item));
+			cache.lpush(UW_IO_TASK_SUFFIX + taskId, Json.getJson().toJson(item));
 		}
 	}
 
@@ -44,11 +60,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的未分配的条目<br>
 	 */
 	public synchronized static void removeUnAssignedTaskItemByTaskId(int taskId) {
-		for (int i = 0; i < cache.llen("IO_TASK_" + taskId); i++) {
-			String item = cache.lindex("IO_TASK_" + taskId, i);
+		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskId); i++) {
+			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskId, i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(item, AGVIOTaskItem.class);
 			if (agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
-				cache.lrem("IO_TASK_" + taskId, 1, item);
+				cache.lrem(UW_IO_TASK_SUFFIX + taskId, 1, item);
 				i--;
 			}
 		}
@@ -59,7 +75,7 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的条目<br>
 	 */
 	public synchronized static void removeTaskItemByTaskId(int taskId) {
-		cache.del("IO_TASK_" + taskId);
+		cache.del(UW_IO_TASK_SUFFIX + taskId);
 	}
 
 
@@ -67,11 +83,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定的出入库任务条目<br>
 	 */
 	public synchronized static void removeTaskItemByPackingListId(Integer taskId, int packingListId) {
-		for (int i = 0; i < cache.llen("IO_TASK_" + taskId); i++) {
-			String item = cache.lindex("IO_TASK_" + taskId, i);
+		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskId); i++) {
+			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskId, i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(item, AGVIOTaskItem.class);
 			if (agvioTaskItem.getId().intValue() == packingListId) {
-				cache.lrem("IO_TASK_" + taskId, 1, item);
+				cache.lrem(UW_IO_TASK_SUFFIX + taskId, 1, item);
 				i--;
 			}
 		}
@@ -82,8 +98,8 @@ public class TaskItemRedisDAO {
 	 *  填写指定出入库任务条目的信息
 	 */
 	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish, Boolean isCut) {
-		for (int i = 0; i < cache.llen("IO_TASK_" + taskItem.getTaskId()); i++) {
-			String item = cache.lindex("IO_TASK_" + taskItem.getTaskId(), i);
+		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskItem.getTaskId()); i++) {
+			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
 			if (agvioTaskItem.getId().intValue() == taskItem.getId().intValue()) {
 				if (state != null) {
@@ -107,7 +123,7 @@ public class TaskItemRedisDAO {
 				if (isCut != null) {
 					agvioTaskItem.setIsCut(isCut);
 				}
-				cache.lset("IO_TASK_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem));
+				cache.lset(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem));
 				break;
 			}
 		}
@@ -128,7 +144,7 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVIOTaskItem> appendIOTaskItems(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
-		List<String> items = cache.lrange("IO_TASK_" + taskId, 0, -1);
+		List<String> items = cache.lrange(UW_IO_TASK_SUFFIX + taskId, 0, -1);
 		for (String item : items) {
 			ioTaskItems.add(Json.getJson().parse(item, AGVIOTaskItem.class));
 		}
@@ -142,7 +158,7 @@ public class TaskItemRedisDAO {
 	public synchronized static int getCmdId() {
 		Integer cmdid = 0;
 		try {
-			String cmdidStr = cache.get("cmdid");
+			String cmdidStr = cache.get(UW_CMDID);
 			if (cmdidStr != null) {
 				cmdid = Integer.valueOf(cmdidStr);
 			}
@@ -150,7 +166,7 @@ public class TaskItemRedisDAO {
 		}
 		cmdid %= 999999;
 		cmdid++;
-		cache.set("cmdid", cmdid);
+		cache.set(UW_CMDID, cmdid);
 		return cmdid;
 	}
 
@@ -160,9 +176,9 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addBuildTaskItem(List<AGVBuildTaskItem> buildTaskItems) {
 		appendBuildTaskItems(buildTaskItems);
-		cache.del("tilOfBuild");
+		cache.del(UW_BUILD_TASK_SUFFIX);
 		for (AGVBuildTaskItem item : buildTaskItems) {
-			cache.lpush("tilOfBuild", Json.getJson().toJson(item));
+			cache.lpush(UW_BUILD_TASK_SUFFIX, Json.getJson().toJson(item));
 		}
 		
 		
@@ -175,7 +191,7 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVBuildTaskItem> appendBuildTaskItems(List<AGVBuildTaskItem> buildTaskItems) {
-		List<String> items = cache.lrange("tilOfBuild", 0, -1);
+		List<String> items = cache.lrange(UW_BUILD_TASK_SUFFIX, 0, -1);
 		for (String item : items) {
 			buildTaskItems.add(Json.getJson().parse(item, AGVBuildTaskItem.class));
 		}
@@ -196,11 +212,11 @@ public class TaskItemRedisDAO {
 	 * 批量删除指定的建仓任务条目<br>
 	 */
 	public static void removeBuildTaskItemBySrcPosition(String srcPosition) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			String item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen(UW_BUILD_TASK_SUFFIX); i++) {
+			String item = cache.lindex(UW_BUILD_TASK_SUFFIX, i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getSrcPosition().equals(srcPosition)) {
-				cache.lrem("tilOfBuild", 1, item);
+				cache.lrem(UW_BUILD_TASK_SUFFIX, 1, item);
 				i--;
 			}
 		}
@@ -211,11 +227,11 @@ public class TaskItemRedisDAO {
 	 * 删除某条指定的建仓任务条目<br>
 	 */
 	public static void removeBuildTaskItemByBoxId(int boxId) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			String item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen(UW_BUILD_TASK_SUFFIX); i++) {
+			String item = cache.lindex(UW_BUILD_TASK_SUFFIX, i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getBoxId().intValue() == boxId) {
-				cache.lrem("tilOfBuild", 1, item);
+				cache.lrem(UW_BUILD_TASK_SUFFIX, 1, item);
 				i--;
 			}
 		}
@@ -226,12 +242,12 @@ public class TaskItemRedisDAO {
 	 *  填写指定建仓任务条目的执行机器
 	 */
 	public synchronized static void updateBuildTaskItemRobot(AGVBuildTaskItem buildTaskItem, int robotid) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			String item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen(UW_BUILD_TASK_SUFFIX); i++) {
+			String item = cache.lindex(UW_BUILD_TASK_SUFFIX, i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()) {
 				agvBuildTaskItem.setRobotId(robotid);
-				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem));
+				cache.lset(UW_BUILD_TASK_SUFFIX, i, Json.getJson().toJson(agvBuildTaskItem));
 				break;
 			}
 		}
@@ -242,12 +258,12 @@ public class TaskItemRedisDAO {
 	 * 更新建仓任务条目执行状态<br>
 	 */
 	public synchronized static void updateBuildTaskItemState(AGVBuildTaskItem buildTaskItem, int state) {
-		for (int i = 0; i < cache.llen("tilOfBuild"); i++) {
-			String item = cache.lindex("tilOfBuild", i);
+		for (int i = 0; i < cache.llen(UW_BUILD_TASK_SUFFIX); i++) {
+			String item = cache.lindex(UW_BUILD_TASK_SUFFIX, i);
 			AGVBuildTaskItem agvBuildTaskItem = Json.getJson().parse(item, AGVBuildTaskItem.class);
 			if (agvBuildTaskItem.getBoxId().intValue() == buildTaskItem.getBoxId().intValue()) {
 				agvBuildTaskItem.setState(state);
-				cache.lset("tilOfBuild", i, Json.getJson().toJson(agvBuildTaskItem));
+				cache.lset(UW_BUILD_TASK_SUFFIX, i, Json.getJson().toJson(agvBuildTaskItem));
 				break;
 			}
 		}
@@ -263,13 +279,13 @@ public class TaskItemRedisDAO {
 
 
 	public synchronized static Boolean getAgvWebSocketStatus() {
-		String flagStr = cache.get("agvWebSocketStatus");
+		String flagStr = cache.get(UW_AGV_LINK_SWITCH);
 		Boolean flag = true;
 		if (flagStr != null && flagStr.equals("false")) {
 			flag= false;
 			return flag;
 		}
-		cache.set("agvWebSocketStatus", true);
+		cache.set(UW_AGV_LINK_SWITCH, true);
 		return flag;
 	}
 
@@ -279,10 +295,10 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addInventoryTaskItem(Integer taskId, List<AGVInventoryTaskItem> agvInventoryTaskItem) {
 		appendInventoryTaskItems(taskId, agvInventoryTaskItem);
-		cache.del("InvTask_" + taskId);
+		cache.del(UW_INVENTORY_TASK_SUFFIX + taskId);
 		for (AGVInventoryTaskItem item : agvInventoryTaskItem) {
-			cache.lpush("InvTask_" + taskId, Json.getJson().toJson(item));
-		}
+			cache.lpush(UW_INVENTORY_TASK_SUFFIX + taskId, Json.getJson().toJson(item));
+	}
 		
 		
 	}
@@ -292,7 +308,7 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的盘点条目<br>
 	 */
 	public static void removeInventoryTaskItemByTaskId(int taskId) {
-		cache.del("InvTask_" + taskId);
+		cache.del(UW_INVENTORY_TASK_SUFFIX + taskId);
 	}
 
 
@@ -300,11 +316,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定的盘点任务条目<br>
 	 */
 	public static void removeInventoryTaskItemById(Integer taskId, Integer boxId) {
-		for (int i = 0; i < cache.llen("InvTask_" + taskId); i++) {
-			String item = cache.lindex("InvTask_" + taskId, i);
+		for (int i = 0; i < cache.llen(UW_INVENTORY_TASK_SUFFIX + taskId); i++) {
+			String item = cache.lindex(UW_INVENTORY_TASK_SUFFIX + taskId, i);
 			AGVInventoryTaskItem agvioTaskItem = Json.getJson().parse(item, AGVInventoryTaskItem.class);
 			if (agvioTaskItem.getGroupId().equals(taskId + "@" + boxId)) {
-				cache.lrem("InvTask_" + taskId, 1, item);
+				cache.lrem(UW_INVENTORY_TASK_SUFFIX + taskId, 1, item);
 				i--;
 			}
 		}
@@ -315,8 +331,8 @@ public class TaskItemRedisDAO {
 	 *  填写指定盘点任务条目的信息
 	 */
 	public synchronized static void updateInventoryTaskItemInfo(AGVInventoryTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
-		for (int i = 0; i < cache.llen("InvTask_" + taskItem.getTaskId()); i++) {
-			String item = cache.lindex("InvTask_" + taskItem.getTaskId(), i);
+		for (int i = 0; i < cache.llen(UW_INVENTORY_TASK_SUFFIX + taskItem.getTaskId()); i++) {
+			String item = cache.lindex(UW_INVENTORY_TASK_SUFFIX + taskItem.getTaskId(), i);
 			AGVInventoryTaskItem agvInventoryTaskItem = Json.getJson().parse(item, AGVInventoryTaskItem.class);
 			if (agvInventoryTaskItem.getGroupId().equals(taskItem.getGroupId())) {
 				if (state != null) {
@@ -334,7 +350,7 @@ public class TaskItemRedisDAO {
 				if (isForceFinish != null) {
 					agvInventoryTaskItem.setIsForceFinish(isForceFinish);
 				}
-				cache.lset("InvTask_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvInventoryTaskItem));
+				cache.lset(UW_INVENTORY_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvInventoryTaskItem));
 				break;
 			}
 		}
@@ -355,7 +371,7 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVInventoryTaskItem> appendInventoryTaskItems(Integer taskId, List<AGVInventoryTaskItem> agvInventoryTaskItem) {
-		List<String> items = cache.lrange("InvTask_" + taskId, 0, -1);
+		List<String> items = cache.lrange(UW_INVENTORY_TASK_SUFFIX + taskId, 0, -1);
 		for (String item : items) {
 			agvInventoryTaskItem.add(Json.getJson().parse(item, AGVInventoryTaskItem.class));
 		}
@@ -368,9 +384,9 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static void addSampleTaskItem(Integer taskId, List<AGVSampleTaskItem> agvSampleTaskItems) {
 		appendSampleTaskItems(taskId, agvSampleTaskItems);
-		cache.del("SamTask_" + taskId);
+		cache.del(UW_SAMPLE_TASK_SUFFIX + taskId);
 		for (AGVSampleTaskItem item : agvSampleTaskItems) {
-			cache.lpush("SamTask_" + taskId, Json.getJson().toJson(item));
+			cache.lpush(UW_SAMPLE_TASK_SUFFIX + taskId, Json.getJson().toJson(item));
 		}
 		
 	}
@@ -380,7 +396,7 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的抽检条目<br>
 	 */
 	public static void removeSampleTaskItemByTaskId(int taskId) {
-		cache.del("SamTask_" + taskId);
+		cache.del(UW_SAMPLE_TASK_SUFFIX + taskId);
 	}
 
 
@@ -388,11 +404,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定的抽检任务条目<br>
 	 */
 	public static void removeSampleTaskItemById(Integer taskId, Integer boxId) {
-		for (int i = 0; i < cache.llen("SamTask_" + taskId); i++) {
-			String item = cache.lindex("SamTask_" + taskId, i);
+		for (int i = 0; i < cache.llen(UW_SAMPLE_TASK_SUFFIX + taskId); i++) {
+			String item = cache.lindex(UW_SAMPLE_TASK_SUFFIX + taskId, i);
 			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(item, AGVSampleTaskItem.class);
 			if (agvSampleTaskItem.getGroupId().equals(taskId + "#" + boxId)) {
-				cache.lrem("SamTask_" + taskId, 1, item);
+				cache.lrem(UW_SAMPLE_TASK_SUFFIX + taskId, 1, item);
 				i--;
 			}
 		}
@@ -448,8 +464,8 @@ public class TaskItemRedisDAO {
 	 *  填写指定出入库任务条目的信息
 	 */
 	public synchronized static void updateSampleTaskItemInfo(AGVSampleTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
-		for (int i = 0; i < cache.llen("SamTask_" + taskItem.getTaskId()); i++) {
-			String item = cache.lindex("SamTask_" + taskItem.getTaskId(), i);
+		for (int i = 0; i < cache.llen(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId()); i++) {
+			String item = cache.lindex(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), i);
 			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(item, AGVSampleTaskItem.class);
 			if (agvSampleTaskItem.getGroupId().equals(taskItem.getGroupId())) {
 				if (state != null) {
@@ -467,7 +483,7 @@ public class TaskItemRedisDAO {
 				if (isForceFinish != null) {
 					agvSampleTaskItem.setIsForceFinish(isForceFinish);
 				}
-				cache.lset("SamTask_" + taskItem.getTaskId(), i, Json.getJson().toJson(agvSampleTaskItem));
+				cache.lset(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvSampleTaskItem));
 				break;
 			}
 		}
@@ -488,7 +504,7 @@ public class TaskItemRedisDAO {
 	 */
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVSampleTaskItem> appendSampleTaskItems(Integer taskId, List<AGVSampleTaskItem> agvSampleTaskItems) {
-		List<String> items = cache.lrange("SamTask_" + taskId, 0, -1);
+		List<String> items = cache.lrange(UW_SAMPLE_TASK_SUFFIX + taskId, 0, -1);
 		for (String item : items) {
 			agvSampleTaskItems.add(Json.getJson().parse(new String(item), AGVSampleTaskItem.class));
 		}
@@ -516,11 +532,11 @@ public class TaskItemRedisDAO {
 	 * 删除指定任务id的未分配的条目<br>
 	 */
 	public synchronized static void removeUnAssignedSampleTaskItemByTaskId(int taskId) {
-		for (int i = 0; i < cache.llen("SamTask_" + taskId); i++) {
-			String item = cache.lindex("SamTask_" + taskId, i);
+		for (int i = 0; i < cache.llen(UW_SAMPLE_TASK_SUFFIX + taskId); i++) {
+			String item = cache.lindex(UW_SAMPLE_TASK_SUFFIX + taskId, i);
 			AGVSampleTaskItem agvSampleTaskItems = Json.getJson().parse(item, AGVSampleTaskItem.class);
 			if (agvSampleTaskItems.getTaskId().intValue() == taskId && (agvSampleTaskItems.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
-				cache.lrem("SamTask_" + taskId, 1, item);
+				cache.lrem(UW_SAMPLE_TASK_SUFFIX + taskId, 1, item);
 				i--;
 			}
 		}
@@ -532,10 +548,10 @@ public class TaskItemRedisDAO {
 	 */
 	public synchronized static Integer getLocationStatus(Integer windowId, Integer goodsLocId) {
 		Integer status = 0;
-		String statusStr = cache.get("Location_" + windowId + "_" + goodsLocId);
+		String statusStr = cache.get(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId);
 		if (statusStr == null) {
 			status = 0;
-			cache.set("Location_" + windowId + "_" + goodsLocId, 0);
+			cache.set(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId, 0);
 		}else {
 			status = Integer.valueOf(statusStr);
 		}
@@ -548,8 +564,8 @@ public class TaskItemRedisDAO {
 	 * 设置位置状态信息（0：空，1：满）
 	 */
 	public synchronized static void setLocationStatus(Integer windowId, Integer goodsLocId, Integer status) {
-		cache.del("Location_" + windowId + "_" + goodsLocId);
-		cache.set("Location_" + windowId + "_" + goodsLocId, status);
+		cache.del(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId);
+		cache.set(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId, status);
 	}
 
 
@@ -557,29 +573,29 @@ public class TaskItemRedisDAO {
 	 * 删除位置状态信息
 	 */
 	public synchronized static void delLocationStatus(Integer windowId, Integer goodsLocId) {
-		cache.del("Location_" + windowId + "_" + goodsLocId);
+		cache.del(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId);
 	}
 
 
 	public synchronized static Boolean getTaskStatus(Integer taskId) {
-		String statusStr = cache.get("Status_" + taskId);
+		String statusStr = cache.get(UW_TASK_STATUS_SUFFIX + taskId);
 		Boolean status = true;
 		if (statusStr != null && statusStr.equals("false")) {
 			status = false;
 			return status;
 		}
-		cache.set("Status_" + taskId, true);
+		cache.set(UW_TASK_STATUS_SUFFIX + taskId, true);
 		return status;
 	}
 
 
 	public synchronized static void setTaskStatus(Integer taskId, Boolean flag) {
-		cache.del("Status_" + taskId);
-		cache.set("Status_" + taskId, flag);
+		cache.del(UW_TASK_STATUS_SUFFIX + taskId);
+		cache.set(UW_TASK_STATUS_SUFFIX + taskId, flag);
 	}
 
 
 	public synchronized static void delTaskStatus(Integer taskId) {
-		cache.del("Status_" + taskId);
+		cache.del(UW_TASK_STATUS_SUFFIX + taskId);
 	}
 }

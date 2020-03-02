@@ -11,6 +11,7 @@ import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.util.VisualSerializer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -63,7 +64,7 @@ public class UrInvTaskInfoDAO {
 			List<UrMaterialInfo> urMaterialInfos = JSON.parseArray(urMaterialInfosString, UrMaterialInfo.class);
 			return urMaterialInfos;
 		}
-		return null;
+		return Collections.emptyList();
 	}
 	
 	

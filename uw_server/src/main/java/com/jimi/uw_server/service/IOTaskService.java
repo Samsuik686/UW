@@ -1,21 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
@@ -28,48 +12,27 @@ import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
-import com.jimi.uw_server.constant.BoxState;
-import com.jimi.uw_server.constant.MaterialBoxType;
-import com.jimi.uw_server.constant.MaterialStatus;
-import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
-import com.jimi.uw_server.constant.sql.IOTaskSQL;
-import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
-import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
-import com.jimi.uw_server.constant.sql.SQL;
-import com.jimi.uw_server.constant.sql.SampleTaskSQL;
+import com.jimi.uw_server.constant.*;
+import com.jimi.uw_server.constant.sql.*;
 import com.jimi.uw_server.exception.FormDataValidateFailedException;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.Efficiency;
-import com.jimi.uw_server.model.ExternalWhLog;
-import com.jimi.uw_server.model.FormerSupplier;
-import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.InventoryLog;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.PackingListItem;
-import com.jimi.uw_server.model.SampleOutRecord;
-import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.PackingListItemBO;
-import com.jimi.uw_server.model.vo.IOTaskDetailVO;
-import com.jimi.uw_server.model.vo.PackingListItemDetailsVO;
-import com.jimi.uw_server.model.vo.IOTaskInfo;
-import com.jimi.uw_server.model.vo.TaskVO;
-import com.jimi.uw_server.model.vo.WindowParkingListItemVO;
-import com.jimi.uw_server.model.vo.WindowTaskItemsVO;
+import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.MaterialHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
 
 
 /**
@@ -481,6 +444,9 @@ public class IOTaskService {
 				throw new OperationException("该任务已完成，禁止作废！");
 			} else if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
 				throw new OperationException("该任务已作废！");
+			} else if (state < TaskState.PROCESSING){
+				task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
+				return true;
 			} else {
 				if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
@@ -494,8 +460,6 @@ public class IOTaskService {
 							for (Material material : materials) {
 								material.setStatus(MaterialStatus.NORMAL).update();
 							}
-							PackingListItem packingListItem = PackingListItem.dao.findById(record.getInt("id"));
-							packingListItem.setFinishTime(new Date()).update();
 						}
 
 						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
@@ -1095,7 +1059,8 @@ public class IOTaskService {
 			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
 			// 通过客户id获取客户名
-			String sName = Supplier.dao.findById(supplierId).getName();
+			Supplier supplier = Supplier.dao.findById(supplierId);
+			String sName = supplier.getName();
 			int materialBoxCapacity = PropKit.use("properties.ini").getInt("materialBoxCapacity");
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
@@ -1127,8 +1092,7 @@ public class IOTaskService {
 					throw new OperationException("当前料盒已满，请停止扫码！");
 				}
 			}
-			material = putInMaterialToDb(material, materialId, boxId, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.NORMAL);
-			
+			material = putInMaterialToDb(material, materialId, boxId, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.NORMAL, supplier.getCompanyId());
 			if (materialType.getRadius().equals(7)) {
 
 				if (reelNum > 0) {
@@ -1242,7 +1206,8 @@ public class IOTaskService {
 			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
 			// 通过客户id获取客户名
-			String sName = Supplier.dao.findById(supplierId).getName();
+			Supplier supplier = Supplier.dao.findById(supplierId);
+			String sName = supplier.getName();
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
 				throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本仓口进行任务，" + "本仓口已绑定 " + sName + " 的任务单！");
@@ -1465,7 +1430,8 @@ public class IOTaskService {
 			// 通过物料类型获取对应的客户id
 			Integer supplierId = materialType.getSupplier();
 			// 通过客户id获取客户名
-			String sName = Supplier.dao.findById(supplierId).getName();
+			Supplier supplier = Supplier.dao.findById(supplierId);
+			String sName = supplier.getName();
 			FormerSupplier formerSupplier = FormerSupplier.dao.findFirst(GET_FORMER_SUPPLIER_SQL, supplierName, materialType.getSupplier());
 			if (!supplierName.equals(sName) && formerSupplier == null) {
 				throw new OperationException("扫码错误，客户 " + supplierName + " 对应的任务目前没有在本界面进行任务，" + "本界面已绑定 " + sName + " 的任务单！");
@@ -1485,8 +1451,8 @@ public class IOTaskService {
 			if (taskLog != null && taskLog.getInt("totalQuantity") != null && taskLog.getInt("totalQuantity") >= packingListItem.getQuantity()) {
 				throw new OperationException("扫描数量足够！");
 			}
-			putInMaterialToDb(material, materialId, null, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.INING);
-			// 写入库日志
+			putInMaterialToDb(material, materialId, null, quantity, productionTime, printTime, materialType.getId(), cycle, manufacturer, MaterialStatus.INING, supplier.getCompanyId());
+			// 写入库日志			// 写入库日志
 			createTaskLog(packingListItem.getId(), materialId, quantity, user, task);
 			return material;
 		}
@@ -1689,7 +1655,7 @@ public class IOTaskService {
 
 
 	// 更新标准料盘出库数量以及料盘信息
-	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, Boolean afterCut, User user) {
+	public void updateOutQuantityAndMaterialInfo(AGVIOTaskItem item, Boolean afterCut, PackingListItem packingListItem, User user) {
 		synchronized (UPDATEOUTQUANTITYANDMATERIALINFO_LOCK) {
 			int acturallyNum = 0;
 			List<Record> records = Db.find(SQL.GET_TASKLOG_BY_ITEM_ID_SQL, item.getId());
@@ -1725,7 +1691,6 @@ public class IOTaskService {
 			// 出库超发，欠发的记录写入外仓
 			if (!item.getIsCut() && item.getIsForceFinish()) {
 
-				PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
 				if (!packingListItem.getQuantity().equals(acturallyNum)) {
 					Task task = Task.dao.findById(item.getTaskId());
 					if (packingListItem.getQuantity() < acturallyNum) {
@@ -1927,7 +1892,6 @@ public class IOTaskService {
 	/**
 	 * 完成贵重仓出库任务缺料条目
 	 * @param taskId
-	 * @param isForce
 	 * @return
 	 */
 	public Boolean finishPreciousTaskLackItem(Integer taskId) {
@@ -1935,10 +1899,20 @@ public class IOTaskService {
 		if (task == null || !task.getType().equals(TaskType.OUT) || !task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId()) || !task.getState().equals(TaskState.PROCESSING)) {
 			throw new OperationException("出库任务不存在或者任务未处于进行中状态");
 		}
-		List<Record> unfinishLackRecoed = Db.find(IOTaskSQL.GET_ALL_UNFINISH_LACK_PRECIOUS_IOTASK_ITEM, taskId);
-		for (Record record : unfinishLackRecoed) {
-			Record problemRecord = Db.findFirst(IOTaskSQL.GET_PROBLEM_PRECIOUS_IOTASK_ITEM_BY_ID, record.getInt("PackingListItem_Id"));
-			if (problemRecord != null) {
+		List<PackingListItem> cutPackingListItems =  PackingListItem.dao.find(IOTaskSQL.GET_CUTTING_PACKING_LIST_ITEM_BY_TASK_ID, taskId);
+		Set<Integer> cutPackingListItemsIdSet = new HashSet<>();
+		if (!cutPackingListItems.isEmpty()) {
+			for (PackingListItem cutPackingListItem : cutPackingListItems) {
+				cutPackingListItemsIdSet.add(cutPackingListItem.getId());
+			}
+		}
+		List<PackingListItem> unfinishLackRecoed = PackingListItem.dao.find(IOTaskSQL.GET_ALL_UNFINISH_PRECIOUS_IOTASK_ITEM, taskId);
+		int finishLackItemSize = 0;
+		for (PackingListItem record : unfinishLackRecoed) {
+			if (cutPackingListItems.contains(record.getId())) {
+				continue;
+			}
+			if (materialService.countPreciousQuantityByMaterialTypeId(record.getMaterialTypeId()) > 0){
 				continue;
 			}
 			List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
@@ -1960,9 +1934,9 @@ public class IOTaskService {
 			}
 			PackingListItem packingListItem = PackingListItem.dao.findById(record.getInt("PackingListItem_Id"));
 			packingListItem.setFinishTime(new Date()).update();
+			finishLackItemSize ++;
 		}
-		PackingListItem packingListItem2 = PackingListItem.dao.findFirst(IOTaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, taskId);
-		if (packingListItem2 == null) {
+		if (finishLackItemSize == unfinishLackRecoed.size()) {
 			Record problemRecord = Db.findFirst(IOTaskSQL.GET_PROBLEM_IOTASK_ITEM_BY_TASK_ID, taskId);
 			if (problemRecord != null) {
 				task.setState(TaskState.EXIST_LACK);
@@ -1975,10 +1949,10 @@ public class IOTaskService {
 	}
 
 
+
 	/**
 	 * 完成贵重仓出库任务条目
 	 * @param taskId
-	 * @param isForce
 	 * @return
 	 */
 	public String finishPreciousTask(Integer taskId) {
@@ -2310,8 +2284,8 @@ public class IOTaskService {
 			}
 		}
 	}
-	
-	public Material putInMaterialToDb(Material material, String materialId, Integer boxId, Integer quantity, Date productionTime, Date printTime, Integer materialTypeId, String cycle, String manufacturer, Integer materialStatus) {
+
+	public Material putInMaterialToDb(Material material, String materialId, Integer boxId, Integer quantity, Date productionTime, Date printTime, Integer materialTypeId, String cycle, String manufacturer, Integer materialStatus, Integer companyId) {
 		if (material != null) {
 			material.setBox(boxId);
 			material.setRow(-1);
@@ -2324,6 +2298,7 @@ public class IOTaskService {
 			material.setStatus(materialStatus);
 			material.setIsInBox(true);
 			material.setIsRepeated(false);
+			material.setCompanyId(companyId);
 			material.update();
 		} else {
 			material = new Material();
@@ -2338,6 +2313,7 @@ public class IOTaskService {
 			material.setPrintTime(printTime);
 			material.setStoreTime(getDateTime());
 			material.setStatus(materialStatus);
+			material.setCompanyId(companyId);
 			if (manufacturer == null || manufacturer.equals("")) {
 				material.setManufacturer("无");
 			} else {

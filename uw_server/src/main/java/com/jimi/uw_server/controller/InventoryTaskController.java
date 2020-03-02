@@ -1,11 +1,5 @@
 package com.jimi.uw_server.controller;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
@@ -22,6 +16,11 @@ import com.jimi.uw_server.service.InventoryTaskService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 
 
 /**
@@ -116,7 +115,6 @@ public class InventoryTaskController extends Controller {
 	 * @param taskId
 	 * @param boxId
 	 * @param windowId
-	 * @param user
 	 * @return
 	 */
 	@Log("盘点料盒回库，任务ID为{taskId}，仓口为{windowId}，料盒ID为{boxId}")
@@ -139,7 +137,6 @@ public class InventoryTaskController extends Controller {
 	 * @param boxId
 	 * @param taskId
 	 * @param acturalNum
-	 * @param user
 	 * @return
 	 */
 	@Log("盘点普通仓物料uw，料盘码为{materialId}，料盒号为{boxId}，任务ID为{taskId}，盘点数量为{acturalNum}")
@@ -159,10 +156,8 @@ public class InventoryTaskController extends Controller {
 	/**
 	 * 盘点UW物料
 	 * @param materialId
-	 * @param boxId
 	 * @param taskId
 	 * @param acturalNum
-	 * @param user
 	 * @return
 	 */
 	@Log("盘点贵重仓物料uw，料盘码为{materialId}，料盒号为{boxId}，任务ID为{taskId}，盘点数量为{acturalNum}")
@@ -183,7 +178,6 @@ public class InventoryTaskController extends Controller {
 	 * 平外仓物料
 	 * @param id
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("普通仓平仓EWH，记录ID为{id}，任务ID为{taskId}")
@@ -203,7 +197,6 @@ public class InventoryTaskController extends Controller {
 	 * UW平仓，根据记录ID和任务ID
 	 * @param id
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("普通仓平仓UW， 记录ID为{id}，任务ID为{taskId}")
@@ -223,7 +216,6 @@ public class InventoryTaskController extends Controller {
 	 * UW平仓，根据记录ID和任务ID
 	 * @param id
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("贵重仓平仓UW， 记录ID为{id}，任务ID为{taskId}")
@@ -243,7 +235,6 @@ public class InventoryTaskController extends Controller {
 	 * 批量平仓，根据任务ID和物料类型ID
 	 * @param materialTypeId
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("普通仓UW批量平仓，物料类型ID为{materialTypeId}，任务ID为{taskId}")
@@ -263,7 +254,6 @@ public class InventoryTaskController extends Controller {
 	 * 批量平仓，根据任务ID和物料类型ID
 	 * @param materialTypeId
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("贵重仓UW批量平仓，物料类型ID为{materialTypeId}，任务ID为{taskId}")
@@ -283,7 +273,6 @@ public class InventoryTaskController extends Controller {
 	 * 批量平仓，根据任务ID和物料类型ID
 	 * @param materialTypeId
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("普通仓外仓批量平仓，物料类型ID为{materialTypeId}，任务ID为{taskId}, 目的仓库ID为{whId}")
@@ -347,7 +336,6 @@ public class InventoryTaskController extends Controller {
 	 * 导入外仓盘点数据
 	 * @param file
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("导入物料仓盘点数据，任务ID为{taskId}, 目的仓库ID为{whId}")
@@ -583,9 +571,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 一键平仓UW
-	 * @param materialTypeId
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("一键平普通UW仓，任务ID{taskId}")
@@ -603,9 +589,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 一键平仓UW
-	 * @param materialTypeId
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("一键平贵重UW仓，任务ID{taskId}")
@@ -623,9 +607,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 物料仓一键批量平仓
-	 * @param materialTypeId
 	 * @param taskId
-	 * @param user
 	 * @return
 	 */
 	@Log("一键平物料仓，任务ID{taskId}, 目的仓库ID为{whId}")

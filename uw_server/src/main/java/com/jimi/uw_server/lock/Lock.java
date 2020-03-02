@@ -24,9 +24,9 @@ public class Lock {
 
 	public static Object TASK_REDIS_LOCK = new Object();
 
-	public static Object REGULAR_SAMPLE_TASK_OUT_LOCK = new Object();
+	public static Object REGULAR_SAMPLE_TASK_SCAN_LOCK = new Object();
 
-	public static Object PRECIOUS_SAMPLE_TASK_OUT_LOCK = new Object();
+	public static Object PRECIOUS_SAMPLE_TASK_SCAN_LOCK = new Object();
 
 	public static Object IO_TASK_BACK_LOCK = new Object();
 

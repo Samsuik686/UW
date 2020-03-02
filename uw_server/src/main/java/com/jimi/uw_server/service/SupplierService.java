@@ -1,7 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.util.Collections;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -17,6 +15,8 @@ import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.SupplierVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
+
+import java.util.Collections;
 
 
 /**
@@ -39,6 +39,7 @@ public class SupplierService extends SelectService {
 			Supplier supplier = new Supplier();
 			supplier.setName(name.trim());
 			supplier.setEnabled(true);
+			supplier.setCompanyId(supplier.getCompanyId());
 			supplier.save();
 			return resultString;
 		}

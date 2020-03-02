@@ -3,7 +3,7 @@ package com.jimi.uw_server.constant.sql;
 public class SQL {
 
 	// 根据仓口ID查询货位
-	public static final String GET_GOODSLOCATION_BY_WINDOWID = "SELECT DISTINCT * FROM goods_location WHERE window_id = ? ORDER BY id ASC";
+	public static final String GET_GOODSLOCATION_BY_WINDOWID = "SELECT DISTINCT * FROM goods_location WHERE window_id = ? AND enabled = 1 ORDER BY id ASC";
 	// 根据料盒计算料盘数
 	public static final String GET_MATERIAL_BY_TYPE_AND_BOX = "SELECT * FROM material WHERE material.type = ? AND material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 ORDER BY production_time ASC";
 

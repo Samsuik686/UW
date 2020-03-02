@@ -57,32 +57,43 @@ public class MessageHandler {
      */
     public void handleAskPostionPackage(AskPostionPackage askPostionPackage){
         Task task = Task.dao.findById(askPostionPackage.getTaskId());
+        Boolean flag = false;
         if (task.getType().equals(TaskType.COUNT)) {
             List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(askPostionPackage.getTaskId(), askPostionPackage.getBoxId());
+
+            MaterialPositionInfoPackage materialPositionInfoPackage = new MaterialPositionInfoPackage();
+            materialPositionInfoPackage.setBoxId(askPostionPackage.getBoxId());
+            materialPositionInfoPackage.setTaskId(askPostionPackage.getTaskId());
+            materialPositionInfoPackage.setType(Constant.UR_INVENTORY_TASK);
             for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
                 if (urMaterialInfo.getIsScaned()) {
                     continue;
                 }
-                MaterialPositionInfoPackage materialPositionInfoPackage = new MaterialPositionInfoPackage();
-                materialPositionInfoPackage.setBoxId(urMaterialInfo.getBoxId());
-                materialPositionInfoPackage.setTaskId(urMaterialInfo.getTaskId());
+                flag = true;
                 materialPositionInfoPackage.setMaterialId(urMaterialInfo.getMaterialId());
-                materialPositionInfoPackage.setType(Constant.UR_INVENTORY_TASK);
                 materialPositionInfoPackage.setxPosition(urMaterialInfo.getxPosition());
                 materialPositionInfoPackage.setyPosition(urMaterialInfo.getyPosition());
                 materialPositionInfoPackage.setQuantity(urMaterialInfo.getQuantity());
                 UrOperationMaterialInfoDAO.putUrTaskBoxArrivedPack("robot1", urMaterialInfo);
-                Runnable runnable = new Runnable() {
 
-					@Override
-					public void run() {
-						PackSender.sendPackage("robot1", materialPositionInfoPackage);
-					}
-				};
-                ProcessorExecutor.me.execute(runnable);
                 break;
             }
+            if (!flag){
+                materialPositionInfoPackage.setMaterialId(null);
+                materialPositionInfoPackage.setxPosition(null);
+                materialPositionInfoPackage.setyPosition(null);
+                materialPositionInfoPackage.setQuantity(null);
+            }
+            Runnable runnable = new Runnable() {
+
+                @Override
+                public void run() {
+                    PackSender.sendPackage("robot1", materialPositionInfoPackage);
+                }
+            };
+            ProcessorExecutor.me.execute(runnable);
         }
+
     }
 
     /**

@@ -1,12 +1,5 @@
 package com.jimi.uw_server.agv.thread;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
@@ -19,24 +12,15 @@ import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
-import com.jimi.uw_server.constant.BoxState;
-import com.jimi.uw_server.constant.BuildTaskItemState;
-import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.constant.*;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.PackingListItem;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.TaskLog;
-import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;
+
+import java.util.*;
 
 
 /**
@@ -248,29 +232,61 @@ public class TaskPool extends Thread {
 				}
 			}
 			i = goodsLocations.size();
-			for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
-				if (goodsLocations.isEmpty()) {
-					return;
-				}
-				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
-					if (materialBox.getIsOnShelf()) {
-						if (task.getPriority().equals(0)) {
-							invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-						} else {
-							if (i > Math.floor(windowSize / 2)) {
+			if (!window.getAuto()) {
+				//不使用机械臂的仓口
+				for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
+					if (goodsLocations.isEmpty()) {
+						return;
+					}
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						if (materialBox.getIsOnShelf()) {
+							if (task.getPriority().equals(0)) {
 								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
 							} else {
-								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								if (i > Math.floor(windowSize / 2)) {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+								} else {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								}
+							}
+							goodsLocations.remove(0);
+							if (i > 0) {
+								i--;
 							}
 						}
-						goodsLocations.remove(0);
-						if (i > 0) {
-							i--;
+					}
+
+				}
+			}else {
+				//使用机械臂盘点
+				for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
+					if (goodsLocations.isEmpty()) {
+						return;
+					}
+					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+					//只有标准料盒才使用机械臂盘点
+					if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
+						continue;
+					}
+					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						if (materialBox.getIsOnShelf()) {
+							if (task.getPriority().equals(0)) {
+								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+							} else {
+								if (i > Math.floor(windowSize / 2)) {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
+								} else {
+									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
+								}
+							}
+							goodsLocations.remove(0);
+							if (i > 0) {
+								i--;
+							}
 						}
 					}
 				}
-
 			}
 		}
 	}

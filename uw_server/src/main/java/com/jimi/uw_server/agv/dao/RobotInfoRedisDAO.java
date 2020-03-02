@@ -1,12 +1,12 @@
 package com.jimi.uw_server.agv.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.jfinal.json.Json;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.model.bo.RobotBO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -19,14 +19,15 @@ public class RobotInfoRedisDAO {
 
 	private static Cache cache = Redis.use();
 
+	private static String UW_ROBOT_LIST = "UW_ROBOT_LIST";
 
 	/**
 	 * 更新机器实时数据到Redis
 	 */
 	public synchronized static void update(List<RobotBO> robotBOs) {
-		cache.del("robot");
+		cache.del(UW_ROBOT_LIST);
 		for (RobotBO agvRobot : robotBOs) {
-			cache.lpush("robot", Json.getJson().toJson(agvRobot));
+			cache.lpush(UW_ROBOT_LIST, Json.getJson().toJson(agvRobot));
 		}
 	}
 
@@ -35,7 +36,7 @@ public class RobotInfoRedisDAO {
 	 * 更新机器实时数据到Redis
 	 */
 	public synchronized static void delete() {
-		cache.del("robot");
+		cache.del(UW_ROBOT_LIST);
 	}
 
 
@@ -45,7 +46,7 @@ public class RobotInfoRedisDAO {
 	@SuppressWarnings("unchecked")
 	public synchronized static List<RobotBO> check() {
 		List<RobotBO> robotBOs = new ArrayList<>();
-		List<String> robots = cache.lrange("robot", 0, -1);
+		List<String> robots = cache.lrange(UW_ROBOT_LIST, 0, -1);
 		for (String robot : robots) {
 			robotBOs.add(Json.getJson().parse(robot, RobotBO.class));
 		}

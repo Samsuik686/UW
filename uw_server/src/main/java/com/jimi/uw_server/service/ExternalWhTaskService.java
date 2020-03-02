@@ -1,18 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
@@ -22,17 +9,20 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.IOTaskSQL;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.model.Destination;
-import com.jimi.uw_server.model.ExternalWhLog;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.User;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.TaskItemBO;
 import com.jimi.uw_server.model.vo.EWhMaterialDetailVO;
 import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /**
@@ -486,7 +476,7 @@ public class ExternalWhTaskService {
 			externalWhInfoVO.setWhId(record.getInt("wh_id"));
 			externalWhInfoVO.setWareHouse(record.getStr("wh_name"));
 			externalWhInfoVO.setQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), task.getCreateTime()));
-			externalWhInfoVO.setReturnQuantity(materialService.countMaterialReturnQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), task.getStartTime()));
+			externalWhInfoVO.setReturnQuantity(materialService.countMaterialReturnQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), task.getCreateTime()));
 			externalWhInfoVOs.add(externalWhInfoVO);
 		}
 		return externalWhInfoVOs;

@@ -1,14 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
@@ -19,18 +10,18 @@ import com.jimi.uw_server.constant.MaterialStatus;
 import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.model.Company;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialReturnRecord;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.Supplier;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.IOTaskRecord;
 import com.jimi.uw_server.model.vo.MaterialInfoVO;
 import com.jimi.uw_server.model.vo.MaterialVO;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelWritter;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /**
@@ -135,7 +126,7 @@ public class MaterialService extends SelectService {
 		if (!supplier.getCompanyId().equals(company.getId())) {
 			throw new OperationException("料盒所属客户的公司与料盒所属公司冲突！");
 		}
-		Page<Record> page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId, company.getId());
+		Page<Record> page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId, supplier.getId());
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageNumber(page.getPageNumber());
 		pagePaginate.setPageSize(page.getPageSize());
@@ -172,7 +163,7 @@ public class MaterialService extends SelectService {
 		PagePaginate pagePaginate = new PagePaginate();
 		Page<Record> page = null;
 		if (materialType.getType().equals(WarehouseType.REGULAR.getId())) {
-			page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, materialTypeId, company.getId());
+			page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, materialTypeId, materialType.getSupplier());
 			if (page.getList() != null && !page.getList().isEmpty()) {
 				pagePaginate.setList(MaterialVO.fillRegualrMaterialVOList(page.getList(), company, supplier));
 			}else {

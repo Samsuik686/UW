@@ -544,7 +544,7 @@ public class InventoryTaskService {
 		// 改变盘点记录
 		inventoryLog.setActuralNum(material.getRemainderQuantity())
 				.setDifferentNum(0)
-				.setInventoryOperatior("robot")
+				.setInventoryOperatior("robot1")
 				.setInventoryTime(new Date())
 				.update();
 	}
@@ -740,6 +740,10 @@ public class InventoryTaskService {
 			inventoryLog.update();
 		}
 		info.setFinishOperator(user.getUid()).setFinishTime(new Date()).update();
+		List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
+		if (infos.size() < 2){
+			task.setState(TaskState.FINISHED).setEndTime(new Date()).update();
+		}
 		return "操作成功";
 	}
 
@@ -1102,7 +1106,7 @@ public class InventoryTaskService {
 				}
 				Supplier supplier = Supplier.dao.findById(materialBox.getSupplier());
 				List<MaterialDetialsVO> materialInfoVOs = info.getList();
-				List<Record> records = Db.find(MaterialSQL.GET_ENTITIES_SELECT_SQL + MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId);
+				List<Record> records = Db.find(MaterialSQL.GET_ENTITIES_SELECT_SQL + MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId, supplier.getId());
 				for (Record record : records) {
 					MaterialDetialsVO materialInfoVO = new MaterialDetialsVO();
 					materialInfoVO.setMaterialTypeId(record.getInt("Material_MaterialTypeId"));
@@ -1406,7 +1410,7 @@ public class InventoryTaskService {
 			List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
 			boolean flag = true;
 			for (InventoryTaskBaseInfo inventoryTaskBaseInfo : infos) {
-				if (!info.getId().equals(inventoryTaskBaseInfo.getId()) && inventoryTaskBaseInfo.getFinishTime() == null) {
+				if (!inventoryTaskBaseInfo.getId().equals(info.getId()) && inventoryTaskBaseInfo.getFinishTime() == null) {
 					flag = false;
 				}
 			}

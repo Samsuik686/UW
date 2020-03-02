@@ -95,22 +95,25 @@ public class UwConfig extends JFinalConfig {
 				EfficiencyService.initTaskEfficiency();
 				System.out.println("效率统计开启，初始化成功！");
 			}
-            Thread urThread = new Thread(new Runnable() {
+			Integer urSwitch = PropKit.use("properties.ini").getInt("urSwitch");
+			if (urSwitch != null && urSwitch == 1){
+				Thread urThread = new Thread(new Runnable() {
 
-                @Override
-                public void run() {
-                    try {
-                        RestaurantBootStrap.strap.start();
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            });
-            urThread.setName("UR_SERVER");
-            urThread.start();
-            System.out.println("UW机械臂服务开启完毕！！！");
-			TaskPool taskPool = new TaskPool();
+					@Override
+					public void run() {
+						try {
+							RestaurantBootStrap.strap.start();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				});
+				urThread.setName("UR_SERVER");
+				urThread.start();
+				System.out.println("UW机械臂服务开启完毕！！！");
+			}
+            TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
 			System.out.println("UW智能仓储系统开启完毕！！！");

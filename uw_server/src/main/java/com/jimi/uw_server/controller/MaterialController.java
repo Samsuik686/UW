@@ -1,11 +1,5 @@
 package com.jimi.uw_server.controller;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-
-import javax.servlet.http.HttpServletResponse;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jimi.uw_server.exception.OperationException;
@@ -14,6 +8,11 @@ import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.service.SupplierService;
 import com.jimi.uw_server.util.ResultUtil;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 
 
 /**
@@ -88,7 +87,7 @@ public class MaterialController extends Controller {
 	
 
 	// 获取物料出入库记录
-	public void getMaterialRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize, String startTime, String endTime) {
+	public void getMaterialIOTaskRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize, String startTime, String endTime) {
 		if (pageNo == null || pageSize == 0) {
 			throw new OperationException("页码和页容量不能为空！");
 		}

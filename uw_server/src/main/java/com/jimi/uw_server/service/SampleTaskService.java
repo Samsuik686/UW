@@ -1,19 +1,5 @@
 package com.jimi.uw_server.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -22,29 +8,13 @@ import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
-import com.jimi.uw_server.constant.MaterialStatus;
-import com.jimi.uw_server.constant.SamplerOutType;
-import com.jimi.uw_server.constant.TaskItemState;
-import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.*;
 import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.InventoryLog;
-import com.jimi.uw_server.model.Material;
-import com.jimi.uw_server.model.MaterialBox;
-import com.jimi.uw_server.model.MaterialType;
-import com.jimi.uw_server.model.SampleOutRecord;
-import com.jimi.uw_server.model.SampleTaskItem;
-import com.jimi.uw_server.model.SampleTaskMaterialRecord;
-import com.jimi.uw_server.model.Supplier;
-import com.jimi.uw_server.model.Task;
-import com.jimi.uw_server.model.User;
-import com.jimi.uw_server.model.Window;
+import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.SampleTaskItemBO;
 import com.jimi.uw_server.model.vo.MaterialDetialsVO;
 import com.jimi.uw_server.model.vo.PackingSampleInfoVO;
@@ -54,6 +24,13 @@ import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /**
@@ -399,7 +376,7 @@ public class SampleTaskService {
 
 
 	public String outRegularTaskSingular(String materialId, String groupId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_OUT_LOCK) {
+		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
 			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					Material material = Material.dao.findById(materialId);
@@ -443,7 +420,7 @@ public class SampleTaskService {
 
 
 	public String outPreciousTaskSingular(String materialId, Integer taskId, User user) {
-		synchronized (Lock.PRECIOUS_SAMPLE_TASK_OUT_LOCK) {
+		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
 
 			Material material = Material.dao.findById(materialId);
 			if (material == null || material.getRemainderQuantity() <= 0) {
@@ -481,7 +458,7 @@ public class SampleTaskService {
 
 
 	public String outRegularTaskRegular(String materialId, String groupId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_OUT_LOCK) {
+		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
 			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					Material material = Material.dao.findById(materialId);
@@ -526,7 +503,7 @@ public class SampleTaskService {
 
 
 	public String outPreciousTaskRegular(String materialId, Integer taskId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_OUT_LOCK) {
+		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
 			Material material = Material.dao.findById(materialId);
 			if (material == null || material.getRemainderQuantity() <= 0) {
 				throw new OperationException("料盘不存在或者已经出库！");
@@ -564,7 +541,7 @@ public class SampleTaskService {
 
 
 	public String outRegularTaskLost(String materialId, String groupId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_OUT_LOCK) {
+		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
 			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					Material material = Material.dao.findById(materialId);
@@ -613,7 +590,7 @@ public class SampleTaskService {
 
 
 	public String outPreciousTaskLost(String materialId, Integer taskId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_OUT_LOCK) {
+		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
 			Material material = Material.dao.findById(materialId);
 			if (material == null || material.getRemainderQuantity() <= 0) {
 				throw new OperationException("料盘不存在或者已经出库！");
@@ -654,59 +631,62 @@ public class SampleTaskService {
 
 
 	public void sampleRegularUWMaterial(String materialId, String groupId) {
-
-		Integer boxId = Integer.valueOf(groupId.split("#")[0]);
-		Integer taskId = Integer.valueOf(groupId.split("#")[1]);
-		Material material = Material.dao.findById(materialId);
-		if (material == null) {
-			throw new OperationException("料盘不存在！");
-		}
-		if (boxId == null || taskId == null) {
-			throw new OperationException("groupId解析失败，获取不到任务ID和料盒号！");
-		}
-		SampleTaskMaterialRecord record = SampleTaskMaterialRecord.dao.findFirst(GET_RECORD_BY_MATERIALID_TASK_BOX, materialId, taskId, boxId);
-		if (record == null) {
-			throw new OperationException("本次抽检抽检范围不包含该料盘！");
-		}
-		if (record.getIsScaned()) {
-			throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
-		} else {
-
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.REGULAR.getId());
-			if (sampleTaskItem == null) {
+		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
+			Integer boxId = Integer.valueOf(groupId.split("#")[0]);
+			Integer taskId = Integer.valueOf(groupId.split("#")[1]);
+			Material material = Material.dao.findById(materialId);
+			if (material == null) {
+				throw new OperationException("料盘不存在！");
+			}
+			if (boxId == null || taskId == null) {
+				throw new OperationException("groupId解析失败，获取不到任务ID和料盒号！");
+			}
+			SampleTaskMaterialRecord record = SampleTaskMaterialRecord.dao.findFirst(GET_RECORD_BY_MATERIALID_TASK_BOX, materialId, taskId, boxId);
+			if (record == null) {
 				throw new OperationException("本次抽检抽检范围不包含该料盘！");
 			}
-			record.setIsScaned(true).update();
-			sampleTaskItem.setScanQuantity(sampleTaskItem.getScanQuantity() + material.getRemainderQuantity());
-			sampleTaskItem.update();
+			if (record.getIsScaned()) {
+				throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
+			} else {
+
+				SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.REGULAR.getId());
+				if (sampleTaskItem == null) {
+					throw new OperationException("本次抽检抽检范围不包含该料盘！");
+				}
+				record.setIsScaned(true).update();
+				sampleTaskItem.setScanQuantity(sampleTaskItem.getScanQuantity() + material.getRemainderQuantity());
+				sampleTaskItem.update();
+			}
 		}
 
 	}
 
 
 	public void samplePreciousUWMaterial(String materialId, Integer taskId) {
-		Task task = Task.dao.findById(taskId);
-		if (!task.getState().equals(TaskState.PROCESSING)) {
-			throw new OperationException("任务未处于进行中状态！");
-		}
-		Material material = Material.dao.findById(materialId);
-		if (material == null) {
-			throw new OperationException("料盘不存在！");
-		}
-		SampleTaskMaterialRecord record = SampleTaskMaterialRecord.dao.findFirst(GET_RECORD_BY_MATERIALID_TASK, materialId, taskId);
-		if (record == null) {
-			throw new OperationException("本次抽检抽检范围不包含该料盘！");
-		}
-		if (record.getIsScaned()) {
-			throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
-		} else {
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
-			if (sampleTaskItem == null) {
+		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
+			Task task = Task.dao.findById(taskId);
+			if (!task.getState().equals(TaskState.PROCESSING)) {
+				throw new OperationException("任务未处于进行中状态！");
+			}
+			Material material = Material.dao.findById(materialId);
+			if (material == null) {
+				throw new OperationException("料盘不存在！");
+			}
+			SampleTaskMaterialRecord record = SampleTaskMaterialRecord.dao.findFirst(GET_RECORD_BY_MATERIALID_TASK, materialId, taskId);
+			if (record == null) {
 				throw new OperationException("本次抽检抽检范围不包含该料盘！");
 			}
-			record.setIsScaned(true).update();
-			sampleTaskItem.setScanQuantity(sampleTaskItem.getScanQuantity() + material.getRemainderQuantity());
-			sampleTaskItem.update();
+			if (record.getIsScaned()) {
+				throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
+			} else {
+				SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
+				if (sampleTaskItem == null) {
+					throw new OperationException("本次抽检抽检范围不包含该料盘！");
+				}
+				record.setIsScaned(true).update();
+				sampleTaskItem.setScanQuantity(sampleTaskItem.getScanQuantity() + material.getRemainderQuantity());
+				sampleTaskItem.update();
+			}
 		}
 
 	}

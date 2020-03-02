@@ -29,7 +29,7 @@ public class MaterialBoxController extends Controller {
 		if (companyId == null) {
 			throw new ParameterException("公司ID不能为空！");
 		}
-		if (pageNo == null || pageSize == 0) {
+		if (pageNo == null || pageSize == null) {
 			throw new OperationException("页码和页容量不能为空！");
 		}
 		if (pageNo <= 0 || pageSize <= 0) {
@@ -40,12 +40,12 @@ public class MaterialBoxController extends Controller {
 
 
 	// 添加料盒#
-	@Log("添加新的料盒，料盒的具体位置为：公司ID{companyId}，区域号{area}，行号{row}，列号{col}，高度{height}，客户{supplierId}，是否标准料盒{isStandard}")
-	public void addBox(Integer companyId, String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
-		if (companyId == null || area == null || row == null || col == null || height == null || supplierId == null || isStandard == null) {
+	@Log("添加新的料盒，料盒的具体位置为：区域号{area}，行号{row}，列号{col}，高度{height}，客户{supplierId}，是否标准料盒{isStandard}")
+	public void addBox(String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
+		if (area == null || row == null || col == null || height == null || supplierId == null || isStandard == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		materialBoxService.addBox(companyId, area, row, col, height, supplierId, isStandard);;
+		materialBoxService.addBox(area, row, col, height, supplierId, isStandard);;
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -57,12 +57,12 @@ public class MaterialBoxController extends Controller {
 		renderJson(ResultUtil.succeed());
 	}
 	
-	@Log("更新料盒号为[{ids}]信息，客户为{supplierId}， 公司为{companyId}")
-	public void editBoxOfSupplier(String ids, Integer supplierId,  Integer companyId) {
+	@Log("更新料盒号为[{ids}]信息，客户为{supplierId}")
+	public void editBoxOfSupplier(String ids, Integer supplierId) {
 		if (supplierId == null || ids == null || ids.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
-		materialBoxService.editBoxOfSupplier(ids, supplierId, companyId);
+		materialBoxService.editBoxOfSupplier(ids, supplierId);
 		renderJson(ResultUtil.succeed());
 	}
 	
