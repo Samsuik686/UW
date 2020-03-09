@@ -79,10 +79,10 @@ public class MessageHandler {
                 break;
             }
             if (!flag){
-                materialPositionInfoPackage.setMaterialId(null);
-                materialPositionInfoPackage.setxPosition(null);
-                materialPositionInfoPackage.setyPosition(null);
-                materialPositionInfoPackage.setQuantity(null);
+                materialPositionInfoPackage.setMaterialId("null");
+                materialPositionInfoPackage.setxPosition(9999);
+                materialPositionInfoPackage.setyPosition(9999);
+                materialPositionInfoPackage.setQuantity(9999);
             }
             Runnable runnable = new Runnable() {
 

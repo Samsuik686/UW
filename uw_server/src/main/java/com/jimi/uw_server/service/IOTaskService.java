@@ -1932,7 +1932,7 @@ public class IOTaskService {
 					material.setStatus(MaterialStatus.NORMAL).update();
 				}
 			}
-			PackingListItem packingListItem = PackingListItem.dao.findById(record.getInt("PackingListItem_Id"));
+			PackingListItem packingListItem = PackingListItem.dao.findById(record.getId());
 			packingListItem.setFinishTime(new Date()).update();
 			finishLackItemSize ++;
 		}
