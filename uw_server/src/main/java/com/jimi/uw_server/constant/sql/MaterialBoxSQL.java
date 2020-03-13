@@ -15,7 +15,7 @@ package com.jimi.uw_server.constant.sql;
 public class MaterialBoxSQL {
 
 
-	public static final String SET_MATERIAL_BOX_SUPPLIER_COMPANY_NULL_BY_SUPPLIER_SQL = "UPDATE material_box SET material_box.supplier = null, material_box.company_id = null WHERE material_box.supplier = ?"; 
+	public static final String SET_MATERIAL_BOX_SUPPLIER_NULL_BY_SUPPLIER_SQL = "UPDATE material_box SET material_box.supplier = null WHERE material_box.supplier = ?"; 
 
 	public static final String SET_MATERIAL_BOX_SUPPLIER_COMPANY_NULL_BY_COMPANY_SQL = "UPDATE material_box SET material_box.supplier = null, material_box.company_id = null WHERE material_box.company_id = ?"; 
 

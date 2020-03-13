@@ -37,7 +37,10 @@ public class MaterialDetialsVO {
 
 	private Integer isOuted;
 
-
+	private Integer exceptionCode;
+	
+	private String exceptionCodeString;
+	
 	public String getMaterialId() {
 		return materialId;
 	}
@@ -165,6 +168,45 @@ public class MaterialDetialsVO {
 
 	public void setCol(Integer col) {
 		this.col = col;
+	}
+
+	
+
+	public Integer getExceptionCode() {
+		return exceptionCode;
+	}
+
+
+	public void setExceptionCode(Integer exceptionCode) {
+		this.exceptionCode = exceptionCode;
+		if (exceptionCode != null) {
+			switch (exceptionCode) {
+			case 1:
+				this.exceptionCodeString = "机械臂夹空";
+				break;
+			case 2:
+				this.exceptionCodeString = "物料扫码不对应";
+			case 3:
+				this.exceptionCodeString = "数量异常（找不到，或者数量小于0）";
+			case 4:
+				this.exceptionCodeString = "数量不匹配";
+			case 5:
+				this.exceptionCodeString = "机械臂异常";
+			default:
+				break;
+			}
+		}
+		
+	}
+
+
+	public String getExceptionCodeString() {
+		return exceptionCodeString;
+	}
+
+
+	public void setExceptionCodeString(String exceptionCodeString) {
+		this.exceptionCodeString = exceptionCodeString;
 	}
 
 

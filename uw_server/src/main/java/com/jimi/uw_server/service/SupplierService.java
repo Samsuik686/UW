@@ -39,7 +39,7 @@ public class SupplierService extends SelectService {
 			Supplier supplier = new Supplier();
 			supplier.setName(name.trim());
 			supplier.setEnabled(true);
-			supplier.setCompanyId(supplier.getCompanyId());
+			supplier.setCompanyId(companyId);
 			supplier.save();
 			return resultString;
 		}
@@ -56,7 +56,7 @@ public class SupplierService extends SelectService {
 		if (mt != null) {
 			throw new OperationException("该客户名下存在物料尚未出库，无法删除！");
 		}
-		Db.update(MaterialBoxSQL.SET_MATERIAL_BOX_SUPPLIER_COMPANY_NULL_BY_SUPPLIER_SQL, supplier.getId());
+		Db.update(MaterialBoxSQL.SET_MATERIAL_BOX_SUPPLIER_NULL_BY_SUPPLIER_SQL, supplier.getId());
 		Db.update(MaterialTypeSQL.SET_MATERIAL_TYPE_UNABLED_BY_SUPPLIER_SQL, supplier.getId());
 		
 		supplier.setEnabled(false);

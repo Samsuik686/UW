@@ -11,6 +11,7 @@ import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.constant.MaterialBoxType;
 import com.jimi.uw_server.constant.sql.MaterialBoxSQL;
 import com.jimi.uw_server.constant.sql.MaterialSQL;
+import com.jimi.uw_server.constant.sql.SupplierSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
@@ -22,7 +23,9 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**  
  * <p>Title: MaterialBoxService</p>  
@@ -48,13 +51,26 @@ public class MaterialBoxService {
 		} else {
 			filter = "material_box.enabled=1#&#company.id=" + companyId;
 		}
-		Page<Record> result = selectService.select(new String[] {"material_box", "supplier", "company"}, new String[] {"material_box.supplier=supplier.id", "material_box.company_id=company.id"}, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = null;
+		Map<Integer, String> supplierNameMap = new HashMap<Integer, String>();
+		if (filter.contains("supplier")) {
+			result = selectService.select(new String[] {"material_box", "supplier", "company"}, new String[] {"material_box.supplier=supplier.id", "material_box.company_id=company.id"}, pageNo, pageSize, ascBy, descBy, filter);
+		}else {
+			result = selectService.select(new String[] {"material_box", "company"}, new String[] {"material_box.company_id=company.id"}, pageNo, pageSize, ascBy, descBy, filter);
+			List<Supplier> suppliers = Supplier.dao.find(SupplierSQL.GET_SUPPLIER_BY_COMPANY_SQL, companyId);
+			if (suppliers != null && !suppliers.isEmpty()) {
+				for (Supplier supplier : suppliers) {
+					supplierNameMap.put(supplier.getId(), supplier.getName());
+				}
+			}
+		}
+		
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setTotalRow(result.getTotalRow());
 		if (!result.getList().isEmpty()) {
-			pagePaginate.setList(MaterialBoxVO.fillList(result.getList()));
+			pagePaginate.setList(MaterialBoxVO.fillList(result.getList(), supplierNameMap));
 		}else {
 			pagePaginate.setList(Collections.emptyList());
 		}

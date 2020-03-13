@@ -255,8 +255,8 @@ public class MaterialService extends SelectService {
 		String[] head = null;
 		if (warehouseType.equals(WarehouseType.REGULAR.getId())) {
 			List<Record> materialRecord = Db.find(MaterialSQL.GET_REGUALR_MATERIAL_REPORT_SQL, warehouseType, supplier.getCompanyId(), supplier.getId());
-			field = new String[] {"id", "no", "specification", "box", "row", "col", "height", "quantity"};
-			head = new String[] {"物料类型号", "料号", "规格号", "盒号", "行号", "列号", "高度", "盒内物料数量"};
+			field = new String[] {"id", "no", "specification",  "quantity"};
+			head = new String[] {"物料类型号", "料号", "规格号", "物料数量"};
 			ExcelWritter writter = ExcelWritter.create(true);
 			writter.fill(materialRecord, fileName, field, head);
 			writter.write(output, true);

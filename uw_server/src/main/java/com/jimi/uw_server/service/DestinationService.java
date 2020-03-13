@@ -29,7 +29,7 @@ public class DestinationService {
 
 	// 添加发料目的地
 	public void add(String name, Integer companyId) {
-		if (Destination.dao.findFirst(DestinationSQL.gET_DESTINATION_BY_NAME_SQL, name) != null) {
+		if (Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_SQL, name, companyId) != null) {
 			throw new OperationException("该发料目的地名称重复，请勿更改！");
 		} else {
 			Destination destination = new Destination();
@@ -45,7 +45,7 @@ public class DestinationService {
 	public void update(Integer id, String name) {
 		Destination destination = Destination.dao.findById(id);
 		if (!destination.getName().equals(name)) {
-			if (Destination.dao.find(DestinationSQL.gET_DESTINATION_BY_NAME_SQL, name) != null) {
+			if (Destination.dao.find(DestinationSQL.GET_DESTINATION_BY_NAME_SQL, name, destination.getCompanyId()) != null) {
 				throw new OperationException("该目的地名称冲突！");
 			}
 		}
@@ -76,12 +76,18 @@ public class DestinationService {
 		}
 		Page<Record> result = selectService.select(new String[] { "destination", "company" },
 				new String[] { "destination.company_id=company.id" }, pageNo, pageSize, ascBy, descBy, filter);
+		List<Destination> destinations = Destination.dao.find(DestinationSQL.GET_SHARE_DESTINATION_SQL);
 		List<DestinationVO> destinationVOs = new ArrayList<DestinationVO>();
+		for (Destination destination : destinations) {
+			DestinationVO destinationVO = new DestinationVO(destination.getId(), destination.getName(), null, destination.getEnabled());
+			destinationVOs.add(destinationVO);
+		}
 		for (Record res : result.getList()) {
 			DestinationVO s = new DestinationVO(res.get("Destination_Id"), res.get("Destination_Name"),
 					res.getStr("Company_NickName"), res.get("Destination_Enabled"));
 			destinationVOs.add(s);
 		}
+		
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setPageSize(pageSize);

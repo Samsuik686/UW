@@ -2,6 +2,7 @@ package com.jimi.uw_server.model.vo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.jfinal.plugin.activerecord.Record;
 
@@ -135,7 +136,7 @@ public class MaterialBoxVO {
 	}
 	
 	
-	public static List<MaterialBoxVO> fillList(List<Record> records){
+	public static List<MaterialBoxVO> fillList(List<Record> records, Map<Integer, String> supplierNameMap){
 		List<MaterialBoxVO> materialBoxVOs = new ArrayList<MaterialBoxVO>(records.size());
 		for (Record record : records) {
 			MaterialBoxVO materialBoxVO = new MaterialBoxVO();
@@ -144,7 +145,11 @@ public class MaterialBoxVO {
 			materialBoxVO.setCol(record.getInt("MaterialBox_Col"));
 			materialBoxVO.setRow(record.getInt("MaterialBox_Row"));
 			materialBoxVO.setHeight(record.getInt("MaterialBox_Height"));
-			materialBoxVO.setSupplierName(record.getStr("Supplier_Name"));
+			if (supplierNameMap != null && !supplierNameMap.isEmpty() && record.getInt("MaterialBox_Supplier") != null) {
+				materialBoxVO.setSupplierName(supplierNameMap.get(record.getInt("MaterialBox_Supplier")));
+			}else {
+				materialBoxVO.setSupplierName(record.getStr("Supplier_Name"));
+			}
 			materialBoxVO.setCompanyName(record.getStr("Company_Nickname"));
 			materialBoxVO.setTypeName(record.getInt("MaterialBox_Type"));
 			materialBoxVO.setIsOnShelfString(record.getBoolean("MaterialBox_IsOnShelf"));

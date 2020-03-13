@@ -17,6 +17,8 @@ import com.jimi.uw_server.model.bo.EWhInventoryRecordBO;
 import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.ur.dao.UrInvTaskInfoDAO;
+import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.MaterialHelper;
@@ -525,6 +527,19 @@ public class InventoryTaskService {
 			if (acturalNum == 0) {
 				material.setCol(-1).setRow(-1);
 				material.update();
+			}
+		}
+		synchronized (Lock.INV_TASK_BACK_LOCK) {
+			List<UrMaterialInfo> infos = UrInvTaskInfoDAO.getUrMaterialInfos(taskId, boxId);
+			if (infos != null && infos.isEmpty()) {
+				for (UrMaterialInfo urMaterialInfo : infos) {
+					if (urMaterialInfo.getMaterialId().equals(material.getId())) {
+						urMaterialInfo.setIsScaned(true);
+						urMaterialInfo.setExceptionCode(0);
+						break;
+					}
+				}
+				UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, infos);
 			}
 		}
 		return material;
@@ -1125,6 +1140,29 @@ public class InventoryTaskService {
 					}
 					materialInfoVOs.add(materialInfoVO);
 				}
+				//当盘点任务仓口为机械臂盘点仓口时
+				if (window.getAuto()) {
+					List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(inventoryTaskItem.getTaskId(), boxId);
+					//设置物料的扫描状态和异常状态
+					if (!urMaterialInfos.isEmpty()) {
+						Set<String> materialScanSet = new HashSet<String>();
+						Map<String, Integer> materialExceptionMap = new HashMap<>();
+						for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
+							if (urMaterialInfo.getIsScaned()) {
+								materialScanSet.add(urMaterialInfo.getMaterialId());
+							}
+							materialExceptionMap.put(urMaterialInfo.getMaterialId(), urMaterialInfo.getExceptionCode());
+						}
+						for (MaterialDetialsVO materialDetialsVO : materialInfoVOs) {
+							if (materialExceptionMap.containsKey(materialDetialsVO.getMaterialId())) {
+								materialDetialsVO.setExceptionCode(materialExceptionMap.get(materialDetialsVO.getMaterialId()));
+								if (materialScanSet.contains(materialDetialsVO.getMaterialId())) {
+									materialDetialsVO.setIsScaned(true);
+								}
+							}
+						}
+					}
+				}
 				info.setBoxId(boxId);
 				info.setTaskId(window.getBindTaskId());
 				info.setWindowId(windowId);
@@ -1426,6 +1464,7 @@ public class InventoryTaskService {
 		
 		return "操作成功！";
 	}
+
 
 	public void cancelTask(Integer taskId) {
 		Task task = Task.dao.findById(taskId);

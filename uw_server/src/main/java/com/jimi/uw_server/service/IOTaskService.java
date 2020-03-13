@@ -1909,13 +1909,13 @@ public class IOTaskService {
 		List<PackingListItem> unfinishLackRecoed = PackingListItem.dao.find(IOTaskSQL.GET_ALL_UNFINISH_PRECIOUS_IOTASK_ITEM, taskId);
 		int finishLackItemSize = 0;
 		for (PackingListItem record : unfinishLackRecoed) {
-			if (cutPackingListItems.contains(record.getId())) {
+			if (cutPackingListItemsIdSet.contains(record.getId())) {
 				continue;
 			}
 			if (materialService.countPreciousQuantityByMaterialTypeId(record.getMaterialTypeId()) > 0){
 				continue;
 			}
-			List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("PackingListItem_Id"));
+			List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getId());
 			boolean flag = false;
 			if (materials != null && materials.size() > 0) {
 				for (Material material : materials) {

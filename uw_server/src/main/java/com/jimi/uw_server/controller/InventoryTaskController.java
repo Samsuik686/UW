@@ -691,5 +691,5 @@ public class InventoryTaskController extends Controller {
 		}
 		renderNull();
 	}
-
+	
 }
