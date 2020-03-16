@@ -496,7 +496,7 @@ public class IOTaskService {
 		if (no != null && !no.trim().equals("")) {
 			filter = "material_type.no like " + no;
 		}
-		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
+		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
 			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, filter);
 

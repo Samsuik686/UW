@@ -110,6 +110,7 @@ public class UwConfig extends JFinalConfig {
 					}
 				});
 				urThread.setName("UR_SERVER");
+				urThread.setDaemon(true);
 				urThread.start();
 				System.out.println("UW机械臂服务开启完毕！！！");
 			}

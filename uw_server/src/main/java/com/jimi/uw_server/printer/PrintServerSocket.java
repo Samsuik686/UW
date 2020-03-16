@@ -50,6 +50,7 @@ public class PrintServerSocket {
 		// 存取返回的数据
 		try {
 			JSONObject jsonObject = JSON.parseObject(result);
+			System.out.println("result:" + result);
 			if (results.containsKey(jsonObject.getString("id"))) {
 				results.put(jsonObject.getString("id"), result);
 			}

@@ -78,5 +78,6 @@ public class RestaurantBootStrap extends ChannelInitializer<SocketChannel> {
 		if (future != null) {
 			future.channel().close();
 		}
+		future = null;
 	}
 }

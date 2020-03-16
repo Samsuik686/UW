@@ -59,6 +59,7 @@ public class PrinterService {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();
 				PrintServerSocket.getClients().remove(ip);
+				e.printStackTrace();
 				throw new OperationException("发送打印信息失败,请检查打印机连接！");
 			}
 			
@@ -70,6 +71,7 @@ public class PrinterService {
 					PrintServerSocket.getResults().remove(id.toString());
 					PrintServerSocket.getClients().get(ip).close();
 					PrintServerSocket.getClients().remove(ip);
+					e.printStackTrace();
 					throw new OperationException("发送打印信息失败,请检查打印机连接！");
 				}
 			}
@@ -135,6 +137,7 @@ public class PrinterService {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();
 				PrintServerSocket.getClients().remove(ip);
+				e.printStackTrace();
 				throw new OperationException("发送打印信息失败,请检查打印机连接！");
 			}
 			// 监听客户端返回的信息
@@ -142,6 +145,7 @@ public class PrinterService {
 				Thread.sleep(500);
 				if (PrintServerSocket.getResults().get(id.toString()) != null) {
 					String returnInfo = PrintServerSocket.getResults().get(id.toString());
+					System.out.println(returnInfo);
 					JSONObject jsonObject = JSON.parseObject(returnInfo);
 					PrintServerSocket.getResults().remove(id.toString());
 					return jsonObject.getString("data");

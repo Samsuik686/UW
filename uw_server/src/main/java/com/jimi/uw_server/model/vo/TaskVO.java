@@ -60,6 +60,8 @@ public class TaskVO extends Task {
 			this.typeString = "调拨入库";
 		} else if (type == 7) {
 			this.typeString = "抽检";
+		} else if (type == 8) {
+			this.typeString = "发料区-紧急出库";
 		}
 	}
 

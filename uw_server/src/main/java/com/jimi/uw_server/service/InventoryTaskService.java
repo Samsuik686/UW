@@ -768,7 +768,7 @@ public class InventoryTaskService {
 		}
 		info.setFinishOperator(user.getUid()).setFinishTime(new Date()).update();
 		List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
-		if (infos.size() < 2){
+		if (infos.size() < 2 && task.getWarehouseType().equals(WarehouseType.REGULAR.getId())){
 			task.setState(TaskState.FINISHED).setEndTime(new Date()).update();
 		}
 		return "操作成功";
