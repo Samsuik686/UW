@@ -1,6 +1,7 @@
 package com.jimi.uw_server.ur.processor;
 
 import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.service.InventoryTaskService;
 import com.jimi.uw_server.ur.constant.Constant;
@@ -22,29 +23,31 @@ public class MessageHandler {
     public void handleScanMaterialInfoPackage(ScanMaterialInfoPackage scanMaterialInfoPackage) {
         Task task = Task.dao.findById(scanMaterialInfoPackage.getTaskId());
         if (task.getType().equals(TaskType.COUNT)) {
-            List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId());
-            if (!urMaterialInfos.isEmpty() && urMaterialInfos.size() > 0) {
-                boolean isScanFlag = false;
-                boolean isAllFinishFlag = true;
-                for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
-                    if (urMaterialInfo.getIsScaned()) {
-                        continue;
+            synchronized (Lock.UR_INV_TASK_LOCK) {
+                List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId());
+                if (!urMaterialInfos.isEmpty() && urMaterialInfos.size() > 0) {
+                    boolean isScanFlag = false;
+                    boolean isAllFinishFlag = true;
+                    for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
+                        if (urMaterialInfo.getIsScaned()) {
+                            continue;
+                        }
+                        if (!urMaterialInfo.getMaterialId().equals(scanMaterialInfoPackage.getMaterialId())) {
+                            isAllFinishFlag = false;
+                            continue;
+                        }
+                        urMaterialInfo.setIsScaned(true);
+                        isScanFlag = true;
                     }
-                    if (!urMaterialInfo.getMaterialId().equals(scanMaterialInfoPackage.getMaterialId())){
-                        isAllFinishFlag = false;
-                        continue;
+                    if (isScanFlag) {
+                        UrInvTaskInfoDAO.putUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(), urMaterialInfos);
+                        InventoryTaskService.me.inventoryUrRegularUWMaterial(scanMaterialInfoPackage.getMaterialId(), scanMaterialInfoPackage.getBoxId(), scanMaterialInfoPackage.getTaskId());
+                        UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
                     }
-                    urMaterialInfo.setIsScaned(true);
-                    isScanFlag = true;
-                }
-                if (isScanFlag) {
-                    UrInvTaskInfoDAO.putUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(), urMaterialInfos);
-                    InventoryTaskService.me.inventoryUrRegularUWMaterial(scanMaterialInfoPackage.getMaterialId(), scanMaterialInfoPackage.getBoxId(), scanMaterialInfoPackage.getTaskId());
-                    UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
-                }
-                if (isAllFinishFlag) {
-                   InventoryTaskService.me.backUrInventoryRegularUWBox(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(),  "robot1");
-                    UrInvTaskInfoDAO.removeUrMaterialInfosByTaskAndBox(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId());
+                    if (isAllFinishFlag) {
+                        InventoryTaskService.me.backUrInventoryRegularUWBox(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(), "robot1");
+                        UrInvTaskInfoDAO.removeUrMaterialInfosByTaskAndBox(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId());
+                    }
                 }
             }
         }
@@ -103,21 +106,23 @@ public class MessageHandler {
     public void handleScanMaterialExceptionPackage(ScanMaterialExceptionPackage scanMaterialExceptionPackage){
         Task task = Task.dao.findById(scanMaterialExceptionPackage.getTaskId());
         if (task.getType().equals(TaskType.COUNT)) {
-            List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(scanMaterialExceptionPackage.getTaskId(), scanMaterialExceptionPackage.getBoxId());
-            boolean flag = false;
-            for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
-                if (urMaterialInfo.getIsScaned() || !urMaterialInfo.getMaterialId().equals(scanMaterialExceptionPackage.getMaterialId())) {
-                    continue;
+            synchronized (Lock.UR_INV_TASK_LOCK) {
+                List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(scanMaterialExceptionPackage.getTaskId(), scanMaterialExceptionPackage.getBoxId());
+                boolean flag = false;
+                for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
+                    if (urMaterialInfo.getIsScaned() || !urMaterialInfo.getMaterialId().equals(scanMaterialExceptionPackage.getMaterialId())) {
+                        continue;
+                    }
+                    flag = true;
+                    urMaterialInfo.setExceptionCode(scanMaterialExceptionPackage.getExceptionCode());
+                    UrMaterialInfo urMaterialInfoTemp = UrOperationMaterialInfoDAO.getUrOperationMaterialInfoByUrName("robot1");
+                    if (urMaterialInfoTemp.getMaterialId().equals(scanMaterialExceptionPackage.getMaterialId())) {
+                        UrOperationMaterialInfoDAO.putUrTaskBoxArrivedPack("robot1", urMaterialInfo);
+                    }
                 }
-                flag = true;
-                urMaterialInfo.setExceptionCode(scanMaterialExceptionPackage.getExceptionCode());
-                UrMaterialInfo urMaterialInfoTemp = UrOperationMaterialInfoDAO.getUrOperationMaterialInfoByUrName("robot1");
-                if (urMaterialInfoTemp.getMaterialId().equals(scanMaterialExceptionPackage.getMaterialId())) {
-                    UrOperationMaterialInfoDAO.putUrTaskBoxArrivedPack("robot1", urMaterialInfo);
+                if (flag) {
+                    UrInvTaskInfoDAO.putUrMaterialInfos(scanMaterialExceptionPackage.getTaskId(), scanMaterialExceptionPackage.getBoxId(), urMaterialInfos);
                 }
-            }
-            if (flag) {
-                UrInvTaskInfoDAO.putUrMaterialInfos(scanMaterialExceptionPackage.getTaskId(), scanMaterialExceptionPackage.getBoxId(), urMaterialInfos);
             }
         }
     }

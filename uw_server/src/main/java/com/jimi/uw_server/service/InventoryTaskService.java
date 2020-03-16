@@ -18,6 +18,7 @@ import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.ur.dao.UrInvTaskInfoDAO;
+import com.jimi.uw_server.ur.dao.UrOperationMaterialInfoDAO;
 import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
@@ -348,7 +349,7 @@ public class InventoryTaskService {
 			if (tempTask != null) {
 				throw new OperationException("当前盘点的客户存在进行中的盘点任务，请等待任务结束后再开始盘点任务!");
 			}
-			tempTask = Task.dao.findFirst(GET_RUNNING_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS);
+			tempTask = Task.dao.findFirst(GET_RUNNING_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS.getId());
 			if (tempTask != null && tempTask.getSupplier().equals(task.getSupplier())) {
 				throw new OperationException("当前盘点的客户存在其他出入库任务，请等待其他任务结束后再开始盘点任务!");
 			}
@@ -429,6 +430,13 @@ public class InventoryTaskService {
 					}
 					material.update();
 
+				}
+			}
+
+			Window window = Window.dao.findById(windowId);
+			if (window != null && window.getAuto()) {
+				synchronized (Lock.UR_INV_TASK_LOCK){
+					UrInvTaskInfoDAO.removeUrMaterialInfosByTaskAndBox(taskId, boxId);
 				}
 			}
 		}
@@ -529,7 +537,7 @@ public class InventoryTaskService {
 				material.update();
 			}
 		}
-		synchronized (Lock.INV_TASK_BACK_LOCK) {
+		synchronized (Lock.UR_INV_TASK_LOCK) {
 			List<UrMaterialInfo> infos = UrInvTaskInfoDAO.getUrMaterialInfos(taskId, boxId);
 			if (infos != null && infos.isEmpty()) {
 				for (UrMaterialInfo urMaterialInfo : infos) {
@@ -538,6 +546,10 @@ public class InventoryTaskService {
 						urMaterialInfo.setExceptionCode(0);
 						break;
 					}
+				}
+				UrMaterialInfo info1 = UrOperationMaterialInfoDAO.getUrOperationMaterialInfoByUrName("robot1");
+				if (info1 != null && info1.getMaterialId().equals(materialId)){
+					UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
 				}
 				UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, infos);
 			}
