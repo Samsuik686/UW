@@ -230,7 +230,7 @@ public class MaterialTypeService {
 		
 	
 	// 新增物料类型
-	public String addMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, Integer warehouseType, String designator) {
+	public String addMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, Integer warehouseType, String designator, Boolean isSuperable) {
 		String resultString = "添加成功！";
 		if (no.contains("!") || no.contains("$")) {
 			throw new OperationException("请勿往料号中添加非法字符，如“!”或“$”！");
@@ -258,13 +258,13 @@ public class MaterialTypeService {
 		}
 		MaterialType newMaterialType = new MaterialType();
 		newMaterialType.setNo(no).setSpecification(specification).setSupplier(supplierId).setThickness(thickness)
-		   .setRadius(radius).setEnabled(true).setType(warehouseType).setDesignator(designator).save();
+		   .setRadius(radius).setEnabled(true).setType(warehouseType).setDesignator(designator).setIsSuperable(isSuperable).save();
 		return resultString;
 	}
 
 
 		// 更新物料类型
-	public String updateMaterialType(Integer id, Integer thickness, Integer radius, String designator, String specification, Integer warehouseType) {
+	public String updateMaterialType(Integer id, Integer thickness, Integer radius, String designator, String specification, Integer warehouseType, Boolean isSuperable) {
 		String resultString = "更新成功！";
 		MaterialType materialType = MaterialType.dao.findById(id);
 		if (materialType == null) {
@@ -281,7 +281,7 @@ public class MaterialTypeService {
 				return resultString;
 			}
 		}
-		materialType.setThickness(thickness).setRadius(radius).setSpecification(specification).setDesignator(designator).update();
+		materialType.setThickness(thickness).setRadius(radius).setSpecification(specification).setDesignator(designator).setIsSuperable(isSuperable).update();
 		return resultString;
 	}
 

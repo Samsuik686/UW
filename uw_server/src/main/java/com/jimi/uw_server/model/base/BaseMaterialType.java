@@ -90,4 +90,13 @@ public abstract class BaseMaterialType<M extends BaseMaterialType<M>> extends Mo
 		return getStr("designator");
 	}
 
+	public M setIsSuperable(java.lang.Boolean isSuperable) {
+		set("is_superable", isSuperable);
+		return (M)this;
+	}
+	
+	public java.lang.Boolean getIsSuperable() {
+		return get("is_superable");
+	}
+
 }

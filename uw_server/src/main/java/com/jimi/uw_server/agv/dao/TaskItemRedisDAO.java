@@ -97,7 +97,7 @@ public class TaskItemRedisDAO {
 	/**
 	 *  填写指定出入库任务条目的信息
 	 */
-	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish, Boolean isCut) {
+	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish, Boolean isCut, Integer oldWindowId, Integer uwQuantity, Integer deductionQuantity) {
 		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskItem.getTaskId()); i++) {
 			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i);
 			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
@@ -122,6 +122,15 @@ public class TaskItemRedisDAO {
 				}
 				if (isCut != null) {
 					agvioTaskItem.setIsCut(isCut);
+				}
+				if (oldWindowId != null) {
+					agvioTaskItem.setOldWindowId(oldWindowId);
+				}
+				if (uwQuantity != null) {
+					agvioTaskItem.setUwQuantity(uwQuantity);
+				}
+				if (deductionQuantity != null) {
+					agvioTaskItem.setDeductionQuantity(deductionQuantity);
 				}
 				cache.lset(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem));
 				break;

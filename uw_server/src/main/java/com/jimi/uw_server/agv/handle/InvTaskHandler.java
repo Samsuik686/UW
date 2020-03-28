@@ -15,13 +15,10 @@ import com.jimi.uw_server.model.GoodsLocation;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Window;
-import com.jimi.uw_server.ur.dao.UrInvTaskBoxInfoDAO;
-import com.jimi.uw_server.ur.dao.UrInvTaskInfoDAO;
+import com.jimi.uw_server.ur.dao.UrTaskInfoDAO;
 import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
-import com.jimi.uw_server.ur.entity.SessionBox;
 import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.ur.handler.assist.PackSender;
-import com.jimi.uw_server.ur.processor.ProcessorExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,25 +135,14 @@ public class InvTaskHandler extends BaseTaskHandler {
 						if (!materials.isEmpty()) {
 							List<UrMaterialInfo> urMaterialInfos = new ArrayList<UrMaterialInfo>();
 							for (Material material : materials) {
-								UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity());
+								UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), 0);
 								urMaterialInfos.add(urMaterialInfo);
 							}
-							UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
+							UrTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
 						}
 						//发送ready包
-						Runnable runnable = new Runnable() {
-
-							@Override
-							public void run() {
-								ForkliftReachPackage pack = new ForkliftReachPackage(taskId, boxId);
-								Boolean flag = PackSender.sendPackage("robot1", pack);
-								if (!flag) {
-									UrInvTaskBoxInfoDAO.putUrTaskBoxArrivedPack("robot1", pack);
-									SessionBox.remove("robot1");
-								}
-							}
-						};
-						ProcessorExecutor.me.execute(runnable);
+						ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
+						PackSender.sendForkliftReachPackage("robot1", pack);
 
 					}
 					break;

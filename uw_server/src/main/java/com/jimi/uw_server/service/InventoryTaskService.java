@@ -17,7 +17,7 @@ import com.jimi.uw_server.model.bo.EWhInventoryRecordBO;
 import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
-import com.jimi.uw_server.ur.dao.UrInvTaskInfoDAO;
+import com.jimi.uw_server.ur.dao.UrTaskInfoDAO;
 import com.jimi.uw_server.ur.dao.UrOperationMaterialInfoDAO;
 import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.util.ExcelHelper;
@@ -436,7 +436,7 @@ public class InventoryTaskService {
 			Window window = Window.dao.findById(windowId);
 			if (window != null && window.getAuto()) {
 				synchronized (Lock.UR_INV_TASK_LOCK){
-					UrInvTaskInfoDAO.removeUrMaterialInfosByTaskAndBox(taskId, boxId);
+					UrTaskInfoDAO.removeUrMaterialInfosByTaskAndBox(taskId, boxId);
 				}
 			}
 		}
@@ -538,7 +538,7 @@ public class InventoryTaskService {
 			}
 		}
 		synchronized (Lock.UR_INV_TASK_LOCK) {
-			List<UrMaterialInfo> infos = UrInvTaskInfoDAO.getUrMaterialInfos(taskId, boxId);
+			List<UrMaterialInfo> infos = UrTaskInfoDAO.getUrMaterialInfos(taskId, boxId);
 			if (infos != null && infos.isEmpty()) {
 				for (UrMaterialInfo urMaterialInfo : infos) {
 					if (urMaterialInfo.getMaterialId().equals(material.getId())) {
@@ -551,7 +551,7 @@ public class InventoryTaskService {
 				if (info1 != null && info1.getMaterialId().equals(materialId)){
 					UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
 				}
-				UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, infos);
+				UrTaskInfoDAO.putUrMaterialInfos(taskId, boxId, infos);
 			}
 		}
 		return material;
@@ -1154,7 +1154,7 @@ public class InventoryTaskService {
 				}
 				//当盘点任务仓口为机械臂盘点仓口时
 				if (window.getAuto()) {
-					List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(inventoryTaskItem.getTaskId(), boxId);
+					List<UrMaterialInfo> urMaterialInfos = UrTaskInfoDAO.getUrMaterialInfos(inventoryTaskItem.getTaskId(), boxId);
 					//设置物料的扫描状态和异常状态
 					if (!urMaterialInfos.isEmpty()) {
 						Set<String> materialScanSet = new HashSet<String>();

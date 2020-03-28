@@ -22,6 +22,11 @@ public class MaterialSQL {
 
 	public static final String GET_MATERIAL_BY_MATERIAL_TYPE_AND_COMPANY_SQL = "SELECT material.* FROM material INNER JOIN material_type ON material_type.id = material.type WHERE remainder_quantity > 0 AND material_type.id = ?";
 
+	public static final String GET_MATERIAL_BY_MATERIAL_TYPE_ORDER_TIME_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND is_in_box = b'1' ORDER BY production_time, id ASC";
+
+	public static final String GET_MATERIAL_BY_MATERIAL_TYPE_AND_NOT_BOX_ORDER_TIME_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND is_in_box = b'1' AND box != ? ORDER BY production_time, id ASC";
+
+	public static final String GET_MATERIAL_BY_TYPE_AND_BOX_ORDER_TIME_SQL = "SELECT material.* FROM material WHERE type = ? AND box = ? AND remainder_quantity > 0 AND is_in_box = 1 ORDER BY production_time ASC";
 	//获取过期物料
 	public static final String GET_OVERDUE_MATERIAL_SQL = "SELECT a.* FROM (SELECT DISTINCT material_type.*, supplier.name AS supplier_name, company.nickname AS company_nickname FROM material_type INNER JOIN material INNER JOIN supplier INNER JOIN company ON material_type.id = material.type AND material_type.supplier = supplier.id AND supplier.company_id = company.id WHERE material_type.enabled = 1 AND material.remainder_quantity > 0 AND material.store_time < ? AND material_type.type = ?) a ";
 

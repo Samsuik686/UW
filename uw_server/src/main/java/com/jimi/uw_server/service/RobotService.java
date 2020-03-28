@@ -11,6 +11,8 @@ import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.*;
+import com.jimi.uw_server.constant.sql.IOTaskSQL;
+import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
@@ -18,6 +20,10 @@ import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
 import com.jimi.uw_server.service.base.SelectService;
+import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
+import com.jimi.uw_server.ur.entity.ScanMaterialInfoPackage;
+import com.jimi.uw_server.ur.entity.UrMaterialInfo;
+import com.jimi.uw_server.ur.handler.assist.PackSender;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,8 +41,6 @@ public class RobotService extends SelectService {
 	private static IOTaskService taskService = Aop.get(IOTaskService.class);
 
 	private static final String GET_MATERIAL_TYPE_ID_SQL = "SELECT * FROM packing_list_item WHERE task_id = ? AND material_type_id = (SELECT id FROM material_type WHERE enabled = 1 AND no = ? AND supplier = ? AND type = ?)";
-
-	private static final String GET_TASK_ITEM_DETAILS_SQL = "SELECT material_id AS materialId, quantity, production_time AS productionTime FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";
 
 	private static final String GET_MATERIAL_BOX_USED_CAPACITY_SQL = "SELECT * FROM material WHERE box = ? AND remainder_quantity > 0";
 
@@ -115,7 +119,7 @@ public class RobotService extends SelectService {
 								throw new OperationException("请扫描修改出库数时所打印出的新料盘二维码!");
 							}
 						}
-
+						
 						// 查询对应料盒
 						MaterialBox materialBox = MaterialBox.dao.findById(agvioTaskItem.getBoxId());
 						materialBox.setStatus(state);
@@ -131,7 +135,7 @@ public class RobotService extends SelectService {
 							int usedcapacity = Material.dao.find(GET_MATERIAL_BOX_USED_CAPACITY_SQL, agvioTaskItem.getBoxId()).size();
 							int unusedcapacity = materialBoxCapacity - usedcapacity;
 							synchronized (Lock.IO_TASK_REDIS_LOCK) {
-								AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem);
+								AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem, task);
 								if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && unusedcapacity <= 0)) {
 									GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
 									if (goodsLocation != null) {
@@ -140,7 +144,16 @@ public class RobotService extends SelectService {
 										throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
 									}
 								} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-									TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null);
+									Window window = Window.dao.findById(item.getWindowId());
+									//处理机械臂仓口
+									if (window.getAuto() && task.getType().equals(TaskType.OUT)) {
+										taskService.putUrOutTaskMaterialInfoToRedis(sameBoxItem, task);
+										//发送到站包
+										ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
+										PackSender.sendForkliftReachPackage("robot1", pack);
+										
+									}
+									TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null, agvioTaskItem.getWindowId(), sameBoxItem.getUwQuantity(), sameBoxItem.getDeductionQuantity());
 									resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 
 								}
@@ -150,7 +163,7 @@ public class RobotService extends SelectService {
 
 							// 若任务队列中不存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则发送回库指令
 							synchronized (Lock.IO_TASK_REDIS_LOCK) {
-								AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem);
+								AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem, task);
 								if ((sameBoxItem == null) || (task.getType() != TaskType.OUT && materialBox.getStatus().equals(BoxState.FULL))) {
 									GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
 									if (goodsLocation != null) {
@@ -159,7 +172,7 @@ public class RobotService extends SelectService {
 										throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
 									}
 								} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-										TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null);
+									TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null, null, null, null);
 									// 更新任务条目绑定的叉车id
 									resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 								}
@@ -170,10 +183,10 @@ public class RobotService extends SelectService {
 							agvioTaskItem.setIsForceFinish(true);
 							packingListItem.setFinishTime(new Date());
 							packingListItem.update();
-							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, true, null);
+							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, true, null, null, null, null);
 
 						} else {
-							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, null, null);
+							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, null, null, null, null, null);
 						}
 						// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
 						if (task.getType() == TaskType.OUT) {
@@ -250,20 +263,88 @@ public class RobotService extends SelectService {
 		return resultString;
 
 	}
-
-
-	/**
-	 * 获取任务条目实际出入库数量
-	 */
-	public Integer getActualIOQuantity(Integer packingListItemId) {
-		// 查询task_log中的material_id,quantity
-		List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, packingListItemId);
-		Integer actualQuantity = 0;
-		// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
-		for (TaskLog tl : taskLogs) {
-			actualQuantity += tl.getQuantity();
+	
+	
+	public void urOutTaskBack(UrMaterialInfo urMaterialInfo) throws Exception{
+		if (urMaterialInfo == null) {
+			return;
 		}
-		return actualQuantity;
+		PackingListItem packingListItem = PackingListItem.dao.findById(urMaterialInfo.getIoItemId());
+		if (packingListItem == null) {
+			throw new OperationException("无此任务条目，回库失败");
+		}
+		Task task = Task.dao.findById(packingListItem.getTaskId());
+		AGVIOTaskItem agvioTaskItem = null;
+		synchronized (Lock.IO_TASK_BACK_LOCK) {
+			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
+				if (item.getId().intValue() == urMaterialInfo.getIoItemId()) {
+					if (item.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
+						agvioTaskItem = item;
+						// 若是出库任务且为截料后重新入库，则需要判断是否对已截过料的料盘重新扫码过
+						if (agvioTaskItem.getIsForceFinish() && task.getType() == TaskType.OUT) {
+							if (!taskService.isScanAgain(agvioTaskItem.getId())) {
+								throw new OperationException("请扫描修改出库数时所打印出的新料盘二维码!");
+							}
+						}
+						
+						// 查询对应料盒
+						MaterialBox materialBox = MaterialBox.dao.findById(agvioTaskItem.getBoxId());
+						materialBox.setStatus(BoxState.UNFULL);
+						materialBox.setUpdateTime(new Date());
+						materialBox.update();
+						Boolean isFinish = false;
+						if (item.getUwQuantity() != 0 && taskService.getActualIOQuantity(item.getId()) >= item.getUwQuantity()) {
+							isFinish = true;
+						}
+						synchronized (Lock.IO_TASK_REDIS_LOCK) {
+							AGVIOTaskItem sameBoxItem = getSameBoxItem(agvioTaskItem, task);
+							if (sameBoxItem == null) {
+								GoodsLocation goodsLocation = GoodsLocation.dao.findById(agvioTaskItem.getGoodsLocationId());
+								if (goodsLocation != null) {
+									ioTaskHandler.sendBackLL(agvioTaskItem, materialBox, goodsLocation, task.getPriority());
+								} else {
+									throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
+								}
+							} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
+								Window window = Window.dao.findById(item.getWindowId());
+								//处理机械臂仓口
+								if (window.getAuto() && task.getType().equals(TaskType.OUT)) {
+									taskService.putUrOutTaskMaterialInfoToRedis(sameBoxItem, task);
+									//发送到站包
+									ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
+									PackSender.sendForkliftReachPackage("robot1", pack);
+									
+								}
+								TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null, agvioTaskItem.getWindowId(), sameBoxItem.getUwQuantity(), sameBoxItem.getDeductionQuantity());
+
+							}
+						}
+						// 更新任务条目状态为已分配回库
+						if (isFinish) {
+							agvioTaskItem.setIsForceFinish(true);
+							packingListItem.setFinishTime(new Date());
+							packingListItem.update();
+							List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_BY_PACKING_LIST_ITEM_ID, urMaterialInfo.getIoItemId());
+							if (!materials.isEmpty()) {
+								for (Material material : materials) {
+									material.setRemainderQuantity(0).setRow(-1).setCol(-1).setIsInBox(false).setStatus(MaterialStatus.NORMAL).update();
+								}
+							}
+							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, true, null, null, null, null);
+
+						} else {
+							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, null, null, null, null, null);
+						}
+					} else {
+						return ;
+					}
+					break;
+				}
+			}
+		}
+
+		return ;
+
 	}
 
 
@@ -271,9 +352,26 @@ public class RobotService extends SelectService {
 	 * 获取同组任务、同料盒中尚未被分配任务的任务条目
 	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目；否则返回null
 	 */
-	public AGVIOTaskItem getSameBoxItem(AGVIOTaskItem item) {
+	public AGVIOTaskItem getSameBoxItem(AGVIOTaskItem item, Task task) {
 		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems(item.getTaskId())) {
 			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getGoodsLocationId() == 0 && item1.getWindowId() == 0 && item1.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+				if (task.getType().equals(TaskType.OUT)) {
+					//判断该物料是否之前到过其他仓口
+					Window presentWindow = Window.dao.findById(item.getWindowId());
+					if (item1.getOldWindowId() != 0 && !item1.getOldWindowId().equals(item.getWindowId())) {
+						
+						Window oldWindow = Window.dao.findById(item1.getOldWindowId());
+						if (oldWindow.getAuto() || presentWindow.getAuto()) {
+							continue;
+						}
+					}
+					if (presentWindow.getAuto()) {
+						if (!item1.getIsSuperable()) {
+							continue;
+						}
+					}
+				}
+				
 				return item1;
 			}
 		}
@@ -334,14 +432,14 @@ public class RobotService extends SelectService {
 
 							// 若任务条目状态为等待扫码，则将其状态更新为未分配拣料
 							else if (redisTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN) {
-								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null, null, null, null);
 								return resultString;
 							}
 
 							// 若任务条目状态为已完成截料，且判断其对应的料盒是否在架，根据料盒在架情况更新其状态
 							else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
 								// 若料盒在架，则将其状态更新为未分配拣料
-								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null, null, null, null);
 								return resultString;
 							}
 							// 如果该料号对应的任务条目不存在于任务队列中，则提示“该物料暂时不需要入库或截料！”
@@ -368,4 +466,10 @@ public class RobotService extends SelectService {
 		}
 	}
 
+	
+	public void urBack(ScanMaterialInfoPackage scanMaterialInfoPackage) {
+		
+	}
+	
+	
 }

@@ -98,12 +98,12 @@ public class ExceptionHandler {
 							if (remainderQuantity <= 0) {
 								item.setState(TaskItemState.LACK);
 								item.setIsForceFinish(true);
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null, null, null, null);
 							} else {
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null, null, null, null);
 							}
 						} else {
-							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
+							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null, null, null, null);
 						}
 
 						// 设置料盒在架
@@ -111,14 +111,14 @@ public class ExceptionHandler {
 						materialBox.setIsOnShelf(true);
 						materialBox.update();
 						if (item.getIsCut()) {
-							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_CUT, null, null, null, null, null, false);
+							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_CUT, null, null, null, null, null, false, null, null, null);
 						}
 						if (!item.getIsForceFinish()) {
 							// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
 							if (task.getType() == TaskType.OUT) {
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null, null, null, null);
 							} else { // 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null);
+								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null, null, null, null);
 							}
 						}
 

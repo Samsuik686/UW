@@ -69,4 +69,6 @@ public class Lock {
 	public static Object START_PRECIOUS_INVTASK_LOCK = new Object();
 
 	public static Object UR_INV_TASK_LOCK = new Object();
+	
+	public static Object UR_OUT_TASK_LOCK = new Object();
 }
