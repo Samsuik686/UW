@@ -541,11 +541,11 @@ public class IOTaskService {
 	}
 
 
-	public void exportUnfinishTaskDetails(Integer id, Integer type, String fileName, OutputStream output) throws IOException {
+	public void exportIOTaskDetails(Integer id, Integer type, String fileName, OutputStream output) throws IOException {
 		// 如果任务类型为出入库
-		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
+		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
-			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id", "packing_list_item.finish_time IS NULL"}, null, null, null, null, null);
+			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 
 			// 遍历同一个任务id的套料单数据
 			for (Record packingListItem : packingListItems.getList()) {
@@ -557,10 +557,13 @@ public class IOTaskService {
 					actualQuantity += tl.getQuantity();
 				}
 				Integer deductQuantity = 0;
-				ExternalWhLog externalWhLog = ExternalWhLog.dao.findFirst(GET_EWH_LOG_BY_TASKID_AND_MATERIALTYPEID, id, packingListItem.getInt("PackingListItem_MaterialTypeId"));
-				if (externalWhLog != null) {
-					deductQuantity = externalWhLog.getQuantity();
+				List<ExternalWhLog> externalWhLogs = ExternalWhLog.dao.find(GET_EWH_LOG_BY_TASKID_AND_MATERIALTYPEID, id, packingListItem.getInt("PackingListItem_MaterialTypeId"));
+				for (ExternalWhLog externalWhLog : externalWhLogs) {
+					if (externalWhLog != null) {
+						deductQuantity = externalWhLog.getQuantity() + deductQuantity;
+					}
 				}
+				
 				packingListItem.set("PackingListItem_actuallyQuantity", actualQuantity);
 				packingListItem.set("PackingListItem_deductQuantity", deductQuantity);
 				Integer lackQuantity = (packingListItem.getInt("PackingListItem_Quantity") - actualQuantity + deductQuantity) > 0 ? (packingListItem.getInt("PackingListItem_Quantity") - actualQuantity + deductQuantity) : 0;
@@ -580,7 +583,7 @@ public class IOTaskService {
 	public Object check(Integer id, Integer type, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
 		// 如果任务类型为出入库
-		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
+		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
 			Page<Record> packingListItems = selectService.select(new String[] {"packing_list_item", "material_type"}, new String[] {"packing_list_item.task_id = " + id.toString(), "material_type.id = packing_list_item.material_type_id"}, pageNo, pageSize, null, null, null);
 
