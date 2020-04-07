@@ -18,12 +18,13 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 	 */
 	private Integer priority;
 
+	private Integer boxType;
 
 	public AGVInventoryTaskItem() {
 	}
 
 
-	public AGVInventoryTaskItem(Integer taskId, Integer boxId, Integer state, Integer priority, Integer windowId) {
+	public AGVInventoryTaskItem(Integer taskId, Integer boxId, Integer state, Integer priority, Integer windowId, Integer boxType) {
 		this.taskId = taskId;
 		this.robotId = 0;
 		this.state = state;
@@ -32,6 +33,7 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 		this.priority = priority;
 		this.windowId = windowId;
 		this.goodsLocationId = 0;
+		this.boxType = boxType;
 	}
 
 
@@ -108,5 +110,18 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 	public void setWindowId(Integer windowId) {
 		this.windowId = windowId;
 	}
+
+
+	public Integer getBoxType() {
+		return boxType;
+	}
+
+
+	public void setBoxType(Integer boxType) {
+		this.boxType = boxType;
+	}
+	
+	
+	
 
 }

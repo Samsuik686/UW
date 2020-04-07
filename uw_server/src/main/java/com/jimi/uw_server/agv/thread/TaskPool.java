@@ -8,10 +8,12 @@ import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
+import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
 import com.jimi.uw_server.agv.handle.BuildHandler;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
+import com.jimi.uw_server.agv.handle.base.BaseTaskHandler;
 import com.jimi.uw_server.constant.*;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.lock.Lock;
@@ -184,16 +186,7 @@ public class TaskPool extends Thread {
 					// 4. 判断任务条目的boxId是否已更新，同时判断料盒是否在架
 					if (boxId > 0 && item.getBoxId().intValue() == boxId && materialBox.getIsOnShelf() && !goodsLocations.isEmpty()) {
 						// 5. 发送LS指令
-						if (task.getPriority().equals(0)) {
-							ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-						} else {
-							if (i > Math.floor(windowSize / 2)) {
-								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-							} else {
-								ioTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
-							}
-						}
-
+						sendTaskMoveBoxOrder(item, task, goodsLocations.get(0), materialBox, windowSize, i);
 						goodsLocations.remove(0);
 						if (i > 0) {
 							i--;
@@ -232,61 +225,55 @@ public class TaskPool extends Thread {
 				}
 			}
 			i = goodsLocations.size();
+			if (i == 0) {
+				return;
+			}
+			List<AGVInventoryTaskItem> presentItems = new ArrayList<AGVInventoryTaskItem>();
 			if (!window.getAuto()) {
 				//不使用机械臂的仓口
+				//优先发送非标准料盒，标准料盒条目作为备用
+				List<AGVInventoryTaskItem> backupItems = new ArrayList<AGVInventoryTaskItem>();
 				for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
-					if (goodsLocations.isEmpty()) {
-						return;
+					//取够非标准料盒条目时停止（非标准料盒条目==空闲货位数）
+					if (presentItems.size() > i) {
+						break;
 					}
-					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
-						if (materialBox.getIsOnShelf()) {
-							if (task.getPriority().equals(0)) {
-								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-							} else {
-								if (i > Math.floor(windowSize / 2)) {
-									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-								} else {
-									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
-								}
-							}
-							goodsLocations.remove(0);
-							if (i > 0) {
-								i--;
-							}
-						}
+					if (item.getBoxType().equals(MaterialBoxType.NONSTANDARD) && item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						presentItems.add(item);
+					}else if (item.getBoxType().equals(MaterialBoxType.STANDARD) && item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						backupItems.add(item);
+						continue;
 					}
-
 				}
+				if (!backupItems.isEmpty()) {
+					presentItems.addAll(backupItems);
+				}
+				
 			}else {
 				//使用机械臂盘点
 				for (AGVInventoryTaskItem item : agvInventoryTaskItems) {
-					if (goodsLocations.isEmpty()) {
-						return;
+					//取够非标准料盒条目时停止（非标准料盒条目==空闲货位数）
+					if (presentItems.size() > i) {
+						break;
 					}
-					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-					//只有标准料盒才使用机械臂盘点
-					if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
-						continue;
-					}
-					if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
-						if (materialBox.getIsOnShelf()) {
-							if (task.getPriority().equals(0)) {
-								invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-							} else {
-								if (i > Math.floor(windowSize / 2)) {
-									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-								} else {
-									invTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
-								}
-							}
-							goodsLocations.remove(0);
-							if (i > 0) {
-								i--;
-							}
-						}
+					if (item.getBoxType().equals(MaterialBoxType.STANDARD) && item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+						presentItems.add(item);
 					}
 				}
+			}
+			for (AGVInventoryTaskItem presentItem : presentItems) {
+				if (goodsLocations.isEmpty()) {
+					return;
+				}
+				MaterialBox materialBox = MaterialBox.dao.findById(presentItem.getBoxId());
+				if (materialBox.getIsOnShelf()) {
+					sendTaskMoveBoxOrder(presentItem, task, goodsLocations.get(0), materialBox, windowSize, i);
+					goodsLocations.remove(0);
+					if (i > 0) {
+						i--;
+					}
+				}
+				
 			}
 		}
 	}
@@ -319,15 +306,7 @@ public class TaskPool extends Thread {
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 				if (item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 					if (materialBox.getIsOnShelf()) {
-						if (task.getPriority().equals(0)) {
-							samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-						} else {
-							if (i > Math.floor(windowSize / 2)) {
-								samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority());
-							} else {
-								samTaskHandler.sendSendLL(item, materialBox, goodsLocations.get(0), task.getPriority() + 1);
-							}
-						}
+						sendTaskMoveBoxOrder(item, task, goodsLocations.get(0), materialBox, windowSize, i);
 						goodsLocations.remove(0);
 						if (i > 0) {
 							i--;
@@ -525,16 +504,7 @@ public class TaskPool extends Thread {
 		// materialTypeId);
 		int boxId = 0;
 		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
-		/*
-		 * List<Window> windows = Window.dao.find(GET_WORKING_WINDOWS); for (Window
-		 * window : windows) { if
-		 * (window.getBindTaskId().equals(packingListItem.getTaskId())) { continue; }
-		 * for (AGVIOTaskItem redisTaskItem :
-		 * TaskItemRedisDAO.get(window.getBindTaskId())) { if
-		 * (redisTaskItem.getState() > IOTaskItemState.WAIT_ASSIGN &&
-		 * redisTaskItem.getIsForceFinish().equals(false)) {
-		 * boxs.add(redisTaskItem.getBoxId().intValue()); } } }
-		 */
+		
 		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 			// 根据任务条目id匹配到redis中的任务条目
 			if (redisTaskItem.getId().equals(packingListItem.getId()) && (redisTaskItem.getIsForceFinish() || redisTaskItem.getState() > TaskItemState.WAIT_ASSIGN)) {
@@ -543,19 +513,7 @@ public class TaskPool extends Thread {
 				}
 			}
 		}
-		/*
-		 * // 如果物料实体表中有多条该物料类型的记录，且库存大于0 if (materialList.size() > 0) { for (Material m
-		 * : materialList) {
-		 * 
-		 * if (m.getProductionTime().before(productionTime) && (m.getIsInBox() ||
-		 * Material.dao.find(GET_MATERIAL_BY_TYPE_AND_BOX_SQL, materialTypeId,
-		 * m.getBox()).size() > 0)) {
-		 * 
-		 * if (boxs.contains(m.getBox().intValue())) { continue; } productionTime =
-		 * m.getProductionTime(); boxId = m.getBox(); }
-		 * 
-		 * } }
-		 */
+		
 		Material material = Material.dao.findFirst(GET_IN_BOX_MATERIAL_BY_TYPE_SQL, materialTypeId);
 		if (material != null) {
 			MaterialBox materialBox = MaterialBox.dao.findById(material.getBox());
@@ -581,4 +539,24 @@ public class TaskPool extends Thread {
 		return boxId;
 	}
 
+	
+	private void sendTaskMoveBoxOrder(BaseTaskItem item, Task task, GoodsLocation goodsLocation, MaterialBox materialBox, Integer windowSize, Integer emptyGoodsLocationSize) throws Exception {
+		BaseTaskHandler baseTaskHandler = null;
+		if (item instanceof AGVSampleTaskItem) {
+			baseTaskHandler = samTaskHandler;
+		}else if (item instanceof AGVInventoryTaskItem) {
+			baseTaskHandler = invTaskHandler;
+		}else if (item instanceof AGVIOTaskItem) {
+			baseTaskHandler = ioTaskHandler;
+		}
+		if (task.getPriority().equals(0)) {
+			baseTaskHandler.sendSendLL(item, materialBox, goodsLocation, task.getPriority());
+		} else {
+			if (emptyGoodsLocationSize > Math.floor(windowSize / 2)) {
+				baseTaskHandler.sendSendLL(item, materialBox, goodsLocation, task.getPriority());
+			} else {
+				baseTaskHandler.sendSendLL(item, materialBox, goodsLocation, task.getPriority() + 1);
+			}
+		}
+	}
 }

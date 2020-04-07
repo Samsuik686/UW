@@ -23,7 +23,7 @@ public class MaterialBoxSQL {
 	
 	public static final String GET_ENABLED_MATERIAL_BOX_BY_POSITION_SQL = "SELECT * FROM material_box WHERE row = ? AND col = ? AND height = ? AND enabled = 1";
 
-	public static final String GET_ALL_NOT_EMPTY_BOX_BY_SUPPLIER_SQL = "SELECT DISTINCT material_box.id AS box FROM material_box INNER JOIN material ON material_box.id = material.box WHERE material.remainder_quantity > 0 AND material_box.supplier = ? AND material_box.enabled = 1";
+	public static final String GET_ALL_NOT_EMPTY_BOX_BY_SUPPLIER_SQL = "SELECT DISTINCT material_box.* FROM material_box INNER JOIN material ON material_box.id = material.box WHERE material.remainder_quantity > 0 AND material_box.supplier = ? AND material_box.enabled = 1";
 
 	public static final String GET_NOT_ON_SHELF_BOX_BY_SUPPLIER_SQL = "SELECT * FROM material_box WHERE material_box.supplier = ? AND material_box.is_on_shelf = 0 AND material_box.enabled = 1";
 
