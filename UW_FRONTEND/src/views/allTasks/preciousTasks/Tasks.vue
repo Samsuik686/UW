@@ -106,7 +106,7 @@
                     <span style="margin-right:10px;cursor:pointer" title="修改备注" @click="handleEditRemark(scope.row)">
                         <i class="el-icon-coke-edit"></i>
                     </span>
-                    <span style="margin-right:10px;cursor:pointer" title="导出报表" v-if="scope.row.state === 4" @click="exportUnfinishTaskDetails(scope.row)">
+                    <span style="margin-right:10px;cursor:pointer" title="导出报表" @click="exportIOTaskDetails(scope.row)">
                         <i class="el-icon-coke-download"></i>
                     </span>
                 </template>
@@ -140,7 +140,7 @@
 <script>
     import Bus from '../../../utils/bus'
     import {
-        exportUnfinishPreciousTaskDetailsUrl,
+        exportIOPreciousTaskDetailsUrl,
         supplierSelectUrl,
         switchTaskUrl,
         taskSelectUrl
@@ -415,7 +415,7 @@
                 this.editData = row;
                 this.isChange = true;
             },
-            exportUnfinishTaskDetails:function(row){
+            exportIOTaskDetails:function(row){
                 if (!this.isPending) {
                     this.isPending = true;
                     let data = {
@@ -423,7 +423,7 @@
                         type:row.type,
                         '#TOKEN#': this.$store.state.token
                     };
-                    downloadFile(exportUnfinishPreciousTaskDetailsUrl, data);
+                    downloadFile(exportIOPreciousTaskDetailsUrl, data);
                     let count = 0;
                     let mark = setInterval(() => {
                         count++;

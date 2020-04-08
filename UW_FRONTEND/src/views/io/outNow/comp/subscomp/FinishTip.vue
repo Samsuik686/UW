@@ -45,10 +45,10 @@
     watch: {
         isFinishTip: function (val) {
         if (val === true) {
-          if (this.taskItem.actualQuantity === this.taskItem.planQuantity) {
-            this.submit();
-            return
-          }
+          // if (this.taskItem.actualQuantity === this.taskItem.planQuantity) {
+          //   this.submit();
+          //   return
+          // }
 
           for (let i = 0; i < this.taskItem.details.length; i++) {
             let item = this.taskItem.details[i];

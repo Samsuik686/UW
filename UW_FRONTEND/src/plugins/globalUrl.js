@@ -110,10 +110,10 @@ export const taskBackPreciousAfterCuttingUrl = url + '/task/backPreciousAfterCut
 
 
 export const editTaskRemarksUrl = url + '/task/editTaskRemarks';
-//导出普通任务未完成
-export const exportUnfinishRegularTaskDetailsUrl = url + '/task/exportUnfinishRegularTaskDetails';
-//导出贵重任务未完成
-export const exportUnfinishPreciousTaskDetailsUrl = url + '/task/exportUnfinishPreciousTaskDetails';
+//导出普通任务
+export const exportIORegularTaskDetailsUrl = url + '/task/exportIORegularTaskDetails';
+//导出贵重任务
+export const exportIOPreciousTaskDetailsUrl = url + '/task/exportIOPreciousTaskDetails';
 
 //修改普通物料数量
 export const modifyRegularOutQuantityUrl = url + '/task/modifyRegularOutQuantity';

@@ -120,8 +120,8 @@
           <span style="margin-right:10px;cursor:pointer" title="更换仓口" @click="handleChangeWindow(scope.row)">
                         <i class="el-icon-coke-transfer"></i>
                     </span>
-          <span style="margin-right:10px;cursor:pointer" title="导出报表" v-if="scope.row.state === 4"
-                @click="exportUnfinishTaskDetails(scope.row)">
+          <span style="margin-right:10px;cursor:pointer" title="导出报表"
+                @click="exportIOTaskDetails(scope.row)">
                         <i class="el-icon-coke-download"></i>
                     </span>
           <span style="margin-right:10px;cursor:pointer" title="强制解绑仓口"
@@ -162,7 +162,7 @@
   import {mapGetters} from 'vuex'
   import Bus from '../../../utils/bus'
   import {
-    exportUnfinishRegularTaskDetailsUrl, forceUnbundlingWindowUrl,
+    exportIORegularTaskDetailsUrl, forceUnbundlingWindowUrl,
     supplierSelectUrl,
     switchTaskUrl,
     taskSelectUrl
@@ -444,7 +444,7 @@
         this.editData = row;
         this.isChange = true;
       },
-      exportUnfinishTaskDetails: function (row) {
+      exportIOTaskDetails: function (row) {
         if (!this.isPending) {
           this.isPending = true;
           let data = {
@@ -452,7 +452,7 @@
             type: row.type,
             '#TOKEN#': this.$store.state.token
           };
-          downloadFile(exportUnfinishRegularTaskDetailsUrl, data);
+          downloadFile(exportIORegularTaskDetailsUrl, data);
           let count = 0;
           let mark = setInterval(() => {
             count++;

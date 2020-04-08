@@ -7,7 +7,7 @@
                 <router-view v-if="isRouterAlive"></router-view>
             </div>
         </div>
-<!--        <show-robot-status v-if="user.type !== 5"></show-robot-status>-->
+        <show-robot-status v-if="user.type !== 5"></show-robot-status>
     </el-container>
 </template>
 
