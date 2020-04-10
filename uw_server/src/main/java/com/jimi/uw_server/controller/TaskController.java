@@ -103,12 +103,12 @@ public class TaskController extends Controller {
 
 
 	// 令指定任务开始
-	@Log("开始常规任务编号为{id}的任务，绑定的仓口为{window}")
-	public void startRegularIOTask(Integer id, Integer window) {
+	@Log("开始常规任务编号为{id}的任务，绑定的仓口为{window},机械臂仓库为{urWindowId}")
+	public void startRegularIOTask(Integer id, Integer window, Integer urWindowId) {
 		if (id == null) {
 			throw new ParameterException("任务id或仓口id不能为空！");
 		}
-		if (taskService.startRegularIOTask(id, window)) {
+		if (taskService.startRegularIOTask(id, window, urWindowId)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -226,7 +226,13 @@ public class TaskController extends Controller {
 
 	// 查询指定类型的仓口
 	public void getWindows(int type) {
-		renderJson(ResultUtil.succeed(taskService.getWindows(type)));
+		renderJson(ResultUtil.succeed(taskService.getWindows(type, false)));
+	}
+	
+	// 查询指定类型的仓口
+	public void getUrWindows() {
+		//0代表查询空闲仓口
+		renderJson(ResultUtil.succeed(taskService.getWindows(0, true)));
 	}
 
 
@@ -322,11 +328,8 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.outEmergencyRegular(taskId, no, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		taskService.outEmergencyRegular(taskId, no, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
+		renderJson(ResultUtil.succeed());
 	}
 	
 	// 物料出库
@@ -551,5 +554,10 @@ public class TaskController extends Controller {
 		}
 		List<Window> windows = taskService.getTaskWindow(taskId);
 		renderJson(ResultUtil.succeed(windows));
+	}
+	
+	
+	public void getUrWindow() {
+		
 	}
 }

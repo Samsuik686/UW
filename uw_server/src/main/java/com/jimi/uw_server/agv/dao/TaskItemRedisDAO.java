@@ -283,7 +283,7 @@ public class TaskItemRedisDAO {
 	 * 设置agvWebSocket运行状态
 	 */
 	public synchronized static void setAgvWebSocketStatus(Boolean flag) {
-		cache.set("agvWebSocketStatus", flag);
+		cache.set(UW_AGV_LINK_SWITCH, flag);
 	}
 
 

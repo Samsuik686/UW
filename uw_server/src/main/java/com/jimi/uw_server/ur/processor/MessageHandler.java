@@ -71,19 +71,19 @@ public class MessageHandler {
 						isAllFinishFlag = false;
 						continue;
 					}
-					
+					ioTaskService.urOutRegular(urMaterialInfo);
 					urMaterialInfo.setIsScaned(true);
 					presentInfo = urMaterialInfo;
-					ioTaskService.urOutRegular(urMaterialInfo);
 					isScanFlag = true;
 				}
 				if (isScanFlag) {
+					
 					UrTaskInfoDAO.putUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(), urMaterialInfos);
 					UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
 				}
 				if (isAllFinishFlag) {
 					try {
-						robotService.urOutTaskBack(presentInfo);
+						robotService.urOutTaskBack(presentInfo.getIoItemId(), null);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

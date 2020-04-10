@@ -539,7 +539,7 @@ public class InventoryTaskService {
 		}
 		synchronized (Lock.UR_INV_TASK_LOCK) {
 			List<UrMaterialInfo> infos = UrTaskInfoDAO.getUrMaterialInfos(taskId, boxId);
-			if (infos != null && infos.isEmpty()) {
+			if (infos != null && !infos.isEmpty()) {
 				for (UrMaterialInfo urMaterialInfo : infos) {
 					if (urMaterialInfo.getMaterialId().equals(material.getId())) {
 						urMaterialInfo.setIsScaned(true);

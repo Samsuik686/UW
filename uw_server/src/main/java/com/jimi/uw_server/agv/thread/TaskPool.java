@@ -218,8 +218,8 @@ public class TaskPool extends Thread {
 								if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) > 2000) {
 									ExternalWhLog externalWhLog = new ExternalWhLog();
 									externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
-									externalWhLog.setDestination(UW_ID);
-									externalWhLog.setSourceWh(task.getDestination());
+									externalWhLog.setDestination(task.getDestination());
+									externalWhLog.setSourceWh(UW_ID);
 									externalWhLog.setTaskId(task.getId());
 									externalWhLog.setQuantity(0 - item.getPlanQuantity());
 									externalWhLog.setTime(inventoryTask == null ? new Date() : inventoryTask.getCreateTime());
@@ -228,7 +228,7 @@ public class TaskPool extends Thread {
 									for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
 										if (tempItem.getGroupId().equals(item.getGroupId())) {
 											if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
-												TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskState.FINISHED, 0, 0, 0, 0, true, false, 0, null, externalWhLog.getQuantity());
+												TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, 0, 0, 0, 0, true, false, 0, null, externalWhLog.getQuantity());
 											}
 										}
 									}

@@ -1,7 +1,6 @@
 package com.jimi.uw_server.agv.handle;
 
 import java.util.Date;
-import java.util.List;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.json.Json;
@@ -16,26 +15,16 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
-import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.GoodsLocation;
-import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.MaterialService;
-import com.jimi.uw_server.ur.dao.UrInvTaskBoxInfoDAO;
-import com.jimi.uw_server.ur.dao.UrTaskInfoDAO;
 import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
-import com.jimi.uw_server.ur.entity.SessionBox;
-import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.ur.handler.assist.PackSender;
-import com.jimi.uw_server.ur.processor.ProcessorExecutor;
 import com.jimi.uw_server.service.ExternalWhLogService;
 import com.jimi.uw_server.service.IOTaskService;
-import com.jimi.uw_server.service.InventoryTaskService;
 
 
 /**
@@ -50,8 +39,6 @@ public class IOTaskHandler extends BaseTaskHandler {
 	private static IOTaskService taskService = Aop.get(IOTaskService.class);
 
 	private static MaterialService materialService = Aop.get(MaterialService.class);
-	
-	private static ExternalWhLogService externalWhLogService = Aop.get(ExternalWhLogService.class);
 
 
 	public final static String UNDEFINED = "undefined";
