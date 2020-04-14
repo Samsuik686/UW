@@ -3,6 +3,8 @@
 */  
 package com.jimi.uw_server.controller;
 
+import java.util.Date;
+
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
@@ -11,6 +13,7 @@ import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.service.MaterialTypeService;
+import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 
 /**  
@@ -142,5 +145,13 @@ public class MaterialTypeController extends Controller {
 			throw new OperationException("页码和页容量必须为正整数！");
 		}
 		renderJson(ResultUtil.succeed(materialTypeService.getMaterialTypeVOs(pageNo, pageSize, supplierId, no, specification)));
+	}
+	
+	
+	public void getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNum, Integer pageSize, Date startTime, Date endTime) {
+		
+		PagePaginate page = materialTypeService.getMaterialStockDetails(no, supplierId, warehouseType, whId, pageNum, pageSize, startTime, endTime);
+		renderJson(ResultUtil.succeed(page));
+ 
 	}
 }

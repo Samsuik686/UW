@@ -76,6 +76,21 @@ public class ExternalWhLogService {
 		Integer quantity = inQuantity - outQuantity - wastageQuantity + inventoryQuantity;
 		return quantity;
 	}
+	
+	
+	public Integer getRuntimeEWhMaterialQuantity(Integer materialTypeId, Integer whId, Date time) {
+
+		ExternalWhLog inExternalWhLog = ExternalWhLog.dao.findFirst(GET_IN_EXTERNALWHLOG_QUANTITY_BY_MATERIALTYPEID_AND_TIME, materialTypeId, whId, time);
+		ExternalWhLog outExternalWhLog = ExternalWhLog.dao.findFirst(GET_OUT_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TIME, materialTypeId, whId, time);
+		ExternalWhLog wastageExternalWhLog = ExternalWhLog.dao.findFirst(GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_TIME, materialTypeId, whId, TaskType.WASTAGE, time);
+		ExternalWhLog inventoryExternalWhLog = ExternalWhLog.dao.findFirst(GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_TIME, materialTypeId, whId, TaskType.COUNT, time);
+		Integer inQuantity = (inExternalWhLog.getInt("in_quantity") == null ? 0 : inExternalWhLog.getInt("in_quantity"));
+		Integer outQuantity = (outExternalWhLog.getInt("out_quantity") == null ? 0 : outExternalWhLog.getInt("out_quantity"));
+		Integer wastageQuantity = (wastageExternalWhLog.getInt("quantity") == null ? 0 : wastageExternalWhLog.getInt("quantity"));
+		Integer inventoryQuantity = (inventoryExternalWhLog.getInt("quantity") == null ? 0 : inventoryExternalWhLog.getInt("quantity"));
+		Integer quantity = inQuantity - outQuantity - wastageQuantity + inventoryQuantity;
+		return quantity;
+	}
 
 
 	/**

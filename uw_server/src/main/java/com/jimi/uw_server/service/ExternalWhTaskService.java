@@ -62,7 +62,7 @@ public class ExternalWhTaskService {
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = file.getName();
-		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME_SQL, fileName , TaskState.CANCELED);
 		if (tempTask != null) {
 			throw new OperationException("文件名重复，请进行修改！");
 		}
@@ -175,7 +175,7 @@ public class ExternalWhTaskService {
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = file.getName();
-		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME_SQL, fileName , TaskState.CANCELED);
 		if (tempTask != null) {
 			throw new OperationException("文件名重复，请进行修改！");
 		}

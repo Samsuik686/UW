@@ -7,8 +7,8 @@ public class SQL {
 	// 根据料盒计算料盘数
 	public static final String GET_MATERIAL_BY_TYPE_AND_BOX = "SELECT * FROM material WHERE material.type = ? AND material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 ORDER BY production_time ASC";
 
-	public static final String GET_MATERIAL_BY_BOX = "SELECT * FROM material WHERE material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 ORDER BY production_time ASC";
-
+    public static final String GET_MATERIAL_BY_BOX = "SELECT * FROM material WHERE material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 ORDER BY col, row ASC";
+    
 	public static final String GET_MATERIALS_BY_TIME_AND_BOX = "SELECT * FROM material WHERE material.type = ? AND material.box = ? AND material.is_in_box = 1 AND material.remainder_quantity > 0 AND production_time = ?";
 	// 根据任务条目ID查询相应的日志和物料记录（用于停泊条目阶段，此时物料数量暂未清零）
 	public static final String GET_PACKING_LIST_ITEM_DETAILS_SQL = "SELECT task_log.id, material_id AS materialId, row, col, quantity, production_time AS productionTime, is_in_box AS isInBox, remainder_quantity  AS remainderQuantity, box AS boxId FROM task_log JOIN material ON task_log.packing_list_item_id = ? AND task_log.material_id = material.id";

@@ -260,7 +260,7 @@ public class InventoryTaskService {
 							
 							List<MaterialBox> materialBoxs = MaterialBox.dao.find(MaterialBoxSQL.GET_ALL_NOT_EMPTY_BOX_BY_SUPPLIER_SQL, task.getSupplier());
 							for (MaterialBox box : materialBoxs) {
-								AGVInventoryTaskItem agvInventoryTaskItem = new AGVInventoryTaskItem(taskId, box.getInt("box"), TaskItemState.WAIT_ASSIGN, 0, 0);
+								AGVInventoryTaskItem agvInventoryTaskItem = new AGVInventoryTaskItem(taskId, box.getId(), TaskItemState.WAIT_ASSIGN, 0, 0, box.getType());
 								agvInventoryTaskItems.add(agvInventoryTaskItem);
 							}
 							

@@ -40,7 +40,7 @@ public class ManualTaskService {
 		}
 		Task task = new Task();
 		if (type == 1) {
-			Destination destination = Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_SQL, destinationName);
+			Destination destination = Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_AND_COMPNAY_SQL, destinationName, supplier.getCompanyId());
 			if (destination == null) {
 				throw new OperationException("目的仓库不存在！");
 			}

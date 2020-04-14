@@ -435,17 +435,17 @@ public class TaskController extends Controller {
 
 
 	@Log("导出普通仓任务未完成条目报表, 任务ID{id}， 任务类型{type}")
-	public void exportUnfinishRegularTaskDetails(Integer id, Integer type) {
+	public void exportIORegularTaskDetails(Integer id, Integer type) {
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "作废任务_" + taskService.getTaskName(id);
+			String fileName = "任务报表_" + taskService.getTaskName(id);
 			HttpServletResponse response = getResponse();
 			response.reset();
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			taskService.exportUnfinishTaskDetails(id, type, fileName, output);
+			taskService.exportIOTaskDetails(id, type, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
@@ -461,18 +461,18 @@ public class TaskController extends Controller {
 	}
 
 
-	@Log("导出贵重仓任务未完成条目报表, 任务ID{id}， 任务类型{type}")
+	@Log("导出贵重仓任务条目报表, 任务ID{id}， 任务类型{type}")
 	public void exportUnfinishPreciousTaskDetails(Integer id, Integer type) {
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "作废任务_" + taskService.getTaskName(id);
+			String fileName = "任务报表_" + taskService.getTaskName(id);
 			HttpServletResponse response = getResponse();
 			response.reset();
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			taskService.exportUnfinishTaskDetails(id, type, fileName, output);
+			taskService.exportIOTaskDetails(id, type, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
