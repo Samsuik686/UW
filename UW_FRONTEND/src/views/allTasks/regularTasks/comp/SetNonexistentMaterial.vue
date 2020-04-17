@@ -37,6 +37,14 @@
                     prop="radius"
             >
             </el-table-column>
+            <el-table-column
+                    label="是否可超发"
+                    prop="isSuperable"
+                    :formatter="function(row, column, cellValue, index) {
+                        return !!cellValue ? '是' : '否';
+                    }"
+            >
+            </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
                     <el-button

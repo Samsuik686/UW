@@ -22,6 +22,9 @@
             <el-form-item label="直径">
                 <el-input v-model.trim="editInfo.radius" placeholder="直径"></el-input>
             </el-form-item>
+            <el-form-item label="是否可超发">
+                <el-checkbox v-model.trim="editInfo.isSuperable" placeholder="是否可超发"></el-checkbox>
+            </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
             <el-button type="info" size="mini" @click="cancel" >取 消</el-button>
@@ -50,7 +53,8 @@
                     specification: '',
                     supplierId:'',
                     thickness:'',
-                    radius:''
+                    radius:'',
+                    isSuperable: ''
                 },
                 isPending:false
             }
@@ -63,6 +67,7 @@
                 this.editInfo.thickness = editData.thickness;
                 this.editInfo.radius = editData.radius;
                 this.editInfo.supplierId = editData.supplierId;
+                this.editInfo.isSuperable = Boolean(editData.isSuperable);
                 this.dialogVisible = true;
                 this.index = index;
             });
@@ -106,6 +111,7 @@
                 this.editInfo.no = '';
                 this.editInfo.radius = '';
                 this.editInfo.supplierId = '';
+                this.editInfo.isSuperable = false;
                 this.index = '';
                 this.dialogVisible = false;
             }

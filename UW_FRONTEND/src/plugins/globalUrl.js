@@ -80,6 +80,7 @@ export const taskCarryBoxesTaskSelectDetailsUrl = url + '/positionTask/listBoxPo
 export const taskCheckUrl = url + '/task/check';
 export const taskGetIOTaskDetailsUrl = url + '/task/getIOTaskDetails';
 export const taskWindowsUrl = url + '/task/getWindows';
+export const taskRobotWindowsUrl = url + '/task/getUrWindows';
 export const taskWindowTaskItems = url + '/task/getWindowTaskItems';
 export const taskWindowParkingItems = url + '/task/getWindowParkingItem';
 

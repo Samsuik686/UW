@@ -7,7 +7,7 @@
             :close-on-press-escape="isCloseOnModal"
             width="30%">
         <el-form>
-            <el-form-item label="状态更改" v-if="originState === '0' || originState === '1' || originState === '2'">
+            <el-form-item label="状态更改*" v-if="originState === '0' || originState === '1' || originState === '2'">
                 <el-select v-model.trim="thisState" placeholder="状态更改" value="" style="width:100%">
                     <el-option  label="请选择" :value="originState" disabled></el-option>
                     <el-option  label="通过审核" value='1' v-if="originState === '0'"></el-option>
@@ -20,10 +20,16 @@
                     <el-option  label="无法操作" :value='originState'></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="仓口选择" v-if="windowShow === '2' && originState === '1' && editData.type !== 8">
+            <el-form-item label="仓口选择*" v-if="windowShow === '2' && originState === '1' && editData.type !== 8">
                 <el-select v-model.trim="windowVal" placeholder="仓口选择" value="" style="width:100%" :disabled="window.length === 0">
                     <el-option  :label="window.length > 0 ? '请选择' : '无可用仓口'" value=''></el-option>
                     <el-option v-for="item in window" :value="item.id" :label="item.id" :key="item.id"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="机械臂仓口选择" v-if="windowShow === '2' && originState === '1' && editData.type !== 8">
+                <el-select v-model.trim="robotWindowVal" placeholder="机械臂仓口选择" value="" style="width:100%" :disabled="robotWindows.length === 0">
+                    <el-option  :label="robotWindows.length > 0 ? '请选择' : '无可用仓口'" value=''></el-option>
+                    <el-option v-for="item in robotWindows" :value="item.id" :label="item.id" :key="item.id"></el-option>
                 </el-select>
             </el-form-item>
         </el-form>
@@ -36,7 +42,7 @@
 
 <script>
     import {mapGetters} from 'vuex'
-    import {taskUrl, taskWindowsUrl} from "../../../../plugins/globalUrl";
+    import {taskRobotWindowsUrl, taskUrl, taskWindowsUrl} from "../../../../plugins/globalUrl";
     import {axiosPost} from "../../../../utils/fetchData";
     import {errHandler} from "../../../../utils/errorHandler";
 
@@ -50,13 +56,17 @@
                 originState:'',
                 windowShow: '',
                 window: [],
-                windowVal: ''
+                windowVal: '',
+                robotWindows: [],
+                robotWindowVal: '',
+
             }
         },
         watch:{
             isEditStatus:function(val){
               if(val === true){
                   this.getWindows();
+                  this.getRobotWindows();
                   this.originState = this.editData.state.toString();
                   this.thisState = this.editData.state.toString();
               }else{
@@ -91,6 +101,14 @@
                 };
                 axiosPost(options).then(res => {
                     this.window = res.data.data
+                })
+            },
+            getRobotWindows:function(){
+                let options = {
+                    url: taskRobotWindowsUrl,
+                };
+                axiosPost(options).then(res => {
+                    this.robotWindows = res.data.data
                 })
             },
             cancel:function(){
@@ -128,7 +146,10 @@
                                 this.isPending = false;
                                 return;
                             }
-                            options.data.window = this.windowVal
+                            options.data.window = this.windowVal;
+                            if (this.robotWindowVal !== '') {
+                                options.data.urWindowId = this.robotWindowVal;
+                            }
                         }
                         axiosPost(options).then(res => {
                             if(res.data.result === 200){
