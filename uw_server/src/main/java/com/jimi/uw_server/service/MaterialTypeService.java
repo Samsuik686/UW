@@ -87,8 +87,8 @@ public class MaterialTypeService {
 					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 
 						// 判断各单元格数据类型是否正确以及是否存在多余的空格
-						if (item.getNo() == null || item.getSpecification() == null || item.getThickness() == null || item.getRadius() == null || item.getNo().replaceAll(" ", "").equals("") || item.getSpecification().replaceAll(" ", "").equals("") || item.getThickness().toString().replaceAll(" ", "").equals("") || item.getRadius().toString().replaceAll(" ", "").equals("")) {
-							resultString = "导入物料类型表失败，请检查单表格第" + i + "行的料号/规格/厚度/直径列是否填写了准确信息！";
+						if (item.getNo() == null || item.getSpecification() == null || item.getThickness() == null || item.getRadius() == null || item.getNo().replaceAll(" ", "").equals("") || item.getSpecification().replaceAll(" ", "").equals("") || item.getThickness().toString().replaceAll(" ", "").equals("") || item.getRadius().toString().replaceAll(" ", "").equals("") || item.getIsSuperabled() == null || item.getIsSuperabled().trim().equals("")) {
+							resultString = "导入物料类型表失败，请检查单表格第" + i + "行的料号/规格/厚度/直径/是否超发列是否填写了准确信息！";
 							return resultString;
 						}
 
@@ -97,7 +97,15 @@ public class MaterialTypeService {
 							resultString = "导入物料类型表失败，表格第" + i + "行的厚度/直径列不是正整数！";
 							return resultString;
 						}
-
+						boolean isSuperable = false;
+						if (item.getIsSuperabled().trim().equals("是")) {
+							isSuperable = true;
+						}else if (item.getIsSuperabled().trim().equals("否")) {
+							isSuperable = false;
+						}else {
+							resultString = "导入物料类型表失败，表格第" + i + "行的是否超发列格式不正确，请填写”是“或.”否“！";
+							return resultString;
+						}
 						// 根据料号和客户找到对应的物料类型
 						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo().trim().toUpperCase(), supplierId);
 						/*
@@ -120,6 +128,7 @@ public class MaterialTypeService {
 							materialType.setEnabled(true);
 							materialType.setSupplier(supplierId);
 							materialType.setType(WarehouseType.REGULAR.getId());
+							materialType.setIsSuperable(isSuperable);
 							list.add(materialType);
 						}
 
@@ -231,9 +240,7 @@ public class MaterialTypeService {
 							break;
 						}
 					}
-					for (MaterialType materialType : list) {
-						materialType.save();
-					}
+					Db.batchSave(list, batchSize);
 				}
 			}
 			return resultString;
@@ -378,7 +385,7 @@ public class MaterialTypeService {
 	}
 	
 	
-	public PagePaginate getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNum, Integer pageSize, Date startTime, Date endTime) {
+	public PagePaginate getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNo, Integer pageSize, Date startTime, Date endTime) {
 		//获取客户所有仓库
 		Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_ID_SQL, supplierId);
 		String warehouseString = WarehouseType.getDescribeById(warehouseType);
@@ -392,7 +399,7 @@ public class MaterialTypeService {
 			sqlPara.setSql(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL);
 			sqlPara.addPara(no).addPara(supplier.getId()).addPara(warehouseType);
 		}
-		Page<Record> materialTypesRecords = Db.paginate(pageNum, pageSize, sqlPara);
+		Page<Record> materialTypesRecords = Db.paginate(pageNo, pageSize, sqlPara);
 		//物料库存明细记录
 		PagePaginate page = new PagePaginate();
 		page.setPageNumber(materialTypesRecords.getPageNumber());
@@ -543,7 +550,7 @@ public class MaterialTypeService {
 						}
 						warehouseStockDetailVOs.add(warehouseStockDetailVO);
 					}
-					oldBalance = externalWhLogService.getEWhMaterialQuantity(record.getInt("id"), warehouse.getId(), startTime) ;
+					oldBalance = externalWhLogService.getRuntimeEWhMaterialQuantity(record.getInt("id"), warehouse.getId(), startTime) ;
 				}
 				warehouseStockVO.setNumberInStock(inStockNum);
 				warehouseStockVO.setNumberOutStock(outStockNum);

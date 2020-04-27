@@ -2458,6 +2458,7 @@ public class IOTaskService {
 				}
 				item.setDeductionQuantity(0 - eWhStoreQuantity + 2000);
 				item.setUwQuantity(actualQuantity);
+				externalWhLog.setOperatior("robot1");
 				externalWhLog.setOperationTime(new Date());
 				externalWhLog.save();
 			}else if (outQuantity == 0 && eWhStoreQuantity <= 2000) {
@@ -2500,7 +2501,7 @@ public class IOTaskService {
 				if (oldestMaterial != null) {
 					if (material.getProductionTime().before(oldestMaterial.getProductionTime()) || material.getProductionTime().equals(oldestMaterial.getProductionTime())) {
 						tempQuantiy = material.getRemainderQuantity();
-						UrMaterialInfo info = new UrMaterialInfo(material.getId(), material.getCol(), material.getRow(), item.getTaskId(), item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), item.getId());
+						UrMaterialInfo info = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), item.getTaskId(), item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), item.getId());
 						urMaterialInfos.add(info);
 						if (tempQuantiy > limitQuantity) {
 							break;
@@ -2508,7 +2509,7 @@ public class IOTaskService {
 					}
 				}else {
 					tempQuantiy = material.getRemainderQuantity();
-					UrMaterialInfo info = new UrMaterialInfo(material.getId(), material.getCol(), material.getRow(), item.getTaskId(), item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), item.getId());
+					UrMaterialInfo info = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), item.getTaskId(), item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), item.getId());
 					urMaterialInfos.add(info);
 					if (tempQuantiy > limitQuantity) {
 						break;

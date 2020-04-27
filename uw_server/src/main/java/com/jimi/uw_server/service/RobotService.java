@@ -284,7 +284,7 @@ public class RobotService extends SelectService {
 			materialBox.update();
 			Boolean isFinish = false;
 			Integer actualNum = taskService.getActualIOQuantity(agvioTaskItem.getId());
-			if (agvioTaskItem.getUwQuantity() != 0 && actualNum >= agvioTaskItem.getUwQuantity()) {
+			if (actualNum >= agvioTaskItem.getUwQuantity()) {
 				isFinish = true;
 			}
 			synchronized (Lock.IO_TASK_REDIS_LOCK) {
@@ -304,7 +304,6 @@ public class RobotService extends SelectService {
 					PackSender.sendForkliftReachPackage("robot1", pack);
 					TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(),
 							agvioTaskItem.getRobotId(), null, null, agvioTaskItem.getWindowId(), sameBoxItem.getUwQuantity(), sameBoxItem.getDeductionQuantity());
-
 				}
 			}
 			// 更新任务条目状态为已分配回库
@@ -314,7 +313,7 @@ public class RobotService extends SelectService {
 				externalWhLog.setDestination(task.getDestination());
 				externalWhLog.setSourceWh(UW_ID);
 				externalWhLog.setTaskId(task.getId());
-				externalWhLog.setQuantity(actualNum - packingListItem.getQuantity());
+				externalWhLog.setQuantity(actualNum - packingListItem.getQuantity() - agvioTaskItem.getDeductionQuantity());
 				externalWhLog.setOperationTime(new Date());
 				externalWhLog.setOperatior("robot1");
 				if (task.getIsInventoryApply()) {

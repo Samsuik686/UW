@@ -41,6 +41,10 @@ public class MaterialInfoVO{
 	private String enabledString;
 
 	private Integer quantity;
+	
+	private Boolean isSuperable;
+	
+	private String isSuperableString;
 
 
 	/**
@@ -186,8 +190,36 @@ public class MaterialInfoVO{
 	public void setType(Integer type) {
 		this.type = type;
 	}
-	
-	
+
+	public Boolean getIsSuperable() {
+		return isSuperable;
+	}
+
+
+	public void setIsSuperable(Boolean isSuperable) {
+		this.isSuperable = isSuperable;
+	}
+
+
+	public String getIsSuperableString() {
+		return isSuperableString;
+	}
+
+
+	public void setIsSuperableString(Boolean isSuperable) {
+		if (isSuperable) {
+			this.isSuperableString = "是";
+		}else {
+			this.isSuperableString = "否";
+		}
+	}
+
+
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+
+
 	public static List<MaterialInfoVO> fillList(List<Record> records){
 		List<MaterialInfoVO> materialInfoVOs = new ArrayList<MaterialInfoVO>(records.size());
 		for (Record record : records) {
@@ -204,6 +236,8 @@ public class MaterialInfoVO{
 			m.setType(record.getInt("MaterialType_Type"));
 			m.setQuantity(record.getInt("MaterialType_Id"), record.getInt("MaterialType_Type"));
 			m.setDesignator(record.getStr("MaterialType_Designator"));
+			m.setIsSuperable(record.getBoolean("MaterialType_IsSuperable"));
+			m.setIsSuperableString(record.getBoolean("MaterialType_IsSuperable"));
 			materialInfoVOs.add(m);
 		}
 		return materialInfoVOs;

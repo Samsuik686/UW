@@ -148,9 +148,22 @@ public class MaterialTypeController extends Controller {
 	}
 	
 	
-	public void getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNum, Integer pageSize, Date startTime, Date endTime) {
-		
-		PagePaginate page = materialTypeService.getMaterialStockDetails(no, supplierId, warehouseType, whId, pageNum, pageSize, startTime, endTime);
+	public void getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNo, Integer pageSize, Date startTime,  Date endTime) {
+		if (supplierId == null || warehouseType == null || startTime == null || endTime == null) {
+			throw new OperationException("参数不能为空");
+		}
+		if (pageNo == null || pageSize == null) {
+			throw new OperationException("页码和页容量不能为空！");
+		}
+		if (pageNo <= 0 || pageSize <= 0) {
+			throw new OperationException("页码和页容量必须为正整数！");
+		}
+		if (startTime != null && endTime != null) {
+			if (!endTime.after(startTime)) {
+				throw new OperationException("开始时间需小于结束时间！");
+			}
+		}
+		PagePaginate page = materialTypeService.getMaterialStockDetails(no, supplierId, warehouseType, whId, pageNo, pageSize, startTime, endTime);
 		renderJson(ResultUtil.succeed(page));
  
 	}

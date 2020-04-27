@@ -139,7 +139,6 @@ public class TaskPool extends Thread {
 				GoodsLocation goodsLocation = iterator.next();
 				if (TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
 					iterator.remove();
-					continue;
 				}
 
 			}
@@ -153,9 +152,9 @@ public class TaskPool extends Thread {
 					// 对于入库和退料入库，根据类型和挑盒子算法获取最佳盒号
 					if (taskType == TaskType.IN || taskType == TaskType.SEND_BACK) {
 						boxId = getMaximumCapacityBox(item.getMaterialTypeId(), item.getTaskId());
-					}
-					// 对于出库， 根据类型获取最旧物料实体的盒号
-					else if (taskType == TaskType.OUT) {
+						
+					}else if (taskType == TaskType.OUT) {
+						// 对于出库， 根据类型获取最旧物料实体的盒号
 						// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
 						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 						if (remainderQuantity == 0 && !item.getIsForceFinish().equals(true)) {
@@ -182,8 +181,8 @@ public class TaskPool extends Thread {
 					MaterialBox materialBox = null;
 					if (boxId != 0) {
 						materialBox = MaterialBox.dao.findById(boxId);
+						
 					}
-					
 					if (item.getBoxId().equals(0) && boxId != 0) {
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null, null, null, null);
 					} else if (!item.getBoxId().equals(0) && !boxId.equals(item.getBoxId())) {
@@ -217,13 +216,14 @@ public class TaskPool extends Thread {
 							synchronized (Lock.IO_TASK_REDIS_LOCK) {
 								Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
 								Integer outQuantity = taskService.getActualIOQuantity(item.getId());
-								if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) > 2000) {
+								if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 2000) {
 									ExternalWhLog externalWhLog = new ExternalWhLog();
 									externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
 									externalWhLog.setDestination(task.getDestination());
 									externalWhLog.setSourceWh(UW_ID);
 									externalWhLog.setTaskId(task.getId());
 									externalWhLog.setQuantity(0 - item.getPlanQuantity());
+									externalWhLog.setOperatior("robot1");
 									externalWhLog.setTime(inventoryTask == null ? new Date() : inventoryTask.getCreateTime());
 									externalWhLog.setOperationTime(new Date());
 									externalWhLog.save();
@@ -234,6 +234,8 @@ public class TaskPool extends Thread {
 											}
 										}
 									}
+									PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
+									packingListItem.setFinishTime(new Date()).update();
 									continue;
 								}
 							}

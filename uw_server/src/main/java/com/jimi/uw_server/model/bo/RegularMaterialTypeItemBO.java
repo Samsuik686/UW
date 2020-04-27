@@ -26,6 +26,8 @@ public class RegularMaterialTypeItemBO {
 	@Excel(col = 4, head = "直径")
 	private Integer radius;
 
+	@Excel(col = 5, head = "是否超发")
+	private String isSuperabled;
 
 	public String getNo() {
 		return no;
@@ -75,5 +77,17 @@ public class RegularMaterialTypeItemBO {
 	public void setSerialNumber(Integer serialNumber) {
 		this.serialNumber = serialNumber;
 	}
+
+
+	public String getIsSuperabled() {
+		return isSuperabled;
+	}
+
+
+	public void setIsSuperabled(String isSuperabled) {
+		this.isSuperabled = isSuperabled;
+	}
+	
+	
 
 }
