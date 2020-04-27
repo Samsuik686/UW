@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">UW客户端</string>
+    <string name="urgent_cn">系统异常紧急出库</string>
+    <string name="valuable_cn">贵重仓抽检盘点</string>
+    <string name="income_area_cn">来料区紧急出库</string>
+    <string name="arrow_content">未选中或选中</string>
+    <string name="editext_digits">0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
+
+    <string name="usr_name_null">工号不能为空</string>
+    <string name="use_pwd_null">密码不能为空</string>
+    <string name="usr_name_not_exits">工号不存在</string>
+    <string name="usr_pwd_incorrect">密码不正确</string>
+    <string name="operate_str">操作人:</string>
+    <string name="order_str">任务单:</string>
+    <string name="material_str">料号</string>
+    <string name="need_count_str">需求数</string>
+    <string name="disk_str">料盘号</string>
+    <string name="out_count_str">发料数量</string>
+    <string name="dex_house_reCount">目的仓剩余</string>
+</resources>

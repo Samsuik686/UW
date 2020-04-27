@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <LinearLayout
+        android:id="@+id/ll_head"
+        android:layout_width="match_parent"
+        android:layout_height="45dp">
+
+        <include layout="@layout/back_layout" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/urgent_cn"
+            android:textColor="@color/titleBlue"
+            android:textSize="18sp"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll_head"
+        android:layout_marginTop="20dp"
+        android:padding="10dp"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/et_usr_scan"
+            android:layout_width="wrap_content"
+            android:layout_height="1dp" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:background="@drawable/editext_background">
+
+            <ImageView
+                android:id="@+id/iv_urgent_name"
+                android:layout_width="29.25dp"
+                android:layout_height="29.25dp"
+                android:src="@mipmap/clear"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="3dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/et_usr"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:drawablePadding="5dp"
+                android:maxLines="1"
+                android:textSize="20sp"
+                android:singleLine="true"
+                android:padding="5dp"
+                android:hint="请扫描工号登陆"
+                android:layout_toStartOf="@id/iv_urgent_name" />
+
+        </RelativeLayout>
+
+        <include
+            layout="@layout/login_button_layout"
+            android:layout_marginTop="25dp"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>

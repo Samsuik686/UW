@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="myGray">#CDCDCD</color>
+    <color name="myGreen">#3fad0f</color>
+    <color name="titleBlue">#1296db</color>
+    <color name="floating_menu_normal">#008577</color>
+    <color name="floating_menu_press">#00574B</color>
+    <color name="colorTable_top">#D5D5D5</color>
+    <color name="colorBlankView">#9C9C9C</color>
+</resources>

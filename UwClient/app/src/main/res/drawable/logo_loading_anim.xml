@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><!-- 属性矢量动画 -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:drawable="@drawable/logo_loading_vec"
+    tools:targetApi="lollipop">
+    <!-- android:drawable="@drawable/searchbar"  矢量图片 -->
+    <target
+        android:animation="@animator/anim_logo_loading"
+        android:name="point_j"
+        />
+
+    <target
+        android:animation="@animator/anim_logo_loading"
+        android:name="point_i1" />
+
+    <target
+        android:animation="@animator/anim_logo_loading"
+        android:name="point_m" />
+
+    <target
+        android:animation="@animator/anim_logo_loading"
+        android:name="point_i2" />
+
+    <target
+        android:animation="@animator/anim_logo_loading"
+        android:name="point_p" />
+
+</animated-vector>

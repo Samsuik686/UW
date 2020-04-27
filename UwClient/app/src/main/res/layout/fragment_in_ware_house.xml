@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/rl_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+        <TextView
+            android:id="@+id/tv_operate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="操作人:"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tv_operator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="0dp"
+            android:layout_toEndOf="@id/tv_operate"
+            android:ellipsize="end"
+            android:maxLength="10"
+            android:maxLines="1"
+            android:textColor="@android:color/black"
+            android:text="A000012"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/et_material"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_toEndOf="@id/tv_operator" />
+
+        <EditText
+            android:id="@+id/et_box"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_toEndOf="@id/et_material" />
+
+        <TextView
+            android:id="@+id/tv_operate_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@id/et_box"
+            android:layout_centerVertical="true"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_below="@id/rl_1"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_task"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="任务单:" />
+
+        <ImageButton
+            android:id="@+id/ib_show_tasks"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:background="@mipmap/show_task" />
+
+        <TextView
+            android:id="@+id/tv_task_dir"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center_horizontal"
+            android:layout_marginStart="3dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_toStartOf="@id/ib_show_tasks"
+            android:layout_toEndOf="@id/tv_task"
+            android:background="@drawable/task_dir_shape"
+            android:text=""
+            android:textColor="@android:color/holo_green_dark" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/ll_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:layout_below="@id/rl_2"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_supplier_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="供应商:" />
+
+        <ImageView
+            android:id="@+id/iv_set_task"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/open_file"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true" />
+
+        <TextView
+            android:id="@+id/tv_supplier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:textColor="@android:color/black"
+            android:background="@drawable/task_dir_shape"
+            android:layout_toStartOf="@id/iv_set_task"
+            android:layout_toEndOf="@id/tv_supplier_title"
+            android:layout_centerVertical="true"
+            android:maxLines="1"
+            android:text=""
+            android:textSize="15sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll_1">
+
+        <TextView
+            android:id="@+id/tv1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="目的地:" />
+
+        <Button
+            android:id="@+id/btn_lock_target"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_centerVertical="true"
+            android:text="保存"
+            android:textColor="@android:color/holo_red_dark"
+            android:background="@drawable/confirm_selector"
+            android:layout_alignParentEnd="true" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="3dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/task_dir_shape"
+            android:layout_toEndOf="@id/tv1"
+            android:layout_toStartOf="@id/btn_lock_target"
+            android:gravity="center">
+
+            <Spinner
+                android:id="@+id/target_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:dropDownWidth="match_parent"
+                android:entries="@array/targets"
+                android:gravity="center"
+                android:popupBackground="#96e896"
+                android:spinnerMode="dropdown" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+
+    <TextView
+        android:id="@+id/tv_scanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/rl_3"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/ll_2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/tv_scanner"
+        android:orientation="vertical">
+
+        <include layout="@layout/urgent_title_layout" />
+
+        <ListView
+            android:id="@+id/lv_in_task"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none" />
+
+    </LinearLayout>
+
+    <com.getbase.floatingactionbutton.FloatingActionsMenu
+        android:id="@+id/fla_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        app:fab_addButtonColorNormal="@color/floating_menu_normal"
+        app:fab_addButtonColorPressed="@color/floating_menu_press"
+        app:fab_labelsPosition="right"
+        app:fab_addButtonSize="mini">
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_last"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:foregroundGravity="center"
+            app:fab_size="mini"
+            android:src="@mipmap/last" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_next"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:foregroundGravity="center"
+            app:fab_size="mini"
+            android:src="@mipmap/next" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_finish"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:foregroundGravity="center"
+            app:fab_size="mini"
+            android:src="@mipmap/finish" />
+
+    </com.getbase.floatingactionbutton.FloatingActionsMenu>
+
+
+</RelativeLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

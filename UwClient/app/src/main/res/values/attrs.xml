@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ItemView">
+        <attr name="title" format="string" />
+    </declare-styleable>
+
+    <string-array name="targets">
+        <item>选择目的地</item>
+        <item>周转仓</item>
+        <item>外发</item>
+        <item>外发米琦</item>
+        <item>退客</item>
+        <item>维修</item>
+        <item>测试</item>
+        <item>外发曙能</item>
+        <item>申补</item>
+        <item>生产</item>
+        <item>锐诚信</item>
+        <item>东方电讯</item>
+    </string-array>
+
+</resources>
