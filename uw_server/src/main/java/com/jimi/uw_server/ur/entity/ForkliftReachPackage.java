@@ -18,15 +18,17 @@ public class ForkliftReachPackage extends UrBasePackage {
 	
 	private Integer boxId;
 	
+	private Integer type;
 	
 	/**
 	 * <p>Title<p>
 	 * <p>Description<p>
 	 */
-	public ForkliftReachPackage(Integer taskId, Integer boxId) {
+	public ForkliftReachPackage(Integer taskId, Integer boxId, Integer type) {
 		this.cmdCode = "forklift_reach";
 		this.taskId = taskId;
 		this.boxId = boxId;
+		this.type = type;
 	}
 
 
@@ -47,6 +49,16 @@ public class ForkliftReachPackage extends UrBasePackage {
 
 	public void setBoxId(Integer boxId) {
 		this.boxId = boxId;
+	}
+
+
+	public Integer getType() {
+		return type;
+	}
+
+
+	public void setType(Integer type) {
+		this.type = type;
 	}
 	
 	

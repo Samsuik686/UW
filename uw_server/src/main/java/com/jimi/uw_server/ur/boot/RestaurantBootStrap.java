@@ -64,7 +64,7 @@ public class RestaurantBootStrap extends ChannelInitializer<SocketChannel> {
 		ch.pipeline().addLast(LoginPackageHandler.me);
 		ch.pipeline().addLast(ReadyPackageHandler.me);
 		ch.pipeline().addLast(AskPositionPackageHandler.me);
-		ch.pipeline().addLast(ScanMaterialInfoPackageHandler.me);
+		ch.pipeline().addLast(InvMaterialScanInfoPackageHandler.me);
 		ch.pipeline().addLast(AckPackageHandler.me);
 		ch.pipeline().addLast(ScanMaterialExceptionPackageHandler.me);
 		// 最后需要一个类型编码器，根据不同的对象类型编码成不同的字节集

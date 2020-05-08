@@ -5,10 +5,14 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.InvTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.agv.handle.InvTaskHandler;
 import com.jimi.uw_server.constant.*;
+import com.jimi.uw_server.constant.enums.MaterialBoxPositionStatusEnum;
+import com.jimi.uw_server.constant.enums.UwInvTaskProcessFlagEnum;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.*;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
@@ -18,8 +22,6 @@ import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.base.SelectService;
 import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.ur.dao.UrInvTaskInfoDAO;
-import com.jimi.uw_server.ur.dao.UrOperationMaterialInfoDAO;
-import com.jimi.uw_server.ur.entity.UrMaterialInfo;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.MaterialHelper;
@@ -124,7 +126,7 @@ public class InventoryTaskService {
 		if (supplier == null) {
 			throw new OperationException("客户不存在！");
 		}
-		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplierId, WarehouseType.REGULAR.getId());
+		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplierId, WarehouseTypeEnum.REGULAR.getId());
 		if (task != null) {
 			throw new OperationException("该客户已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
 		}
@@ -150,11 +152,11 @@ public class InventoryTaskService {
 		}
 		task = new Task();
 		Date date = new Date();
-		task.setFileName(getTaskName(date, WarehouseType.REGULAR.getId()));
+		task.setFileName(getTaskName(date, WarehouseTypeEnum.REGULAR.getId()));
 		task.setCreateTime(date);
 		task.setType(TaskType.COUNT);
 		task.setState(TaskState.WAIT_START);
-		task.setWarehouseType(WarehouseType.REGULAR.getId());
+		task.setWarehouseType(WarehouseTypeEnum.REGULAR.getId());
 		task.setSupplier(supplierId);
 		task.save();
 		for (Integer destinationId : destinationIdIntegerArr) {
@@ -175,13 +177,13 @@ public class InventoryTaskService {
 		if (supplier == null) {
 			throw new OperationException("客户不存在！");
 		}
-		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplierId, WarehouseType.PRECIOUS.getId());
+		Task task = Task.dao.findFirst(GET_USEFUL_TASK_BY_TYPE_SUPPLIER, TaskType.COUNT, supplierId, WarehouseTypeEnum.PRECIOUS.getId());
 		if (task != null) {
 			throw new OperationException("该客户已存在未开始或进行中的盘点任务，无法创建新的盘点任务！");
 		}
 		Date date = new Date();
 		task = new Task();
-		task.setFileName(getTaskName(date, WarehouseType.PRECIOUS.getId())).setCreateTime(date).setType(TaskType.COUNT).setState(TaskState.WAIT_START).setSupplier(supplierId).setWarehouseType(WarehouseType.PRECIOUS.getId()).save();
+		task.setFileName(getTaskName(date, WarehouseTypeEnum.PRECIOUS.getId())).setCreateTime(date).setType(TaskType.COUNT).setState(TaskState.WAIT_START).setSupplier(supplierId).setWarehouseType(WarehouseTypeEnum.PRECIOUS.getId()).save();
 		InventoryTaskBaseInfo info = new InventoryTaskBaseInfo();
 		info.setTaskId(task.getId()).setDestinationId(uwId).save();
 		return "操作成功";
@@ -230,7 +232,7 @@ public class InventoryTaskService {
 					if (window.getBindTaskId() == null) {
 						continue;
 					}
-					Task tempTask = Task.dao.findFirst(GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR.getId());
+					Task tempTask = Task.dao.findFirst(GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseTypeEnum.REGULAR.getId());
 					if (tempTask != null) {
 						throw new OperationException("当前盘点的客户存在进行中的盘点任务，请等待任务结束后再开始盘点任务!");
 					}
@@ -311,7 +313,7 @@ public class InventoryTaskService {
 				Db.batchSave(externalWhLogs, batchSize);
 				if (!infos.isEmpty()) {
 					for (InventoryTaskBaseInfo info : infos) {
-						Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), info.getDestinationId(), task.getSupplier(), WarehouseType.REGULAR.getId());
+						Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), info.getDestinationId(), task.getSupplier(), WarehouseTypeEnum.REGULAR.getId());
 
 					}
 				}
@@ -326,7 +328,7 @@ public class InventoryTaskService {
 					window.update();
 				}
 				Collections.shuffle(agvInventoryTaskItems);
-				TaskItemRedisDAO.addInventoryTaskItem(taskId, agvInventoryTaskItems);
+				InvTaskRedisDAO.addInventoryTaskItem(taskId, agvInventoryTaskItems);
 			}
 		}
 
@@ -345,16 +347,16 @@ public class InventoryTaskService {
 				throw new OperationException("该任务并未处于未开始状态，无法开始任务！");
 			}
 
-			Task tempTask = Task.dao.findFirst(GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS.getId());
+			Task tempTask = Task.dao.findFirst(GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseTypeEnum.PRECIOUS.getId());
 			if (tempTask != null) {
 				throw new OperationException("当前盘点的客户存在进行中的盘点任务，请等待任务结束后再开始盘点任务!");
 			}
-			tempTask = Task.dao.findFirst(GET_RUNNING_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.PRECIOUS.getId());
+			tempTask = Task.dao.findFirst(GET_RUNNING_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseTypeEnum.PRECIOUS.getId());
 			if (tempTask != null && tempTask.getSupplier().equals(task.getSupplier())) {
 				throw new OperationException("当前盘点的客户存在其他出入库任务，请等待其他任务结束后再开始盘点任务!");
 			}
 			List<InventoryLog> inventoryLogs = new ArrayList<>();
-			List<Material> materials = Material.dao.find(MaterialSQL.GET_ALL_PRECIOUS_MATERIAL_BY_SUPPLIER_SQL, task.getSupplier(), WarehouseType.PRECIOUS.getId(), MaterialStatus.NORMAL);
+			List<Material> materials = Material.dao.find(MaterialSQL.GET_ALL_PRECIOUS_MATERIAL_BY_SUPPLIER_SQL, task.getSupplier(), WarehouseTypeEnum.PRECIOUS.getId(), MaterialStatus.NORMAL);
 			for (Material material2 : materials) {
 				InventoryLog inventoryLog = new InventoryLog();
 				inventoryLog.setMaterialId(material2.getId());
@@ -365,7 +367,7 @@ public class InventoryTaskService {
 				inventoryLogs.add(inventoryLog);
 			}
 			Db.batchSave(inventoryLogs, batchSize);
-			Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), uwId, task.getSupplier(), WarehouseType.PRECIOUS.getId());
+			Db.update(UPDATE_MATERIAL_RETURN_RECORD_UNENABLED, task.getCreateTime(), uwId, task.getSupplier(), WarehouseTypeEnum.PRECIOUS.getId());
 			task.setStartTime(new Date()).setState(TaskState.PROCESSING).update();
 		}
 		return "操作成功";
@@ -401,7 +403,7 @@ public class InventoryTaskService {
 			if (materialBox == null) {
 				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
 			}
-			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
+			for (AGVInventoryTaskItem inventoryTaskItem : InvTaskRedisDAO.getInventoryTaskItems(taskId)) {
 				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
 					try {
 						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
@@ -410,7 +412,115 @@ public class InventoryTaskService {
 						} else {
 							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
 						}
-						TaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
+						InvTaskRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true, null);
+					} catch (Exception e) {
+						e.printStackTrace();
+						throw new OperationException(e.getMessage());
+					}
+					break;
+				}
+			}
+			for (InventoryLog inventoryLog : inventoryLogs) {
+				if (!inventoryLog.getBeforeNum().equals(inventoryLog.getActuralNum())) {
+					// 改变实际库存
+					Material material = Material.dao.findById(inventoryLog.getMaterialId());
+					material.setRemainderQuantity(inventoryLog.getActuralNum());
+					if (inventoryLog.getActuralNum().equals(0)) {
+						material.setRow(-1);
+						material.setCol(-1);
+						material.setIsInBox(false);
+					}
+					material.update();
+
+				}
+			}
+		}
+		return "操作成功";
+	}
+
+
+	/**
+	 * 
+	 * <p>Description: 机械臂叉车回库<p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2020年4月30日
+	 */
+	public String backUrInventoryRegularUWBox(Integer taskId, Integer boxId, String user) {
+		synchronized (Lock.INV_TASK_BACK_LOCK) {
+			Task task = Task.dao.findById(taskId);
+			if (task == null) {
+				throw new OperationException("任务不存在，请检查参数是否正确!");
+			}
+			List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_BOX_AND_TASKID, boxId, taskId);
+			Boolean isException = false;
+			for (InventoryLog inventoryLog : inventoryLogs) {
+				if (inventoryLog.getActuralNum() == null) {
+					isException = true;
+				}
+			}
+			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+			if (materialBox == null) {
+				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
+			}
+			for (AGVInventoryTaskItem inventoryTaskItem : InvTaskRedisDAO.getInventoryTaskItems(taskId)) {
+				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
+					try {
+						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
+						if (goodsLocation != null) {
+							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
+						} else {
+							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
+						}
+						InvTaskRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true, isException);
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+						throw new OperationException(e.getMessage());
+					}
+					break;
+				}
+			}
+		}
+		return "操作成功";
+	}
+
+	
+	/**
+	 * 让盘点任务的叉车回库
+	 * @param taskId
+	 * @param boxId
+	 * @param windowId
+	 * @param user
+	 * @return
+	 */
+	public String backUrExceptionInventoryRegularUWBox(Integer taskId, Integer boxId, Integer windowId, User user) {
+		synchronized (Lock.INV_TASK_BACK_LOCK) {
+			Task task = Task.dao.findById(taskId);
+			if (task == null) {
+				throw new OperationException("任务不存在，请检查参数是否正确！");
+			}
+			List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_BOX_AND_TASKID, boxId, taskId);
+			for (InventoryLog inventoryLog : inventoryLogs) {
+				if (inventoryLog.getActuralNum() == null) {
+					throw new OperationException("存在未盘点的物料，请处理！");
+				}
+			}
+			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+			if (materialBox == null) {
+				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确！");
+			}
+			for (AGVInventoryTaskItem inventoryTaskItem : InvTaskRedisDAO.getInventoryTaskItems(taskId)) {
+				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
+					try {
+						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
+						if (goodsLocation != null) {
+							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
+						} else {
+							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
+						}
+						InvTaskRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true, false);
 					} catch (Exception e) {
 						e.printStackTrace();
 						throw new OperationException(e.getMessage());
@@ -437,63 +547,6 @@ public class InventoryTaskService {
 			if (window != null && window.getAuto()) {
 				synchronized (Lock.UR_INV_TASK_LOCK){
 					UrInvTaskInfoDAO.removeUrMaterialInfosByTaskAndBox(taskId, boxId);
-				}
-			}
-		}
-		return "操作成功";
-	}
-
-
-	public String backUrInventoryRegularUWBox(Integer taskId, Integer boxId, String user) {
-		synchronized (Lock.INV_TASK_BACK_LOCK) {
-			Task task = Task.dao.findById(taskId);
-			if (task == null) {
-				throw new OperationException("任务不存在，请检查参数是否正确!");
-			}
-			List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_BOX_AND_TASKID, boxId, taskId);
-			for (InventoryLog inventoryLog : inventoryLogs) {
-				if (inventoryLog.getActuralNum() == null) {
-					inventoryLog.setActuralNum(inventoryLog.getBeforeNum());
-					inventoryLog.setDifferentNum(0);
-					inventoryLog.setEnabled(true);
-					inventoryLog.setInventoryOperatior(user);
-					inventoryLog.setInventoryTime(new Date());
-					inventoryLog.update();
-				}
-			}
-			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
-			if (materialBox == null) {
-				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
-			}
-			for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(taskId)) {
-				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
-					try {
-						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
-						if (goodsLocation != null) {
-							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
-						} else {
-							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
-						}
-						TaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
-					} catch (Exception e) {
-						e.printStackTrace();
-						throw new OperationException(e.getMessage());
-					}
-					break;
-				}
-			}
-			for (InventoryLog inventoryLog : inventoryLogs) {
-				if (!inventoryLog.getBeforeNum().equals(inventoryLog.getActuralNum())) {
-					// 改变实际库存
-					Material material = Material.dao.findById(inventoryLog.getMaterialId());
-					material.setRemainderQuantity(inventoryLog.getActuralNum());
-					if (inventoryLog.getActuralNum().equals(0)) {
-						material.setRow(-1);
-						material.setCol(-1);
-						material.setIsInBox(false);
-					}
-					material.update();
-
 				}
 			}
 		}
@@ -537,23 +590,7 @@ public class InventoryTaskService {
 				material.update();
 			}
 		}
-		synchronized (Lock.UR_INV_TASK_LOCK) {
-			List<UrMaterialInfo> infos = UrInvTaskInfoDAO.getUrMaterialInfos(taskId, boxId);
-			if (infos != null && infos.isEmpty()) {
-				for (UrMaterialInfo urMaterialInfo : infos) {
-					if (urMaterialInfo.getMaterialId().equals(material.getId())) {
-						urMaterialInfo.setIsScaned(true);
-						urMaterialInfo.setExceptionCode(0);
-						break;
-					}
-				}
-				UrMaterialInfo info1 = UrOperationMaterialInfoDAO.getUrOperationMaterialInfoByUrName("robot1");
-				if (info1 != null && info1.getMaterialId().equals(materialId)){
-					UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
-				}
-				UrInvTaskInfoDAO.putUrMaterialInfos(taskId, boxId, infos);
-			}
-		}
+		
 		return material;
 	}
 
@@ -565,15 +602,47 @@ public class InventoryTaskService {
 	 * @param taskId
 	 * @return
 	 */
-	public void inventoryUrRegularUWMaterial(String materialId, Integer boxId, Integer taskId) {
-		InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, taskId, materialId);
-		Material material = Material.dao.findById(materialId);
-		// 改变盘点记录
-		inventoryLog.setActuralNum(material.getRemainderQuantity())
-				.setDifferentNum(0)
+	public void inventoryUrRegularUWMaterial(String materialId, Integer boxId, Integer taskId, Integer xPosition, Integer yPosition, Integer quantity, Integer result) {
+		if (result == MaterialBoxPositionStatusEnum.NORMAL.getCode()) {
+			Material material = Material.dao.findById(materialId);
+			InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, taskId, materialId);
+			if (material == null || quantity < 0) {
+			    result = MaterialBoxPositionStatusEnum.SCAN_ERROR.getCode();
+			    
+			} else if (material != null && material.getBox().equals(boxId)) {
+				material.setRow(xPosition)
+			    .setCol(yPosition)
+			    .setRemainderQuantity(quantity)
+			    .update();
+				inventoryLog.setActuralNum(quantity)
+				.setDifferentNum(quantity - inventoryLog.getBeforeNum())
 				.setInventoryOperatior("robot1")
 				.setInventoryTime(new Date())
 				.update();
+			}else if (material != null && !material.getBox().equals(boxId)) {
+			    result = MaterialBoxPositionStatusEnum.POSITION_ERROR.getCode();
+			    
+			}
+		}
+		MaterialBoxDetail boxDetail = MaterialBoxDetail.dao.findFirst(MaterialBoxSQL.GET_MATERIAL_BOX_DETAILS_BY_BOX_AND_POSITION_SQL, boxId, xPosition, yPosition);
+		if (boxDetail != null) {
+			boxDetail.setStatus(result).update();
+		}
+		
+		
+	}
+	
+	
+	/**
+	 * 盘点异常机械臂UW物料
+	 * @param materialId
+	 * @param boxId
+	 * @param taskId
+	 * @return
+	 */
+	public Material inventoryUrExceptionRegularUWMaterial(String materialId, Integer boxId, Integer taskId, Integer acturalNum, User user) {
+		
+		return inventoryRegularUWMaterial(materialId, boxId, taskId, acturalNum, user);	
 	}
 
 
@@ -768,7 +837,7 @@ public class InventoryTaskService {
 		}
 		info.setFinishOperator(user.getUid()).setFinishTime(new Date()).update();
 		List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
-		if (infos.size() < 2 && task.getWarehouseType().equals(WarehouseType.REGULAR.getId())){
+		if (infos.size() < 2 && task.getWarehouseType().equals(WarehouseTypeEnum.REGULAR.getId())){
 			task.setState(TaskState.FINISHED).setEndTime(new Date()).update();
 		}
 		return "操作成功";
@@ -1031,7 +1100,7 @@ public class InventoryTaskService {
 						}
 						String no = item.getNo().trim().toUpperCase();
 						// 根据料号找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, no, task.getSupplier(), WarehouseType.REGULAR.getId());
+						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, no, task.getSupplier(), WarehouseTypeEnum.REGULAR.getId());
 						// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
 						if (mType == null) {
 							resultString = "导入失败，料号为" + item.getNo() + "的物料没有记录在物料类型表中或已被禁用，或者是客户与料号对应不上！";
@@ -1106,7 +1175,7 @@ public class InventoryTaskService {
 	 * @param windowId
 	 * @return
 	 */
-	public List<PackingInventoryInfoVO> getPackingInventory(Integer windowId) {
+	public List<PackingInventoryInfoVO> getPackingExceptionInventory(Integer windowId) {
 		Window window = Window.dao.findById(windowId);
 		if (window == null || window.getBindTaskId() == null) {
 			throw new OperationException("仓口不存在任务！");
@@ -1115,10 +1184,10 @@ public class InventoryTaskService {
 		Map<Integer, PackingInventoryInfoVO> map = new LinkedHashMap<>();
 		List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, windowId);
 		for (GoodsLocation goodsLocation : goodsLocations) {
-			map.put(goodsLocation.getId(), new PackingInventoryInfoVO(goodsLocation, new ArrayList<>()));
+			map.put(goodsLocation.getId(), new PackingInventoryInfoVO(goodsLocation, new ArrayList<>(), new ArrayList<>()));
 		}
-		for (AGVInventoryTaskItem inventoryTaskItem : TaskItemRedisDAO.getInventoryTaskItems(window.getBindTaskId())) {
-			if (inventoryTaskItem.getWindowId().equals(windowId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
+		for (AGVInventoryTaskItem inventoryTaskItem : InvTaskRedisDAO.getInventoryTaskItems(window.getBindTaskId())) {
+			if (inventoryTaskItem.getWindowId().equals(windowId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && inventoryTaskItem.getIsException()) {
 				boxId = inventoryTaskItem.getBoxId();
 				PackingInventoryInfoVO info = map.get(inventoryTaskItem.getGoodsLocationId());
 				if (info == null) {
@@ -1152,28 +1221,9 @@ public class InventoryTaskService {
 					}
 					materialInfoVOs.add(materialInfoVO);
 				}
-				//当盘点任务仓口为机械臂盘点仓口时
-				if (window.getAuto()) {
-					List<UrMaterialInfo> urMaterialInfos = UrInvTaskInfoDAO.getUrMaterialInfos(inventoryTaskItem.getTaskId(), boxId);
-					//设置物料的扫描状态和异常状态
-					if (!urMaterialInfos.isEmpty()) {
-						Set<String> materialScanSet = new HashSet<String>();
-						Map<String, Integer> materialExceptionMap = new HashMap<>();
-						for (UrMaterialInfo urMaterialInfo : urMaterialInfos) {
-							if (urMaterialInfo.getIsScaned()) {
-								materialScanSet.add(urMaterialInfo.getMaterialId());
-							}
-							materialExceptionMap.put(urMaterialInfo.getMaterialId(), urMaterialInfo.getExceptionCode());
-						}
-						for (MaterialDetialsVO materialDetialsVO : materialInfoVOs) {
-							if (materialExceptionMap.containsKey(materialDetialsVO.getMaterialId())) {
-								materialDetialsVO.setExceptionCode(materialExceptionMap.get(materialDetialsVO.getMaterialId()));
-								if (materialScanSet.contains(materialDetialsVO.getMaterialId())) {
-									materialDetialsVO.setIsScaned(true);
-								}
-							}
-						}
-					}
+				List<MaterialBoxDetail> materialBoxDetails = MaterialBoxDetail.dao.find(MaterialBoxSQL.GET_MATERIAL_BOX_DETAILS_BY_BOX_SQL, boxId);
+				if (!materialBoxDetails.isEmpty()) {
+					info.setMaterialBoxDetailVOs(MaterialBoxDetailVO.fillList(materialBoxDetails));
 				}
 				info.setBoxId(boxId);
 				info.setTaskId(window.getBindTaskId());
@@ -1185,6 +1235,68 @@ public class InventoryTaskService {
 	}
 
 
+	/**
+	 * 获取当前仓口的盘点物料清单
+	 * @param windowId
+	 * @return
+	 */
+	public List<PackingInventoryInfoVO> getPackingInventory(Integer windowId) {
+		Window window = Window.dao.findById(windowId);
+		if (window == null || window.getBindTaskId() == null) {
+			throw new OperationException("仓口不存在任务！");
+		}
+		int boxId = 0;
+		Map<Integer, PackingInventoryInfoVO> map = new LinkedHashMap<>();
+		List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, windowId);
+		for (GoodsLocation goodsLocation : goodsLocations) {
+			map.put(goodsLocation.getId(), new PackingInventoryInfoVO(goodsLocation, new ArrayList<>()));
+		}
+		for (AGVInventoryTaskItem inventoryTaskItem : InvTaskRedisDAO.getInventoryTaskItems(window.getBindTaskId())) {
+			if (inventoryTaskItem.getWindowId().equals(windowId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && !inventoryTaskItem.getIsException()) {
+				boxId = inventoryTaskItem.getBoxId();
+				PackingInventoryInfoVO info = map.get(inventoryTaskItem.getGoodsLocationId());
+				if (info == null) {
+					throw new OperationException("仓口 " + windowId + "没有对应货位" + inventoryTaskItem.getGoodsLocationId() + "！");
+				}
+				if (info.getBoxId() != null) {
+					throw new OperationException("仓口 " + windowId + "的货位" + inventoryTaskItem.getGoodsLocationId() + "有一个以上的到站任务条目，请检查！");
+				}
+				MaterialBox materialBox = MaterialBox.dao.findById(inventoryTaskItem.getBoxId());
+				if (materialBox == null) {
+					throw new OperationException("料盒不存在或者未启用！");
+				}
+				Supplier supplier = Supplier.dao.findById(materialBox.getSupplier());
+				List<MaterialDetialsVO> materialInfoVOs = info.getList();
+				List<Record> records = Db.find(MaterialSQL.GET_ENTITIES_SELECT_SQL + MaterialSQL.GET_ENTITIES_BY_BOX_EXCEPT_SELECT_SQL, boxId, supplier.getId());
+				for (Record record : records) {
+					MaterialDetialsVO materialInfoVO = new MaterialDetialsVO();
+					materialInfoVO.setMaterialTypeId(record.getInt("Material_MaterialTypeId"));
+					materialInfoVO.setMaterialId(record.getStr("Material_Id"));
+					materialInfoVO.setNo(record.getStr("MaterialType_No"));
+					materialInfoVO.setSpecification(record.getStr("MaterialType_Specification"));
+					materialInfoVO.setStoreNum(record.getInt("Material_RemainderQuantity"));
+					materialInfoVO.setSupplierId(supplier.getId());
+					materialInfoVO.setSupplierName(supplier.getName());
+					materialInfoVO.setProductionTime(record.getDate("Material_ProductionTime"));
+					materialInfoVO.setRow(record.getInt("Material_Row"));
+					materialInfoVO.setCol(record.getInt("Material_Col"));
+					InventoryLog inventoryLog = InventoryLog.dao.findFirst(GET_INVENTORY_LOG_BY_BOX_AND_TASKID_AND_MATERIALID, boxId, window.getBindTaskId(), record.getStr("Material_Id"));
+					if (inventoryLog != null && inventoryLog.getActuralNum() != null) {
+						materialInfoVO.setActualNum(inventoryLog.getActuralNum());
+					}
+					materialInfoVOs.add(materialInfoVO);
+				}
+				info.setBoxId(boxId);
+				info.setTaskId(window.getBindTaskId());
+				info.setWindowId(windowId);
+				info.setList(materialInfoVOs);
+			}
+		}
+		return new ArrayList<>(map.values());
+	}
+
+	
+	
 	/**
 	 * 根据客户获取盘点任务(下拉框使用)
 	 * @param supplierId
@@ -1236,7 +1348,7 @@ public class InventoryTaskService {
 			taskVO.setSupplierName(record.getStr("Supplier_Name"));
 			status = false;
 			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
-				status = TaskItemRedisDAO.getTaskStatus(record.getInt("Task_Id"));
+				status = TaskUtilsRedisDAO.getTaskStatus(record.getInt("Task_Id"));
 			}
 
 			taskVO.setStatus(status);
@@ -1556,11 +1668,32 @@ public class InventoryTaskService {
 		info.setCheckTime(null).setCheckOperator(null).update();
 		return "操作成功！";
 	}
+	
+	
+	public void startInvExceptionProcess(Integer taskId) {
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.COUNT)) {
+			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
+		}
+		if (!task.getState().equals(TaskState.PROCESSING)) {
+			throw new OperationException("盘点任务未处于进行中状态！");
+		}
+		if (!UwInvTaskProcessFlagEnum.UW_EXCEPTION_WAIT_PROCESS.isCodeEquals(InvTaskRedisDAO.getUwInvTaskProcess(taskId))) {
+			throw new OperationException("盘点任务异常处理阶段未处于等待开始状态，无法开始！");
+		}
+		InvTaskRedisDAO.setUwInvTaskProcess(taskId, UwInvTaskProcessFlagEnum.UW_EXCEPTION_START_PROCESS);
+
+		for (AGVInventoryTaskItem inventoryTaskItem : InvTaskRedisDAO.getInventoryTaskItems(taskId)) {
+			if (inventoryTaskItem.getState() == TaskItemState.FINISH_BACK && inventoryTaskItem.getIsException() && inventoryTaskItem.getIsForceFinish()) {
+				InvTaskRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.WAIT_ASSIGN , 0, 0, 0, false, null);
+			}
+		}
+	}
 
 
 	public String getTaskName(Date date, Integer warehouseType) {
 		String fileName = "";
-		if (warehouseType.equals(WarehouseType.REGULAR.getId())) {
+		if (warehouseType.equals(WarehouseTypeEnum.REGULAR.getId())) {
 			fileName = "普通仓盘点_";
 		} else {
 			fileName = "贵重仓盘点_";

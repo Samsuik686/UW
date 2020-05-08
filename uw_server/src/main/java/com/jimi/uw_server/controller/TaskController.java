@@ -13,7 +13,7 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
 import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.Task;
@@ -49,7 +49,7 @@ public class TaskController extends Controller {
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 			file = getFile();
 			String fileName = file.getFileName();
-			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR.getId(), isForced);
+			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseTypeEnum.REGULAR.getId(), isForced);
 			renderJson(ResultUtil.succeed());
 		}
 	}
@@ -68,7 +68,7 @@ public class TaskController extends Controller {
 		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
 			file = getFile();
 			String fileName = file.getFileName();
-			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced);
+			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseTypeEnum.PRECIOUS.getId(), isForced);
 			renderJson(ResultUtil.succeed());	
 		}
 	}

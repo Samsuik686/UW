@@ -6,7 +6,7 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.IOTaskSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.*;
@@ -104,7 +104,7 @@ public class ExternalWhTaskService {
 						resultString = "导入失败，料号为" + item.getNo() + "的物料表中存在重复项！";
 						return resultString;
 					}
-					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR.getId(), destinationWhId);
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseTypeEnum.REGULAR.getId(), destinationWhId);
 					materialTypeIdSet.add(mType.getId());
 					if (sourceWhId != 0 && sourceWhId != -1) {
 						int storeNum = 0;
@@ -214,7 +214,7 @@ public class ExternalWhTaskService {
 						return resultString;
 					}
 					materialTypeIdSet.add(mType.getId());
-					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseType.REGULAR.getId(), whId);
+					Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(supplierId, WarehouseTypeEnum.REGULAR.getId(), whId);
 					if (whId != 0) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
@@ -279,7 +279,7 @@ public class ExternalWhTaskService {
 			resultString = "目的仓不存在，请确认系统中存在该物料类型！";
 			return resultString;
 		}
-		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseType.REGULAR.getId(), whId);
+		Task inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(mType.getSupplier(), WarehouseTypeEnum.REGULAR.getId(), whId);
 		if (whId != 0) {
 			int storeNum = 0;
 			if (inventoryTask != null) {
@@ -388,7 +388,7 @@ public class ExternalWhTaskService {
 			if (unStartInvTasks.containsKey(key)) {
 				inventoryTask = unStartInvTasks.get(key);
 			} else {
-				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseType.REGULAR.getId(), record.getInt("wh_id"));
+				inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(record.getInt("supplier_id"), WarehouseTypeEnum.REGULAR.getId(), record.getInt("wh_id"));
 				unStartInvTasks.put(key, inventoryTask);
 			}
 			if (inventoryTask != null) {

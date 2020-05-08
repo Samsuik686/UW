@@ -3,7 +3,7 @@ package com.jimi.uw_server.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jimi.uw_server.constant.MaterialStatus;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.printer.PrintServerSocket;
@@ -50,7 +50,7 @@ public class PrinterService {
 				throw new OperationException("发送打印信息失败,请检查物料是否处于截料状态！"); 
 			}
 			try {
-				if (materialType.getType().equals(WarehouseType.REGULAR.getId())) {
+				if (materialType.getType().equals(WarehouseTypeEnum.REGULAR.getId())) {
 					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
 				}else {
 					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity() - taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());

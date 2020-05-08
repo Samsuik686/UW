@@ -6,11 +6,9 @@ import java.util.List;
 import com.jfinal.json.Json;
 import com.jimi.uw_server.ur.constant.UrCmdType;
 import com.jimi.uw_server.ur.entity.AckPackage;
-import com.jimi.uw_server.ur.entity.AskPostionPackage;
 import com.jimi.uw_server.ur.entity.ReadyPackage;
-import com.jimi.uw_server.ur.entity.ScanMaterialExceptionPackage;
 import com.jimi.uw_server.ur.entity.LoginPackage;
-import com.jimi.uw_server.ur.entity.ScanMaterialInfoPackage;
+import com.jimi.uw_server.ur.entity.InvMaterialScanInfoPackage;
 import com.jimi.uw_server.ur.entity.base.UrBasePackage;
 
 import io.netty.buffer.ByteBuf;
@@ -41,14 +39,8 @@ public class TypeDecoder extends ByteToMessageDecoder {
 			case UrCmdType.READY:
 				out.add(Json.getJson().parse(msg, ReadyPackage.class));
 				break;
-			case UrCmdType.ASK_POSTITION:
-				out.add(Json.getJson().parse(msg, AskPostionPackage.class));
-				break;
-			case UrCmdType.SCAN_MATERIAL_INFO:
-				out.add(Json.getJson().parse(msg, ScanMaterialInfoPackage.class));
-				break;
-			case UrCmdType.SCAN_MATERIAL_EXCEPTION:
-				out.add(Json.getJson().parse(msg, ScanMaterialExceptionPackage.class));
+			case UrCmdType.INV_MATERIAL_SCAN_INFO:
+				out.add(Json.getJson().parse(msg, InvMaterialScanInfoPackage.class));
 				break;
 			case UrCmdType.ACK:
 				out.add(Json.getJson().parse(msg, AckPackage.class));

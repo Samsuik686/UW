@@ -7,7 +7,7 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.constant.MaterialStatus;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.*;
@@ -162,7 +162,7 @@ public class MaterialService extends SelectService {
 		Company company = Company.dao.findById(supplier.getCompanyId());
 		PagePaginate pagePaginate = new PagePaginate();
 		Page<Record> page = null;
-		if (materialType.getType().equals(WarehouseType.REGULAR.getId())) {
+		if (materialType.getType().equals(WarehouseTypeEnum.REGULAR.getId())) {
 			page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, materialTypeId, materialType.getSupplier());
 			if (page.getList() != null && !page.getList().isEmpty()) {
 				pagePaginate.setList(MaterialVO.fillRegualrMaterialVOList(page.getList(), company, supplier));
@@ -253,7 +253,7 @@ public class MaterialService extends SelectService {
 	public void exportMaterialReport(Supplier supplier, String fileName, OutputStream output, Integer warehouseType) throws IOException {
 		String[] field = null;
 		String[] head = null;
-		if (warehouseType.equals(WarehouseType.REGULAR.getId())) {
+		if (warehouseType.equals(WarehouseTypeEnum.REGULAR.getId())) {
 			List<Record> materialRecord = Db.find(MaterialSQL.GET_REGUALR_MATERIAL_REPORT_SQL, warehouseType, supplier.getCompanyId(), supplier.getId());
 			field = new String[] {"id", "no", "specification",  "quantity"};
 			head = new String[] {"物料类型号", "料号", "规格号", "物料数量"};

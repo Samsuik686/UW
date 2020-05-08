@@ -1,7 +1,8 @@
 package com.jimi.uw_server.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.BulidTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.exception.OperationException;
@@ -92,7 +93,7 @@ public class BuildService extends SelectService {
 					AGVBuildTaskItem bt = new AGVBuildTaskItem(materialBox.getId(), srcPosition);
 					buildTaskItems.add(bt);
 					if (endX.equals(startX) && endY.equals(y) && endZ.equals(z)) {
-						TaskItemRedisDAO.addBuildTaskItem(buildTaskItems);
+						BulidTaskRedisDAO.addBuildTaskItem(buildTaskItems);
 						return;
 					}
 					if (y == limitYR) {
@@ -124,7 +125,7 @@ public class BuildService extends SelectService {
 					AGVBuildTaskItem bt = new AGVBuildTaskItem(materialBox.getId(), srcPosition);
 					buildTaskItems.add(bt);
 					if (endX.equals(startX) && endY.equals(y) && endZ.equals(z)) {
-						TaskItemRedisDAO.addBuildTaskItem(buildTaskItems);
+						BulidTaskRedisDAO.addBuildTaskItem(buildTaskItems);
 						return;
 					}
 					// 需要修改
@@ -135,7 +136,7 @@ public class BuildService extends SelectService {
 
 			}
 		}
-		TaskItemRedisDAO.addBuildTaskItem(buildTaskItems);
+		BulidTaskRedisDAO.addBuildTaskItem(buildTaskItems);
 
 	}
 

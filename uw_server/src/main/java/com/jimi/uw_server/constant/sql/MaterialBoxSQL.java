@@ -27,4 +27,8 @@ public class MaterialBoxSQL {
 
 	public static final String GET_NOT_ON_SHELF_BOX_BY_SUPPLIER_SQL = "SELECT * FROM material_box WHERE material_box.supplier = ? AND material_box.is_on_shelf = 0 AND material_box.enabled = 1";
 
+	public static final String GET_MATERIAL_BOX_DETAILS_BY_BOX_AND_POSITION_SQL = "SELECT * FROM material_box_detail WHERE box_id = ? AND x_position = ? AND y_position = ?";
+
+	public static final String GET_MATERIAL_BOX_DETAILS_BY_BOX_SQL = "SELECT * FROM material_box_detail WHERE box_id = ?";
+
 }

@@ -16,12 +16,11 @@ public class UrCmdType {
 	
 	public static final String ASK_POSTITION = "ask_position";
 
-	public static final String SCAN_MATERIAL_INFO = "scan_material_info";
+	public static final String INV_MATERIAL_SCAN_INFO = "inv_material_scan_info";
 
 	public static final String FORKLIFT_REACH = "forklift_reach";
 
-	public static final String MATERIAL_POSITION_INFO = "material_position_info";
+	public static final String MATERIAL_POSITION_INFO = "out_material_position_info";
 	
-	public static final String SCAN_MATERIAL_EXCEPTION = "scan_material_exception";
 
 }

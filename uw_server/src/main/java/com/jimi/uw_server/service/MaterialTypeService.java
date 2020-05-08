@@ -11,7 +11,7 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.exception.OperationException;
@@ -108,7 +108,7 @@ public class MaterialTypeService {
 							materialType.setRadius(item.getRadius());
 							materialType.setEnabled(true);
 							materialType.setSupplier(supplierId);
-							materialType.setType(WarehouseType.REGULAR.getId());
+							materialType.setType(WarehouseTypeEnum.REGULAR.getId());
 							list.add(materialType);
 						}
 
@@ -182,7 +182,7 @@ public class MaterialTypeService {
 							/*
 							 * 判断物料类型表中是否存在对应的料号且客户也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
 							 */
-							MaterialType tempMaterialType2 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, deignator, WarehouseType.PRECIOUS.getId());
+							MaterialType tempMaterialType2 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, deignator, WarehouseTypeEnum.PRECIOUS.getId());
 
 							if (tempMaterialType1 != null) {
 								resultString = "导入物料类型表失败，表格第" + i + "行的料号已存在于系统中！";
@@ -206,7 +206,7 @@ public class MaterialTypeService {
 								materialType.setEnabled(true);
 								materialType.setSupplier(supplierId);
 								materialType.setDesignator(deignator);
-								materialType.setType(WarehouseType.PRECIOUS.getId());
+								materialType.setType(WarehouseTypeEnum.PRECIOUS.getId());
 								list.add(materialType);
 								nos.add(no);
 								designators.add(deignator);
@@ -243,14 +243,14 @@ public class MaterialTypeService {
 		}
 		MaterialType conflictMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME_SQL, no, supplierId);
 		if (conflictMaterialType != null) {
-			resultString = WarehouseType.getDescribeById(conflictMaterialType.getType()) + "已存在该物料类型，请勿重复添加！";
+			resultString = WarehouseTypeEnum.getDescribeById(conflictMaterialType.getType()) + "已存在该物料类型，请勿重复添加！";
 			return resultString;
 		}
-		if (warehouseType.equals(WarehouseType.PRECIOUS.getId())) {
+		if (warehouseType.equals(WarehouseTypeEnum.PRECIOUS.getId())) {
 			if (designator == null) {
 				throw new OperationException("贵重仓物料类型需添加位号！");
 			}
-			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, designator, WarehouseType.PRECIOUS.getId());
+			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, supplierId, designator, WarehouseTypeEnum.PRECIOUS.getId());
 			if (tempMaterialType != null) {
 				resultString = "存在物料的位号与新添加物料的位号相同，添加失败！";
 				return resultString;
@@ -271,11 +271,11 @@ public class MaterialTypeService {
 			throw new OperationException("物料类型不存在！");
 		}
 		designator = (designator == null || designator.trim().equals("")) ? null : designator.trim().toUpperCase();
-		if (materialType.getType().equals(WarehouseType.PRECIOUS.getId())) {
+		if (materialType.getType().equals(WarehouseTypeEnum.PRECIOUS.getId())) {
 			if (designator == null) {
 				throw new OperationException("贵重仓物料类型需添加位号！");
 			}
-			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, materialType.getSupplier(), designator, WarehouseType.PRECIOUS.getId());
+			MaterialType tempMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_DESIGNATOR_AND_TYPE_SQL, materialType.getSupplier(), designator, WarehouseTypeEnum.PRECIOUS.getId());
 			if (tempMaterialType != null && !tempMaterialType.getId().equals(id)) {
 				resultString = "存在其他物料的位号与新添加物料的位号相同，添加失败！";
 				return resultString;

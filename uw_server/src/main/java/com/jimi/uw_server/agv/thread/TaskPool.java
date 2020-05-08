@@ -2,8 +2,12 @@ package com.jimi.uw_server.agv.thread;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
+import com.jimi.uw_server.agv.dao.BulidTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.IOTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.InvTaskRedisDAO;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.SampleTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -67,7 +71,7 @@ public class TaskPool extends Thread {
 		while (true) {
 			try {
 				sleep(taskPoolCycle);
-				if (!TaskItemRedisDAO.getAgvWebSocketStatus()) {
+				if (!TaskUtilsRedisDAO.getAgvWebSocketStatus()) {
 					continue;
 				}
 				// 判断是否存在停止分配标志位
@@ -78,7 +82,7 @@ public class TaskPool extends Thread {
 					for (Window window : windows) {
 						Task task = Task.dao.findById(window.getBindTaskId());
 						// 获取出入库任务
-						if (task == null || (task.getState() != TaskState.PROCESSING && task.getState() != TaskState.CANCELED) || (TaskItemRedisDAO.getTaskStatus(task.getId()) != null && !TaskItemRedisDAO.getTaskStatus(task.getId()))) {
+						if (task == null || (task.getState() != TaskState.PROCESSING && task.getState() != TaskState.CANCELED) || (TaskUtilsRedisDAO.getTaskStatus(task.getId()) != null && !TaskUtilsRedisDAO.getTaskStatus(task.getId()))) {
 							continue;
 						}
 						if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.OUT) || task.getType().equals(TaskType.SEND_BACK)) {
@@ -97,7 +101,7 @@ public class TaskPool extends Thread {
 
 				robotBOs = countFreeRobot();
 				List<AGVBuildTaskItem> buildTaskItems = new ArrayList<>();
-				TaskItemRedisDAO.appendBuildTaskItems(buildTaskItems);
+				BulidTaskRedisDAO.appendBuildTaskItems(buildTaskItems);
 				if (buildTaskItems.isEmpty() || robotBOs.size() == 0) {
 					continue;
 				}
@@ -113,7 +117,7 @@ public class TaskPool extends Thread {
 	public void sendIOCmds(Task task, Window window) throws Exception {
 
 		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
-		TaskItemRedisDAO.appendIOTaskItems(task.getId(), ioTaskItems);
+		IOTaskRedisDAO.appendIOTaskItems(task.getId(), ioTaskItems);
 		int i = 0;
 		int windowSize = window.getSize();
 		if (!ioTaskItems.isEmpty()) {
@@ -124,7 +128,7 @@ public class TaskPool extends Thread {
 			Iterator<GoodsLocation> iterator = goodsLocations.iterator();
 			while (iterator.hasNext()) {
 				GoodsLocation goodsLocation = iterator.next();
-				if (TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
+				if (TaskUtilsRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskUtilsRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
 					iterator.remove();
 					continue;
 				}
@@ -146,7 +150,7 @@ public class TaskPool extends Thread {
 						// 根据物料类型号获取物料库存数量，若库存数为0，则将任务条目状态设置为缺料并记录一条出库数为0的出库日志，然后跳出循环;否则，调用获取最旧物料算法
 						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 						if (remainderQuantity == 0 && !item.getIsForceFinish().equals(true)) {
-							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
+							IOTaskRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
 
 							// 为将该出库日志关联到对应的物料，需要查找对应的料盘唯一码，因为出库数是设置为0的，所以不会影响系统数据
 							TaskLog taskLog = new TaskLog();
@@ -170,14 +174,14 @@ public class TaskPool extends Thread {
 					// 3. 将盒号填入item并update到Redis
 
 					if (item.getBoxId().equals(0) && boxId != 0) {
-						TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+						IOTaskRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
 					} else if (!item.getBoxId().equals(0) && !boxId.equals(item.getBoxId())) {
 						//防止任务条目在叉车回库已经分配了到站的料盒，导致再次修改料盒
 						synchronized (Lock.IO_TASK_REDIS_LOCK) {
-							for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
+							for (AGVIOTaskItem tempItem : IOTaskRedisDAO.getIOTaskItems(task.getId())) {
 								if (tempItem.getGroupId().equals(item.getGroupId())) {
 									if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
-										TaskItemRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
+										IOTaskRedisDAO.updateIOTaskItemInfo(item, null, null, null, boxId, 0, null, null);
 									}
 								}
 							}
@@ -196,7 +200,7 @@ public class TaskPool extends Thread {
 					// 根据物料类型号获取物料库存数量
 					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 					if (remainderQuantity > 0) {
-						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, false, null);
+						IOTaskRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, false, null);
 					}
 				}
 			}
@@ -207,8 +211,7 @@ public class TaskPool extends Thread {
 
 	public void sendInventoryTaskItemCmds(Task task, Window window) throws Exception {
 
-		List<AGVInventoryTaskItem> agvInventoryTaskItems = new ArrayList<>();
-		TaskItemRedisDAO.appendInventoryTaskItems(task.getId(), agvInventoryTaskItems);
+		List<AGVInventoryTaskItem> agvInventoryTaskItems = InvTaskRedisDAO.getInventoryTaskItems(task.getId());
 		int i = 0;
 		int windowSize = window.getSize();
 		if (!agvInventoryTaskItems.isEmpty()) {
@@ -219,7 +222,7 @@ public class TaskPool extends Thread {
 			Iterator<GoodsLocation> iterator = goodsLocations.iterator();
 			while (iterator.hasNext()) {
 				GoodsLocation goodsLocation = iterator.next();
-				if (TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
+				if (TaskUtilsRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskUtilsRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
 					iterator.remove();
 					continue;
 				}
@@ -256,7 +259,7 @@ public class TaskPool extends Thread {
 					if (presentItems.size() > i) {
 						break;
 					}
-					if (item.getBoxType().equals(MaterialBoxType.STANDARD) && item.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+					if (item.getBoxType().equals(MaterialBoxType.STANDARD) && item.getState().intValue() == TaskItemState.WAIT_ASSIGN && !item.getIsException()) {
 						presentItems.add(item);
 					}
 				}
@@ -281,8 +284,7 @@ public class TaskPool extends Thread {
 
 	public void sendSampleTaskItemCmds(Task task, Window window) throws Exception {
 
-		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
-		TaskItemRedisDAO.appendSampleTaskItems(task.getId(), agvSampleTaskItems);
+		List<AGVSampleTaskItem> agvSampleTaskItems = SampleTaskRedisDAO.getSampleTaskItems(task.getId());
 		int i = 0;
 		int windowSize = window.getSize();
 		if (!agvSampleTaskItems.isEmpty()) {
@@ -293,7 +295,7 @@ public class TaskPool extends Thread {
 			Iterator<GoodsLocation> iterator = goodsLocations.iterator();
 			while (iterator.hasNext()) {
 				GoodsLocation goodsLocation = iterator.next();
-				if (TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskItemRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
+				if (TaskUtilsRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()) != null && !TaskUtilsRedisDAO.getLocationStatus(window.getId(), goodsLocation.getId()).equals(0)) {
 					iterator.remove();
 					continue;
 				}
@@ -369,13 +371,13 @@ public class TaskPool extends Thread {
 			if (window.getBindTaskId().equals(taskId)) {
 				continue;
 			}
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId())) {
+			for (AGVIOTaskItem redisTaskItem : IOTaskRedisDAO.getIOTaskItems(window.getBindTaskId())) {
 				if (redisTaskItem.getState() > TaskItemState.WAIT_ASSIGN && redisTaskItem.getIsForceFinish().equals(false)) {
 					diffTaskBoxs.add(redisTaskItem.getBoxId().intValue());
 				}
 			}
 		}
-		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+		for (AGVIOTaskItem redisTaskItem : IOTaskRedisDAO.getIOTaskItems(taskId)) {
 
 			if (redisTaskItem.getTaskId().equals(taskId) && redisTaskItem.getState() >= TaskItemState.ASSIGNED && redisTaskItem.getMaterialTypeId().equals(materialTypeId)) {
 				return redisTaskItem.getBoxId();
@@ -402,7 +404,7 @@ public class TaskPool extends Thread {
 
 			// 如果不存在同类型的料盒或者同类型的料盒都已装满
 			if (sameTypeMaterialBoxList.size() == 0 || boxRemainderCapacity == 0) {
-				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+				for (AGVIOTaskItem redisTaskItem : IOTaskRedisDAO.getIOTaskItems(taskId)) {
 					if (redisTaskItem.getState() == TaskItemState.ARRIVED_WINDOW) {
 						int tempBoxId = redisTaskItem.getBoxId();
 						MaterialBox materialBox = MaterialBox.dao.findById(tempBoxId);
@@ -448,7 +450,7 @@ public class TaskPool extends Thread {
 			// 如果不存在同类型的料盒或者同类型的料盒都已装满
 			if (boxId == 0) {
 				// 批量入库推送仓口
-				for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+				for (AGVIOTaskItem redisTaskItem : IOTaskRedisDAO.getIOTaskItems(taskId)) {
 					if (redisTaskItem.getState() == TaskItemState.ARRIVED_WINDOW) {
 						int tempBoxId = redisTaskItem.getBoxId();
 						MaterialBox materialBox = MaterialBox.dao.findById(tempBoxId);
@@ -505,7 +507,7 @@ public class TaskPool extends Thread {
 		int boxId = 0;
 		PackingListItem packingListItem = PackingListItem.dao.findById(packingListItemId);
 		
-		for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
+		for (AGVIOTaskItem redisTaskItem : IOTaskRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 			// 根据任务条目id匹配到redis中的任务条目
 			if (redisTaskItem.getId().equals(packingListItem.getId()) && (redisTaskItem.getIsForceFinish() || redisTaskItem.getState() > TaskItemState.WAIT_ASSIGN)) {
 				if (redisTaskItem.getBoxId() != 0) {

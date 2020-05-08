@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.jfinal.json.Json;
 import com.jimi.uw_server.constant.TaskState;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.DestinationSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SupplierSQL;
@@ -72,7 +72,7 @@ public class ManualTaskService {
 					problemString += "[客户 " + record.getSupplierName() + " 不存在]\n";
 					continue;
 				}
-				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, record.getNo(), supplier.getId(), WarehouseType.REGULAR);
+				MaterialType materialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, record.getNo(), supplier.getId(), WarehouseTypeEnum.REGULAR);
 				if (materialType == null) {
 					problemString += "[物料类型 " + record.getNo() + " 不存在]\n";
 					continue;

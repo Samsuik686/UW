@@ -6,7 +6,7 @@ package com.jimi.uw_server.service;
 import java.util.List;
 
 import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;
@@ -30,7 +30,7 @@ public class EfficiencyService {
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
 		if (!windows.isEmpty()) {
 			for (Window window : windows) {
-				TaskItemRedisDAO.setTaskStatus(window.getBindTaskId(), false);
+				TaskUtilsRedisDAO.setTaskStatus(window.getBindTaskId(), false);
 			}
 		}
 		EfficiencyRedisDAO.removeTaskBoxArrivedTime();

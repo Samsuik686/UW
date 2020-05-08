@@ -4,13 +4,14 @@ import com.jfinal.aop.Aop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Record;
+import com.jimi.uw_server.agv.dao.IOTaskRedisDAO;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.handle.IOTaskHandler;
 import com.jimi.uw_server.agv.handle.SwitchHandler;
 import com.jimi.uw_server.comparator.RobotComparator;
 import com.jimi.uw_server.constant.*;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
@@ -104,7 +105,7 @@ public class RobotService extends SelectService {
 		Boolean afterCut = false;
 		AGVIOTaskItem agvioTaskItem = null;
 		synchronized (Lock.IO_TASK_BACK_LOCK) {
-			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
+			for (AGVIOTaskItem item : IOTaskRedisDAO.getIOTaskItems(packingListItem.getTaskId())) {
 				if (item.getId().intValue() == id) {
 					if (item.getState().intValue() == TaskItemState.ARRIVED_WINDOW) {
 						agvioTaskItem = item;
@@ -140,7 +141,7 @@ public class RobotService extends SelectService {
 										throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
 									}
 								} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-									TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null);
+									IOTaskRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null);
 									resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 
 								}
@@ -159,7 +160,7 @@ public class RobotService extends SelectService {
 										throw new OperationException("找不到目的货位，仓口：" + agvioTaskItem.getWindowId() + "货位：" + agvioTaskItem.getGoodsLocationId());
 									}
 								} else { // 否则，将同料盒号、未被分配任务的任务条目状态更新为已到达仓口
-										TaskItemRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null);
+									IOTaskRedisDAO.updateIOTaskItemInfo(sameBoxItem, TaskItemState.ARRIVED_WINDOW, agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId(), agvioTaskItem.getBoxId(), agvioTaskItem.getRobotId(), null, null);
 									// 更新任务条目绑定的叉车id
 									resultString = "料盒中还有其他需要出库的物料，叉车暂时不回库！";
 								}
@@ -170,10 +171,10 @@ public class RobotService extends SelectService {
 							agvioTaskItem.setIsForceFinish(true);
 							packingListItem.setFinishTime(new Date());
 							packingListItem.update();
-							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, true, null);
+							IOTaskRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, true, null);
 
 						} else {
-							TaskItemRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, null, null);
+							IOTaskRedisDAO.updateIOTaskItemInfo(agvioTaskItem, TaskItemState.START_BACK, null, null, null, null, null, null);
 						}
 						// 在对出库任务执行回库操作时，调用 updateOutQuantity 方法，以便「修改出库数」
 						if (task.getType() == TaskType.OUT) {
@@ -272,7 +273,7 @@ public class RobotService extends SelectService {
 	 * 若任务队列中存在其他料盒号与仓库停泊条目料盒号相同，且未被分配任务的任务条目，则返回其任务条目；否则返回null
 	 */
 	public AGVIOTaskItem getSameBoxItem(AGVIOTaskItem item) {
-		for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems(item.getTaskId())) {
+		for (AGVIOTaskItem item1 : IOTaskRedisDAO.getIOTaskItems(item.getTaskId())) {
 			if (item1.getBoxId().intValue() == item.getBoxId().intValue() && item1.getGoodsLocationId() == 0 && item1.getWindowId() == 0 && item1.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
 				return item1;
 			}
@@ -308,7 +309,7 @@ public class RobotService extends SelectService {
 					return resultString;
 				}
 				// 通过任务id，料号和客户获取套料单条目
-				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no.trim(), supplierId, WarehouseType.REGULAR.getId());
+				PackingListItem item = PackingListItem.dao.findFirst(GET_MATERIAL_TYPE_ID_SQL, taskId, no.trim(), supplierId, WarehouseTypeEnum.REGULAR.getId());
 
 				// 若是扫描到一些不属于当前仓口任务的料盘二维码，需要捕获该异常，不然会出现NPE异常
 				if (item == null) {
@@ -317,7 +318,7 @@ public class RobotService extends SelectService {
 				}
 				// 若是扫描到属于当前仓口任务的料盘二维码，则逐条读取任务队列中的任务条目
 				else {
-					for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(taskId)) {
+					for (AGVIOTaskItem redisTaskItem : IOTaskRedisDAO.getIOTaskItems(taskId)) {
 						// 若扫描的料号对应的任务条目与任务队列读取到的数据匹配
 						if (item.getId().intValue() == redisTaskItem.getId().intValue()) {
 							// 若任务条目已完成，则提示不要重复执行已完成任务条目
@@ -334,14 +335,14 @@ public class RobotService extends SelectService {
 
 							// 若任务条目状态为等待扫码，则将其状态更新为未分配拣料
 							else if (redisTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN) {
-								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
+								IOTaskRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
 								return resultString;
 							}
 
 							// 若任务条目状态为已完成截料，且判断其对应的料盒是否在架，根据料盒在架情况更新其状态
 							else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
 								// 若料盒在架，则将其状态更新为未分配拣料
-								TaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null);
+								IOTaskRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null);
 								return resultString;
 							}
 							// 如果该料号对应的任务条目不存在于任务队列中，则提示“该物料暂时不需要入库或截料！”

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Record;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.service.MaterialService;
 
 
@@ -73,9 +73,9 @@ public class MaterialInfoVO{
 
 	public void setQuantity(Integer id, Integer type) {
 		Integer remainderQuantity = 0;
-		if (type.equals(WarehouseType.REGULAR.getId())) {
+		if (type.equals(WarehouseTypeEnum.REGULAR.getId())) {
 			remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(id);
-		} else if (type.equals(WarehouseType.PRECIOUS.getId())) {
+		} else if (type.equals(WarehouseTypeEnum.PRECIOUS.getId())) {
 			remainderQuantity = materialService.countPreciousQuantityByMaterialTypeId(id);
 		}
 

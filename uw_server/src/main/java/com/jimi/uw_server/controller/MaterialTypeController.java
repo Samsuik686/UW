@@ -7,7 +7,7 @@ import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.service.MaterialTypeService;
@@ -31,7 +31,7 @@ public class MaterialTypeController extends Controller {
 		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.REGULAR.getId(), null);
+		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseTypeEnum.REGULAR.getId(), null);
 		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -46,7 +46,7 @@ public class MaterialTypeController extends Controller {
 		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || designator == null || designator.equals("")) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.PRECIOUS.getId(), designator);
+		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseTypeEnum.PRECIOUS.getId(), designator);
 		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -58,7 +58,7 @@ public class MaterialTypeController extends Controller {
 	// 更新物料类型#
 	@Log("更新普通仓物料类型号为{id}的物料类型, 厚度为{thickness}，直径为{radius}， 规格为{specification}")
 	public void updateRegularMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String specification) {
-		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, null, specification, WarehouseType.REGULAR.getId());
+		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, null, specification, WarehouseTypeEnum.REGULAR.getId());
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -69,7 +69,7 @@ public class MaterialTypeController extends Controller {
 
 	@Log("更新贵重仓物料类型号为{id}的物料类型，厚度为{thickness}，直径为{radius}， 行号为{designator}， 规格为{specification}")
 	public void updatePreciousMaterialType(Integer id, Integer thickness, Integer radius, String designator, String specification) {
-		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, designator, specification, WarehouseType.PRECIOUS.getId());
+		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, designator, specification, WarehouseTypeEnum.PRECIOUS.getId());
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {

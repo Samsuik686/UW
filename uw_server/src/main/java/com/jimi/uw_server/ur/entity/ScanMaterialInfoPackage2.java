@@ -9,7 +9,7 @@ import com.jimi.uw_server.ur.entity.base.UrBasePackage;
  * <b>2019年5月9日</b>
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
-public class ScanMaterialInfoPackage extends UrBasePackage {
+public class ScanMaterialInfoPackage2 extends UrBasePackage {
 
 	private Integer taskId;
 	
@@ -23,7 +23,7 @@ public class ScanMaterialInfoPackage extends UrBasePackage {
 	 * <p>Title<p>
 	 * <p>Description<p>
 	 */
-	public ScanMaterialInfoPackage() {
+	public ScanMaterialInfoPackage2() {
 		// TODO Auto-generated constructor stub
 	}
 	

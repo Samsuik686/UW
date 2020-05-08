@@ -3,7 +3,13 @@ package com.jimi.uw_server.controller;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
+import com.jimi.uw_server.agv.dao.InvTaskRedisDAO;
+import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.annotation.Log;
+import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.constant.TaskState;
+import com.jimi.uw_server.constant.TaskType;
+import com.jimi.uw_server.constant.enums.UwInvTaskProcessFlagEnum;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.Destination;
@@ -72,6 +78,17 @@ public class InventoryTaskController extends Controller {
 		renderJson(ResultUtil.succeed(result));
 
 	}
+	
+	@Log("开始普通仓盘点任务：机械臂异常处理阶段，任务ID：{taskId}")
+	public void startInvExceptionProcess(Integer taskId) {
+		
+		if (taskId == null) {
+			throw new ParameterException("参数不能为空！");
+
+		}
+		inventoryTaskService.startInvExceptionProcess(taskId);
+		renderJson(ResultUtil.succeed());
+	}
 
 
 	/**
@@ -130,6 +147,26 @@ public class InventoryTaskController extends Controller {
 		renderJson(ResultUtil.succeed(result));
 	}
 
+	
+	/**
+	 * 让盘点任务的机械臂异常处理阶段的叉车回库
+	 * @param taskId
+	 * @param boxId
+	 * @param windowId
+	 * @return
+	 */
+	@Log("盘点机械臂异常处理阶段料盒回库，任务ID为{taskId}，仓口为{windowId}，料盒ID为{boxId}")
+	public void backUrExceptionInventoryRegularUWBox(Integer taskId, Integer boxId, Integer windowId) {
+
+		if (taskId == null || boxId == null || windowId == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		String result = inventoryTaskService.backUrExceptionInventoryRegularUWBox(taskId, boxId, windowId, user);
+		renderJson(ResultUtil.succeed(result));
+	}
 
 	/**
 	 * 盘点UW物料
@@ -141,6 +178,28 @@ public class InventoryTaskController extends Controller {
 	 */
 	@Log("盘点普通仓物料uw，料盘码为{materialId}，料盒号为{boxId}，任务ID为{taskId}，盘点数量为{acturalNum}")
 	public void inventoryRegularUWMaterial(String materialId, Integer boxId, Integer taskId, Integer acturalNum) {
+		if (materialId == null || taskId == null || boxId == null || acturalNum == null) {
+			throw new ParameterException("参数不能为空！");
+		}
+		// 获取当前使用系统的用户，以便获取操作员uid
+		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
+		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
+		Material result = inventoryTaskService.inventoryRegularUWMaterial(materialId, boxId, taskId, acturalNum, user);
+		renderJson(ResultUtil.succeed(result));
+
+	}
+
+	
+	/**
+	 * 盘点UW物料
+	 * @param materialId
+	 * @param boxId
+	 * @param taskId
+	 * @param acturalNum
+	 * @return
+	 */
+	@Log("盘点普通仓机械臂异常物料uw，料盘码为{materialId}，料盒号为{boxId}，任务ID为{taskId}，盘点数量为{acturalNum}")
+	public void inventoryUrExceptionRegularUWMaterial(String materialId, Integer boxId, Integer taskId, Integer acturalNum) {
 		if (materialId == null || taskId == null || boxId == null || acturalNum == null) {
 			throw new ParameterException("参数不能为空！");
 		}
@@ -367,6 +426,21 @@ public class InventoryTaskController extends Controller {
 			throw new ParameterException("参数不能为空");
 		}
 		List<PackingInventoryInfoVO> result = inventoryTaskService.getPackingInventory(windowId);
+		renderJson(ResultUtil.succeed(result));
+	}
+	
+	
+	/**
+	 * 获取当前仓口的盘点物料清单
+	 * @param windowId
+	 * @return
+	 */
+	public void getPackingExceptionInventory(Integer windowId) {
+
+		if (windowId == null) {
+			throw new ParameterException("参数不能为空");
+		}
+		List<PackingInventoryInfoVO> result = inventoryTaskService.getPackingExceptionInventory(windowId);
 		renderJson(ResultUtil.succeed(result));
 	}
 

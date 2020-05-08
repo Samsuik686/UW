@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
-import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
@@ -39,7 +39,7 @@ public class SampleTaskController extends Controller {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.REGULAR.getId());
+			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseTypeEnum.REGULAR.getId());
 			renderJson(ResultUtil.succeed(result));
 		} finally {
 			file.getFile().delete();
@@ -54,7 +54,7 @@ public class SampleTaskController extends Controller {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.PRECIOUS.getId());
+			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseTypeEnum.PRECIOUS.getId());
 			renderJson(ResultUtil.succeed(result));
 		} finally {
 			file.getFile().delete();

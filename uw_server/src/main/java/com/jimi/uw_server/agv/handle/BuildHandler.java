@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jfinal.json.Json;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.BulidTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVMissionGroup;
 import com.jimi.uw_server.agv.entity.cmd.AGVMoveCmd;
@@ -29,7 +30,7 @@ public class BuildHandler {
 		// 发送LL>>>
 		AGVMainSocket.sendMessage(Json.getJson().toJson(moveCmd));
 		// 更新任务条目状态为1
-		TaskItemRedisDAO.updateBuildTaskItemState(item, TaskItemState.ASSIGNED);
+		BulidTaskRedisDAO.updateBuildTaskItemState(item, TaskItemState.ASSIGNED);
 	}
 
 
@@ -50,7 +51,7 @@ public class BuildHandler {
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");
-		moveCmd.setCmdid(TaskItemRedisDAO.getCmdId());
+		moveCmd.setCmdid(TaskUtilsRedisDAO.getCmdId());
 		moveCmd.setMissiongroups(groups);
 		return moveCmd;
 	}
@@ -83,10 +84,10 @@ public class BuildHandler {
 		String groupid = statusCmd.getMissiongroupid();
 
 		// 匹配groupid
-		for (AGVBuildTaskItem item : TaskItemRedisDAO.getBuildTaskItems()) {
+		for (AGVBuildTaskItem item : BulidTaskRedisDAO.getBuildTaskItems()) {
 			if (groupid.equals(item.getGroupId())) {
 				// 更新buildTsakitems里对应item的robotid
-				TaskItemRedisDAO.updateBuildTaskItemRobot(item, statusCmd.getRobotid());
+				BulidTaskRedisDAO.updateBuildTaskItemRobot(item, statusCmd.getRobotid());
 			}
 		}
 	}
@@ -97,10 +98,10 @@ public class BuildHandler {
 		String groupid = statusCmd.getMissiongroupid();
 
 		// 匹配groupid
-		for (AGVBuildTaskItem item : TaskItemRedisDAO.getBuildTaskItems()) {
+		for (AGVBuildTaskItem item : BulidTaskRedisDAO.getBuildTaskItems()) {
 			if (groupid.equals(item.getGroupId())) {
 				// 更改taskitems里对应item状态为2（已入仓完成）***
-				TaskItemRedisDAO.updateBuildTaskItemState(item, BuildTaskItemState.FINISH_ONE_BUILD_TASK);
+				BulidTaskRedisDAO.updateBuildTaskItemState(item, BuildTaskItemState.FINISH_ONE_BUILD_TASK);
 
 				// 设置料盒在架
 				MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
@@ -118,13 +119,13 @@ public class BuildHandler {
 	*/
 	public static void clearTil(String srcPosition) {
 		boolean isAllFinish = true;
-		for (AGVBuildTaskItem item1 : TaskItemRedisDAO.getBuildTaskItems()) {
+		for (AGVBuildTaskItem item1 : BulidTaskRedisDAO.getBuildTaskItems()) {
 			if (srcPosition.equals(item1.getSrcPosition()) && item1.getState() != BuildTaskItemState.FINISH_ONE_BUILD_TASK) {
 				isAllFinish = false;
 			}
 		}
 		if (isAllFinish) {
-			TaskItemRedisDAO.removeBuildTaskItemBySrcPosition(srcPosition);
+			BulidTaskRedisDAO.removeBuildTaskItemBySrcPosition(srcPosition);
 		}
 	}
 

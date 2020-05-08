@@ -20,6 +20,8 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 
 	private Integer boxType;
 
+	private Boolean isException;
+	
 	public AGVInventoryTaskItem() {
 	}
 
@@ -34,6 +36,7 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 		this.windowId = windowId;
 		this.goodsLocationId = 0;
 		this.boxType = boxType;
+		this.isException = false;
 	}
 
 
@@ -84,6 +87,16 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 
 	public void setIsForceFinish(Boolean isForceFinish) {
 		this.isForceFinish = isForceFinish;
+	}
+	
+
+	public Boolean getIsException() {
+		return isException;
+	}
+
+
+	public void setIsException(Boolean isException) {
+		this.isException = isException;
 	}
 
 

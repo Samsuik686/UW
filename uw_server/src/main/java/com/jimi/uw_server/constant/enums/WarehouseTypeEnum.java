@@ -1,6 +1,6 @@
-package com.jimi.uw_server.constant;
+package com.jimi.uw_server.constant.enums;
 
-public enum WarehouseType {
+public enum WarehouseTypeEnum {
 
 	REGULAR(0, "普通仓"), PRECIOUS(1,"贵重仓");
 	
@@ -8,7 +8,7 @@ public enum WarehouseType {
 	
 	private String describe;
 	
-	private WarehouseType(int id, String describe){
+	private WarehouseTypeEnum(int id, String describe){
 		this.id = id;
 		this.describe = describe;
 	}
@@ -22,7 +22,7 @@ public enum WarehouseType {
 	}
 	
 	public static String getDescribeById(int id) {
-		for (WarehouseType type : values()) {
+		for (WarehouseTypeEnum type : values()) {
 			if (type.getId().equals(id)) {
 				return type.getDescribe();
 			}

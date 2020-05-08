@@ -5,10 +5,12 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.SampleTaskRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.constant.*;
+import com.jimi.uw_server.constant.enums.WarehouseTypeEnum;
 import com.jimi.uw_server.constant.sql.InventoryTaskSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
 import com.jimi.uw_server.constant.sql.SQL;
@@ -158,7 +160,7 @@ public class SampleTaskService {
 			if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
 				throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
 			}
-			Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseType.REGULAR.getId());
+			Task inventoryTask = Task.dao.findFirst(InventoryTaskSQL.GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER, task.getSupplier(), WarehouseTypeEnum.REGULAR.getId());
 			InventoryLog inventoryLog = null;
 			if (inventoryTask != null) {
 				inventoryLog = InventoryLog.dao.findFirst(InventoryTaskSQL.GET_UNCOVER_INVENTORY_LOG_BY_TASKID, inventoryTask.getId());
@@ -187,11 +189,11 @@ public class SampleTaskService {
 					throw new OperationException("仓口参数不能为空，请检查参数及其格式");
 				}
 			}
-			Material material = Material.dao.findFirst(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR.getId(), false);
+			Material material = Material.dao.findFirst(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseTypeEnum.REGULAR.getId(), false);
 			if (material != null) {
 				throw new OperationException("该抽检任务所抽检的物料类型存在不在料盒内的物料，请检查！");
 			}
-			List<Material> materials = Material.dao.find(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.REGULAR.getId(), true);
+			List<Material> materials = Material.dao.find(GET_REGULAR_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseTypeEnum.REGULAR.getId(), true);
 			List<SampleTaskMaterialRecord> sampleTaskMaterialRecords = new ArrayList<>();
 			for (Material material2 : materials) {
 				SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
@@ -218,7 +220,7 @@ public class SampleTaskService {
 			task.update();
 			// 绑定仓口
 			if (!agvSampleTaskItems.isEmpty()) {
-				TaskItemRedisDAO.addSampleTaskItem(taskId, agvSampleTaskItems);
+				SampleTaskRedisDAO.addSampleTaskItem(taskId, agvSampleTaskItems);
 				for (Window window : wList) {
 					window.setBindTaskId(task.getId());
 					window.update();
@@ -240,11 +242,11 @@ public class SampleTaskService {
 			if (task == null || !task.getType().equals(TaskType.SAMPLE) || !task.getState().equals(TaskState.WAIT_START)) {
 				throw new OperationException("抽检任务不存在或并未处于未开始状态，无法开始任务！");
 			}
-			Material material = Material.dao.findFirst(GET_PROBLEM_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS.getId(), MaterialStatus.NORMAL);
+			Material material = Material.dao.findFirst(GET_PROBLEM_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseTypeEnum.PRECIOUS.getId(), MaterialStatus.NORMAL);
 			if (material != null) {
 				throw new OperationException("该抽检任务所抽检的物料类型存在处于出库、入库或截料状态的物料，请检查！");
 			}
-			List<Material> materials = Material.dao.find(GET_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseType.PRECIOUS.getId(), MaterialStatus.NORMAL);
+			List<Material> materials = Material.dao.find(GET_PRECIOUS_MATERIAL_BY_SAMPLE_TASK, task.getId(), WarehouseTypeEnum.PRECIOUS.getId(), MaterialStatus.NORMAL);
 			for (Material material2 : materials) {
 				SampleTaskMaterialRecord record = new SampleTaskMaterialRecord();
 				record.setMaterialId(material2.getId());
@@ -291,7 +293,7 @@ public class SampleTaskService {
 			} else {
 				// 判断任务是否处于进行中状态，若是，则把相关的任务条目从til中剔除;若存在已分配的任务条目，则不解绑任务仓口
 				if (state == TaskState.PROCESSING) {
-					TaskItemRedisDAO.removeUnAssignedSampleTaskItemByTaskId(id);
+					SampleTaskRedisDAO.removeUnAssignedSampleTaskItemByTaskId(id);
 				}
 				// 更新任务状态为作废
 				task.setState(TaskState.CANCELED).update();
@@ -348,7 +350,7 @@ public class SampleTaskService {
 			if (task == null) {
 				throw new OperationException("任务不存在，回库失败！");
 			}
-			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
+			for (AGVSampleTaskItem agvSampleTaskItem : SampleTaskRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					MaterialBox materialBox = MaterialBox.dao.findById(agvSampleTaskItem.getBoxId());
 					SampleTaskMaterialRecord record = SampleTaskMaterialRecord.dao.findFirst(GET_UNSCAN_MATERIAL_BY_TASK_AND_BOX, agvSampleTaskItem.getTaskId(), agvSampleTaskItem.getBoxId());
@@ -362,7 +364,7 @@ public class SampleTaskService {
 						} else {
 							throw new OperationException("找不到目的货位，仓口：" + agvSampleTaskItem.getWindowId() + "货位：" + agvSampleTaskItem.getGoodsLocationId());
 						}
-						TaskItemRedisDAO.updateSampleTaskItemInfo(agvSampleTaskItem, TaskItemState.START_BACK, null, null, null, true);
+						SampleTaskRedisDAO.updateSampleTaskItemInfo(agvSampleTaskItem, TaskItemState.START_BACK, null, null, null, true);
 					} catch (Exception e) {
 						e.printStackTrace();
 						throw new OperationException("发送回库指令失败，+ " + e.getMessage());
@@ -377,13 +379,13 @@ public class SampleTaskService {
 
 	public String outRegularTaskSingular(String materialId, String groupId, User user) {
 		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
-			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
+			for (AGVSampleTaskItem agvSampleTaskItem : SampleTaskRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					Material material = Material.dao.findById(materialId);
 					if (material == null || material.getRemainderQuantity() <= 0 || !material.getIsInBox()) {
 						throw new OperationException("料盘不存在或者已经出库！");
 					}
-					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR.getId());
+					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseTypeEnum.REGULAR.getId());
 					if (sampleTaskItem == null) {
 						throw new OperationException("该料盘不在本次抽检范围内！");
 					}
@@ -429,7 +431,7 @@ public class SampleTaskService {
 			if (!material.getStatus().equals(MaterialStatus.NORMAL)) {
 				throw new OperationException("该料盘目前不属于正常状态，可能出库、入库或者截料中！");
 			}
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseTypeEnum.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("该料盘不在本次抽检范围内！");
 			}
@@ -459,13 +461,13 @@ public class SampleTaskService {
 
 	public String outRegularTaskRegular(String materialId, String groupId, User user) {
 		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
-			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
+			for (AGVSampleTaskItem agvSampleTaskItem : SampleTaskRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					Material material = Material.dao.findById(materialId);
 					if (material == null || material.getRemainderQuantity() <= 0 || !material.getIsInBox()) {
 						throw new OperationException("料盘不存在或者已经出库！");
 					}
-					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR.getId());
+					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseTypeEnum.REGULAR.getId());
 					if (sampleTaskItem == null) {
 						throw new OperationException("该料盘不在本次抽检范围内！");
 					}
@@ -511,7 +513,7 @@ public class SampleTaskService {
 			if (!material.getStatus().equals(MaterialStatus.NORMAL)) {
 				throw new OperationException("该料盘目前不属于正常状态，可能出库、入库或者截料中！");
 			}
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseTypeEnum.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("该料盘不在本次抽检范围内！");
 			}
@@ -542,13 +544,13 @@ public class SampleTaskService {
 
 	public String outRegularTaskLost(String materialId, String groupId, User user) {
 		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
-			for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
+			for (AGVSampleTaskItem agvSampleTaskItem : SampleTaskRedisDAO.getSampleTaskItems(Integer.valueOf(groupId.split("#")[1]))) {
 				if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getGroupId().equals(groupId)) {
 					Material material = Material.dao.findById(materialId);
 					if (material == null || material.getRemainderQuantity() <= 0 || !material.getIsInBox()) {
 						throw new OperationException("料盘不存在或者已经出库！");
 					}
-					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseType.REGULAR.getId());
+					SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, agvSampleTaskItem.getTaskId(), material.getType(), WarehouseTypeEnum.REGULAR.getId());
 					if (sampleTaskItem == null) {
 						throw new OperationException("该料盘不在本次抽检范围内！");
 					}
@@ -598,7 +600,7 @@ public class SampleTaskService {
 			if (!material.getStatus().equals(MaterialStatus.NORMAL)) {
 				throw new OperationException("该料盘目前不属于正常状态，可能出库、入库或者截料中！");
 			}
-			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
+			SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseTypeEnum.PRECIOUS.getId());
 			if (sampleTaskItem == null) {
 				throw new OperationException("该料盘不在本次抽检范围内！");
 			}
@@ -649,7 +651,7 @@ public class SampleTaskService {
 				throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
 			} else {
 
-				SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.REGULAR.getId());
+				SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseTypeEnum.REGULAR.getId());
 				if (sampleTaskItem == null) {
 					throw new OperationException("本次抽检抽检范围不包含该料盘！");
 				}
@@ -679,7 +681,7 @@ public class SampleTaskService {
 			if (record.getIsScaned()) {
 				throw new OperationException("该料盘已经扫描过，请勿重复扫描！");
 			} else {
-				SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseType.PRECIOUS.getId());
+				SampleTaskItem sampleTaskItem = SampleTaskItem.dao.findFirst(GET_SAMPLETASKITEM_BY_TASK_AND_TYPE, taskId, material.getType(), WarehouseTypeEnum.PRECIOUS.getId());
 				if (sampleTaskItem == null) {
 					throw new OperationException("本次抽检抽检范围不包含该料盘！");
 				}
@@ -704,7 +706,7 @@ public class SampleTaskService {
 		for (GoodsLocation goodsLocation : goodsLocations) {
 			map.put(goodsLocation.getId(), new PackingSampleInfoVO(goodsLocation));
 		}
-		for (AGVSampleTaskItem agvSampleTaskItem : TaskItemRedisDAO.getSampleTaskItems(window.getBindTaskId())) {
+		for (AGVSampleTaskItem agvSampleTaskItem : SampleTaskRedisDAO.getSampleTaskItems(window.getBindTaskId())) {
 			if (agvSampleTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW) && agvSampleTaskItem.getWindowId().equals(windowId)) {
 				boxId = agvSampleTaskItem.getBoxId();
 				groupId = agvSampleTaskItem.getGroupId();
@@ -867,7 +869,7 @@ public class SampleTaskService {
 		for (Record record : result.getList()) {
 			status = false;
 			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
-				status = TaskItemRedisDAO.getTaskStatus(record.getInt("Task_Id"));
+				status = TaskUtilsRedisDAO.getTaskStatus(record.getInt("Task_Id"));
 			}
 			TaskVO t = new TaskVO(record.get("Task_Id"), record.get("Task_State"), record.get("Task_Type"), record.get("Task_FileName"), record.get("Task_CreateTime"), record.get("Task_Priority"), record.get("Task_Supplier"), record.get("Task_Remarks"), status);
 			taskVOs.add(t);
@@ -886,9 +888,9 @@ public class SampleTaskService {
 
 	public String getSampleTaskName(Date date, Integer warehouseType, String supplierName) {
 		String fileName = "";
-		if (warehouseType.equals(WarehouseType.REGULAR.getId())) {
+		if (warehouseType.equals(WarehouseTypeEnum.REGULAR.getId())) {
 			fileName = "抽检_";
-		} else if (warehouseType.equals(WarehouseType.PRECIOUS.getId())) {
+		} else if (warehouseType.equals(WarehouseTypeEnum.PRECIOUS.getId())) {
 			fileName = supplierName + "贵重仓抽检_";
 		}
 
@@ -932,12 +934,12 @@ public class SampleTaskService {
 		if (windows == null || windows.isEmpty()) {
 			throw new OperationException("任务并未绑定仓口，无需解绑！");
 		}
-		TaskItemRedisDAO.removeSampleTaskItemByTaskId(task.getId());
+		SampleTaskRedisDAO.removeSampleTaskItemByTaskId(task.getId());
 		for (Window window : windows) {
 			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOW, window.getId());
 			if (!goodsLocations.isEmpty()) {
 				for (GoodsLocation goodsLocation : goodsLocations) {
-					TaskItemRedisDAO.delLocationStatus(window.getId(), goodsLocation.getId());
+					TaskUtilsRedisDAO.delLocationStatus(window.getId(), goodsLocation.getId());
 				}
 			}
 			window.setBindTaskId(null).update();

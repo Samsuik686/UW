@@ -1,5 +1,6 @@
 package com.jimi.uw_server.model.vo;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.jimi.uw_server.model.GoodsLocation;
@@ -25,12 +26,23 @@ public class PackingInventoryInfoVO {
 
 	private List<MaterialDetialsVO> list;
 
-
+	private List<MaterialBoxDetailVO> materialBoxDetailVOs;
+	
 	public PackingInventoryInfoVO(GoodsLocation goodsLocation, List<MaterialDetialsVO> list) {
 		this.setGoodsLocationId(goodsLocation.getId());
 		this.setGoodsLocationName(goodsLocation.getName());
 		this.setWindowId(goodsLocation.getWindowId());
 		this.setList(list);
+		this.setMaterialBoxDetailVOs(Collections.emptyList());
+	}
+	
+	
+	public PackingInventoryInfoVO(GoodsLocation goodsLocation, List<MaterialDetialsVO> list, List<MaterialBoxDetailVO> materialBoxDetailVOs) {
+		this.setGoodsLocationId(goodsLocation.getId());
+		this.setGoodsLocationName(goodsLocation.getName());
+		this.setWindowId(goodsLocation.getWindowId());
+		this.setList(list);
+		this.setMaterialBoxDetailVOs(materialBoxDetailVOs);
 	}
 
 
@@ -91,6 +103,16 @@ public class PackingInventoryInfoVO {
 
 	public void setList(List<MaterialDetialsVO> list) {
 		this.list = list;
+	}
+
+
+	public List<MaterialBoxDetailVO> getMaterialBoxDetailVOs() {
+		return materialBoxDetailVOs;
+	}
+
+
+	public void setMaterialBoxDetailVOs(List<MaterialBoxDetailVO> materialBoxDetailVOs) {
+		this.materialBoxDetailVOs = materialBoxDetailVOs;
 	}
 
 }
