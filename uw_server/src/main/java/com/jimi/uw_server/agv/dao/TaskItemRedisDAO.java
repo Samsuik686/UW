@@ -104,24 +104,32 @@ public class TaskItemRedisDAO {
 			if (agvioTaskItem.getId().intValue() == taskItem.getId().intValue()) {
 				if (state != null) {
 					agvioTaskItem.setState(state);
+					taskItem.setState(state);
 				}
 				if (windowId != null) {
 					agvioTaskItem.setWindowId(windowId);
+					taskItem.setWindowId(windowId);
 				}
 				if (goodsLocationId != null) {
 					agvioTaskItem.setGoodsLocationId(goodsLocationId);
+					taskItem.setGoodsLocationId(goodsLocationId);
 				}
 				if (boxId != null) {
 					agvioTaskItem.setBoxId(boxId);
+					taskItem.setBoxId(boxId);
+					
 				}
 				if (robotId != null) {
 					agvioTaskItem.setRobotId(robotId);
+					taskItem.setRobotId(robotId);
 				}
 				if (isForceFinish != null) {
 					agvioTaskItem.setIsForceFinish(isForceFinish);
+					taskItem.setIsForceFinish(isForceFinish);
 				}
 				if (isCut != null) {
 					agvioTaskItem.setIsCut(isCut);
+					taskItem.setIsCut(isCut);
 				}
 				cache.lset(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem));
 				break;
@@ -274,7 +282,7 @@ public class TaskItemRedisDAO {
 	 * 设置agvWebSocket运行状态
 	 */
 	public synchronized static void setAgvWebSocketStatus(Boolean flag) {
-		cache.set("agvWebSocketStatus", flag);
+		cache.set(UW_AGV_LINK_SWITCH, flag);
 	}
 
 

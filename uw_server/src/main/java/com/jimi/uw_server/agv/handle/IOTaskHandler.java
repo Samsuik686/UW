@@ -1,6 +1,7 @@
 package com.jimi.uw_server.agv.handle;
 
 import java.util.Date;
+import java.util.List;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.json.Json;
@@ -142,8 +143,6 @@ public class IOTaskHandler extends BaseTaskHandler {
 					Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
 
 					if (remainderQuantity <= 0) {
-						item.setState(TaskItemState.LACK);
-						item.setIsForceFinish(true);
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
 					} else {
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
@@ -159,27 +158,30 @@ public class IOTaskHandler extends BaseTaskHandler {
 				if (item.getIsCut()) {
 					TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_CUT, null, null, null, null, null, false);
 				}
-				nextRound(item);
+				nextRound(task, item);
 				EfficiencyRedisDAO.removeTaskBoxArrivedTimeByTaskAndBox(item.getTaskId(), item.getBoxId());
-				clearTask(task.getId());
+				clearTask(task.getId(), false);
 			}
 
 		}
 	}
 
 
-	private void nextRound(AGVIOTaskItem item) {
+	private void nextRound(Task task, AGVIOTaskItem item) {
 		// 获取任务类型
 		Integer taskType = Task.dao.findById(item.getTaskId()).getType();
 		// 判断实际出入库数量是否不满足计划数
-		if (!item.getIsForceFinish()) {
-			// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
-			if (taskType == TaskType.OUT) {
-				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
-			} else { // 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
-				TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null);
+		if (task.getState() != TaskState.CANCELED) {
+			if (!item.getIsForceFinish()) {
+				// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
+				if (taskType == TaskType.OUT) {
+					TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
+				} else { // 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
+					TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null);
+				}
 			}
 		}
+		
 	}
 
 
@@ -187,48 +189,21 @@ public class IOTaskHandler extends BaseTaskHandler {
 	 * 判断该groupid所在的任务是否全部条目状态为"已回库完成"并且没有需要截料返库的，也如果是，
 	 * 则清除所有该任务id对应的条目，释放内存，并修改数据库任务状态***
 	*/
-	public void clearTask(Integer taskId) {
+	public void clearTask(Integer taskId, Boolean isCanceled) {
 		boolean isAllFinish = true;
-		boolean isLack = false;
 		Task task = Task.dao.findById(taskId);
+		List<AGVIOTaskItem> items = TaskItemRedisDAO.getIOTaskItems(taskId);
 		if (task != null) {
-			if (!task.getState().equals(TaskState.CANCELED)) {
-				for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems(taskId)) {
-					if (item1.getState() == TaskItemState.LACK) {
-						isLack = true;
-					}
-					if ((item1.getState() != TaskItemState.FINISH_BACK && item1.getState() != TaskItemState.LACK && !item1.getIsForceFinish())) {
-						isAllFinish = false;
-					}
-					if (item1.getState() == TaskItemState.FINISH_CUT || item1.getIsCut().equals(true)) {
-						isAllFinish = false;
-					}
-					if (item1.getIsForceFinish() && item1.getState() >= 0 && item1.getState() <= 5) {
-						isAllFinish = false;
-					}
-				}
-			} else {
-				for (AGVIOTaskItem item1 : TaskItemRedisDAO.getIOTaskItems(taskId)) {
-					if (item1.getState() == TaskItemState.LACK) {
-						isLack = true;
-					}
-					if (item1.getState() != TaskItemState.FINISH_BACK && item1.getState() != TaskItemState.LACK && !item1.getIsForceFinish() && item1.getState() != TaskItemState.WAIT_SCAN) {
-						isAllFinish = false;
-					}
-					if (item1.getState() == TaskItemState.FINISH_CUT || item1.getIsCut().equals(true)) {
-						isAllFinish = false;
-					}
-					if (item1.getIsForceFinish() && item1.getState() >= 0 && item1.getState() <= 5) {
-						isAllFinish = false;
-					}
-				}
-			}
-
+			isAllFinish = checkIOTaskFinish(task, items, isCanceled);
 		}
 
+		
 		if (isAllFinish) {
-
-			taskService.finishRegualrTask(taskId, isLack);
+			if (task.getState() == TaskState.CANCELED || isCanceled) {
+				taskService.cancelRegualrTask(taskId);
+			}else {
+				taskService.finishRegualrTask(taskId);
+			}			
 			EfficiencyRedisDAO.removeTaskBoxArrivedTimeByTask(taskId);
 			EfficiencyRedisDAO.removeTaskLastOperationUserByTask(taskId);
 			EfficiencyRedisDAO.removeTaskStartTimeByTask(taskId);
@@ -238,4 +213,31 @@ public class IOTaskHandler extends BaseTaskHandler {
 		}
 	}
 
+	
+	private boolean checkIOTaskFinish(Task task, List<AGVIOTaskItem> items, Boolean isCanceled) {
+		
+		if (task.getState() == TaskState.CANCELED || isCanceled) {
+			for (AGVIOTaskItem item : items) {
+				if (item.getState() != TaskItemState.FINISH_BACK && item.getState() != TaskItemState.LACK && item.getState() != TaskItemState.WAIT_SCAN) {
+					return false;
+				}
+				if (item.getIsCut()) {
+					return false;
+				}
+			}
+		}else {
+			for (AGVIOTaskItem item : items) {
+				if (item.getState() != TaskItemState.FINISH_BACK && item.getState() != TaskItemState.LACK && !item.getIsForceFinish()) {
+					return false;
+				}
+				if (item.getState() == TaskItemState.FINISH_CUT || item.getIsCut().equals(true)) {
+					return false;
+				}
+				if (item.getIsForceFinish() && item.getState() >= 0 && item.getState() <= 5) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 }

@@ -159,7 +159,7 @@ public class TaskPool extends Thread {
 							taskLog.setTime(new Date());
 							taskLog.setDestination(task.getDestination());
 							taskLog.save();
-							ioTaskHandler.clearTask(task.getId());
+							ioTaskHandler.clearTask(task.getId(), false);
 							continue;
 						} else {
 							boxId = getOldestMaterialBox(item.getMaterialTypeId(), item.getId());

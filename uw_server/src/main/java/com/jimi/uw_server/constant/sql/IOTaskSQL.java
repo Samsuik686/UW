@@ -51,5 +51,7 @@ public class IOTaskSQL {
 	public static final String GET_OLDEST_MATERIAL_UW_STORE = "SELECT material.*, packing_list_item.id AS PackingListItem_Id FROM material INNER JOIN packing_list_item ON packing_list_item.material_type_id = material.type WHERE remainder_quantity > 0 AND packing_list_item.task_id = ? AND status = 0 ORDER BY type, production_time ASC";
 
 	public static final String GET_TASK_BY_NAME = "SELECT * FROM task WHERE task.file_name = ? and task.state != ?";
+	
+	public static final String GET_OUT_QUANTIYT_IOTASK_ITEM_BY_ID = "SELECT packing_list_item.id AS PackingListItem_Id, packing_list_item.quantity AS PlanQuantity, SUM(task_log.quantity) AS ActualQuantity, task_log.operator AS Operator FROM packing_list_item LEFT JOIN task_log  ON packing_list_item.id = task_log.packing_list_item_id  WHERE packing_list_item.id = ?";
 
 }

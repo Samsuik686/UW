@@ -126,7 +126,7 @@ public class ExceptionHandler {
 				}
 			}
 
-			ioTaskHandler.clearTask(Integer.valueOf(groupid.split(":")[2]));
+			ioTaskHandler.clearTask(Integer.valueOf(groupid.split(":")[2]), false);
 
 		} else if (groupid.contains("@") && missionGroupId.contains("B")) { // missiongroupid 包含“@”表示为盘点任务
 			for (AGVInventoryTaskItem item : TaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
