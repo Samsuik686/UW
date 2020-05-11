@@ -21,9 +21,9 @@ public class MaterialBoxDetailVO {
 
 	private Integer boxId;
 	
-	private Integer x_position;
+	private Integer row;
 	
-	private Integer y_position;
+	private Integer col;
 	
 	private Integer status;
 
@@ -35,20 +35,20 @@ public class MaterialBoxDetailVO {
 		this.boxId = boxId;
 	}
 
-	public Integer getX_position() {
-		return x_position;
+	public Integer getRow() {
+		return row;
 	}
 
-	public void setX_position(Integer x_position) {
-		this.x_position = x_position;
+	public void setRow(Integer row) {
+		this.row = row;
 	}
 
-	public Integer getY_position() {
-		return y_position;
+	public Integer getCol() {
+		return col;
 	}
 
-	public void setY_position(Integer y_position) {
-		this.y_position = y_position;
+	public void setCol(Integer col) {
+		this.col = col;
 	}
 
 	public Integer getStatus() {
@@ -65,8 +65,8 @@ public class MaterialBoxDetailVO {
 			
 			MaterialBoxDetailVO materialBoxDetailVO = new MaterialBoxDetailVO();
 			materialBoxDetailVO.setBoxId(record.getBoxId());
-			materialBoxDetailVO.setX_position(record.getXPosition());
-			materialBoxDetailVO.setY_position(record.getYPosition());
+			materialBoxDetailVO.setRow(record.getXPosition());
+			materialBoxDetailVO.setCol(record.getYPosition());
 			materialBoxDetailVO.setStatus(record.getStatus());
 			materialBoxDetailVOs.add(materialBoxDetailVO);
 		}
