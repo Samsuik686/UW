@@ -145,9 +145,8 @@ public class IOTaskHandler extends BaseTaskHandler {
 				Window window = Window.dao.findById(item.getWindowId());
 				if (window.getAuto()) {
 					synchronized (Lock.IO_TASK_REDIS_LOCK) {
-						
-						taskService.putUrOutTaskMaterialInfoToRedis(item, task);
 						//发送到站包
+						taskService.putUrOutTaskMaterialInfoToRedis(item, task);
 						ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
 						PackSender.sendForkliftReachPackage("robot1", pack);
 						TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null, null, null, null, item.getUwQuantity(), item.getDeductionQuantity());

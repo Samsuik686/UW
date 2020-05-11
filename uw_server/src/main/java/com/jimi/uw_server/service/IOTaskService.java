@@ -924,10 +924,12 @@ public class IOTaskService {
 			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type",}, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
 			List<WindowTaskItemsVO> windowTaskItemVOs = new ArrayList<WindowTaskItemsVO>();
 			int totalRow = 0;
-			Task inventoryTask = null;
+			Task bindInventoryTask = null;
 			if (task.getIsInventoryApply() != null && task.getIsInventoryApply()) {
-				inventoryTask = Task.dao.findById(task.getInventoryTaskId());
+				bindInventoryTask = Task.dao.findById(task.getInventoryTaskId());
 			}
+			Task unstartInventoryTask = inventoryTaskService.getOneUnStartInventoryTask(task.getSupplier(), task.getWarehouseType(), task.getDestination());
+
 			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId())) {
 				// 查询task_log中的material_id,quantity
 				List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
@@ -946,12 +948,11 @@ public class IOTaskService {
 					}
 					Integer eWhStoreQuantity = 0;
 					if (task.getType().equals(TaskType.OUT)) {
-						if (inventoryTask != null) {
-							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
+						if (bindInventoryTask != null) {
+							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), bindInventoryTask.getCreateTime());
 						} else {
-							inventoryTask = inventoryTaskService.getOneUnStartInventoryTask(task.getSupplier(), task.getWarehouseType(), task.getDestination());
-							if (inventoryTask != null) {
-								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), inventoryTask.getCreateTime());
+							if (unstartInventoryTask != null) {
+								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), unstartInventoryTask.getCreateTime());
 							} else {
 								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
 							}
@@ -2436,43 +2437,42 @@ public class IOTaskService {
 		}else if (task.getType().equals(TaskType.OUT) && !task.getIsInventoryApply()) {
 			inventoryTask = InventoryTaskService.me.getOneUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR.getId(), task.getDestination());
 		}
-		synchronized (Lock.IO_TASK_REDIS_LOCK) {
-			Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
-			Integer outQuantity = getActualIOQuantity(item.getId());
-			Integer actualQuantity = 0;
-			//计算实际UW仓需出库物料数，以及抵扣数
-			if (outQuantity == 0 && eWhStoreQuantity > 2000) {
-				ExternalWhLog externalWhLog = new ExternalWhLog();
-				externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
-				externalWhLog.setDestination(task.getDestination());
-				externalWhLog.setSourceWh(UW_ID);
-				externalWhLog.setTaskId(task.getId());
-				externalWhLog.setTime(inventoryTask == null ? new Date() : inventoryTask.getCreateTime());
-				if (eWhStoreQuantity - item.getPlanQuantity() > 2000) {
-					externalWhLog.setQuantity(0 - item.getPlanQuantity());
-					actualQuantity = 0;
-					item.setDeductionQuantity(0 - item.getPlanQuantity());
-				}else {
-					externalWhLog.setQuantity(0 - eWhStoreQuantity + 2000);
-					actualQuantity = item.getPlanQuantity() - (eWhStoreQuantity - 2000);
-				}
-				item.setDeductionQuantity(0 - eWhStoreQuantity + 2000);
-				item.setUwQuantity(actualQuantity);
-				externalWhLog.setOperatior("robot1");
-				externalWhLog.setOperationTime(new Date());
-				externalWhLog.save();
-			}else if (outQuantity == 0 && eWhStoreQuantity <= 2000) {
-				actualQuantity = item.getPlanQuantity() + 2000;
-				item.setUwQuantity(actualQuantity);
+		Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
+		Integer outQuantity = getActualIOQuantity(item.getId());
+		Integer actualQuantity = 0;
+		//计算实际UW仓需出库物料数，以及抵扣数
+		if (outQuantity == 0 && eWhStoreQuantity > 2000) {
+			ExternalWhLog externalWhLog = new ExternalWhLog();
+			externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
+			externalWhLog.setDestination(task.getDestination());
+			externalWhLog.setSourceWh(UW_ID);
+			externalWhLog.setTaskId(task.getId());
+			externalWhLog.setTime(inventoryTask == null ? new Date() : inventoryTask.getCreateTime());
+			if (eWhStoreQuantity - item.getPlanQuantity() > 2000) {
+				externalWhLog.setQuantity(0 - item.getPlanQuantity());
+				actualQuantity = 0;
+				item.setDeductionQuantity(0 - item.getPlanQuantity());
 			}else {
-				actualQuantity = item.getUwQuantity() + item.getDeductionQuantity() - outQuantity;
+				externalWhLog.setQuantity(0 - eWhStoreQuantity + 2000);
+				actualQuantity = item.getPlanQuantity() - (eWhStoreQuantity - 2000);
 			}
-			//获取机械臂出库物料
-			List<UrMaterialInfo> urMaterialInfos = getUrOutTaskMaterialInfos(item, actualQuantity);
-			if (urMaterialInfos != null) {
-				UrTaskInfoDAO.putUrMaterialInfos(item.getTaskId(), item.getBoxId(), urMaterialInfos);
-			}
+			item.setDeductionQuantity(0 - eWhStoreQuantity + 2000);
+			item.setUwQuantity(actualQuantity);
+			externalWhLog.setOperatior("robot1");
+			externalWhLog.setOperationTime(new Date());
+			externalWhLog.save();
+		}else if (outQuantity == 0 && eWhStoreQuantity <= 2000) {
+			actualQuantity = item.getPlanQuantity() + 2000;
+			item.setUwQuantity(actualQuantity);
+		}else {
+			actualQuantity = item.getUwQuantity() - outQuantity;
 		}
+		//获取机械臂出库物料
+		List<UrMaterialInfo> urMaterialInfos = getUrOutTaskMaterialInfos(item, actualQuantity);
+		if (urMaterialInfos != null) {
+			UrTaskInfoDAO.putUrMaterialInfos(item.getTaskId(), item.getBoxId(), urMaterialInfos);
+		}
+		
 	}
 	
 	
@@ -2499,8 +2499,8 @@ public class IOTaskService {
 		if (!materials.isEmpty()) {
 			for (Material material : materials) {
 				if (oldestMaterial != null) {
-					if (material.getProductionTime().before(oldestMaterial.getProductionTime()) || material.getProductionTime().equals(oldestMaterial.getProductionTime())) {
-						tempQuantiy = material.getRemainderQuantity();
+					if (material.getProductionTime().getTime() <= oldestMaterial.getProductionTime().getTime()) {
+						tempQuantiy += material.getRemainderQuantity();
 						UrMaterialInfo info = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), item.getTaskId(), item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), item.getId());
 						urMaterialInfos.add(info);
 						if (tempQuantiy > limitQuantity) {
@@ -2508,7 +2508,7 @@ public class IOTaskService {
 						}
 					}
 				}else {
-					tempQuantiy = material.getRemainderQuantity();
+					tempQuantiy += material.getRemainderQuantity();
 					UrMaterialInfo info = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), item.getTaskId(), item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), item.getId());
 					urMaterialInfos.add(info);
 					if (tempQuantiy > limitQuantity) {

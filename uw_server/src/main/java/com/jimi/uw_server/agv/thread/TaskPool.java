@@ -25,6 +25,7 @@ import com.jimi.uw_server.service.IOTaskService;
 import com.jimi.uw_server.service.InventoryTaskService;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.util.ErrorLogWritter;
+import com.jimi.uw_server.util.UwProcessorExcutor;
 
 import java.util.*;
 
@@ -213,31 +214,41 @@ public class TaskPool extends Thread {
 							if (item.getOldWindowId() != 0 && !window.getId().equals(item.getOldWindowId())) {
 								continue;
 							}
-							synchronized (Lock.IO_TASK_REDIS_LOCK) {
-								Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
-								Integer outQuantity = taskService.getActualIOQuantity(item.getId());
-								if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 2000) {
-									ExternalWhLog externalWhLog = new ExternalWhLog();
-									externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
-									externalWhLog.setDestination(task.getDestination());
-									externalWhLog.setSourceWh(UW_ID);
-									externalWhLog.setTaskId(task.getId());
-									externalWhLog.setQuantity(0 - item.getPlanQuantity());
-									externalWhLog.setOperatior("robot1");
-									externalWhLog.setTime(inventoryTask == null ? new Date() : inventoryTask.getCreateTime());
-									externalWhLog.setOperationTime(new Date());
-									externalWhLog.save();
+							
+							Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
+							Integer outQuantity = taskService.getActualIOQuantity(item.getId());
+							if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 2000) {
+								final Date time = inventoryTask == null ? new Date() : inventoryTask.getCreateTime();
+								UwProcessorExcutor.me.execute(new Runnable() {
+									
+									@Override
+									public void run() {
+										ExternalWhLog externalWhLog = new ExternalWhLog();
+										externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
+										externalWhLog.setDestination(task.getDestination());
+										externalWhLog.setSourceWh(UW_ID);
+										externalWhLog.setTaskId(task.getId());
+										externalWhLog.setQuantity(0 - item.getPlanQuantity());
+										externalWhLog.setOperatior("robot1");
+										externalWhLog.setTime(time);
+										externalWhLog.setOperationTime(new Date());
+										externalWhLog.save();
+										
+										PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
+										packingListItem.setFinishTime(new Date()).update();
+									}
+								});
+								
+								synchronized (Lock.IO_TASK_REDIS_LOCK) {
 									for (AGVIOTaskItem tempItem : TaskItemRedisDAO.getIOTaskItems(task.getId())) {
 										if (tempItem.getGroupId().equals(item.getGroupId())) {
 											if (tempItem.getState() <= TaskItemState.WAIT_ASSIGN) {
-												TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, 0, 0, 0, 0, true, false, 0, null, externalWhLog.getQuantity());
+												TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, 0, 0, 0, 0, true, false, 0, null, 0 - item.getPlanQuantity());
 											}
 										}
 									}
-									PackingListItem packingListItem = PackingListItem.dao.findById(item.getId());
-									packingListItem.setFinishTime(new Date()).update();
-									continue;
 								}
+								continue;
 							}
 						}else {//非机械臂仓口
 							//旧仓口为机械臂仓口
