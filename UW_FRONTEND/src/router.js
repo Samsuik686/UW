@@ -108,6 +108,12 @@ import CutMaterial from "./views/cutMaterial/CutMaterial";
 //截料登录
 import CutLogin from "./views/user/CutLogin"
 
+
+//报表查询
+import Table from './views/table/Table'
+//物料明细表
+import MaterialDetails from "./views/table/materialDetails/MaterialDetails";
+
 const router = new Router({
   mode: 'hash',
   base: window.g.SYSTEM_PATH,
@@ -327,6 +333,17 @@ const router = new Router({
             {
               path: 'read',
               component: Read
+            }
+          ]
+        },
+        {
+          path: '/table',
+          name: 'Table',
+          component: Table,
+          children: [
+            {
+              path: 'materialDetails',
+              component: MaterialDetails
             }
           ]
         }

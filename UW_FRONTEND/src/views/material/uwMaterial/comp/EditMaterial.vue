@@ -22,6 +22,9 @@
             <el-form-item label="直径">
                 <el-input v-model.trim="editInfo.radius" placeholder="直径"></el-input>
             </el-form-item>
+            <el-form-item label="是否可超发">
+                <el-checkbox v-model.trim="editInfo.isSuperable" placeholder="是否可超发"></el-checkbox>
+            </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
             <el-button type="info" size="mini" @click="cancel" >取 消</el-button>
@@ -52,7 +55,8 @@
                     no: '',
                     supplierName:'',
                     thickness: '',
-                    radius: ''
+                    radius: '',
+                    isSuperable: false
                 }
             }
         },
@@ -65,6 +69,7 @@
                     this.editInfo.supplierName = this.editData.supplierName;
                     this.editInfo.thickness = this.editData.thickness;
                     this.editInfo.radius = this.editData.radius;
+                    this.editInfo.isSuperable = Boolean(this.editData.isSuperable);
                 } else {
                     this.clearForm();
                 }
@@ -89,7 +94,8 @@
                             enabled: 1,
                             thickness:this.editInfo.thickness,
                             radius:this.editInfo.radius,
-                            specification:this.editInfo.specification
+                            specification:this.editInfo.specification,
+                            isSuperable: this.editInfo.isSuperable
                         }
                     };
                     axiosPost(options).then(res => {
@@ -114,6 +120,7 @@
                 this.editInfo.specification = '';
                 this.editInfo.no = '';
                 this.editInfo.radius = '';
+                this.editInfo.isSuperable = '';
             }
         }
     }

@@ -40,6 +40,10 @@
                     prop="quantity">
             </el-table-column>
             <el-table-column
+                    label="周期"
+                    prop="cycle">
+            </el-table-column>
+            <el-table-column
                     label="入库日期"
                     min-width="160"
                     prop="storeTime">

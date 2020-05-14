@@ -347,3 +347,7 @@ export const printUrl = url + '/task/printer/printSingle';
 export const getCuttingMaterialUrl = url + '/task/getCuttingMaterial';
 export const getCuttingTaskUrl = url + '/task/getCuttingTask';
 export const printCutUrl = url + '/task/printer/print';
+
+
+//报表
+export const selectMaterialDetailsUrl = url + '/manage/materialType/getMaterialStockDetails';

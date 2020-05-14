@@ -102,6 +102,10 @@
         label="位号"
         prop="designator">
       </el-table-column>
+      <el-table-column
+        label="是否可超发"
+        prop="isSuperableString">
+      </el-table-column>
       <el-table-column label="操作" min-width="100">
         <template slot-scope="scope">
                     <span style="margin-right:10px;cursor:pointer" title="收发记录" @click="showDetails(scope.row)">

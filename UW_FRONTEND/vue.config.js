@@ -13,7 +13,7 @@ module.exports = {
                 changOrigin: true
             }
         },
-        before(app) {
+/*        before(app) {
             const bodyParser = require('body-parser');
             app.use(bodyParser.json());
             app.post('/manage/company/getCompanies', (req, res) => {
@@ -43,7 +43,7 @@ module.exports = {
                     "data": "success"
                 })
             });
-        }
+        }*/
     },
     configureWebpack: {
         plugins: [

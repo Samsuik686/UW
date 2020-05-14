@@ -64,6 +64,17 @@
             ]
           },
           {
+            index: 'table',
+            name: '报表',
+            icon: 'el-icon-s-order',
+            children: [
+              {
+                index: '/table/materialDetails',
+                name: '物料明细表'
+              }
+            ]
+          },
+          {
             index: 'material',
             name: '物料',
             icon: 'el-icon-coke-table',
