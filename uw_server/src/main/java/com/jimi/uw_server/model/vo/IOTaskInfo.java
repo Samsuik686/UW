@@ -36,6 +36,8 @@ public class IOTaskInfo {
 
 	public Date oldestMaterialDate;
 	
+	private String cycle;
+
 	public Boolean cutBoolean;
 	
 	public String cutString;
@@ -181,7 +183,16 @@ public class IOTaskInfo {
 	public void setCutString(String cutString) {
 		this.cutString = cutString;
 	}
+	
+	
+	public String getCycle() {
+		return cycle;
+	}
 
+
+	public void setCycle(String cycle) {
+		this.cycle = cycle;
+	}
 
 	public static List<IOTaskInfo> fillList(Task task, List<Record> taskInfoRecords, List<Record> uwStoreRecords, List<Record> oldestMaterialRecords) {
 		Map<Integer, IOTaskInfo> map = new HashMap<>();
@@ -244,6 +255,7 @@ public class IOTaskInfo {
 			IOTaskInfo info = map.get(record.getInt("PackingListItem_Id"));
 			if (info != null && info.getOldestMaterialDate() == null) {
 				info.setOldestMaterialDate(record.getDate("production_time"));
+				info.setCycle(record.getStr("cycle"));
 			}
 		}
 		for (Record record : uwStoreRecords) {

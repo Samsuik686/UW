@@ -77,9 +77,13 @@ public class InventoryTaskService {
 
 	private static final String GET_UW_INVENTORY_TASK_INFO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, material_type.designator, inventory_log.task_id, inventory_task_base_info.check_time AS check_time, inventory_task_base_info.check_operator AS check_operator, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN inventory_task_base_info INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = inventory_task_base_info.task_id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND inventory_task_base_info.destination_id = ? GROUP BY material.type ORDER BY material_type.`no` DESC";
 
+	private static final String GET_UW_INVENTORY_TASK_DETIALS_INFO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, material_type.designator, material.id AS material_id, material.cycle AS material_cycle, inventory_log.task_id, inventory_task_base_info.check_time AS check_time, inventory_task_base_info.check_operator AS check_operator, before_num AS before_num, actural_num AS actural_num, different_num AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN inventory_task_base_info INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = inventory_task_base_info.task_id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND inventory_task_base_info.destination_id = ? ORDER BY material_type.`no` DESC";
+	
 	private static final String GET_EWH_INVENTORY_TASK_INFO_BY_NO = "SELECT external_inventory_log.material_type_id AS material_type_id, material_type.`no` AS `no`, material_type.specification, external_inventory_log.task_id AS task_id, SUM( external_inventory_log.before_num ) AS before_num, SUM( external_inventory_log.actural_num ) AS actural_num, SUM( external_inventory_log.different_num ) AS different_num, SUM( external_inventory_log.material_return_num ) AS material_return_num, inventory_task_base_info.check_time AS check_time, inventory_task_base_info.check_operator AS check_operator, supplier.id AS supplier_id, supplier.`name` AS supplier_name, external_inventory_log.inventory_operatior FROM external_inventory_log INNER JOIN material_type INNER JOIN  inventory_task_base_info INNER JOIN supplier ON external_inventory_log.material_type_id = material_type.id AND supplier.id = material_type.supplier AND external_inventory_log.task_id = inventory_task_base_info.task_id AND external_inventory_log.wh_id = inventory_task_base_info.destination_id WHERE external_inventory_log.task_id = ? AND inventory_task_base_info.destination_id = ? AND material_type.`no` like ? GROUP BY external_inventory_log.material_type_id ORDER BY material_type.`no` DESC";
 
 	private static final String GET_UW_INVENTORY_TASK_INFO_BY_NO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, material_type.designator, inventory_log.task_id, inventory_task_base_info.check_time AS check_time, inventory_task_base_info.check_operator AS check_operator, SUM(before_num) AS before_num, SUM(actural_num) AS actural_num, SUM(different_num) AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN inventory_task_base_info INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = inventory_task_base_info.task_id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND inventory_task_base_info.destination_id = ? AND material_type.`no` like ? GROUP BY material.type ORDER BY material_type.`no` DESC";
+
+	private static final String GET_UW_INVENTORY_TASK_DETIALS_INFO_BY_NO = "SELECT material_type.id AS material_type_id, material_type.`no`, material_type.specification, material_type.designator, material.id AS material_id, material.cycle AS material_cycle, inventory_log.task_id, inventory_task_base_info.check_time AS check_time, inventory_task_base_info.check_operator AS check_operator, before_num AS before_num, actural_num AS actural_num, different_num AS different_num, supplier.id AS supplier_id, supplier.`name` AS supplier_name, inventory_log.inventory_operatior AS inventory_operatior FROM inventory_log INNER JOIN inventory_task_base_info INNER JOIN material INNER JOIN material_type INNER JOIN supplier ON inventory_log.task_id = inventory_task_base_info.task_id AND inventory_log.material_id = material.id AND material_type.id = material.type AND material_type.supplier = supplier.id WHERE inventory_log.task_id = ? AND inventory_task_base_info.destination_id = ? AND material_type.`no` LIKE ? ORDER BY material_type.`no` DESC";
 
 	private static final String GET_RUNNING_INVENTORY_TASK_BY_SUPPLIER = "SELECT * FROM task where state = 2 and type = 2 and supplier = ? and warehouse_type = ?";
 
@@ -1413,6 +1417,35 @@ public class InventoryTaskService {
 		String[] head = null;
 		field = new String[] {"supplier_name", "no", "before_num", "actural_num", "different_num"};
 		head = new String[] {"客户", "料号", "盘前数量", "盘点数量", "盈亏"};
+		ExcelWritter writter = ExcelWritter.create(true);
+		writter.fill(inventoryRecords, fileName, field, head);
+		writter.write(output, true);
+	}
+	
+	
+	public void exportUwInventoryTaskDetials(Integer taskId, String no, String fileName, OutputStream output) throws IOException {
+		SqlPara sqlPara = new SqlPara();
+		Task task = Task.dao.findById(taskId);
+		if (task == null || !task.getType().equals(TaskType.COUNT)) {
+			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
+		}
+		if (no == null || no.equals("")) {
+			
+			sqlPara.setSql(GET_UW_INVENTORY_TASK_DETIALS_INFO);
+			sqlPara.addPara(taskId);
+			sqlPara.addPara(uwId);
+		} else {
+			sqlPara.setSql(GET_UW_INVENTORY_TASK_DETIALS_INFO_BY_NO);
+			sqlPara.addPara(taskId);
+			sqlPara.addPara(uwId);
+			sqlPara.addPara("%" + no + "%");
+		}
+		List<Record> inventoryRecords = Db.find(sqlPara);
+
+		String[] field = null;
+		String[] head = null;
+		field = new String[] {"supplier_name", "no", "material_id", "material_cycle",  "before_num", "actural_num", "different_num"};
+		head = new String[] {"客户", "料号", "料盘码", "周期" ,"盘前数量", "盘点数量", "盈亏"};
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(inventoryRecords, fileName, field, head);
 		writter.write(output, true);

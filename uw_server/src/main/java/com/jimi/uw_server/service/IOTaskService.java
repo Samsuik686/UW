@@ -25,6 +25,7 @@ import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelHelper;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.MaterialHelper;
+import com.mysql.jdbc.log.NullLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -1014,7 +1015,6 @@ public class IOTaskService {
 				int inOperationType = 0;
 				int boxType = 0;
 				Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), boxId, user.getUid());
-				System.out.println("end:" + userLastOperationTime);
 				if (materialType.getRadius().equals(7)) {
 					putEfficiencyTimeToDb(userLastOperationTime, boxType , user, inOperationType, task.getId(), boxId);
 				}else {
@@ -1143,7 +1143,10 @@ public class IOTaskService {
 				}
 			}
 			if (materialTemp1 != null) {
-				throw new OperationException("当前料盒存在更旧的物料，请选择其他料盘！");
+				if (materialTemp1.getCycle() == null || materialTemp1.getCycle().trim().equals("")) {
+					throw new OperationException("当前料盒存在更旧的物料，日期是 " + materialTemp1.getPrintTime() + "！");
+				}
+				throw new OperationException("当前料盒存在更旧的物料，周期是 " + materialTemp1.getCycle() + "！");
 			}
 			// 若在同一个出库任务中重复扫同一个料盘时间戳，则抛出OperationException
 			if (TaskLog.dao.find(GET_MATERIAL_ID_IN_SAME_TASK_SQL, materialId, packListItemId).size() != 0) {
@@ -1159,7 +1162,6 @@ public class IOTaskService {
 			Integer efficiencySwitch = PropKit.use("properties.ini").getInt("efficiencySwitch");
 			if (efficiencySwitch != null && efficiencySwitch == 1) {
 				Long userLastOperationTime = efficiencyService.getUserLastOperationTime(task.getId(), material.getBox(), user.getUid()); 
-				System.out.println("end:" + userLastOperationTime); 
 				int outOperationType = 1; int boxType = 0; 
 				if(materialType.getRadius().equals(7)) {
 					putEfficiencyTimeToDb(userLastOperationTime, boxType , user, outOperationType, task.getId(), material.getBox()); 
@@ -1413,7 +1415,11 @@ public class IOTaskService {
 				Material materialTemp1 = Material.dao.findFirst(IOTaskSQL.GET_OLDER_MATERIAL_BY_BOX_AND_TIME, material.getType(), material.getProductionTime(), MaterialStatus.NORMAL);
 
 				if (materialTemp1 != null) {
-					throw new OperationException("当前存在更旧的物料，请选择其他料盘！,最旧料盘日期为" + materialTemp1.getProductionTime());
+					if (materialTemp1.getCycle() == null || materialTemp1.getCycle().trim().equals("")) {
+						throw new OperationException("存在更旧的物料，日期是 " + materialTemp1.getPrintTime() + "！");
+					}
+					throw new OperationException("存在更旧的物料，周期是 " + materialTemp1.getCycle() + "！");
+				
 				}
 			}
 			// 判断物料二维码中包含的料盘数量信息是否与数据库中的料盘剩余数相匹配
@@ -2270,7 +2276,7 @@ public class IOTaskService {
 		Calendar calendar = Calendar.getInstance();
 		System.out.println("now:" + calendar.getTime());
 		if (time != null && !time.equals((long) 0)) {	
-			Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH) + 1 , user.getUid(), boxType, operationType);
+			Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE year = ? AND month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1 , user.getUid(), boxType, operationType);
 			if (efficiency != null) {
 				if (time == null || time == -1 || time == -2) {
 					efficiency.setDishNum(efficiency.getDishNum() + 1).update();
@@ -2283,7 +2289,7 @@ public class IOTaskService {
 				}
 			}else {
 				efficiency = new Efficiency();
-				efficiency.setUid(user.getUid()).setMonth(calendar.get(Calendar.MONTH) + 1 ).setOperationType(operationType).setBoxType(boxType);
+				efficiency.setYear(calendar.get(Calendar.YEAR)).setUid(user.getUid()).setMonth(calendar.get(Calendar.MONTH) + 1 ).setOperationType(operationType).setBoxType(boxType);
 				if (time == null || time == -1 || time == -2) {
 					efficiency.setDishNum(1).save();
 				}else {
@@ -2304,7 +2310,7 @@ public class IOTaskService {
 	
 	private void putAndReduceDishNumToDb(Integer taskId, Integer boxId, Integer boxType, String userId, Integer operationType) {
 		Calendar calendar = Calendar.getInstance();
-		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.MONTH) + 1, userId, boxType, operationType);
+		Efficiency efficiency = Efficiency.dao.findFirst("SELECT * FROM efficiency WHERE year = ? AND month = ? AND uid = ? AND box_type = ? AND operation_type = ?", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, userId, boxType, operationType);
 		if (efficiency != null) {
 			if (EfficiencyRedisDAO.getTaskBoxArrivedTime(taskId, boxId) != null && efficiency.getDishNum() > 0) {
 				efficiency.setDishNum(efficiency.getDishNum() - 1).update();

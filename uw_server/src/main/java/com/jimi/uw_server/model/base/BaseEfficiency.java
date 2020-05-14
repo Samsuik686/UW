@@ -27,6 +27,15 @@ public abstract class BaseEfficiency<M extends BaseEfficiency<M>> extends Model<
 		return getStr("uid");
 	}
 
+	public M setYear(java.lang.Integer year) {
+		set("year", year);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getYear() {
+		return getInt("year");
+	}
+
 	public M setMonth(java.lang.Integer month) {
 		set("month", month);
 		return (M)this;
