@@ -5,7 +5,7 @@ import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.ExternalWhTaskService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.util.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 

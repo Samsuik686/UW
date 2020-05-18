@@ -11,7 +11,7 @@ import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.UserType;
 import com.jimi.uw_server.model.vo.UserVO;
 import com.jimi.uw_server.service.base.SelectService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.util.PagePaginate;
 
 import cc.darhao.dautils.api.MD5Util;
 

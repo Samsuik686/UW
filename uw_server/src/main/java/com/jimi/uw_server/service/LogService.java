@@ -12,7 +12,7 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.ActionLogVO;
 import com.jimi.uw_server.model.vo.TaskLogVO;
 import com.jimi.uw_server.service.base.SelectService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.util.PagePaginate;
 
 
 /**

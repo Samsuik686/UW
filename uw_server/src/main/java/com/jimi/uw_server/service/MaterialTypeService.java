@@ -3,27 +3,37 @@ package com.jimi.uw_server.service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.jfinal.aop.Aop;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
+import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
+import com.jimi.uw_server.constant.sql.DestinationSQL;
+import com.jimi.uw_server.constant.sql.IOTaskSQL;
 import com.jimi.uw_server.constant.sql.MaterialSQL;
 import com.jimi.uw_server.constant.sql.MaterialTypeSQL;
+import com.jimi.uw_server.constant.sql.SupplierSQL;
 import com.jimi.uw_server.exception.OperationException;
+import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.bo.PreciousMaterialTypeItemBO;
 import com.jimi.uw_server.model.bo.RegularMaterialTypeItemBO;
+import com.jimi.uw_server.model.vo.MaterialStockDetailVO;
 import com.jimi.uw_server.model.vo.MaterialTypeVO;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.model.vo.WarehouseStockDetailVO;
+import com.jimi.uw_server.model.vo.WarehouseStockVO;
 import com.jimi.uw_server.util.ExcelHelper;
+import com.jimi.uw_server.util.PagePaginate;
 
 /**  
  * <p>Title: MaterialTypeService</p>  
@@ -44,6 +54,8 @@ public class MaterialTypeService {
 	
 	private static Object IMPORT_MATERIAL_TYPE_FILE_LOCK = new Object();
 	
+	private ExternalWhLogService externalWhLogService = Aop.get(ExternalWhLogService.class);
+
 	
 	// 导入物料类型表
 	public String importRegularMaterialTypeFile(String fileName, File file, Integer supplierId) throws Exception {
@@ -76,17 +88,24 @@ public class MaterialTypeService {
 					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 
 						// 判断各单元格数据类型是否正确以及是否存在多余的空格
-						if (item.getNo() == null || item.getSpecification() == null || item.getThickness() == null || item.getRadius() == null || item.getNo().replaceAll(" ", "").equals("") || item.getSpecification().replaceAll(" ", "").equals("") || item.getThickness().toString().replaceAll(" ", "").equals("") || item.getRadius().toString().replaceAll(" ", "").equals("")) {
-							resultString = "导入物料类型表失败，请检查单表格第" + i + "行的料号/规格/厚度/直径列是否填写了准确信息！";
-							return resultString;
-						}
+                        if (item.getNo() == null || item.getSpecification() == null || item.getThickness() == null || item.getRadius() == null || item.getNo().replaceAll(" ", "").equals("") || item.getSpecification().replaceAll(" ", "").equals("") || item.getThickness().toString().replaceAll(" ", "").equals("") || item.getRadius().toString().replaceAll(" ", "").equals("") || item.getIsSuperabled() == null || item.getIsSuperabled().trim().equals("")) {
+                            resultString = "导入物料类型表失败，请检查单表格第" + i + "行的料号/规格/厚度/直径/是否超发列是否填写了准确信息！";
+                        }
 
 						// 判断厚度和半径是否为正整数
 						if (item.getThickness() <= 0 || item.getRadius() <= 0) {
 							resultString = "导入物料类型表失败，表格第" + i + "行的厚度/直径列不是正整数！";
 							return resultString;
 						}
-
+                        boolean isSuperable = false;
+                        if (item.getIsSuperabled().trim().equals("是")) {
+                            isSuperable = true;
+                        }else if (item.getIsSuperabled().trim().equals("否")) {
+                            isSuperable = false;
+                        }else {
+                            resultString = "导入物料类型表失败，表格第" + i + "行的是否超发列格式不正确，请填写”是“或.”否“！";
+                            return resultString;
+                        }
 						// 根据料号和客户找到对应的物料类型
 						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, item.getNo().trim().toUpperCase(), supplierId);
 						/*
@@ -109,6 +128,7 @@ public class MaterialTypeService {
 							materialType.setEnabled(true);
 							materialType.setSupplier(supplierId);
 							materialType.setType(WarehouseType.REGULAR.getId());
+                            materialType.setIsSuperable(isSuperable);
 							list.add(materialType);
 						}
 
@@ -178,7 +198,7 @@ public class MaterialTypeService {
 							String no = item.getNo().trim().toUpperCase();
 							String deignator = item.getDesignator().trim().toUpperCase();
 							// 根据料号和客户找到对应的物料类型
-							MaterialType tempMaterialType1 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME_SQL, no, supplierId);
+							MaterialType tempMaterialType1 = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, no, supplierId);
 							/*
 							 * 判断物料类型表中是否存在对应的料号且客户也相同的物料类型记录，并且该物料类型未被禁用； 若存在，则跳过这些记录
 							 */
@@ -230,7 +250,7 @@ public class MaterialTypeService {
 		
 	
 	// 新增物料类型
-	public String addMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, Integer warehouseType, String designator) {
+	public String addMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, Integer warehouseType, String designator, Boolean isSuperable) {
 		String resultString = "添加成功！";
 		if (no.contains("!") || no.contains("$")) {
 			throw new OperationException("请勿往料号中添加非法字符，如“!”或“$”！");
@@ -241,7 +261,7 @@ public class MaterialTypeService {
 		if (s == null) {
 			throw new OperationException("客户不存在！");
 		}
-		MaterialType conflictMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_NAME_SQL, no, supplierId);
+		MaterialType conflictMaterialType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_SQL, no, supplierId);
 		if (conflictMaterialType != null) {
 			resultString = WarehouseType.getDescribeById(conflictMaterialType.getType()) + "已存在该物料类型，请勿重复添加！";
 			return resultString;
@@ -258,13 +278,13 @@ public class MaterialTypeService {
 		}
 		MaterialType newMaterialType = new MaterialType();
 		newMaterialType.setNo(no).setSpecification(specification).setSupplier(supplierId).setThickness(thickness)
-		   .setRadius(radius).setEnabled(true).setType(warehouseType).setDesignator(designator).save();
+		   .setRadius(radius).setEnabled(true).setType(warehouseType).setDesignator(designator).setIsSuperable(isSuperable).save();
 		return resultString;
 	}
 
 
 		// 更新物料类型
-	public String updateMaterialType(Integer id, Integer thickness, Integer radius, String designator, String specification, Integer warehouseType) {
+	public String updateMaterialType(Integer id, Integer thickness, Integer radius, String designator, String specification, Integer warehouseType, Boolean isSuperable) {
 		String resultString = "更新成功！";
 		MaterialType materialType = MaterialType.dao.findById(id);
 		if (materialType == null) {
@@ -281,7 +301,7 @@ public class MaterialTypeService {
 				return resultString;
 			}
 		}
-		materialType.setThickness(thickness).setRadius(radius).setSpecification(specification).setDesignator(designator).update();
+		materialType.setThickness(thickness).setRadius(radius).setSpecification(specification).setDesignator(designator).setIsSuperable(isSuperable).update();
 		return resultString;
 	}
 
@@ -366,4 +386,230 @@ public class MaterialTypeService {
 		return pagePaginate;
 	}
 	
+	
+	/**
+	 * 
+	 * <p>Description: 物料明细表<p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2020年5月20日
+	 */
+	public PagePaginate getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNo, Integer pageSize, Date startTime, Date endTime) {
+		//获取客户所有仓库
+		Supplier supplier = Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_ID_SQL, supplierId);
+		String warehouseString = WarehouseType.getDescribeById(warehouseType);
+		List<Destination> warehouses = getWarehouseBySupplier(supplier, warehouseType, whId);
+		//获取客户所有物料类型
+		SqlPara sqlPara = new SqlPara();
+		if (no == null || no.trim().equals("")) {
+			sqlPara.setSql(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_SUPPLIER_AND_TYPE_SQL);
+			sqlPara.addPara(supplier.getId()).addPara(warehouseType);
+		}else {
+			sqlPara.setSql(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL);
+			sqlPara.addPara(no).addPara(supplier.getId()).addPara(warehouseType);
+		}
+		Page<Record> materialTypesRecords = Db.paginate(pageNo, pageSize, sqlPara);
+		//物料库存明细记录
+		PagePaginate page = new PagePaginate();
+		page.setPageNumber(materialTypesRecords.getPageNumber());
+		page.setPageSize(materialTypesRecords.getPageSize());
+		page.setTotalPage(materialTypesRecords.getTotalPage());
+		page.setTotalRow(materialTypesRecords.getTotalRow());
+		List<MaterialStockDetailVO> materialStockDetailVOs = new ArrayList<>();
+		//遍历所有物料类型
+		for (Record record : materialTypesRecords.getList()) {
+			
+			MaterialStockDetailVO materialStockDetailVO = new MaterialStockDetailVO();
+			materialStockDetailVO.setId(record.getInt("id"));
+			materialStockDetailVO.setNo(record.getStr("no"));
+			materialStockDetailVO.setSpecification(record.getStr("specification"));
+			materialStockDetailVO.setSupplierName(supplier.getName());
+			materialStockDetailVO.setWarehouse(warehouseString);
+			List<WarehouseStockVO> warehouseStockVOs = new ArrayList<>();
+			//全部仓库的入库数和出库数
+			Integer allWarehosueInNum = 0;
+			Integer allWarehosueOutNum = 0;
+			Integer allOldBalance = 0;
+			Integer allCurrentBalance = 0; 
+			//遍历所有仓库
+			for (Destination warehouse : warehouses) {
+				WarehouseStockVO warehouseStockVO = new WarehouseStockVO();
+				warehouseStockVO.setWarehouse(warehouse.getName());
+				List<WarehouseStockDetailVO> warehouseStockDetailVOs = new ArrayList<>();
+				//每个仓库内部的入库数和出库数
+				Integer inStockNum = 0;
+				Integer outStockNum = 0;
+				Integer oldBalance =  0;
+				if (warehouse.getId().equals(0)) {
+					List<Record> ioRecords = Db.find(IOTaskSQL.GET_ALL_SUM_OF_TASK_LOG_BY_TIME_AND_MATERIALTYPE_SQL, startTime, endTime, record.getInt("id"), startTime, endTime, record.getInt("id"), startTime, endTime, record.getInt("id"));
+					//遍历所有日志记录（同一任务同一物料类型入库，出库数量已统计）
+					for (Record ioRecord : ioRecords) {
+						Integer taskType = ioRecord.getInt("Task_Type");
+						Integer ioQuantity = ioRecord.getInt("IO_Quantity");
+						WarehouseStockDetailVO warehouseStockDetailVO = new WarehouseStockDetailVO();
+						switch (taskType) {
+						//入库
+						case TaskType.IN:
+							warehouseStockDetailVO.setOperationType("入库");
+							warehouseStockDetailVO.setNumberInStock(ioQuantity);
+							inStockNum += ioQuantity;
+							break;
+						//出库
+						case TaskType.OUT:
+							warehouseStockDetailVO.setOperationType("出库");
+							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+							outStockNum += ioQuantity;
+							break;
+						//调拨入库
+						case TaskType.SEND_BACK:
+							warehouseStockDetailVO.setOperationType("入库");
+							warehouseStockDetailVO.setNumberInStock(ioQuantity);
+							inStockNum += ioQuantity;
+							break;
+						//紧急出库（紧急出库伴随着一个入库任务生成，紧急入库任务数量包含在入库任务中计算，此处仅计算紧急出库）
+						case TaskType.EMERGENCY_OUT:
+							warehouseStockDetailVO.setOperationType("出库");
+							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+							outStockNum += ioQuantity;
+							break;
+						//盘点
+						case TaskType.COUNT:
+							if (ioQuantity > 0) {
+								warehouseStockDetailVO.setOperationType("入库");
+								warehouseStockDetailVO.setNumberInStock(ioQuantity);
+								inStockNum += ioQuantity;
+							}else {
+								warehouseStockDetailVO.setOperationType("出库");
+								warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
+								outStockNum += (0 - ioQuantity);
+							}
+							break;
+						//抽检
+						case TaskType.SAMPLE:
+							warehouseStockDetailVO.setOperationType("出库");
+							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+							outStockNum += ioQuantity;
+							break;
+						}
+						warehouseStockDetailVOs.add(warehouseStockDetailVO);
+					}
+					oldBalance = getUwStockByTimeAndMaterialType(startTime, record.getInt("id"));
+				}else {
+					List<Record> ioRecords = Db.find(IOTaskSQL.GET_ALL_EXTERNAL_WH_IO_LOG_BY_TIME_AND_MATERIALTYPE_SQL, warehouse.getId(), startTime, endTime, record.getInt("id"), warehouse.getId(), startTime, endTime, record.getInt("id"), warehouse.getId(), startTime, endTime, record.getInt("id"));
+					for (Record ioRecord : ioRecords) {
+						Integer taskType = ioRecord.getInt("Task_Type");
+						Integer ioQuantity = ioRecord.getInt("IO_Quantity");
+						WarehouseStockDetailVO warehouseStockDetailVO = new WarehouseStockDetailVO();
+						switch (taskType) {
+						//出库
+						case TaskType.OUT :
+							if (ioQuantity > 0) {
+								warehouseStockDetailVO.setOperationType("入库");
+								warehouseStockDetailVO.setNumberInStock(ioQuantity);
+								inStockNum += ioQuantity;
+							}else {
+								warehouseStockDetailVO.setOperationType("出库");
+								warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+								outStockNum += (0 - ioQuantity);
+							}
+							break;
+						//紧急出库（紧急出库伴随着一个入库任务生成，紧急入库任务数量包含在入库任务中计算，此处仅计算紧急出库）
+						case TaskType.EMERGENCY_OUT :
+							if (ioQuantity > 0) {
+								warehouseStockDetailVO.setOperationType("入库");
+								warehouseStockDetailVO.setNumberInStock(ioQuantity);
+								inStockNum += ioQuantity;
+							}else {
+								warehouseStockDetailVO.setOperationType("出库");
+								warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+								outStockNum += (0 - ioQuantity);
+							}
+							break;
+						//调拨入库
+						case TaskType.SEND_BACK:
+							warehouseStockDetailVO.setOperationType("出库");
+							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+							outStockNum += ioQuantity;
+							break;
+						//盘点
+						case TaskType.COUNT:
+							if (ioQuantity > 0) {
+								warehouseStockDetailVO.setOperationType("入库");
+								warehouseStockDetailVO.setNumberInStock(ioQuantity);
+								inStockNum += ioQuantity;
+							}else {
+								warehouseStockDetailVO.setOperationType("出库");
+								warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
+								outStockNum += (0 - ioQuantity);
+							}
+							break;
+						//抽检
+						case TaskType.EXTERNAL_IN_OUT:
+							if (ioQuantity > 0) {
+								warehouseStockDetailVO.setOperationType("入库");
+								warehouseStockDetailVO.setNumberInStock(ioQuantity);
+								inStockNum += ioQuantity;
+							}else {
+								warehouseStockDetailVO.setOperationType("出库");
+								warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
+								outStockNum += (0 - ioQuantity);
+							}
+							
+							break;
+						}
+						warehouseStockDetailVOs.add(warehouseStockDetailVO);
+					}
+					oldBalance = externalWhLogService.getRuntimeEWhMaterialQuantity(record.getInt("id"), warehouse.getId(), startTime) ;
+				}
+				warehouseStockVO.setNumberInStock(inStockNum);
+				warehouseStockVO.setNumberOutStock(outStockNum);
+				warehouseStockVO.setOldBalance(oldBalance);
+				warehouseStockVO.setCurrentBalance(oldBalance + inStockNum - outStockNum);
+				warehouseStockVO.setDetails(warehouseStockDetailVOs);
+				warehouseStockVOs.add(warehouseStockVO);
+				allWarehosueInNum += inStockNum;
+				allWarehosueOutNum += outStockNum;
+				allOldBalance += oldBalance;
+				allCurrentBalance += warehouseStockVO.getCurrentBalance();
+			}
+			materialStockDetailVO.setNumberInStock(allWarehosueInNum);
+			materialStockDetailVO.setNumberOutStock(allWarehosueOutNum);
+			materialStockDetailVO.setOldBalance(allOldBalance);
+			materialStockDetailVO.setCurrentBalance(allCurrentBalance);
+			materialStockDetailVO.setList(warehouseStockVOs);
+			materialStockDetailVOs.add(materialStockDetailVO);
+			
+			
+		}
+		page.setList(materialStockDetailVOs);
+		return page;
+	}
+	
+	
+	private List<Destination> getWarehouseBySupplier(Supplier supplier, Integer warehouseType, Integer whId){
+		List<Destination> warehouses =  new ArrayList<Destination>();
+		if (WarehouseType.REGULAR.getId().equals(warehouseType)) {
+			if (whId != null) {
+				warehouses = Destination.dao.find(DestinationSQL.GET_DESTINATION_BY_ID_SQL, whId);
+			}else {
+				warehouses = Destination.dao.find(DestinationSQL.GET_UW_DESTINATION_SQL);
+				List<Destination> whOfCompany = Destination.dao.find(DestinationSQL.GET_DESTINATION_BY_COMPANY_SQL, supplier.getCompanyId());
+				warehouses.addAll(whOfCompany);
+			}
+		}else {
+			warehouses = Destination.dao.find(DestinationSQL.GET_UW_DESTINATION_SQL);
+		}
+		return warehouses;
+	}
+	
+	
+	private Integer getUwStockByTimeAndMaterialType(Date time, Integer materialTypeId) {
+		Record uwStockRecord = Db.findFirst(IOTaskSQL.GET_UW_STOCK_BY_TIME_AND_MATERIALTYPE_SQL, time, materialTypeId, time, materialTypeId, time, materialTypeId, time, materialTypeId);
+		if (uwStockRecord == null || uwStockRecord.getInt("IO_Quantity") == null) {
+			return 0;
+		}else {
+			return uwStockRecord.getInt("IO_Quantity");
+		}
+	}
 }

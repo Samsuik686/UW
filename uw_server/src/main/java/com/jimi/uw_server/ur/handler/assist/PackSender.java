@@ -3,10 +3,14 @@
 */  
 package com.jimi.uw_server.ur.handler.assist;
 
+import com.jimi.uw_server.ur.dao.UrInvTaskBoxInfoDAO;
 import com.jimi.uw_server.ur.entity.AckResponseManager;
 import com.jimi.uw_server.ur.entity.CmdidManager;
+import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
 import com.jimi.uw_server.ur.entity.SessionBox;
 import com.jimi.uw_server.ur.entity.base.UrBasePackage;
+import com.jimi.uw_server.ur.processor.ProcessorExecutor;
+
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.concurrent.CountDownLatch;
@@ -49,4 +53,22 @@ public class PackSender {
 		}
 		
 	}
+	
+	
+    public static void sendForkliftReachPackage(String urName, ForkliftReachPackage pack) {
+        Runnable runnable = new Runnable() {
+            
+            @Override
+            public void run() {
+                Boolean flag = PackSender.sendPackage(urName, pack);
+                if (!flag) {
+                    UrInvTaskBoxInfoDAO.putUrTaskBoxArrivedPack(urName, pack);
+                    SessionBox.remove(urName);
+                }else {
+                    UrInvTaskBoxInfoDAO.removeUrTaskBoxArrivedPack(urName);
+                }
+            }
+        };
+        ProcessorExecutor.me.execute(runnable);
+    }
 }

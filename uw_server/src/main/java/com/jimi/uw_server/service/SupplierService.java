@@ -14,7 +14,7 @@ import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.SupplierVO;
 import com.jimi.uw_server.service.base.SelectService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.util.PagePaginate;
 
 import java.util.Collections;
 
@@ -32,7 +32,7 @@ public class SupplierService extends SelectService {
 	// 添加客户
 	public String add(String name, Integer companyId) {
 		String resultString = "添加成功！";
-		if (Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME_SQL, name.trim()) != null || FormerSupplier.dao.findFirst(SupplierSQL.GET_FORMER_SUPPLIER_SQL, name.trim()) != null) {
+		if (Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME_SQL, name.trim()) != null || FormerSupplier.dao.findFirst(SupplierSQL.GET_FORMER_SUPPLIER_BY_NAME_SQL, name.trim()) != null) {
 			resultString = "该客户已存在或为某客户的曾用名，请勿重复添加！";
 			return resultString;
 		} else {
@@ -92,7 +92,7 @@ public class SupplierService extends SelectService {
 		Supplier supplier = Supplier.dao.findById(id);
 		name = name.trim();
 		if (!supplier.getName().equals(name.trim())) {
-			if (Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME_SQL, name) != null || FormerSupplier.dao.findFirst(SupplierSQL.GET_FORMER_SUPPLIER_SQL, name) != null) {
+			if (Supplier.dao.findFirst(SupplierSQL.GET_SUPPLIER_BY_NAME_SQL, name) != null || FormerSupplier.dao.findFirst(SupplierSQL.GET_FORMER_SUPPLIER_BY_NAME_SQL, name) != null) {
 				resultString = "该客户已存在或者为某个客户的曾用名，请勿重复添加！";
 				throw new OperationException(resultString);
 			}

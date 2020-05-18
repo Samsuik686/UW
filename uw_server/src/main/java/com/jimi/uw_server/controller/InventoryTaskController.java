@@ -1,5 +1,6 @@
 package com.jimi.uw_server.controller;
 
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
@@ -12,8 +13,9 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.vo.InventoryTaskDetailVO;
 import com.jimi.uw_server.model.vo.PackingInventoryInfoVO;
-import com.jimi.uw_server.service.InventoryTaskService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.service.inventory.PreciousInventoryTaskService;
+import com.jimi.uw_server.service.inventory.RegularInventoryTaskService;
+import com.jimi.uw_server.util.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
@@ -33,8 +35,9 @@ public class InventoryTaskController extends Controller {
 
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
-	private InventoryTaskService inventoryTaskService = InventoryTaskService.me;
+	private RegularInventoryTaskService regularInventoryTaskService = Aop.get(RegularInventoryTaskService.class);
 
+	private PreciousInventoryTaskService preciousInventoryTaskService = Aop.get(PreciousInventoryTaskService.class);
 
 	@Log("创建普通仓盘点任务，客户编号为{supplierId}， 盘点仓库{destinationIds}")
 	public void createRegularTask(Integer supplierId, String destinationIds) {
@@ -42,7 +45,7 @@ public class InventoryTaskController extends Controller {
 		if (supplierId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		inventoryTaskService.createRegularTask(supplierId, destinationIds);
+		regularInventoryTaskService.create(supplierId, destinationIds);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -53,7 +56,7 @@ public class InventoryTaskController extends Controller {
 		if (supplierId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		inventoryTaskService.createPreciousTask(supplierId);
+		preciousInventoryTaskService.create(supplierId);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -68,7 +71,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null || windows == null || windows.trim().equals("")) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String result = inventoryTaskService.startRegularTask(taskId, windows);
+		String result = regularInventoryTaskService.start(taskId, windows);
 		renderJson(ResultUtil.succeed(result));
 
 	}
@@ -84,7 +87,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String result = inventoryTaskService.startPreciousTask(taskId);
+		String result = preciousInventoryTaskService.start(taskId);
 		renderJson(ResultUtil.succeed(result));
 
 	}
@@ -95,7 +98,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		inventoryTaskService.cancelTask(taskId);
+		regularInventoryTaskService.cancelTask(taskId);
 		renderJson(ResultUtil.succeed());
 	}
 	
@@ -105,7 +108,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		inventoryTaskService.cancelTask(taskId);
+		preciousInventoryTaskService.cancelTask(taskId);
 		renderJson(ResultUtil.succeed());
 	}
 	
@@ -126,7 +129,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.backInventoryRegularUWBox(taskId, boxId, windowId, user);
+		String result = regularInventoryTaskService.backUWBox(taskId, boxId, windowId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -147,7 +150,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		Material result = inventoryTaskService.inventoryRegularUWMaterial(materialId, boxId, taskId, acturalNum, user);
+		Material result = regularInventoryTaskService.inventoryUWMaterial(materialId, boxId, taskId, acturalNum, user);
 		renderJson(ResultUtil.succeed(result));
 
 	}
@@ -168,7 +171,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		inventoryTaskService.inventoryPreciousUWMaterial(materialId, taskId, acturalNum, user);
+		preciousInventoryTaskService.inventoryUWMaterial(materialId, taskId, acturalNum, user);
 		renderJson(ResultUtil.succeed());
 
 	}
@@ -188,7 +191,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverRegularEWhMaterial(id, taskId, user);
+		String result = regularInventoryTaskService.coverEWhMaterial(id, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -207,7 +210,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverUwMaterial(id, taskId, user);
+		String result = regularInventoryTaskService.coverUwMaterial(id, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -226,7 +229,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverUwMaterial(id, taskId, user);
+		String result = preciousInventoryTaskService.coverUwMaterial(id, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -245,7 +248,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverUwMaterialByTaskId(materialTypeId, taskId, user);
+		String result = regularInventoryTaskService.coverUwMaterialByTaskId(materialTypeId, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -264,7 +267,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverUwMaterialByTaskId(materialTypeId, taskId, user);
+		String result = preciousInventoryTaskService.coverUwMaterialByTaskId(materialTypeId, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -283,7 +286,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverEwhMaterialByTaskId(materialTypeId, taskId, whId, user);
+		String result = regularInventoryTaskService.coverEwhMaterialByTaskId(materialTypeId, taskId, whId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -301,7 +304,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.checkUwRegularTask(taskId, user);
+		String result = regularInventoryTaskService.checkUwTask(taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -314,7 +317,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.checkUwPreciousTask(taskId, user);
+		String result = preciousInventoryTaskService.checkUwTask(taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -327,7 +330,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.checkEwhInventoryTask(taskId, whId, user);
+		String result = regularInventoryTaskService.checkEwhTask(taskId, whId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -347,7 +350,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.importEWhInventoryRecord(file.getFile(), taskId,whId, user);
+		String result = regularInventoryTaskService.importEWhInventoryRecord(file.getFile(), taskId,whId, user);
 		if (result.equals("导入成功")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -366,7 +369,7 @@ public class InventoryTaskController extends Controller {
 		if (windowId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<PackingInventoryInfoVO> result = inventoryTaskService.getPackingInventory(windowId);
+		List<PackingInventoryInfoVO> result = regularInventoryTaskService.getPackingInventory(windowId);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -380,15 +383,22 @@ public class InventoryTaskController extends Controller {
 		if (supplierId == null || warehouseType == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<Task> result = inventoryTaskService.getInventoryTask(supplierId, warehouseType);
+		List<Task> result = regularInventoryTaskService.getInventoryTask(supplierId, warehouseType);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
-	// 获取进行中的贵重仓盘点任务（PDA用）
+	/**
+	 *  
+	 * <p>Description: 获取进行中的贵重仓盘点任务（PDA用）<p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2020年5月25日
+	 */
 	public void getWorkingPreciousTask() {
 		String filter = "warehouse_type=1#&#state=2";
-		PagePaginate result = inventoryTaskService.selectAllInventoryTask(filter, null, null, null, null);
+		PagePaginate result = preciousInventoryTaskService.selectAllInventoryTask(filter, null, null, null, null);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -407,7 +417,7 @@ public class InventoryTaskController extends Controller {
 		if (pageNo <= 0 || pageSize <= 0) {
 			throw new ParameterException("页码和页容量必须大于0");
 		}
-		PagePaginate result = inventoryTaskService.selectAllInventoryTask(filter, pageNo, pageSize, ascBy, descBy);
+		PagePaginate result = regularInventoryTaskService.selectAllInventoryTask(filter, pageNo, pageSize, ascBy, descBy);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -422,7 +432,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<Record> result = inventoryTaskService.getUwInventoryTaskInfo(taskId, no);
+		List<Record> result = regularInventoryTaskService.getUwInventoryTaskInfo(taskId, no);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -437,7 +447,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null || whId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<Record> result = inventoryTaskService.getEwhInventoryTaskInfo(taskId, whId, no);
+		List<Record> result = regularInventoryTaskService.getEwhInventoryTaskInfo(taskId, whId, no);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -452,7 +462,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = inventoryTaskService.getUwInventoryTaskDetails(taskId, materialTypeId);
+		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = regularInventoryTaskService.getUwInventoryTaskDetails(taskId, materialTypeId);
 		renderJson(ResultUtil.succeed(inventoryTaskDetailVOs));
 	}
 
@@ -467,7 +477,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null || whId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = inventoryTaskService.getEwhInventoryTaskDetails(taskId, materialTypeId, whId);
+		List<InventoryTaskDetailVO> inventoryTaskDetailVOs = regularInventoryTaskService.getEwhInventoryTaskDetails(taskId, materialTypeId, whId);
 		renderJson(ResultUtil.succeed(inventoryTaskDetailVOs));
 	}
 
@@ -481,7 +491,7 @@ public class InventoryTaskController extends Controller {
 		if (supplierId == null || whId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<Task> tasks = inventoryTaskService.getUnStartInventoryTask(supplierId, warehouseType, whId);
+		List<Task> tasks = regularInventoryTaskService.getUnStartInventoryTask(supplierId, warehouseType, whId);
 		renderJson(ResultUtil.succeed(tasks));
 	}
 
@@ -495,7 +505,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<Destination> destinations = inventoryTaskService.getInventoryTaskDestination(taskId);
+		List<Destination> destinations = regularInventoryTaskService.getInventoryTaskDestination(taskId);
 		renderJson(ResultUtil.succeed(destinations));
 	}
 	
@@ -509,7 +519,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		List<Record> records = inventoryTaskService.getInventoryTaskBaseInfo(taskId);
+		List<Record> records = regularInventoryTaskService.getInventoryTaskBaseInfo(taskId);
 		renderJson(ResultUtil.succeed(records));
 	}
 
@@ -525,7 +535,7 @@ public class InventoryTaskController extends Controller {
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.finishRegularTask(taskId, whId, user);
+		String result = regularInventoryTaskService.finishTask(taskId, whId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -542,7 +552,7 @@ public class InventoryTaskController extends Controller {
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.finishPreciousTask(taskId, user);
+		String result = preciousInventoryTaskService.finish(taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -564,7 +574,7 @@ public class InventoryTaskController extends Controller {
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.editEwhInventoryLog(id, acturalNum, returnNum, user);
+		String result = regularInventoryTaskService.editEwhInventoryLog(id, acturalNum, returnNum, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -582,7 +592,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverUwMaterialOneKey(taskId, user);
+		String result = regularInventoryTaskService.coverUwMaterialOneKey(taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -600,7 +610,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverUwMaterialOneKey(taskId, user);
+		String result = preciousInventoryTaskService.coverUwMaterialOneKey(taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -618,7 +628,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = inventoryTaskService.coverEwhMaterialOneKey(taskId, whId, user);
+		String result = regularInventoryTaskService.coverEwhMaterialOneKey(taskId, whId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -628,7 +638,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		String fileName = inventoryTaskService.getTaskName(taskId);
+		String fileName = regularInventoryTaskService.getTaskName(taskId);
 		if (fileName == null) {
 			throw new OperationException("任务不存在，导出失败！");
 		}
@@ -641,7 +651,7 @@ public class InventoryTaskController extends Controller {
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			inventoryTaskService.exportEwhInventoryTask(taskId, no, whId, fileName, output);
+			regularInventoryTaskService.exportEwhInventoryTask(taskId, no, whId, fileName, output);
 
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
@@ -663,7 +673,7 @@ public class InventoryTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
-		String fileName = inventoryTaskService.getTaskName(taskId);
+		String fileName = regularInventoryTaskService.getTaskName(taskId);
 		if (fileName == null) {
 			throw new OperationException("任务不存在，导出失败！");
 		}
@@ -676,7 +686,7 @@ public class InventoryTaskController extends Controller {
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			inventoryTaskService.exportUwInventoryTask(taskId, no, fileName, output);
+			regularInventoryTaskService.exportUwInventoryTask(taskId, no, fileName, output);
 
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());

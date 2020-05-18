@@ -24,7 +24,7 @@ import java.util.Set;
  * @date 2019年12月19日
  *
  */
-public class UrInvTaskInfoDAO {
+public class UrTaskInfoDAO {
 	
 	public static final String UNDEFINED = "undefined";
 
@@ -103,9 +103,9 @@ public class UrInvTaskInfoDAO {
 		rp.setSerializer(new VisualSerializer());
 	    rp.start();
 	    cache = Redis.use();
-	    UrMaterialInfo urMaterialInfo1 = new UrMaterialInfo("123", 1, 2,4,5,1,1, true,1,100);
-	    UrMaterialInfo urMaterialInfo2 = new UrMaterialInfo("124", 2, 2,3,4,4,1,true,1,100);
-	    List<UrMaterialInfo> urMaterialInfos = new ArrayList<>();
+        UrMaterialInfo urMaterialInfo1 = new UrMaterialInfo("123", 1, 2,4,5,1,1, true,1,100,0);
+        UrMaterialInfo urMaterialInfo2 = new UrMaterialInfo("124", 2, 2,3,4,4,1,true,1,100,0);
+        List<UrMaterialInfo> urMaterialInfos = new ArrayList<>();
 	    urMaterialInfos.add(urMaterialInfo1);
 	    urMaterialInfos.add(urMaterialInfo2);
 	    putUrMaterialInfos(12, 1, urMaterialInfos);

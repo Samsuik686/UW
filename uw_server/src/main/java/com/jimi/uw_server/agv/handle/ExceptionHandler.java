@@ -2,8 +2,12 @@ package com.jimi.uw_server.agv.handle;
 
 import com.jfinal.aop.Aop;
 import com.jfinal.json.Json;
+import com.jimi.uw_server.agv.dao.BuildTaskItemDAO;
+import com.jimi.uw_server.agv.dao.IOTaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.InventoryTaskItemRedisDAO;
 import com.jimi.uw_server.agv.dao.RobotInfoRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.SampleTaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
@@ -78,18 +82,18 @@ public class ExceptionHandler {
 		String groupid = missionGroupId.split("_")[0];
 		if (groupid.contains(":") && missionGroupId.contains("B")) {
 			AGVIOTaskItem agvioTaskItem = null;
-			for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
+			for (AGVIOTaskItem item : IOTaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
 				if (item.getGroupId().equals(groupid) && item.getState() > TaskItemState.ARRIVED_WINDOW) {
 					agvioTaskItem = item;
 					if (agvioTaskItem.getState() == TaskItemState.START_BACK) {
-						TaskItemRedisDAO.delLocationStatus(agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId());
+						TaskPropertyRedisDAO.delLocationStatus(agvioTaskItem.getWindowId(), agvioTaskItem.getGoodsLocationId());
 					}
 					break;
 				}
 
 			}
 			if (agvioTaskItem != null) {
-				for (AGVIOTaskItem item : TaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
+				for (AGVIOTaskItem item : IOTaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
 					if (item.getBoxId().equals(agvioTaskItem.getBoxId()) && item.getWindowId().equals(agvioTaskItem.getWindowId()) && item.getGoodsLocationId().equals(agvioTaskItem.getGoodsLocationId()) && item.getState() > TaskItemState.ARRIVED_WINDOW) {
 
 						Task task = Task.dao.findById(item.getTaskId());
@@ -98,12 +102,12 @@ public class ExceptionHandler {
 							if (remainderQuantity <= 0) {
 								item.setState(TaskItemState.LACK);
 								item.setIsForceFinish(true);
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null);
+								IOTaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.LACK, null, null, null, null, true, null, null, null, null);
 							} else {
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
+								IOTaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null, null, null, null);
 							}
 						} else {
-							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null);
+							IOTaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null, null, null, null, null, null);
 						}
 
 						// 设置料盒在架
@@ -111,14 +115,14 @@ public class ExceptionHandler {
 						materialBox.setIsOnShelf(true);
 						materialBox.update();
 						if (item.getIsCut()) {
-							TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_CUT, null, null, null, null, null, false);
+							IOTaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.FINISH_CUT, null, null, null, null, null, false, null, null, null);
 						}
 						if (!item.getIsForceFinish()) {
 							// 如果是出库任务，若实际出库数量小于计划出库数量，则将任务条目状态回滚到未分配状态
 							if (task.getType() == TaskType.OUT) {
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null);
+								IOTaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null, null, null, null);
 							} else { // 如果是入库或退料入库任务，若实际入库或退料入库数量小于计划入库或退料入库数量，则将任务条目状态回滚到等待扫码状态
-								TaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null);
+								IOTaskItemRedisDAO.updateIOTaskItemInfo(item, TaskItemState.WAIT_SCAN, 0, 0, 0, 0, null, null, null, null, null);
 							}
 						}
 
@@ -129,36 +133,36 @@ public class ExceptionHandler {
 			ioTaskHandler.clearTask(Integer.valueOf(groupid.split(":")[2]), false);
 
 		} else if (groupid.contains("@") && missionGroupId.contains("B")) { // missiongroupid 包含“@”表示为盘点任务
-			for (AGVInventoryTaskItem item : TaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
+			for (AGVInventoryTaskItem item : InventoryTaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
 				if (item.getGroupId().equals(groupid) && item.getState() > TaskItemState.ARRIVED_WINDOW) {
 					if (item.getState() == TaskItemState.START_BACK) {
-						TaskItemRedisDAO.delLocationStatus(item.getWindowId(), item.getGoodsLocationId());
+						TaskPropertyRedisDAO.delLocationStatus(item.getWindowId(), item.getGoodsLocationId());
 					}
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 					materialBox.setIsOnShelf(true);
 					materialBox.update();
-					TaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
+					InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
 				}
 			}
 			invTaskHandler.clearTask(Integer.valueOf(groupid.split("@")[1]));
 		} else if (groupid.contains("#") && missionGroupId.contains("B")) { // missiongroupid 包含“@”表示为盘点任务
-			for (AGVSampleTaskItem item : TaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
+			for (AGVSampleTaskItem item : SampleTaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupid.split(":")[1]))) {
 				if (item.getGroupId().equals(groupid) && item.getState() > TaskItemState.ARRIVED_WINDOW) {
 					if (item.getState() == TaskItemState.START_BACK) {
-						TaskItemRedisDAO.delLocationStatus(item.getWindowId(), item.getGoodsLocationId());
+						TaskPropertyRedisDAO.delLocationStatus(item.getWindowId(), item.getGoodsLocationId());
 					}
 					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 					materialBox.setIsOnShelf(true);
 					materialBox.update();
-					TaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
+					SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
 				}
 			}
 			samTaskHandler.clearTask(Integer.valueOf(groupid.split("#")[1]));
 		} else { // missiongroupid 不包含“:”表示为建仓任务
-			for (AGVBuildTaskItem item2 : TaskItemRedisDAO.getBuildTaskItems()) {
+			for (AGVBuildTaskItem item2 : BuildTaskItemDAO.getBuildTaskItems()) {
 				if (item2.getGroupId().equals(groupid) && item2.getState() > BuildTaskItemState.WAIT_MOVE) {
 					// 清除掉对应的建仓任务条目
-					TaskItemRedisDAO.removeBuildTaskItemByBoxId(item2.getBoxId().intValue());
+					BuildTaskItemDAO.removeBuildTaskItemByBoxId(item2.getBoxId().intValue());
 
 					break;
 				}

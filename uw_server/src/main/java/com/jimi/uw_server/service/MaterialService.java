@@ -15,8 +15,8 @@ import com.jimi.uw_server.model.bo.IOTaskRecord;
 import com.jimi.uw_server.model.vo.MaterialInfoVO;
 import com.jimi.uw_server.model.vo.MaterialVO;
 import com.jimi.uw_server.service.base.SelectService;
-import com.jimi.uw_server.service.entity.PagePaginate;
 import com.jimi.uw_server.util.ExcelWritter;
+import com.jimi.uw_server.util.PagePaginate;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -34,6 +34,7 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 		this.windowId = windowId;
 		this.goodsLocationId = 0;
 		this.boxType = boxType;
+
 	}
 
 
@@ -120,8 +121,4 @@ public class AGVInventoryTaskItem extends BaseTaskItem implements Serializable {
 	public void setBoxType(Integer boxType) {
 		this.boxType = boxType;
 	}
-	
-	
-	
-
 }

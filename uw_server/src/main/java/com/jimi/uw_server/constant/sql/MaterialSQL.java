@@ -51,8 +51,14 @@ public class MaterialSQL {
 	public static final String GET_ALL_REGULAR_MATERIAL_BY_SUPPLIER_SQL = "SELECT material.* FROM material_box INNER JOIN material ON material_box.id = material.box WHERE material.remainder_quantity > 0 AND material_box.supplier = ? AND material_box.enabled = 1";
 
 	//获取所有贵重仓物料，通过客户
-	public static final String GET_ALL_PRECIOUS_MATERIAL_BY_SUPPLIER_SQL = "SELECT material.* FROM material_type INNER JOIN material ON material_type.id = material.type WHERE material.remainder_quantity > 0 AND material_type.supplier = ? AND material_type.enabled = 1 AND material_type.type = ? AND material.status = ?";
+	public static final String GET_ALL_MATERIAL_BY_SUPPLIER_AND_WAREHOUSE_SQL = "SELECT material.* FROM material_type INNER JOIN material ON material_type.id = material.type WHERE material.remainder_quantity > 0 AND material_type.supplier = ? AND material_type.enabled = 1 AND material_type.type = ? AND material.status = ?";
 	//获取物料类型和物料信息，通过料盒号
 	public static final String GET_MATERIAL_INFO_BY_BOX = "SELECT material.id as id, material.row as row, material.col as col, material.type as material_type_id, material.remainder_quantity as quantity, material.production_time as production_time, material_type.`no` as `no`, material_type.specification as specification, supplier.id as supplier_id, supplier.`name` as supplier_name FROM material INNER JOIN material_type INNER JOIN supplier ON material.type = material_type.id AND supplier.id = material_type.supplier WHERE material.box = ? AND material.is_in_box = 1 AND remainder_quantity > 0";
 
+	public static final String GET_MATERIAL_BY_MATERIAL_TYPE_ORDER_TIME_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND is_in_box = b'1' ORDER BY production_time, id ASC";
+
+	public static final String GET_MATERIAL_BY_MATERIAL_TYPE_AND_NOT_BOX_ORDER_TIME_SQL = "SELECT * FROM material WHERE remainder_quantity > 0 AND type = ? AND is_in_box = b'1' AND box != ? ORDER BY production_time, id ASC";
+
+	public static final String GET_MATERIAL_BY_TYPE_AND_BOX_ORDER_TIME_SQL = "SELECT material.* FROM material WHERE type = ? AND box = ? AND remainder_quantity > 0 AND is_in_box = 1 ORDER BY production_time ASC";
+	
 }

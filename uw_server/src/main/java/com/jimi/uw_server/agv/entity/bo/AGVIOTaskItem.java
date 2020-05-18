@@ -19,7 +19,7 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 
 	private Integer materialTypeId;
 
-	private Integer quantity;
+	private Integer planQuantity;
 
 	/**
 	 * 任务优先级，取值范围：1-9；数值越大，优先级越高
@@ -28,16 +28,24 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 
 	private Boolean isCut;
 
+	private Boolean isSuperable;
+	
+	private Integer oldWindowId;
 
+	private Integer uwQuantity;
+	
+	private Integer deductionQuantity;
+	
+	
 	public AGVIOTaskItem() {
 	}
 
 
-	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority) {
+	public AGVIOTaskItem(PackingListItem packingListItem, Integer state, Integer priority, Boolean isSuperable) {
 		this.id = packingListItem.getId();
 		this.taskId = packingListItem.getTaskId();
 		this.materialTypeId = packingListItem.getMaterialTypeId();
-		this.quantity = packingListItem.getQuantity();
+		this.planQuantity = packingListItem.getQuantity();
 		this.robotId = 0;
 		this.state = state;
 		this.boxId = 0;
@@ -46,6 +54,10 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 		this.isForceFinish = false;
 		this.priority = priority;
 		this.isCut = false;
+		this.isSuperable = isSuperable;
+		this.oldWindowId = 0;
+		this.uwQuantity = 0;
+		this.deductionQuantity = 0;
 	}
 
 
@@ -99,13 +111,13 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 	}
 
 
-	public Integer getQuantity() {
-		return quantity;
+	public Integer getPlanQuantity() {
+		return planQuantity;
 	}
 
 
-	public void setQuantity(Integer quantity) {
-		this.quantity = quantity;
+	public void setPlanQuantity(Integer planQuantity) {
+		this.planQuantity = planQuantity;
 	}
 
 
@@ -163,4 +175,43 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 		return this.id + ":" + this.boxId + ":" + this.taskId;
 	}
 
+
+	public Boolean getIsSuperable() {
+		return isSuperable;
+	}
+
+
+	public void setIsSuperable(Boolean isSuperable) {
+		this.isSuperable = isSuperable;
+	}
+
+
+	public Integer getOldWindowId() {
+		return oldWindowId;
+	}
+
+
+	public void setOldWindowId(Integer oldWindowId) {
+		this.oldWindowId = oldWindowId;
+	}
+
+
+	public Integer getUwQuantity() {
+		return uwQuantity;
+	}
+
+
+	public void setUwQuantity(Integer uwQuantity) {
+		this.uwQuantity = uwQuantity;
+	}
+
+
+	public Integer getDeductionQuantity() {
+		return deductionQuantity;
+	}
+
+
+	public void setDeductionQuantity(Integer deductionQuantity) {
+		this.deductionQuantity = deductionQuantity;
+	}
 }

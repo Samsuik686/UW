@@ -19,7 +19,7 @@ import javax.websocket.WebSocketContainer;
 
 import com.jfinal.json.Json;
 import com.jfinal.kit.PropKit;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.agv.entity.cmd.AGVStatusCmd;
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 import com.jimi.uw_server.agv.handle.ACKHandler;
@@ -77,14 +77,14 @@ public class AGVMainSocket {
 	public void onOpen(Session userSession) {
 		System.out.println("AGVMainSocket is Running Now...");
 		session = userSession;
-		TaskItemRedisDAO.setAgvWebSocketStatus(true);
+		TaskPropertyRedisDAO.setAgvWebSocketStatus(true);
 	}
 
 
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
 		ErrorLogWritter.save("AGVMainSocket was Stopped because :" + reason.getCloseCode());
-		TaskItemRedisDAO.setAgvWebSocketStatus(false);
+		TaskPropertyRedisDAO.setAgvWebSocketStatus(false);
 		if (flag) {
 			connect(AGVMainSocket.uri);
 		}

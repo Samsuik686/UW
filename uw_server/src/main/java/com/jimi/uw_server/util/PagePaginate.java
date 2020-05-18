@@ -1,4 +1,4 @@
-package com.jimi.uw_server.service.entity;
+package com.jimi.uw_server.util;
 
 import java.util.List;
 

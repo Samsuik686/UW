@@ -31,6 +31,7 @@ public class MaterialTypeVO{
 
 	private String designator;
 	
+
 	/**
 	 * <p>Title<p>
 	 * <p>Description<p>
@@ -126,7 +127,6 @@ public class MaterialTypeVO{
 	public void setDesignator(String designator) {
 		this.designator = designator;
 	}
-
 
 	/**
 	 * <p>Description: <p>

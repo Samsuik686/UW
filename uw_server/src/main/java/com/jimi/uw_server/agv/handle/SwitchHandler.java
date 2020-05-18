@@ -3,7 +3,7 @@ package com.jimi.uw_server.agv.handle;
 import java.util.List;
 
 import com.jfinal.json.Json;
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.agv.entity.cmd.AGVSwitchEnableCmd;
 import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 import com.jimi.uw_server.agv.socket.AGVMainSocket;
@@ -39,7 +39,7 @@ public class SwitchHandler {
 
 	private static void sendStartOrPause(boolean start) throws Exception {
 		AGVBaseCmd cmd = new AGVBaseCmd();
-		cmd.setCmdid(TaskItemRedisDAO.getCmdId());
+		cmd.setCmdid(TaskPropertyRedisDAO.getCmdId());
 		if (start) {
 			cmd.setCmdcode("allstart");
 		} else {
@@ -51,7 +51,7 @@ public class SwitchHandler {
 
 	private static void sendEnableOrDisable(List<Integer> robotid, boolean enabled) throws Exception {
 		AGVSwitchEnableCmd cmd = new AGVSwitchEnableCmd();
-		cmd.setCmdid(TaskItemRedisDAO.getCmdId());
+		cmd.setCmdid(TaskPropertyRedisDAO.getCmdId());
 		cmd.setRobotids(robotid);
 		if (enabled) {
 			cmd.setCmdcode("enable");

@@ -19,8 +19,10 @@ public class Lock {
 	public static Object INVENTORY_REDIS_LOCK = new Object();
 
 	public static Object IMPORT_EWH_INVENTORY_FILE_LOCK = new Object();
-
-	public static Object IMPORT_SAMPLE_TASK_FILE_LOCK = new Object();
+	
+	public static Object CREATE_SAMPLE_LOCK = new Object();
+	
+	public static Object CREATE_INVENTORY_LOCK = new Object();
 
 	public static Object TASK_REDIS_LOCK = new Object();
 
@@ -36,37 +38,9 @@ public class Lock {
 
 	public static Object INV_TASK_CALL_LOCK = new Object();
 
-	public static Object CREATE_REGULAR_IOTASK_LOCK = new Object();
-
-	public static Object CREATE_PRECIOUS_IOTASK_LOCK = new Object();
-
-	public static Object PASS_REGULAR_IOTASK_LOCK = new Object();
-
-	public static Object PASS_PRECIOUS_IOTASK_LOCK = new Object();
-
-	public static Object CANCEL_REGULAR_IOTASK_LOCK = new Object();
-
-	public static Object CANCEL_PRECIOUS_IOTASK_LOCK = new Object();
-
-	public static Object IN_REGULAR_IOTASK_LOCK = new Object();
-
-	public static Object OUT_REGULAR_IOTASK_LOCK = new Object();
-
-	public static Object IN_PRECIOUS_IOTASK_LOCK = new Object();
-
-	public static Object OUT_PRECIOUS_IOTASK_LOCK = new Object();
-
-	public static Object START_REGUALR_IOTASK_LOCK = new Object();
-
-	public static Object START_PRECIOUST_IOTASK_LOCK = new Object();
-
-	public static Object START_REGUALR_SAMPLETASK_LOCK = new Object();
-
-	public static Object START_PRECIOUS_SAMPLETASK_LOCK = new Object();
-
-	public static Object START_REGUALR_INVTASK_LOCK = new Object();
-
-	public static Object START_PRECIOUS_INVTASK_LOCK = new Object();
+	public static Object CREATE_IOTASK_LOCK = new Object();
 
 	public static Object UR_INV_TASK_LOCK = new Object();
+	
+    public static Object UR_OUT_TASK_LOCK = new Object();
 }

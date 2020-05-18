@@ -22,14 +22,14 @@ public class ScanMaterialInfoPackageHandler extends SimpleChannelInboundHandler<
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, ScanMaterialInfoPackage msg) throws Exception {
-		AckPackage ackPackage = new AckPackage(msg.getCmdId());
-		ctx.channel().writeAndFlush(ackPackage);
 		try {
 			System.out.println("扫描物料包已收到");
 			MessageHandler.me.handleScanMaterialInfoPackage(msg);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
+		AckPackage ackPackage = new AckPackage(msg.getCmdId());
+		ctx.channel().writeAndFlush(ackPackage);
 
 	}
 

@@ -12,7 +12,7 @@ import com.jimi.uw_server.model.Destination;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.vo.DestinationVO;
 import com.jimi.uw_server.service.base.SelectService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.util.PagePaginate;
 
 /**
  * 发料目的地业务层
@@ -29,7 +29,7 @@ public class DestinationService {
 
 	// 添加发料目的地
 	public void add(String name, Integer companyId) {
-		if (Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_SQL, name, companyId) != null) {
+		if (Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_AND_COMPANY_SQL, name, companyId) != null) {
 			throw new OperationException("该发料目的地名称重复，请勿更改！");
 		} else {
 			Destination destination = new Destination();
@@ -45,7 +45,7 @@ public class DestinationService {
 	public void update(Integer id, String name) {
 		Destination destination = Destination.dao.findById(id);
 		if (!destination.getName().equals(name)) {
-			if (Destination.dao.find(DestinationSQL.GET_DESTINATION_BY_NAME_SQL, name, destination.getCompanyId()) != null) {
+			if (Destination.dao.find(DestinationSQL.GET_DESTINATION_BY_NAME_AND_COMPANY_SQL, name, destination.getCompanyId()) != null) {
 				throw new OperationException("该目的地名称冲突！");
 			}
 		}

@@ -3,7 +3,7 @@ package com.jimi.uw_server.agv.handle.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jimi.uw_server.agv.dao.TaskItemRedisDAO;
+import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.agv.entity.CmdStatus;
 import com.jimi.uw_server.agv.entity.bo.AGVMissionGroup;
 import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
@@ -67,7 +67,7 @@ public abstract class BaseTaskHandler {
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");
-		moveCmd.setCmdid(TaskItemRedisDAO.getCmdId());
+		moveCmd.setCmdid(TaskPropertyRedisDAO.getCmdId());
 		moveCmd.setMissiongroups(groups);
 		return moveCmd;
 	}
@@ -88,7 +88,7 @@ public abstract class BaseTaskHandler {
 		groups.add(group);
 		AGVMoveCmd moveCmd = new AGVMoveCmd();
 		moveCmd.setCmdcode("LL");
-		moveCmd.setCmdid(TaskItemRedisDAO.getCmdId());
+		moveCmd.setCmdid(TaskPropertyRedisDAO.getCmdId());
 		moveCmd.setMissiongroups(groups);
 		return moveCmd;
 	}

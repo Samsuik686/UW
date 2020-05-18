@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
 import com.jimi.uw_server.annotation.Log;
@@ -15,7 +16,8 @@ import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.vo.PackingSampleInfoVO;
 import com.jimi.uw_server.model.vo.SampleTaskDetialsVO;
-import com.jimi.uw_server.service.SampleTaskService;
+import com.jimi.uw_server.service.sample.PreciousSampleTaskService;
+import com.jimi.uw_server.service.sample.RegularSampleTaskService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
@@ -28,8 +30,9 @@ import com.jimi.uw_server.util.TokenBox;
 
 public class SampleTaskController extends Controller {
 
-	private static SampleTaskService sampleTaskService = SampleTaskService.me;
+	private static RegularSampleTaskService regularSampleTaskService = Aop.get(RegularSampleTaskService.class);
 
+	private static PreciousSampleTaskService preciousSampleTaskService = Aop.get(PreciousSampleTaskService.class);
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
@@ -39,8 +42,8 @@ public class SampleTaskController extends Controller {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.REGULAR.getId());
-			renderJson(ResultUtil.succeed(result));
+			regularSampleTaskService.create(file.getFile(), supplierId, remarks, WarehouseType.REGULAR.getId());
+			renderJson(ResultUtil.succeed());
 		} finally {
 			file.getFile().delete();
 		}
@@ -54,8 +57,8 @@ public class SampleTaskController extends Controller {
 			if (file == null || supplierId == null || remarks == null) {
 				throw new OperationException("参数不能为空");
 			}
-			String result = sampleTaskService.createSampleTask(file.getFile(), supplierId, remarks, WarehouseType.PRECIOUS.getId());
-			renderJson(ResultUtil.succeed(result));
+			preciousSampleTaskService.create(file.getFile(), supplierId, remarks, WarehouseType.PRECIOUS.getId());
+			renderJson(ResultUtil.succeed());
 		} finally {
 			file.getFile().delete();
 		}
@@ -69,7 +72,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null || windows == null || windows.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
-		String result = sampleTaskService.startRegularTask(taskId, windows);
+		String result = regularSampleTaskService.start(taskId, windows);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -80,7 +83,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		String result = sampleTaskService.startPreciousTask(taskId);
+		String result = preciousSampleTaskService.start(taskId);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -90,7 +93,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (sampleTaskService.cancelRegularTask(taskId)) {
+		if (regularSampleTaskService.cancelRegularTask(taskId)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -103,7 +106,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (sampleTaskService.cancelPreciousTask(taskId)) {
+		if (preciousSampleTaskService.cancel(taskId)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -116,7 +119,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (sampleTaskService.finishPreciousTask(taskId)) {
+		if (preciousSampleTaskService.finish(taskId)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -129,7 +132,7 @@ public class SampleTaskController extends Controller {
 		if (groupId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		String result = sampleTaskService.backRegularUWBox(groupId);
+		String result = regularSampleTaskService.backRegularUWBox(groupId);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -142,7 +145,7 @@ public class SampleTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outRegularTaskSingular(materialId, groupId, user);
+		String result = regularSampleTaskService.outSingular(materialId, groupId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -155,7 +158,7 @@ public class SampleTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outPreciousTaskSingular(materialId, taskId, user);
+		String result = preciousSampleTaskService.outSingular(materialId, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -168,7 +171,7 @@ public class SampleTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outRegularTaskRegular(materialId, groupId, user);
+		String result = regularSampleTaskService.outRegular(materialId, groupId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -181,7 +184,7 @@ public class SampleTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outPreciousTaskRegular(materialId, taskId, user);
+		String result = preciousSampleTaskService.outRegular(materialId, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -194,7 +197,7 @@ public class SampleTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outRegularTaskLost(materialId, groupId, user);
+		String result = regularSampleTaskService.outLost(materialId, groupId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -207,7 +210,7 @@ public class SampleTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = sampleTaskService.outPreciousTaskLost(materialId, taskId, user);
+		String result = preciousSampleTaskService.outLost(materialId, taskId, user);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -217,7 +220,7 @@ public class SampleTaskController extends Controller {
 		if (materialId == null || materialId.trim().equals("") || groupId == null || groupId.trim().equals("")) {
 			throw new OperationException("参数不能为空");
 		}
-		sampleTaskService.sampleRegularUWMaterial(materialId, groupId);
+		regularSampleTaskService.sampleUWMaterial(materialId, groupId);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -227,7 +230,7 @@ public class SampleTaskController extends Controller {
 		if (materialId == null || materialId.trim().equals("") || taskId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		sampleTaskService.samplePreciousUWMaterial(materialId, taskId);
+		preciousSampleTaskService.sampleUWMaterial(materialId, taskId);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -240,7 +243,7 @@ public class SampleTaskController extends Controller {
 		if (windowId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		List<PackingSampleInfoVO> result = sampleTaskService.getPackingSampleMaterialInfo(windowId);
+		List<PackingSampleInfoVO> result = regularSampleTaskService.getParkingSampleMaterialInfo(windowId);
 		renderJson(ResultUtil.succeed(result));
 
 	}
@@ -250,7 +253,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		PackingSampleInfoVO result = sampleTaskService.getSampleTaskMaterialInfo(taskId);
+		PackingSampleInfoVO result = regularSampleTaskService.getSampleTaskMaterialInfo(taskId);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -265,7 +268,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new OperationException("参数不能为空");
 		}
-		List<SampleTaskDetialsVO> result = sampleTaskService.getSampleTaskDetials(taskId);
+		List<SampleTaskDetialsVO> result = regularSampleTaskService.getSampleTaskDetials(taskId);
 		renderJson(ResultUtil.succeed(result));
 
 	}
@@ -275,14 +278,14 @@ public class SampleTaskController extends Controller {
 	public void getWorkingPreciousTask() {
 		String filter = "warehouse_type=1#&#state=2";
 		;
-		Object result = sampleTaskService.select(null, null, null, null, filter);
+		Object result = regularSampleTaskService.select(null, null, null, null, filter);
 		renderJson(ResultUtil.succeed(result));
 	}
 
 
 	// 查询所有任务
 	public void select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		renderJson(ResultUtil.succeed(sampleTaskService.select(pageNo, pageSize, ascBy, descBy, filter)));
+		renderJson(ResultUtil.succeed(regularSampleTaskService.select(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
 
@@ -291,13 +294,13 @@ public class SampleTaskController extends Controller {
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "报表_" + sampleTaskService.getTaskName(taskId) + ".xlsx";
+			String fileName = "报表_" + regularSampleTaskService.getTaskName(taskId) + ".xlsx";
 			HttpServletResponse response = getResponse();
 			response.reset();
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			sampleTaskService.exportSampleTaskInfo(taskId, fileName, output);
+			regularSampleTaskService.exportSampleTaskInfo(taskId, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
@@ -326,7 +329,7 @@ public class SampleTaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		sampleTaskService.forceUnbundlingWindow(taskId);
+		regularSampleTaskService.forceUnbundlingWindow(taskId);
 		renderJson(ResultUtil.succeed());
 	}
 

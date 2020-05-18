@@ -52,6 +52,7 @@ public class MaterialVO {
 	
 	private String SupplierName;
 	
+    private String cycle;
 	/**
 	 * <p>Title<p>
 	 * <p>Description<p>
@@ -179,6 +180,15 @@ public class MaterialVO {
 	public void setSupplierName(String supplierName) {
 		SupplierName = supplierName;
 	}
+	
+    public String getCycle() {
+        return cycle;
+    }
+
+    public void setCycle(String cycle) {
+        this.cycle = cycle;
+    }
+
 
 	public static List<MaterialVO> fillRegualrMaterialVOList(List<Record> records, Company company, Supplier supplier){
 		List<MaterialVO> materialVOs = new ArrayList<MaterialVO>(records.size());
@@ -196,6 +206,7 @@ public class MaterialVO {
 			materialVO.setCompanyName(company.getNickname());
 			materialVO.setSupplierId(supplier.getId());
 			materialVO.setSupplierName(supplier.getName());
+            materialVO.setCycle(record.getStr("Material_Cycle"));
 			if (record.getInt("Material_Col") != -1 && record.getInt("Material_Row") != -1) {
 				materialVO.setRow(record.getInt("Material_Row") + 1);
 				materialVO.setCol(record.getInt("Material_Col") + 1);
@@ -222,6 +233,7 @@ public class MaterialVO {
 			materialVO.setCompanyId(record.getInt("Company_Id"));
 			materialVO.setCompanyName(record.getStr("Company_Nickname"));
 			materialVO.setManufacturer(record.getStr("Material_Manufacturer"));
+            materialVO.setCycle(record.getStr("Material_Cycle"));
 			materialVO.setCompanyId(company.getId());
 			materialVO.setCompanyName(company.getNickname());
 			materialVO.setSupplierId(supplier.getId());

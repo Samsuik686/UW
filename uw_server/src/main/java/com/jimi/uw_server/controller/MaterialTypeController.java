@@ -3,6 +3,8 @@
 */  
 package com.jimi.uw_server.controller;
 
+import java.util.Date;
+
 import com.jfinal.aop.Aop;
 import com.jfinal.core.Controller;
 import com.jfinal.upload.UploadFile;
@@ -11,6 +13,7 @@ import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.service.MaterialTypeService;
+import com.jimi.uw_server.util.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 
 /**  
@@ -26,12 +29,12 @@ public class MaterialTypeController extends Controller {
 
 	private static MaterialTypeService materialTypeService = Aop.get(MaterialTypeService.class);
 	
-	@Log("添加普通仓料号为{no}的物料类型，规格号为{specification}，客户ID为{supplierId}，厚度为{thickness}，直径为{radius}")
-	public void addRegularMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius) {
-		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null) {
+	@Log("添加普通仓料号为{no}的物料类型，规格号为{specification}，客户ID为{supplierId}，厚度为{thickness}，直径为{radius}，超发为{isSuperable}")
+	public void addRegularMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, Boolean isSuperable) {
+		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || isSuperable == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.REGULAR.getId(), null);
+		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.REGULAR.getId(), null, isSuperable);
 		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -46,7 +49,7 @@ public class MaterialTypeController extends Controller {
 		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || designator == null || designator.equals("")) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.PRECIOUS.getId(), designator);
+		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.PRECIOUS.getId(), designator, false);
 		if (resultString.equals("添加成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -56,9 +59,9 @@ public class MaterialTypeController extends Controller {
 
 
 	// 更新物料类型#
-	@Log("更新普通仓物料类型号为{id}的物料类型, 厚度为{thickness}，直径为{radius}， 规格为{specification}")
-	public void updateRegularMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String specification) {
-		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, null, specification, WarehouseType.REGULAR.getId());
+	@Log("更新普通仓物料类型号为{id}的物料类型, 厚度为{thickness}，直径为{radius}， 规格为{specification}，超发为{isSuperable}")
+	public void updateRegularMaterialType(Integer id, Boolean enabled, Integer thickness, Integer radius, String specification, Boolean isSuperable) {
+		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, null, specification, WarehouseType.REGULAR.getId(), isSuperable);
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -69,7 +72,7 @@ public class MaterialTypeController extends Controller {
 
 	@Log("更新贵重仓物料类型号为{id}的物料类型，厚度为{thickness}，直径为{radius}， 行号为{designator}， 规格为{specification}")
 	public void updatePreciousMaterialType(Integer id, Integer thickness, Integer radius, String designator, String specification) {
-		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, designator, specification, WarehouseType.PRECIOUS.getId());
+		String resultString = materialTypeService.updateMaterialType(id, thickness, radius, designator, specification, WarehouseType.PRECIOUS.getId(), false);
 		if (resultString.equals("更新成功！")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -142,5 +145,26 @@ public class MaterialTypeController extends Controller {
 			throw new OperationException("页码和页容量必须为正整数！");
 		}
 		renderJson(ResultUtil.succeed(materialTypeService.getMaterialTypeVOs(pageNo, pageSize, supplierId, no, specification)));
+	}
+	
+	
+	public void getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNo, Integer pageSize, Date startTime,  Date endTime) {
+		if (supplierId == null || warehouseType == null || startTime == null || endTime == null) {
+			throw new OperationException("参数不能为空");
+		}
+		if (pageNo == null || pageSize == null) {
+			throw new OperationException("页码和页容量不能为空！");
+		}
+		if (pageNo <= 0 || pageSize <= 0) {
+			throw new OperationException("页码和页容量必须为正整数！");
+		}
+		if (startTime != null && endTime != null) {
+			if (!endTime.after(startTime)) {
+				throw new OperationException("开始时间需小于结束时间！");
+			}
+		}
+		PagePaginate page = materialTypeService.getMaterialStockDetails(no, supplierId, warehouseType, whId, pageNo, pageSize, startTime, endTime);
+		renderJson(ResultUtil.succeed(page));
+ 
 	}
 }

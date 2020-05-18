@@ -19,7 +19,9 @@ import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.model.Window;
-import com.jimi.uw_server.service.IOTaskService;
+import com.jimi.uw_server.service.WindowService;
+import com.jimi.uw_server.service.io.PreciousIOTaskService;
+import com.jimi.uw_server.service.io.RegularIOTaskService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
@@ -31,26 +33,35 @@ import com.jimi.uw_server.util.TokenBox;
  */
 public class TaskController extends Controller {
 
-	private static IOTaskService taskService = Aop.get(IOTaskService.class);
+	private static RegularIOTaskService regualrIOTaskService = Aop.get(RegularIOTaskService.class);
 
+	private static PreciousIOTaskService preciousIOTaskService = Aop.get(PreciousIOTaskService.class);
+
+	private static WindowService windowService = Aop.get(WindowService.class);
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
 	// 创建出入库/退料任务
 	@Log("创建普通仓任务类型为：{type}的任务，客户编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
 	public void createRegularIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
-		if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
+		try {
+			if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
-		}
-		if (isForced == null) {
-			isForced = false;
-		}
-		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
-		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
-			file = getFile();
-			String fileName = file.getFileName();
-			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.REGULAR.getId(), isForced);
-			renderJson(ResultUtil.succeed());
+			}
+			if (isForced == null) {
+				isForced = false;
+			}
+			// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
+			if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
+				file = getFile();
+				String fileName = file.getFileName();
+				regualrIOTaskService.create(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, isForced);
+				renderJson(ResultUtil.succeed());
+			}
+		} finally {
+			if (file != null && file.getFile() != null) {
+				file.getFile().delete();
+			}
 		}
 	}
 
@@ -58,19 +69,26 @@ public class TaskController extends Controller {
 	// 创建出入库/退料任务
 	@Log("创建贵重仓任务类型为：{type}的任务，客户编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
 	public void createPreciousIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
-		if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
-			throw new ParameterException("参数不能为空！");
+		try {
+			if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
+				throw new ParameterException("参数不能为空！");
+			}
+			if (isForced == null) {
+				isForced = false;
+			}
+			// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
+			if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
+				file = getFile();
+				String fileName = file.getFileName();
+				preciousIOTaskService.create(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced);
+				renderJson(ResultUtil.succeed());	
+			}
+		} finally {
+			if (file != null && file.getFile() != null) {
+				file.getFile().delete();
+			}
 		}
-		if (isForced == null) {
-			isForced = false;
-		}
-		// 如果是创建「出库、入库或退料任务」，入库type为0，出库type为1，退料type为4，退料清0
-		if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
-			file = getFile();
-			String fileName = file.getFileName();
-			taskService.createIOTask(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced);
-			renderJson(ResultUtil.succeed());	
-		}
+		
 	}
 
 
@@ -80,11 +98,9 @@ public class TaskController extends Controller {
 		if (id == null) {
 			throw new ParameterException("任务id不能为空！");
 		}
-		if (taskService.passRegularIOTask(id)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		preciousIOTaskService.pass(id);
+		renderJson(ResultUtil.succeed());
+
 	}
 
 
@@ -94,25 +110,19 @@ public class TaskController extends Controller {
 		if (id == null) {
 			throw new ParameterException("任务id不能为空！");
 		}
-		if (taskService.passPreciousIOTask(id)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		preciousIOTaskService.pass(id);
+		renderJson(ResultUtil.succeed());
 	}
 
 
 	// 令指定任务开始
-	@Log("开始常规任务编号为{id}的任务，绑定的仓口为{window}")
-	public void startRegularIOTask(Integer id, Integer window) {
+	@Log("开始常规任务编号为{id}的任务，绑定的仓口为{window}, 机械臂仓口为：{urWindowId}")
+	public void startRegularIOTask(Integer id, Integer window, Integer urWindowId) {
 		if (id == null) {
 			throw new ParameterException("任务id或仓口id不能为空！");
 		}
-		if (taskService.startRegularIOTask(id, window)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		regualrIOTaskService.start(id, window, urWindowId);
+		renderJson(ResultUtil.succeed());
 	}
 
 
@@ -122,11 +132,9 @@ public class TaskController extends Controller {
 		if (id == null) {
 			throw new ParameterException("任务id不能为空！");
 		}
-		if (taskService.startPreciousIOTask(id)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		preciousIOTaskService.start(id);
+		renderJson(ResultUtil.succeed());
+		
 	}
 
 
@@ -136,11 +144,8 @@ public class TaskController extends Controller {
 		if (id == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (taskService.cancelRegularIOTask(id)) {
-			renderJson(ResultUtil.succeed());
-		} else {
-			renderJson(ResultUtil.failed());
-		}
+		regualrIOTaskService.cancel(id);
+		renderJson(ResultUtil.succeed());
 	}
 
 
@@ -150,7 +155,7 @@ public class TaskController extends Controller {
 		if (id == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (taskService.cancelPreciousIOTask(id)) {
+		if (preciousIOTaskService.cancel(id)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -165,7 +170,7 @@ public class TaskController extends Controller {
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		taskService.finishEmergencyRegularTask(taskId, user);
+		regualrIOTaskService.finishEmergencyRegularTask(taskId, user);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -175,7 +180,7 @@ public class TaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("任务id参数不能为空！");
 		}
-		if (taskService.finishPreciousTaskLackItem(taskId)) {
+		if (preciousIOTaskService.finishTaskLackItem(taskId)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -187,7 +192,7 @@ public class TaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String result = taskService.finishPreciousTask(taskId);
+		String result = preciousIOTaskService.finish(taskId);
 		if (result.equals("操作成功")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -201,7 +206,7 @@ public class TaskController extends Controller {
 		if (id == null || type == null) {
 			throw new ParameterException("任务id或任务类型不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.check(id, type, pageSize, pageNo)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.check(id, type, pageSize, pageNo)));
 	}
 
 
@@ -210,7 +215,7 @@ public class TaskController extends Controller {
 		if (id == null || type == null) {
 			throw new ParameterException("任务id或任务类型不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.getIOTaskDetails(id, type, no, pageSize, pageNo)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.getIOTaskDetails(id, type, no, pageSize, pageNo)));
 	}
 
 
@@ -219,45 +224,51 @@ public class TaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		Object object = taskService.getIOTaskInfos(taskId);
+		Object object = preciousIOTaskService.getIOTaskInfos(taskId);
 		renderJson(ResultUtil.succeed(object));
 	}
 
 
 	// 查询指定类型的仓口
 	public void getWindows(int type) {
-		renderJson(ResultUtil.succeed(taskService.getWindows(type)));
-	}
+        renderJson(ResultUtil.succeed(windowService.getWindows(type, false)));
+    }
+    
+    // 查询指定类型的仓口
+    public void getUrWindows() {
+        //0代表查询空闲仓口
+        renderJson(ResultUtil.succeed(windowService.getWindows(0, true)));
+    }
 
 
 	// 查询所有任务
 	public void select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		renderJson(ResultUtil.succeed(taskService.select(pageNo, pageSize, ascBy, descBy, filter)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.select(pageNo, pageSize, ascBy, descBy, filter)));
 	}
 
 
 	// 获取截料中的物料的信息
 	public void getCuttingMaterial(Integer taskId) {
-		List<Record> records = taskService.getCuttingMaterial(taskId);
+		List<Record> records = regualrIOTaskService.getCuttingMaterial(taskId);
 		renderJson(ResultUtil.succeed(records));
 	}
 
 	// 获取截料中的物料的信息
 	public void getCuttingTask() {
-		List<Task> records = taskService.getCuttingTask();
+		List<Task> records = regualrIOTaskService.getCuttingTask();
 		renderJson(ResultUtil.succeed(records));
 	}
 	
 	
 	// 获取指定仓口任务条目
 	public void getWindowTaskItems(Integer id, Integer pageNo, Integer pageSize) {
-		renderJson(ResultUtil.succeed(taskService.getWindowTaskItems(id, pageNo, pageSize)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.getWindowTaskItems(id, pageNo, pageSize)));
 	}
 
 
 	// 获取指定仓口停泊条目
 	public void getWindowParkingItem(Integer id) {
-		ResultUtil result = ResultUtil.succeed(taskService.getWindowParkingItem(id));
+		ResultUtil result = ResultUtil.succeed(regualrIOTaskService.getWindowParkingItem(id));
 		renderJson(result);
 	}
 
@@ -274,7 +285,7 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		Material material = taskService.inRegular(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
+		Material material = regualrIOTaskService.in(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
 		renderJson(ResultUtil.succeed(material));
 	}
 
@@ -291,7 +302,7 @@ public class TaskController extends Controller {
 		}
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		Material material = taskService.inPrecious(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
+		Material material = preciousIOTaskService.in(packingListItemId, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user);
 		renderJson(ResultUtil.succeed(material));
 	}
 
@@ -305,7 +316,7 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.outRegular(packingListItemId, materialId, quantity, supplierName, user)) {
+		if (regualrIOTaskService.out(packingListItemId, materialId, quantity, supplierName, user)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -322,7 +333,7 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.outEmergencyRegular(taskId, no, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user)) {
+		if (regualrIOTaskService.outEmergencyRegular(taskId, no, materialId, quantity, productionTime, supplierName, cycle, manufacturer, printTime, user)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -338,7 +349,7 @@ public class TaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		if (taskService.outPrecious(packingListItemId, materialId, quantity, supplierName, user, isForced)) {
+		if (preciousIOTaskService.out(packingListItemId, materialId, quantity, supplierName, user, isForced)) {
 			renderJson(ResultUtil.succeed());
 		} else {
 			renderJson(ResultUtil.failed());
@@ -352,7 +363,7 @@ public class TaskController extends Controller {
 		if (packingListItemId == null || materialId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.deleteRegularMaterialRecord(packingListItemId, materialId)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.deleteRegularMaterialRecord(packingListItemId, materialId)));
 	}
 	
 	
@@ -362,7 +373,7 @@ public class TaskController extends Controller {
 		if (taskLogId == null || materialId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		taskService.deleteEmergencyRegularMaterialRecord(taskLogId, materialId);
+		regualrIOTaskService.deleteEmergencyRegularMaterialRecord(taskLogId, materialId);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -373,7 +384,7 @@ public class TaskController extends Controller {
 		if (packingListItemId == null || materialId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.deletePreciousMaterialRecord(packingListItemId, materialId)));
+		renderJson(ResultUtil.succeed(preciousIOTaskService.deleteMaterialRecord(packingListItemId, materialId)));
 	}
 
 
@@ -386,7 +397,7 @@ public class TaskController extends Controller {
 		if (quantity <= 0) {
 			throw new ParameterException("数量必须为正整数！");
 		}
-		renderJson(ResultUtil.succeed(taskService.modifyRegularOutQuantity(taskLogId, packingListItemId, materialId, quantity)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.modifyOutQuantity(taskLogId, packingListItemId, materialId, quantity)));
 	}
 
 
@@ -396,7 +407,7 @@ public class TaskController extends Controller {
 		if (packingListItemId == null || materialId == null || quantity == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
-		Material material = taskService.backRegularAfterCutting(packingListItemId, materialId, quantity, supplierName);
+		Material material = regualrIOTaskService.backAfterCutting(packingListItemId, materialId, quantity, supplierName);
 		renderJson(ResultUtil.succeed(material));
 	}
 
@@ -406,7 +417,7 @@ public class TaskController extends Controller {
 		if (packingListItemId == null || materialId == null || quantity == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
-		Material material = taskService.backPreciousAfterCutting(packingListItemId, materialId, quantity, supplierName);
+		Material material = preciousIOTaskService.backAfterCutting(packingListItemId, materialId, quantity, supplierName);
 		renderJson(ResultUtil.succeed(material));
 	}
 
@@ -417,7 +428,7 @@ public class TaskController extends Controller {
 		if (id == null || priority == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		renderJson(ResultUtil.succeed(taskService.setPriority(id, priority)));
+		renderJson(ResultUtil.succeed(regualrIOTaskService.setPriority(id, priority)));
 	}
 
 
@@ -426,7 +437,7 @@ public class TaskController extends Controller {
 		if (taskId == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
 		}
-		String result = taskService.editTaskRemarks(taskId, remarks);
+		String result = regualrIOTaskService.editTaskRemarks(taskId, remarks);
 		renderJson(ResultUtil.succeed(result));
 	}
 
@@ -436,13 +447,13 @@ public class TaskController extends Controller {
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "任务报表_" + taskService.getTaskName(id);
+			String fileName = "任务报表_" + regualrIOTaskService.getTaskName(id);
 			HttpServletResponse response = getResponse();
 			response.reset();
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			taskService.exportIOTaskDetails(id, type, fileName, output);
+			regualrIOTaskService.exportIOTaskDetails(id, type, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
@@ -463,13 +474,13 @@ public class TaskController extends Controller {
 		OutputStream output = null;
 		try {
 			// 设置响应，只能在controller层设置，因为getResponse()方法只能在controller层调用
-			String fileName = "任务报表_" + taskService.getTaskName(id);
+			String fileName = "任务报表_" + preciousIOTaskService.getTaskName(id);
 			HttpServletResponse response = getResponse();
 			response.reset();
 			response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes(), "ISO8859-1"));
 			response.setContentType("application/vnd.ms-excel");
 			output = response.getOutputStream();
-			taskService.exportIOTaskDetails(id, type, fileName, output);
+			preciousIOTaskService.exportIOTaskDetails(id, type, fileName, output);
 		} catch (Exception e) {
 			renderJson(ResultUtil.failed());
 		} finally {
@@ -490,7 +501,7 @@ public class TaskController extends Controller {
 		if (taskId == null || flag == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		taskService.switchTask(taskId, flag);
+		regualrIOTaskService.switchTask(taskId, flag);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -503,7 +514,7 @@ public class TaskController extends Controller {
 	 * @Time 2019年11月27日
 	 */
 	public void getEmergencyRegularTasks(){
-		List<Task> tasks = taskService.getEmergencyRegularTasks();
+		List<Task> tasks = regualrIOTaskService.getEmergencyRegularTasks();
 		renderJson(ResultUtil.succeed(tasks));
 	}
 
@@ -519,7 +530,7 @@ public class TaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		taskService.setTaskWindow(taskId, windowIds);
+		regualrIOTaskService.setTaskWindow(taskId, windowIds);
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -536,7 +547,7 @@ public class TaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		taskService.forceUnbundlingWindow(taskId);
+		regualrIOTaskService.forceUnbundlingWindow(taskId);
 		renderJson(ResultUtil.succeed());
 	}
 	
@@ -549,7 +560,7 @@ public class TaskController extends Controller {
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		List<Window> windows = taskService.getTaskWindow(taskId);
+		List<Window> windows = regualrIOTaskService.getTaskWindow(taskId);
 		renderJson(ResultUtil.succeed(windows));
 	}
 }

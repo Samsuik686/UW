@@ -18,7 +18,7 @@ import com.jimi.uw_server.model.MaterialBox;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.MaterialBoxVO;
 import com.jimi.uw_server.service.base.SelectService;
-import com.jimi.uw_server.service.entity.PagePaginate;
+import com.jimi.uw_server.util.PagePaginate;
 
 import java.util.ArrayList;
 import java.util.Collections;
