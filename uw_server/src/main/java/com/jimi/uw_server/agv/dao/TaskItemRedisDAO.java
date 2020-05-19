@@ -146,6 +146,16 @@ public class TaskItemRedisDAO {
 		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
 		return appendIOTaskItems(taskId, ioTaskItems);
 	}
+	
+	
+	public synchronized static List<AGVIOTaskItem> getIOTaskItems(Integer taskId, Integer startLine, Integer endLine) {
+		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
+		List<String> items = cache.lrange(UW_IO_TASK_SUFFIX + taskId, startLine, endLine);
+		for (String item : items) {
+			ioTaskItems.add(Json.getJson().parse(item, AGVIOTaskItem.class));
+		}
+		return ioTaskItems;
+	}
 
 
 	/**

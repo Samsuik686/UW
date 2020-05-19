@@ -148,7 +148,7 @@ public class UwConfig extends JFinalConfig {
 			System.out.println("System is in test envrionment");
 		} else {
 			dp = new DruidPlugin(PropKit.get("d_url"), PropKit.get("d_user"), PropKit.get("d_password"));
-			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379/*, PropKit.get("d_redisPassword")*/);
+			rp = new RedisPlugin("uw", PropKit.get("d_redisIp"), 6379, PropKit.get("d_redisPassword"));
 			System.out.println("System is in development envrionment" + PropKit.get("d_url"));
 		}
 		rp.setSerializer(new VisualSerializer());

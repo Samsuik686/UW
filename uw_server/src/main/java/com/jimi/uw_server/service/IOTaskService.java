@@ -54,6 +54,8 @@ public class IOTaskService {
 	private static EfficiencyService efficiencyService = Aop.get(EfficiencyService.class);
 
 	private static final int UW_ID = 0;
+	
+	private static final int EWH_DEDUCT_QUANTITY_LIMIT = 5000;
 
 	private static final Object UPDATEOUTQUANTITYANDMATERIALINFO_LOCK = new Object();
 
@@ -915,78 +917,69 @@ public class IOTaskService {
 				return null;
 			}
 			Task task = Task.dao.findById(window.getBindTaskId());
-			Map<Integer, GoodsLocation> map = new HashMap<>();
+			Map<Integer, String> map = new HashMap<>();
 			List<GoodsLocation> goodsLocations = GoodsLocation.dao.find(SQL.GET_GOODSLOCATION_BY_WINDOWID, id);
 			for (GoodsLocation goodsLocation : goodsLocations) {
-				map.put(goodsLocation.getId(), goodsLocation);
+				map.put(goodsLocation.getId(), goodsLocation.getName());
 			}
+			map.put(0, "无");
 			// 先进行多表查询，查询出仓口id绑定的正在执行中的任务的套料单表的id，套料单文件名，物料类型表的料号no，套料单表的计划出入库数量quantity
 			Page<Record> windowTaskItems = selectService.select(new String[] {"packing_list_item", "material_type",}, new String[] {"packing_list_item.task_id = " + window.getBindTaskId(), "material_type.id = packing_list_item.material_type_id"}, null, null, null, null, null);
+			
 			List<WindowTaskItemsVO> windowTaskItemVOs = new ArrayList<WindowTaskItemsVO>();
-			int totalRow = 0;
 			Task bindInventoryTask = null;
 			if (task.getIsInventoryApply() != null && task.getIsInventoryApply()) {
 				bindInventoryTask = Task.dao.findById(task.getInventoryTaskId());
 			}
 			Task unstartInventoryTask = inventoryTaskService.getOneUnStartInventoryTask(task.getSupplier(), task.getWarehouseType(), task.getDestination());
-
-			for (AGVIOTaskItem redisTaskItem : TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId())) {
+			int startLine = (pageNo - 1) * pageSize;
+			int endLine = (pageNo * pageSize) - 1;
+			List<AGVIOTaskItem> items = TaskItemRedisDAO.getIOTaskItems(window.getBindTaskId(), startLine, endLine);
+			if (items.isEmpty()) {
+				return null;
+			}
+			Map<Integer, Record> taskItemMap = new HashMap<Integer, Record>();
+			for (Record windowTaskItem : windowTaskItems.getList()) {
+				taskItemMap.put(windowTaskItem.getInt("PackingListItem_Id"), windowTaskItem);
+			}
+			for (AGVIOTaskItem redisTaskItem : items) {
 				// 查询task_log中的material_id,quantity
 				List<TaskLog> taskLogs = TaskLog.dao.find(GET_TASK_ITEM_DETAILS_SQL, redisTaskItem.getId());
-				GoodsLocation goodsLocation = map.get(redisTaskItem.getGoodsLocationId());
-				if (goodsLocation == null) {
-					goodsLocation = new GoodsLocation();
-					goodsLocation.setId(0);
-					goodsLocation.setName("无");
+				Integer actualQuantity = 0;
+				// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
+				for (TaskLog tl : taskLogs) {
+					actualQuantity += tl.getQuantity();
 				}
-				totalRow += 1;
-				for (Record windowTaskItem : windowTaskItems.getList()) {
-					Integer actualQuantity = 0;
-					// 实际出入库数量要根据task_log中的出入库数量记录进行累加得到
-					for (TaskLog tl : taskLogs) {
-						actualQuantity += tl.getQuantity();
-					}
-					Integer eWhStoreQuantity = 0;
-					if (task.getType().equals(TaskType.OUT)) {
-						if (bindInventoryTask != null) {
-							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), bindInventoryTask.getCreateTime());
+				Integer eWhStoreQuantity = 0;
+				if (task.getType().equals(TaskType.OUT)) {
+					if (bindInventoryTask != null) {
+						eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), bindInventoryTask.getCreateTime());
+					} else {
+						if (unstartInventoryTask != null) {
+							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), unstartInventoryTask.getCreateTime());
 						} else {
-							if (unstartInventoryTask != null) {
-								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination()) - externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination(), unstartInventoryTask.getCreateTime());
-							} else {
-								eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
-							}
+							eWhStoreQuantity = externalWhLogService.getEWhMaterialQuantity(redisTaskItem.getMaterialTypeId(), task.getDestination());
 						}
 					}
-					
-					if (windowTaskItem.get("PackingListItem_Id").equals(redisTaskItem.getId())) {
-
-						WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.getInt("PackingListItem_Id"), task.getFileName(), task.getType(), windowTaskItem.getStr("MaterialType_No"), windowTaskItem.getInt("PackingListItem_Quantity"), actualQuantity, windowTaskItem.getDate("PackingListItem_FinishTime"), redisTaskItem.getState(), redisTaskItem.getBoxId(), goodsLocation.getId(), goodsLocation.getName(), redisTaskItem.getRobotId(), eWhStoreQuantity);
-						wt.setDetails(taskLogs);
-						windowTaskItemVOs.add(wt);
-					}
 				}
-			}
-			List<WindowTaskItemsVO> windowTaskItemSubVOs = new ArrayList<WindowTaskItemsVO>();
-			int startIndex = (pageNo - 1) * pageSize;
-			int endIndex = (pageNo - 1) * pageSize + pageSize;
-			// 不用 endIndex 作为数组结尾是为了避免数组越界
-			for (int i = startIndex; i < windowTaskItemVOs.size(); i++) {
-				windowTaskItemSubVOs.add(windowTaskItemVOs.get(i));
-				if (i == endIndex - 1) {
-					break;
-				}
+				Record windowTaskItem = taskItemMap.get(redisTaskItem.getId());
+				WindowTaskItemsVO wt = new WindowTaskItemsVO(windowTaskItem.getInt("PackingListItem_Id"), task.getFileName(), task.getType(),
+						windowTaskItem.getStr("MaterialType_No"), windowTaskItem.getInt("PackingListItem_Quantity"), actualQuantity, windowTaskItem.getDate("PackingListItem_FinishTime"), redisTaskItem.getState(), redisTaskItem.getBoxId(),
+						redisTaskItem.getGoodsLocationId(), map.get(redisTaskItem.getGoodsLocationId()), redisTaskItem.getRobotId(), eWhStoreQuantity);
+				wt.setDetails(taskLogs);
+				windowTaskItemVOs.add(wt);
 			}
 			// 分页，设置页码，每页显示条目等
 			PagePaginate pagePaginate = new PagePaginate();
 			pagePaginate.setPageSize(pageSize);
 			pagePaginate.setPageNumber(pageNo);
-			pagePaginate.setTotalRow(totalRow);
-			pagePaginate.setList(windowTaskItemSubVOs);
+			pagePaginate.setTotalRow(windowTaskItems.getTotalRow());
+			pagePaginate.setList(windowTaskItemVOs);
 			return pagePaginate;
 		} else {
 			return null;
 		}
+		
 	}
 
 
@@ -2441,28 +2434,28 @@ public class IOTaskService {
 		Integer outQuantity = getActualIOQuantity(item.getId());
 		Integer actualQuantity = 0;
 		//计算实际UW仓需出库物料数，以及抵扣数
-		if (outQuantity == 0 && eWhStoreQuantity > 2000) {
+		if (outQuantity == 0 && eWhStoreQuantity > EWH_DEDUCT_QUANTITY_LIMIT) {
 			ExternalWhLog externalWhLog = new ExternalWhLog();
 			externalWhLog.setMaterialTypeId(item.getMaterialTypeId());
 			externalWhLog.setDestination(task.getDestination());
 			externalWhLog.setSourceWh(UW_ID);
 			externalWhLog.setTaskId(task.getId());
 			externalWhLog.setTime(inventoryTask == null ? new Date() : inventoryTask.getCreateTime());
-			if (eWhStoreQuantity - item.getPlanQuantity() > 2000) {
+			if (eWhStoreQuantity - item.getPlanQuantity() > EWH_DEDUCT_QUANTITY_LIMIT) {
 				externalWhLog.setQuantity(0 - item.getPlanQuantity());
 				actualQuantity = 0;
 				item.setDeductionQuantity(0 - item.getPlanQuantity());
 			}else {
-				externalWhLog.setQuantity(0 - eWhStoreQuantity + 2000);
-				actualQuantity = item.getPlanQuantity() - (eWhStoreQuantity - 2000);
+				externalWhLog.setQuantity(0 - eWhStoreQuantity + EWH_DEDUCT_QUANTITY_LIMIT);
+				actualQuantity = item.getPlanQuantity() - (eWhStoreQuantity - EWH_DEDUCT_QUANTITY_LIMIT);
 			}
-			item.setDeductionQuantity(0 - eWhStoreQuantity + 2000);
+			item.setDeductionQuantity(0 - eWhStoreQuantity + EWH_DEDUCT_QUANTITY_LIMIT);
 			item.setUwQuantity(actualQuantity);
 			externalWhLog.setOperatior("robot1");
 			externalWhLog.setOperationTime(new Date());
 			externalWhLog.save();
-		}else if (outQuantity == 0 && eWhStoreQuantity <= 2000) {
-			actualQuantity = item.getPlanQuantity() + 2000;
+		}else if (outQuantity == 0 && eWhStoreQuantity <= EWH_DEDUCT_QUANTITY_LIMIT) {
+			actualQuantity = item.getPlanQuantity() + EWH_DEDUCT_QUANTITY_LIMIT;
 			item.setUwQuantity(actualQuantity);
 		}else {
 			actualQuantity = item.getUwQuantity() - outQuantity;

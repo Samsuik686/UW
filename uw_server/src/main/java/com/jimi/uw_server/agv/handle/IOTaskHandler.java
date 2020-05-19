@@ -23,7 +23,6 @@ import com.jimi.uw_server.model.Window;
 import com.jimi.uw_server.service.MaterialService;
 import com.jimi.uw_server.ur.entity.ForkliftReachPackage;
 import com.jimi.uw_server.ur.handler.assist.PackSender;
-import com.jimi.uw_server.service.ExternalWhLogService;
 import com.jimi.uw_server.service.IOTaskService;
 
 

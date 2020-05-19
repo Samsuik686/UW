@@ -217,7 +217,7 @@ public class TaskPool extends Thread {
 							
 							Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
 							Integer outQuantity = taskService.getActualIOQuantity(item.getId());
-							if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 2000) {
+							if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 5000) {
 								final Date time = inventoryTask == null ? new Date() : inventoryTask.getCreateTime();
 								UwProcessorExcutor.me.execute(new Runnable() {
 									
