@@ -136,7 +136,7 @@ public class InvTaskHandler extends BaseTaskHandler {
 						Task task = Task.dao.findById(taskId);
 						//发送ready包
 						if (task != null) {
-							Db.update(InventoryTaskSQL.UPDATE_AND_CLERAT_MATERIAL_POSITION, boxId);
+							Db.update(InventoryTaskSQL.UPDATE_AND_CLEAR_MATERIAL_POSITION, boxId);
 							Runnable runnable = new Runnable() {
 
 								@Override

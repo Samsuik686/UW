@@ -2,7 +2,6 @@ package com.jimi.uw_server.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.jimi.uw_server.agv.dao.BulidTaskRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskUtilsRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.exception.OperationException;

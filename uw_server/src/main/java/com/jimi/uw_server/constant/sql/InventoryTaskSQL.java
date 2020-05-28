@@ -14,5 +14,5 @@ public class InventoryTaskSQL {
 
 	public static final String GET_INVENTORY_LOG_BY_BOX_AND_TASKID = "SELECT * FROM inventory_log WHERE inventory_log.box_id = ? AND inventory_log.task_id = ?";
 
-	public static final String UPDATE_AND_CLERAT_MATERIAL_POSITION = "UPDATE material SET `row` = -1 ,AND `col` = -1 WHERE material.box = ?";
+	public static final String UPDATE_AND_CLEAR_MATERIAL_POSITION = "UPDATE material SET `row` = -1 , `col` = -1 WHERE material.box = ?";
 }
