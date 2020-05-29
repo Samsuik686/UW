@@ -15,6 +15,8 @@ public class SampleTaskSQL {
 	public static final String GET_SAMPLETASKITEM_BY_TASK = "SELECT * FROM sample_task_item WHERE task_id = ?";
 
 	public static final String GET_UNSCAN_MATERIAL_BY_TASK = "SELECT * FROM sample_task_material_record WHERE task_id = ? AND is_scaned = 0";
+	
+	public static final String GET_UNSCAN_MATERIAL_BY_TASK_AND_MATERIAL_TYPE = "SELECT sample_task_material_record.* FROM sample_task_material_record INNER JOIN material ON sample_task_material_record.material_id = material.id WHERE task_id = ? AND material.type = ? AND is_scaned = 0";
 
 	public static final String GET_SAMPLETASKITEM_BY_TASK_AND_TYPE = "SELECT sample_task_item.* FROM sample_task_item INNER JOIN material_type ON material_type.id = sample_task_item.material_type_id WHERE task_id = ? AND material_type_id = ? AND material_type.type = ?";
 

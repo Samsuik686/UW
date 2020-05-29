@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>factory_v1</version>
+	<version>factory_v4</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>

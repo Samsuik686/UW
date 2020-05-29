@@ -73,6 +73,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/manage/company", CompanyController.class);
 		me.add("/manage/materialType", MaterialTypeController.class);
 		me.add("/manage/materialBox", MaterialBoxController.class);
+		me.add("/pda", PdaClientController.class);
 	}
 
 	@Override

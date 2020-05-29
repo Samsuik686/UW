@@ -22,6 +22,7 @@ import com.jimi.uw_server.lock.RegularTaskLock;
 import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.vo.*;
 import com.jimi.uw_server.service.EfficiencyService;
+import com.jimi.uw_server.service.ExternalWhLogService;
 import com.jimi.uw_server.service.base.BaseIOTaskService;
 import com.jimi.uw_server.service.inventory.RegularInventoryTaskService;
 import com.jimi.uw_server.ur.dao.UrOperationMaterialInfoDAO;
@@ -44,6 +45,8 @@ import java.util.*;
 public class RegularIOTaskService extends BaseIOTaskService {
 
 	private static EfficiencyService efficiencyService = Aop.get(EfficiencyService.class);
+	
+	private static ExternalWhLogService externalWhLogService = Aop.get(ExternalWhLogService.class);
 
 	private static final Object UPDATEOUTQUANTITYANDMATERIALINFO_LOCK = new Object();
 
@@ -259,12 +262,8 @@ public class RegularIOTaskService extends BaseIOTaskService {
 			if (uwQuantity == null) {
 				uwQuantity = 0;
 			}
-			Integer deductQuantity = 0;
-			ExternalWhLog externalWhLog = ExternalWhLog.dao.findFirst(IOTaskSQL.GET_EWH_LOG_BY_TASKID_AND_MATERIALTYPEID, task.getId(), packingListItem.getMaterialTypeId());
-			if (externalWhLog != null) {
-				deductQuantity = externalWhLog.getQuantity();
-			}
-			if (packingListItem.getQuantity() > (uwQuantity - deductQuantity)) {
+			Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(task.getId(), packingListItem.getMaterialTypeId());
+			if (deductQuantity < 0 && packingListItem.getQuantity() > (uwQuantity - deductQuantity)) {
 				isLack = true;
 				break;
 			}
@@ -291,6 +290,11 @@ public class RegularIOTaskService extends BaseIOTaskService {
 		task.setState(TaskState.CANCELED).setEndTime(new Date()).update();
 		unbindWindow(task);
 		// 将仓口解绑(作废任务时，如果还有任务条目没跑完就不会解绑仓口，因此不管任务状态是为进行中还是作废，这里都需要解绑仓口)
+	}
+	
+	public List<Task> getEmergencyRegularTasks() {
+		List<Task> tasks = Task.dao.find(IOTaskSQL.GET_TASK_BY_TYPE, TaskType.EMERGENCY_OUT, TaskState.PROCESSING, WarehouseType.REGULAR.getId());
+		return tasks;
 	}
 
 	// 获取指定仓口停泊条目
@@ -803,11 +807,7 @@ public class RegularIOTaskService extends BaseIOTaskService {
 		newTask.setEndTime(new Date()).setState(TaskState.FINISHED).update();
 
 	}
-
-	public List<Task> getEmergencyRegularTasks() {
-		List<Task> tasks = Task.dao.find(IOTaskSQL.GET_TASK_BY_TYPE, TaskType.EMERGENCY_OUT, TaskState.PROCESSING, WarehouseType.REGULAR.getId());
-		return tasks;
-	}
+	
 
 	// 删除错误的料盘记录
 	public Material deleteRegularMaterialRecord(Integer packListItemId, String materialId) {

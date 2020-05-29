@@ -24,7 +24,6 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.SqlPara;
 import com.jimi.uw_server.agv.dao.IOTaskItemRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.constant.MaterialStatus;
 import com.jimi.uw_server.constant.TaskState;
@@ -37,7 +36,6 @@ import com.jimi.uw_server.constant.sql.WindowSQL;
 import com.jimi.uw_server.exception.FormDataValidateFailedException;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
-import com.jimi.uw_server.model.ExternalWhLog;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
@@ -271,8 +269,6 @@ public class BaseIOTaskService {
 			filter = filter + "#&#task.type!=5#&#task.type!=6#&#task.type!=2#&#task.type!=7#&#supplier.enabled=1";
 		}
 		Page<Record> result = selectService.select(new String[] { "task", "supplier" }, new String[] { "task.supplier=supplier.id" }, pageNo, pageSize, ascBy, descBy, filter);
-		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
-		Boolean status;
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
 		Set<Integer> windowBindTaskSet = new HashSet<>();
 		if (!windows.isEmpty()) {
@@ -280,15 +276,7 @@ public class BaseIOTaskService {
 				windowBindTaskSet.add(window.getBindTaskId());
 			}
 		}
-		for (Record record : result.getList()) {
-			status = false;
-			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
-				status = TaskPropertyRedisDAO.getTaskStatus(record.getInt("Task_Id"));
-			}
-			TaskVO t = new TaskVO(record.get("Task_Id"), record.get("Task_State"), record.get("Task_Type"), record.get("Task_FileName"), record.get("Task_CreateTime"), record.get("Task_Priority"),
-					record.get("Task_Supplier"), record.get("Task_Remarks"), status);
-			taskVOs.add(t);
-		}
+		List<TaskVO> taskVOs = TaskVO.fillList(result.getList(), windowBindTaskSet);
 
 		// 分页，设置页码，每页显示条目等
 		PagePaginate pagePaginate = new PagePaginate();
@@ -304,6 +292,7 @@ public class BaseIOTaskService {
 	public PagePaginate getIOTaskDetails(Integer id, Integer type, String no, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
 		// 如果任务类型为出入库
+		
 		String filter = null;
 		if (no != null && !no.trim().equals("")) {
 			filter = "material_type.no like " + no;
@@ -322,11 +311,7 @@ public class BaseIOTaskService {
 				for (TaskLog tl : taskLog) {
 					actualQuantity += tl.getQuantity();
 				}
-				Integer deductQuantity = 0;
-				ExternalWhLog externalWhLog = ExternalWhLog.dao.findFirst(IOTaskSQL.GET_EWH_LOG_BY_TASKID_AND_MATERIALTYPEID, id, packingListItem.getInt("PackingListItem_MaterialTypeId"));
-				if (externalWhLog != null) {
-					deductQuantity = externalWhLog.getQuantity();
-				}
+				Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(packingListItem.getInt("PackingListItem_TaskId"), packingListItem.getInt("PackingListItem_MaterialTypeId"));
 				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"),
 						actualQuantity, deductQuantity, packingListItem.get("PackingListItem_FinishTime"), type);
 				io.setDetails(taskLog);
@@ -342,7 +327,6 @@ public class BaseIOTaskService {
 
 			return pagePaginate;
 		}
-
 		return null;
 	}
 
@@ -375,14 +359,7 @@ public class BaseIOTaskService {
 				for (TaskLog tl : taskLog) {
 					actualQuantity += tl.getQuantity();
 				}
-				Integer deductQuantity = 0;
-				List<ExternalWhLog> externalWhLogs = ExternalWhLog.dao.find(IOTaskSQL.GET_EWH_LOG_BY_TASKID_AND_MATERIALTYPEID, id, packingListItem.getInt("PackingListItem_MaterialTypeId"));
-				for (ExternalWhLog externalWhLog : externalWhLogs) {
-					if (externalWhLog != null) {
-						deductQuantity = externalWhLog.getQuantity() + deductQuantity;
-					}
-				}
-
+				Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(packingListItem.getInt("PackingListItem_TaskId"), packingListItem.getInt("PackingListItem_MaterialTypeId"));
 				packingListItem.set("PackingListItem_actuallyQuantity", actualQuantity);
 				packingListItem.set("PackingListItem_deductQuantity", deductQuantity);
 				Integer lackQuantity = (packingListItem.getInt("PackingListItem_Quantity") - actualQuantity + deductQuantity) > 0

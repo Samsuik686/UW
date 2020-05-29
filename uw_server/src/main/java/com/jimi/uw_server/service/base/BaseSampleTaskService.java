@@ -209,8 +209,6 @@ public class BaseSampleTaskService {
 			filter = filter + "#&#task.type=7";
 		}
 		Page<Record> result = selectService.select(new String[] { "task", "supplier" }, new String[] { "task.supplier=supplier.id" }, pageNo, pageSize, ascBy, descBy, filter);
-		List<TaskVO> taskVOs = new ArrayList<TaskVO>();
-		Boolean status;
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
 		Set<Integer> windowBindTaskSet = new HashSet<>();
 		if (!windows.isEmpty()) {
@@ -218,16 +216,7 @@ public class BaseSampleTaskService {
 				windowBindTaskSet.add(window.getBindTaskId());
 			}
 		}
-		for (Record record : result.getList()) {
-			status = false;
-			if (record.getInt("Task_State").equals(TaskState.PROCESSING) && windowBindTaskSet.contains(record.getInt("Task_Id"))) {
-				status = TaskPropertyRedisDAO.getTaskStatus(record.getInt("Task_Id"));
-			}
-			TaskVO t = new TaskVO(record.get("Task_Id"), record.get("Task_State"), record.get("Task_Type"), record.get("Task_FileName"), record.get("Task_CreateTime"), record.get("Task_Priority"),
-					record.get("Task_Supplier"), record.get("Task_Remarks"), status);
-			taskVOs.add(t);
-		}
-
+		List<TaskVO> taskVOs = TaskVO.fillList(result.getList(), windowBindTaskSet);
 		// 分页，设置页码，每页显示条目等
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);

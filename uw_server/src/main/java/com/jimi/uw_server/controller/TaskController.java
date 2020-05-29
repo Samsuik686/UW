@@ -218,6 +218,18 @@ public class TaskController extends Controller {
 		renderJson(ResultUtil.succeed(regualrIOTaskService.getIOTaskDetails(id, type, no, pageSize, pageNo)));
 	}
 
+	/**
+	 * <p>Description: 获取紧急出库任务列表<p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2019年11月27日
+	 */
+	public void getEmergencyRegularTasks(){
+		List<Task> tasks = regualrIOTaskService.getEmergencyRegularTasks();
+		renderJson(ResultUtil.succeed(tasks));
+	}
+
 
 	// 获取任务详情（贵重仓调用）
 	public void getIOTaskInfos(Integer taskId) {
@@ -503,19 +515,6 @@ public class TaskController extends Controller {
 		}
 		regualrIOTaskService.switchTask(taskId, flag);
 		renderJson(ResultUtil.succeed());
-	}
-
-	
-	/**
-	 * <p>Description: 获取紧急出库任务列表<p>
-	 * @return
-	 * @exception
-	 * @author trjie
-	 * @Time 2019年11月27日
-	 */
-	public void getEmergencyRegularTasks(){
-		List<Task> tasks = regualrIOTaskService.getEmergencyRegularTasks();
-		renderJson(ResultUtil.succeed(tasks));
 	}
 
 

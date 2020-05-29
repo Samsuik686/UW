@@ -27,7 +27,6 @@ public class MappingKit {
 		arp.addMapping("faq", "id", Faq.class);
 		arp.addMapping("former_supplier", "id", FormerSupplier.class);
 		arp.addMapping("goods_location", "id", GoodsLocation.class);
-		arp.addMapping("input_help_socket_log", "id", InputHelpSocketLog.class);
 		arp.addMapping("inventory_log", "id", InventoryLog.class);
 		arp.addMapping("inventory_task_base_info", "id", InventoryTaskBaseInfo.class);
 		arp.addMapping("material", "id", Material.class);
