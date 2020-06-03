@@ -19,7 +19,7 @@ public class RobotInfoRedisDAO {
 
 	private static Cache cache = Redis.use();
 
-	private static String UW_ROBOT_LIST = "UW_ROBOT_LIST";
+	private static String UW_ROBOT_LIST = "UW:ROBOT_LIST";
 
 	/**
 	 * 更新机器实时数据到Redis

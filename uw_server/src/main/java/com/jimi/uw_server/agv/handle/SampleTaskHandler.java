@@ -79,12 +79,11 @@ public class SampleTaskHandler extends BaseTaskHandler {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
 		// 匹配groupid
-		for (AGVSampleTaskItem item : SampleTaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupid.split("#")[1]))) {
-			if (groupid.equals(item.getGroupId())) {
-				// 更新tsakitems里对应item的robotid
-				SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, null, null, null, statusCmd.getRobotid(), null);
-			}
+		AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
+		if (item == null) {
+			return ;
 		}
+		SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, null, null, null, statusCmd.getRobotid(), null);
 	}
 
 
@@ -92,18 +91,15 @@ public class SampleTaskHandler extends BaseTaskHandler {
 	protected void handleProcessStatus(AGVStatusCmd statusCmd) throws Exception {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
-		for (AGVSampleTaskItem item : SampleTaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupid.split("#")[1]))) {
-			// 判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-			if (item.getGroupId().equals(groupid.trim()) && item.getState() == TaskItemState.ASSIGNED && missionGroupId.contains("S")) {// 判断是取料盒并且叉到料盒
-				// 更改taskitems里对应item状态为2（已拣料到站）***
-				SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null);
-				break;
-			} else if (item.getGroupId().equals(groupid.trim()) && item.getState() == TaskItemState.START_BACK && missionGroupId.contains("B")) {// 判断是回库并且叉到料盒
-				// 更改taskitems里对应item状态为4（已回库完成）***
-				SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null);
-				TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);
-				break;
-			}
+		AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
+		if (item == null) {
+			return ;
+		}
+		if (item.getState() == TaskItemState.ASSIGNED && missionGroupId.contains("S")) {
+			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null);
+		}else if (item.getState() == TaskItemState.START_BACK && missionGroupId.contains("B")) {
+			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null);
+			TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);	
 		}
 	}
 
@@ -114,26 +110,19 @@ public class SampleTaskHandler extends BaseTaskHandler {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
 		// 匹配groupid
-		for (AGVSampleTaskItem item : SampleTaskItemRedisDAO.getSampleTaskItems(Integer.valueOf(groupid.split("#")[1]))) {
-			if (groupid.equals(item.getGroupId())) {
-
-				// 判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-				if (item.getState() == TaskItemState.SEND_BOX) {// LS执行完成时
-					// 更改taskitems里对应item状态为2（已拣料到站）***
-					SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
-					break;
-				} else if (item.getState() == TaskItemState.BACK_BOX) {// SL执行完成时：
-					// 更改taskitems里对应item状态为4（已回库完成）***
-					SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
-					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-					materialBox.setIsOnShelf(true);
-					materialBox.update();
-					clearTask(item.getTaskId());
-					break;
-				}
-			}
+		AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
+		if (item == null) {
+			return ;
 		}
-
+		if (item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {
+			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
+		}else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {
+			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
+			MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+			materialBox.setIsOnShelf(true);
+			materialBox.update();
+			clearTask(item.getTaskId());
+		}
 	}
 
 

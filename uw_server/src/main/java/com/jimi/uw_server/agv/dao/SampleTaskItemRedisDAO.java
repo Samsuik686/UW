@@ -4,12 +4,14 @@
 package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import com.jfinal.json.Json;
+import com.jfinal.json.Jackson;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
+import com.jimi.uw_server.comparator.SampleTaskItemComparator;
 import com.jimi.uw_server.constant.TaskItemState;
 
 /**  
@@ -33,7 +35,7 @@ public class SampleTaskItemRedisDAO {
 	public synchronized static void addSampleTaskItem(Integer taskId, List<AGVSampleTaskItem> agvSampleTaskItems) {
 		cache.del(UW_SAMPLE_TASK_SUFFIX + taskId);
 		for (AGVSampleTaskItem item : agvSampleTaskItems) {
-			cache.lpush(UW_SAMPLE_TASK_SUFFIX + taskId, Json.getJson().toJson(item));
+			cache.hset(UW_SAMPLE_TASK_SUFFIX + taskId, item.getBoxId(), Jackson.getJson().toJson(item));
 		}
 		
 	}
@@ -45,79 +47,106 @@ public class SampleTaskItemRedisDAO {
 	public static void removeSampleTaskItemByTaskId(int taskId) {
 		cache.del(UW_SAMPLE_TASK_SUFFIX + taskId);
 	}
-
-
-	/**
-	 * 删除指定的抽检任务条目<br>
-	 */
-	public static void removeSampleTaskItemById(Integer taskId, Integer boxId) {
-		for (int i = 0; i < cache.llen(UW_SAMPLE_TASK_SUFFIX + taskId); i++) {
-			String item = cache.lindex(UW_SAMPLE_TASK_SUFFIX + taskId, i);
-			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(item, AGVSampleTaskItem.class);
-			if (agvSampleTaskItem.getGroupId().equals(taskId + "#" + boxId)) {
-				cache.lrem(UW_SAMPLE_TASK_SUFFIX + taskId, 1, item);
-				i--;
-			}
-		}
-	}
-
+	
 
 	/**
 	 *  填写指定出入库任务条目的信息
 	 */
 	public synchronized static void updateSampleTaskItemInfo(AGVSampleTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
-		for (int i = 0; i < cache.llen(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId()); i++) {
-			String item = cache.lindex(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), i);
-			AGVSampleTaskItem agvSampleTaskItem = Json.getJson().parse(item, AGVSampleTaskItem.class);
-			if (agvSampleTaskItem.getGroupId().equals(taskItem.getGroupId())) {
-				if (state != null) {
-					agvSampleTaskItem.setState(state);
-				}
-				if (windowId != null) {
-					agvSampleTaskItem.setWindowId(windowId);
-				}
-				if (goodsLocationId != null) {
-					agvSampleTaskItem.setGoodsLocationId(goodsLocationId);
-				}
-				if (robotId != null) {
-					agvSampleTaskItem.setRobotId(robotId);
-				}
-				if (isForceFinish != null) {
-					agvSampleTaskItem.setIsForceFinish(isForceFinish);
-				}
-				cache.lset(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvSampleTaskItem));
-				break;
-			}
+		String item = cache.hget(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getBoxId());
+		if (item == null || item.trim().equals("")) {
+			return ;
 		}
+		AGVSampleTaskItem agvSampleTaskItem = Jackson.getJson().parse(item, AGVSampleTaskItem.class);
+		if (state != null) {
+			agvSampleTaskItem.setState(state);
+		}
+		if (windowId != null) {
+			agvSampleTaskItem.setWindowId(windowId);
+		}
+		if (goodsLocationId != null) {
+			agvSampleTaskItem.setGoodsLocationId(goodsLocationId);
+		}
+		if (robotId != null) {
+			agvSampleTaskItem.setRobotId(robotId);
+		}
+		if (isForceFinish != null) {
+			agvSampleTaskItem.setIsForceFinish(isForceFinish);
+		}
+		cache.hset(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getBoxId(), Jackson.getJson().toJson(agvSampleTaskItem));
 	}
 
 
 	/**
 	 * 返回抽检任务条目列表的副本
 	 */
-	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVSampleTaskItem> getSampleTaskItems(Integer taskId) {
-		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>();
-		List<String> items = cache.lrange(UW_SAMPLE_TASK_SUFFIX + taskId, 0, -1);
-		for (String item : items) {
-			agvSampleTaskItems.add(Json.getJson().parse(new String(item), AGVSampleTaskItem.class));
-		}
+		List<AGVSampleTaskItem> agvSampleTaskItems = getSampleTaskItems(taskId, null, null);
 		return agvSampleTaskItems;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public synchronized static List<AGVSampleTaskItem> getSampleTaskItems(Integer taskId, Integer startLine, Integer endLine) {
+		List<String> items = cache.hvals(UW_SAMPLE_TASK_SUFFIX + taskId);
+		if (items == null || items.isEmpty()) {
+			return Collections.emptyList();
+		}
+		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>(items.size());
+
+		for (String item : items) {
+			agvSampleTaskItems.add(Jackson.getJson().parse(item, AGVSampleTaskItem.class));
+		}
+		agvSampleTaskItems.sort(SampleTaskItemComparator.me);
+		if (startLine == null || endLine == null) {
+			return agvSampleTaskItems;
+		}
+		if (startLine >= endLine) {
+			return Collections.emptyList();
+		}
+		if (endLine > agvSampleTaskItems.size()) {
+			endLine = agvSampleTaskItems.size();
+		}
+		List<AGVSampleTaskItem> subAGVSampleTaskItems = new ArrayList<>(agvSampleTaskItems.subList(startLine, endLine));
+		return subAGVSampleTaskItems;
 	}
 	
 
 	/**
 	 * 删除指定任务id的未分配的条目<br>
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static void removeUnAssignedSampleTaskItemByTaskId(int taskId) {
-		for (int i = 0; i < cache.llen(UW_SAMPLE_TASK_SUFFIX + taskId); i++) {
-			String item = cache.lindex(UW_SAMPLE_TASK_SUFFIX + taskId, i);
-			AGVSampleTaskItem agvSampleTaskItems = Json.getJson().parse(item, AGVSampleTaskItem.class);
-			if (agvSampleTaskItems.getTaskId().intValue() == taskId && (agvSampleTaskItems.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
-				cache.lrem(UW_SAMPLE_TASK_SUFFIX + taskId, 1, item);
-				i--;
+		List<String> items = cache.hvals(UW_SAMPLE_TASK_SUFFIX + taskId);
+		if (items == null || items.isEmpty()) {
+			return ;
+		}
+		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>(items.size());
+
+		for (String item : items) {
+			agvSampleTaskItems.add(Jackson.getJson().parse(item, AGVSampleTaskItem.class));
+		}
+		for (AGVSampleTaskItem agvSampleTaskItem : agvSampleTaskItems) {
+			if ((agvSampleTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
+				cache.hdel(UW_SAMPLE_TASK_SUFFIX + taskId, agvSampleTaskItem.getBoxId());
 			}
 		}
+	}
+
+
+	/**
+	 * <p>Description: <p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2020年6月2日
+	 */
+	public static AGVSampleTaskItem getSampleTaskItem(Integer taskId, Integer boxId) {
+		String item = cache.hget(UW_SAMPLE_TASK_SUFFIX + taskId, boxId);
+		if (item == null || item.trim().equals("")) {
+			return null;
+		}
+		AGVSampleTaskItem agvSampleTaskItem = Jackson.getJson().parse(item, AGVSampleTaskItem.class);
+		return agvSampleTaskItem;
 	}
 
 }

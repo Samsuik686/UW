@@ -26,15 +26,15 @@ public class EfficiencyRedisDAO {
 
 	private static Cache cache = Redis.use();
 	
-	private static final String TASK_LAST_OPERATION_TIME_MAP = "UW_TASK_LAST_OPERATION_TIME_MAP";
+	private static final String TASK_LAST_OPERATION_TIME_MAP = "UW:TASK_LAST_OPERATION_TIME_MAP";
 	
-	private static final String USER_LAST_OPERATION_TIME_MAP = "UW_USER_LAST_OPERATION_TIME_MAP";
+	private static final String USER_LAST_OPERATION_TIME_MAP = "UW:USER_LAST_OPERATION_TIME_MAP";
 
-	private static final String TASK_LAST_OPERATION_USER_MAP = "UW_TASK_LAST_OPERATION_USER_MAP";
+	private static final String TASK_LAST_OPERATION_USER_MAP = "UW:TASK_LAST_OPERATION_USER_MAP";
 	
-	private static final String TASK_BOX_ARRIVED_TIME_MAP = "UW_TASK_BOX_ARRIVED_TIME_MAP";
+	private static final String TASK_BOX_ARRIVED_TIME_MAP = "UW:TASK_BOX_ARRIVED_TIME_MAP";
 	
-	private static final String TASK_START_TIME_MAP = "UW_TASK_START_TIME_MAP";
+	private static final String TASK_START_TIME_MAP = "UW:TASK_START_TIME_MAP";
 	
 	private static Object TASK_LAST_OPERATION_TIME_LOCK = new Object();
 	

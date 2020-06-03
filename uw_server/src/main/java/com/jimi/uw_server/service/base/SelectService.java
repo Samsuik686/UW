@@ -149,7 +149,7 @@ public class SelectService {
 					String key = whereUnit.substring(0, operatorStartIndex);
 					String value = whereUnit.substring(operatorStartIndex + operator.length(), whereUnit.length());
 					sql.append(key + operator.toString() + "? AND ");
-					questionValues.add(value);
+					questionValues.add(value.trim());
 					if (index == whereUnits.length - 1) {
 						sql.delete(sql.lastIndexOf("AND"), sql.length());
 					}
@@ -186,7 +186,6 @@ public class SelectService {
 
 		} else {
 			try {
-
 				return Db.paginate(pageNo, pageSize, resultSet, sql.toString(), questionValues.toArray());
 			} catch (ActiveRecordException a) {
 				System.out.println(resultSet);

@@ -58,7 +58,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 	public void create(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced)
 			throws Exception {
 		synchronized (PreciousTaskLock.CREATE_IO_LOCK) {
-			super.create(type, fileName, file, supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced);
+			super.createTask(type, fileName, file, supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced, false);
 		}
 	}
 	// 令指定任务开始
@@ -96,48 +96,53 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 			// 对于已完成的任务，禁止作废
 			if (state == TaskState.FINISHED) {
 				throw new OperationException("该任务已完成，禁止作废！");
-			} else if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
+			}
+			if (state == TaskState.CANCELED) { // 对于已作废过的任务，禁止作废
 				throw new OperationException("该任务已作废！");
-			} else if (state < TaskState.PROCESSING) {
+			}
+			if (state < TaskState.PROCESSING) {
+				if (task.getStartTime() == null) {
+					task.setStartTime(new Date());
+				}
 				task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
 				return true;
-			} else {
-				if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
-					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
-						Record problemRecords = Db.findFirst(IOTaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
-						if (problemRecords != null) {
-							throw new OperationException("该任务存在入料与需求数不符的情况！");
-						}
-						List<Record> unfinshRecords = Db.find(IOTaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, task.getId());
-						for (Record record : unfinshRecords) {
-							List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("id"));
-							for (Material material : materials) {
-								material.setStatus(MaterialStatus.NORMAL).update();
-							}
-						}
-
-						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
-						return true;
-					} else if (task.getType().equals(TaskType.OUT)) {
-						Record cuttingRecord = Db.findFirst(IOTaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM, task.getId());
-						if (cuttingRecord != null) {
-							throw new OperationException("该任务存在截料待处理的情况！");
-						}
-						Record overQuantityRecord = Db.findFirst(IOTaskSQL.GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
-						if (overQuantityRecord != null) {
-							throw new OperationException("该任务存在发料超发的情况！");
-						}
-						Record lackRecord = Db.findFirst(IOTaskSQL.GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
-						if (lackRecord != null) {
-							throw new OperationException("该任务存在发料缺发的情况！");
-						}
-						task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
-						return true;
+			} 
+			if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
+				if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
+					Record problemRecords = Db.findFirst(IOTaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
+					if (problemRecords != null) {
+						throw new OperationException("该任务存在入料与需求数不符的情况！");
 					}
+					List<Record> unfinshRecords = Db.find(IOTaskSQL.GET_UNFINISH_PACKING_LIST_ITEM, task.getId());
+					for (Record record : unfinshRecords) {
+						List<Material> materials = Material.dao.find(IOTaskSQL.GET_MATERIAL_AND_OUTQUANTITY_BY_PACKING_LIST_ITEM_ID, record.getInt("id"));
+						for (Material material : materials) {
+							material.setStatus(MaterialStatus.NORMAL).update();
+						}
+					}
+
+					task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
+					return true;
+				} else if (task.getType().equals(TaskType.OUT)) {
+					Record cuttingRecord = Db.findFirst(IOTaskSQL.GET_IOTASK_CUTTING_PACKING_LIST_ITEM, task.getId());
+					if (cuttingRecord != null) {
+						throw new OperationException("该任务存在截料待处理的情况！");
+					}
+					Record overQuantityRecord = Db.findFirst(IOTaskSQL.GET_OUT_OVER_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
+					if (overQuantityRecord != null) {
+						throw new OperationException("该任务存在发料超发的情况！");
+					}
+					Record lackRecord = Db.findFirst(IOTaskSQL.GET_OUT_LACK_PRECIOUS_IOTASK_ITEM_BY_TASKID, task.getId());
+					if (lackRecord != null) {
+						throw new OperationException("该任务存在发料缺发的情况！");
+					}
+					task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
+					return true;
 				}
 			}
-			return false;
 		}
+		return false;
+		
 	}
 
 	// 新增入库料盘记录并写入库任务日志记录

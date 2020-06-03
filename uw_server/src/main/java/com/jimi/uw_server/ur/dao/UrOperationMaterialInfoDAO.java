@@ -23,7 +23,7 @@ public class UrOperationMaterialInfoDAO {
 
 	private static Cache cache = Redis.use();
 	
-	private static final String UW_UR_PRESENT_OPERATION_MATERIAL_INFO_MAP = "UW_UR_PRESENT_OPERATION_MATERIAL_INFO_MAP";
+	private static final String UW_UR_PRESENT_OPERATION_MATERIAL_INFO_MAP = "UW:UR_PRESENT_OPERATION_MATERIAL_INFO_MAP";
 	
 	private static Object UW_UR_PRESENT_OPERATION_MATERIAL_INFO_MAP_LOCK = new Object();
 	

@@ -43,7 +43,7 @@ public class TaskController extends Controller {
 
 	// 创建出入库/退料任务
 	@Log("创建普通仓任务类型为：{type}的任务，客户编号为：{supplier}，目的地：{destination}， 是否申补：{isInventoryApply}， 申补任务：{inventoryTaskId}， 备注：{remarks}， 是否强制生成：{isForced}")
-	public void createRegularIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced) throws Exception {
+	public void createRegularIOTask(UploadFile file, Integer type, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Boolean isForced, Boolean isDeducted) throws Exception {
 		try {
 			if (file == null || type == null || supplier == null || remarks == null || remarks.equals("")) {
 			throw new ParameterException("参数不能为空！");
@@ -55,7 +55,7 @@ public class TaskController extends Controller {
 			if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK || type == TaskType.EMERGENCY_OUT) {
 				file = getFile();
 				String fileName = file.getFileName();
-				regualrIOTaskService.create(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, isForced);
+				regualrIOTaskService.create(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, isForced, isDeducted);
 				renderJson(ResultUtil.succeed());
 			}
 		} finally {
@@ -80,7 +80,7 @@ public class TaskController extends Controller {
 			if (type == TaskType.IN || type == TaskType.OUT || type == TaskType.SEND_BACK) {
 				file = getFile();
 				String fileName = file.getFileName();
-				preciousIOTaskService.create(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced);
+				preciousIOTaskService.create(type, fileName, file.getFile(), supplier, destination, isInventoryApply, inventoryTaskId, remarks, isForced);
 				renderJson(ResultUtil.succeed());	
 			}
 		} finally {

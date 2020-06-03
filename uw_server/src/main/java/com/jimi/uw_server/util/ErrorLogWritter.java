@@ -11,7 +11,7 @@ public class ErrorLogWritter {
 		LogManager.getRootLogger().error(message);
 		;
 		ErrorLog errorLog = new ErrorLog();
-		System.out.println("record: " + errorLog);
+		System.out.println("UW record: " + errorLog);
 		return errorLog.set("message", message).set("time", new Date()).save();
 	}
 

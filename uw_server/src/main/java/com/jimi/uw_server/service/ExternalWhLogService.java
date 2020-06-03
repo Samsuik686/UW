@@ -199,7 +199,8 @@ public class ExternalWhLogService {
 		int deductQuantity = 0;
 		if (externalWhLogs != null && !externalWhLogs.isEmpty()) {
 			for (ExternalWhLog externalWhLog : externalWhLogs) {
-				deductQuantity += externalWhLog.getQuantity();
+				int quantity = externalWhLog.getQuantity() == null ? 0 : externalWhLog.getQuantity();
+				deductQuantity += quantity;
 			}
 		}
 		return deductQuantity;

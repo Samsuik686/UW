@@ -1,7 +1,6 @@
 package com.jimi.uw_server.agv.entity.bo;
 
-import java.io.Serializable;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
 
 
@@ -11,8 +10,8 @@ import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
  * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
-@SuppressWarnings("serial")
-public class AGVSampleTaskItem extends BaseTaskItem implements Serializable {
+
+public class AGVSampleTaskItem extends BaseTaskItem{
 
 	public AGVSampleTaskItem() {
 	}
@@ -29,6 +28,7 @@ public class AGVSampleTaskItem extends BaseTaskItem implements Serializable {
 	}
 
 
+	@JsonIgnore
 	public String getGroupId() {
 		return boxId + "#" + taskId;
 	}

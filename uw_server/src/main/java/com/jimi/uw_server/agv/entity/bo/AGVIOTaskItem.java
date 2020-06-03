@@ -1,7 +1,6 @@
 package com.jimi.uw_server.agv.entity.bo;
 
-import java.io.Serializable;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
 import com.jimi.uw_server.model.PackingListItem;
 
@@ -12,8 +11,8 @@ import com.jimi.uw_server.model.PackingListItem;
  * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
-@SuppressWarnings("serial")
-public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
+
+public class AGVIOTaskItem extends BaseTaskItem{
 
 	private Integer id;
 
@@ -171,6 +170,7 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 	}
 
 
+	@JsonIgnore
 	public String getGroupId() {
 		return this.id + ":" + this.boxId + ":" + this.taskId;
 	}
@@ -213,5 +213,13 @@ public class AGVIOTaskItem extends BaseTaskItem implements Serializable {
 
 	public void setDeductionQuantity(Integer deductionQuantity) {
 		this.deductionQuantity = deductionQuantity;
+	}
+
+
+	@Override
+	public String toString() {
+		return "AGVIOTaskItem [id=" + id + ", materialTypeId=" + materialTypeId + ", planQuantity=" + planQuantity + ", priority=" + priority + ", isCut=" + isCut + ", isSuperable=" + isSuperable
+				+ ", oldWindowId=" + oldWindowId + ", uwQuantity=" + uwQuantity + ", deductionQuantity=" + deductionQuantity + ", taskId=" + taskId + ", robotId=" + robotId + ", boxId=" + boxId
+				+ ", state=" + state + ", isForceFinish=" + isForceFinish + ", windowId=" + windowId + ", goodsLocationId=" + goodsLocationId + "]";
 	}
 }

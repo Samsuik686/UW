@@ -12,12 +12,12 @@ import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
  * @createTime 2018年11月9日  下午3:35:49
  */
 
-public class PriorityComparator implements Comparator<AGVIOTaskItem> {
+public class IOTaskItemComparator implements Comparator<AGVIOTaskItem> {
 
+	public static IOTaskItemComparator me = new IOTaskItemComparator();
+	
 	@Override
 	public int compare(AGVIOTaskItem a1, AGVIOTaskItem a2) {
-		// 根据任务条目优先级数值大小，进行降序排序
-		return a2.getPriority() - a1.getPriority();
+		return a1.getId() - a2.getId();
 	}
-
 }

@@ -87,8 +87,8 @@ public class BaseIOTaskService {
 	private static final String GET_UNCANCLE_TASK_BY_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
 
 	// 创建出入库/退料任务
-	public void create(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType,
-			Boolean isForced) throws Exception {
+	public void createTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType,
+			Boolean isForced, Boolean isDeducted) throws Exception {
 		String resultString = "";
 
 		// 如果文件格式不对，则提示检查文件格式
@@ -165,6 +165,7 @@ public class BaseIOTaskService {
 				task.setSupplier(supplier);
 				task.setDestination(destination);
 				task.setRemarks(remarks);
+				task.setIsDeducted(isDeducted);
 				if (isInventoryApply != null && isInventoryApply) {
 					task.setIsInventoryApply(true);
 					if (inventoryTaskId == null) {
@@ -480,7 +481,7 @@ public class BaseIOTaskService {
 		return material;
 	}
 
-	protected TaskLog createTaskLog(Integer packListItemId, String materialId, Integer quantity, User user, Task task) {
+	public TaskLog createTaskLog(Integer packListItemId, String materialId, Integer quantity, User user, Task task) {
 		TaskLog taskLog = new TaskLog();
 		taskLog.setPackingListItemId(packListItemId);
 		taskLog.setMaterialId(materialId);
@@ -499,7 +500,7 @@ public class BaseIOTaskService {
 	}
 	
 	
-	protected TaskLog createAutoTaskLog(Integer packListItemId, String materialId, Integer quantity, String user, Task task) {
+	public TaskLog createAutoTaskLog(Integer packListItemId, String materialId, Integer quantity, String user, Task task) {
 		TaskLog taskLog = new TaskLog();
 		taskLog.setPackingListItemId(packListItemId);
 		taskLog.setMaterialId(materialId);

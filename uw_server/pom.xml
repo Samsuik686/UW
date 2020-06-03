@@ -6,7 +6,7 @@
 	<groupId>com.jimi</groupId>
 	<artifactId>uw_server</artifactId>
 	<packaging>war</packaging>
-	<version>factory_v4</version>
+	<version>factory_v5</version>
 
 	<name>uw_server</name>
 	<url>http://maven.apache.org</url>
@@ -137,6 +137,12 @@
 			<groupId>com.jfinal</groupId>
 			<artifactId>cos</artifactId>
 			<version>26Dec2008</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.fasterxml.jackson.core</groupId>
+		    <artifactId>jackson-databind</artifactId>
+		    <version>2.11.0</version>
 		</dependency>
 
 		<!-- 性能序列化框架FST,jfinal文件上传也需要这个依赖包 -->

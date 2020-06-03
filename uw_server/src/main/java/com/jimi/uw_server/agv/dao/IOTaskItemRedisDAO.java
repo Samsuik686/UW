@@ -4,16 +4,22 @@
 package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
 
-import com.jfinal.json.Json;
+import com.jfinal.json.Jackson;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
+import com.jfinal.plugin.redis.RedisPlugin;
 import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
-import com.jimi.uw_server.comparator.PriorityComparator;
+import com.jimi.uw_server.comparator.IOTaskItemComparator;
 import com.jimi.uw_server.constant.TaskItemState;
+import com.jimi.uw_server.model.PackingListItem;
+import com.jimi.uw_server.util.VisualSerializer;
 
 /**  
  * <p>Title: IOTaskItemRedisDAO</p>  
@@ -31,13 +37,12 @@ public class IOTaskItemRedisDAO {
 	private static Cache cache = Redis.use();
 	
 	/**
-	 * 添加出入库任务条目，该方法会把新的任务条目插入到现有的任务列表当中，并把它们按任务优先级轮流排序<br>
+	 * 添加出入库任务条目，一个任务仅能添加一次<br>
 	 */
-	public synchronized static void addIOTaskItem(Integer taskId, List<AGVIOTaskItem> ioTaskItems) {
-		ioTaskItems.sort(new PriorityComparator());
+	public synchronized static void addIOTaskItem(Integer taskId, List<AGVIOTaskItem> taskItems) {
 		cache.del(UW_IO_TASK_SUFFIX + taskId);
-		for (AGVIOTaskItem item : ioTaskItems) {
-			cache.lpush(UW_IO_TASK_SUFFIX + taskId, Json.getJson().toJson(item));
+		for (AGVIOTaskItem taskItem : taskItems) {
+			cache.hset(UW_IO_TASK_SUFFIX + taskId, taskItem.getId(), Jackson.getJson().toJson(taskItem));
 		}
 	}
 
@@ -45,13 +50,17 @@ public class IOTaskItemRedisDAO {
 	/**
 	 * 删除指定任务id的未分配的条目<br>
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized static void removeUnAssignedTaskItemByTaskId(int taskId) {
-		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskId); i++) {
-			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskId, i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(item, AGVIOTaskItem.class);
-			if (agvioTaskItem.getTaskId().intValue() == taskId && (agvioTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN || agvioTaskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN)) {
-				cache.lrem(UW_IO_TASK_SUFFIX + taskId, 1, item);
-				i--;
+		List<String> list = cache.hvals(UW_IO_TASK_SUFFIX + taskId);
+		if (list == null || list.isEmpty()) {
+			return ;
+		}
+		for (String item : list) {
+			AGVIOTaskItem taskItem = Jackson.getJson().parse(item, AGVIOTaskItem.class);
+			if (taskItem.getState().intValue() == TaskItemState.WAIT_SCAN || taskItem.getState().intValue() == TaskItemState.WAIT_ASSIGN) {
+				cache.hdel(UW_IO_TASK_SUFFIX + taskId, taskItem.getId());
+
 			}
 		}
 	}
@@ -66,62 +75,47 @@ public class IOTaskItemRedisDAO {
 
 
 	/**
-	 * 删除指定的出入库任务条目<br>
-	 */
-	public synchronized static void removeTaskItemByPackingListId(Integer taskId, int packingListId) {
-		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskId); i++) {
-			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskId, i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(item, AGVIOTaskItem.class);
-			if (agvioTaskItem.getId().intValue() == packingListId) {
-				cache.lrem(UW_IO_TASK_SUFFIX + taskId, 1, item);
-				i--;
-			}
-		}
-	}
-
-
-	/**
 	 *  填写指定出入库任务条目的信息
 	 */
 	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish, Boolean isCut, Integer oldWindowId, Integer uwQuantity, Integer deductionQuantity) {
-		for (int i = 0; i < cache.llen(UW_IO_TASK_SUFFIX + taskItem.getTaskId()); i++) {
-			String item = cache.lindex(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i);
-			AGVIOTaskItem agvioTaskItem = Json.getJson().parse(new String(item), AGVIOTaskItem.class);
-			if (agvioTaskItem.getId().intValue() == taskItem.getId().intValue()) {
-				if (state != null) {
-					agvioTaskItem.setState(state);
-				}
-				if (windowId != null) {
-					agvioTaskItem.setWindowId(windowId);
-				}
-				if (goodsLocationId != null) {
-					agvioTaskItem.setGoodsLocationId(goodsLocationId);
-				}
-				if (boxId != null) {
-					agvioTaskItem.setBoxId(boxId);
-				}
-				if (robotId != null) {
-					agvioTaskItem.setRobotId(robotId);
-				}
-				if (isForceFinish != null) {
-					agvioTaskItem.setIsForceFinish(isForceFinish);
-				}
-				if (isCut != null) {
-					agvioTaskItem.setIsCut(isCut);
-				}
-				if (oldWindowId != null) {
-					agvioTaskItem.setOldWindowId(oldWindowId);
-				}
-				if (uwQuantity != null) {
-					agvioTaskItem.setUwQuantity(uwQuantity);
-				}
-				if (deductionQuantity != null) {
-					agvioTaskItem.setDeductionQuantity(deductionQuantity);
-				}
-				cache.lset(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), i, Json.getJson().toJson(agvioTaskItem));
-				break;
+		String item = cache.hget(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getId());
+		if (item == null || item.trim().equals("")) {
+			return ;
+		}
+		AGVIOTaskItem agvioTaskItem = Jackson.getJson().parse(new String(item), AGVIOTaskItem.class);
+		if (agvioTaskItem.getId().intValue() == taskItem.getId().intValue()) {
+			if (state != null) {
+				agvioTaskItem.setState(state);
+			}
+			if (windowId != null) {
+				agvioTaskItem.setWindowId(windowId);
+			}
+			if (goodsLocationId != null) {
+				agvioTaskItem.setGoodsLocationId(goodsLocationId);
+			}
+			if (boxId != null) {
+				agvioTaskItem.setBoxId(boxId);
+			}
+			if (robotId != null) {
+				agvioTaskItem.setRobotId(robotId);
+			}
+			if (isForceFinish != null) {
+				agvioTaskItem.setIsForceFinish(isForceFinish);
+			}
+			if (isCut != null) {
+				agvioTaskItem.setIsCut(isCut);
+			}
+			if (oldWindowId != null) {
+				agvioTaskItem.setOldWindowId(oldWindowId);
+			}
+			if (uwQuantity != null) {
+				agvioTaskItem.setUwQuantity(uwQuantity);
+			}
+			if (deductionQuantity != null) {
+				agvioTaskItem.setDeductionQuantity(deductionQuantity);
 			}
 		}
+		cache.hset(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getId(), Jackson.getJson().toJson(agvioTaskItem));
 	}
 
 
@@ -129,30 +123,96 @@ public class IOTaskItemRedisDAO {
 	 * 返回出入库任务条目列表的副本
 	 */
 	public synchronized static List<AGVIOTaskItem> getIOTaskItems(Integer taskId) {
-		return getIOTaskItems(taskId, 0, -1);
+		return getIOTaskItems(taskId, null, null);
 	}
 
 
 	
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVIOTaskItem> getIOTaskItems(Integer taskId, Integer startLine, Integer endLine) {
-		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>();
-		List<String> items = cache.lrange(UW_IO_TASK_SUFFIX + taskId, startLine, endLine);
-		for (String item : items) {
-			ioTaskItems.add(Json.getJson().parse(item, AGVIOTaskItem.class));
+		List<String> items = cache.hvals(UW_IO_TASK_SUFFIX + taskId);
+		if (items == null || items.isEmpty()) {
+			return Collections.emptyList();
 		}
-		return ioTaskItems;
+		List<AGVIOTaskItem> ioTaskItems = new ArrayList<>(items.size());
+		for (String item : items) {
+			ioTaskItems.add(Jackson.getJson().parse(item, AGVIOTaskItem.class));
+		}
+		ioTaskItems.sort(IOTaskItemComparator.me);
+		if (startLine == null || endLine == null) {
+			return ioTaskItems;
+		}
+		if (startLine >= endLine) {
+			return Collections.emptyList();
+		}
+		if (endLine > ioTaskItems.size()) {
+			endLine = ioTaskItems.size();
+		}
+		List<AGVIOTaskItem> subAgvioTaskItems = new ArrayList<>(ioTaskItems.subList(startLine, endLine));
+		return subAgvioTaskItems;
+	}
+
+	
+	/**
+	 * 
+	 * <p>Description: 根据任务ID和任务条目ID返回对应的redis条目，返回可能为空<p>
+	 * @return
+	 * @exception
+	 * @author trjie
+	 * @Time 2020年6月1日
+	 */
+	public synchronized static AGVIOTaskItem getIOTaskItem(Integer taskId, Integer taskItemId) {
+		String item = cache.hget(UW_IO_TASK_SUFFIX + taskId, taskItemId);
+		if (item == null || item.trim().equals("")) {
+			return null;
+		}
+		AGVIOTaskItem taskItem = Jackson.getJson().parse(item, AGVIOTaskItem.class);
+		return taskItem;
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public synchronized static Map<Integer, AGVIOTaskItem> getIOTaskItemMap(Integer taskId) {
-		List<AGVIOTaskItem> ioTaskItems = getIOTaskItems(taskId, 0, -1);
-		Map<Integer, AGVIOTaskItem> map = new HashMap<>();
-		if (!ioTaskItems.isEmpty()) {
-			for (AGVIOTaskItem agvioTaskItem : ioTaskItems) {
-				map.put(agvioTaskItem.getId(), agvioTaskItem);
+		Map<String, String> map = cache.hgetAll(UW_IO_TASK_SUFFIX + taskId);
+		Map<Integer, AGVIOTaskItem> itemMap = new HashMap<>();
+		if (!map.isEmpty()) {
+			for (Entry<String, String> entry : map.entrySet()) {
+				itemMap.put(Integer.valueOf(entry.getKey()), Jackson.getJson().parse(entry.getValue(), AGVIOTaskItem.class));
 			}
 		}
-		return map;
+		return itemMap;
+	}
+	
+	public static void main(String[] args) {
+	    RedisPlugin rp = new RedisPlugin("myRedis", "localhost");
+	    // 与web下唯一区别是需要这里调用一次start()方法
+	    rp.setSerializer(new VisualSerializer());
+	    rp.start();
+	    cache = Redis.use();
+	    List<AGVIOTaskItem> taskItems = new ArrayList<>();
+	    taskItems.add(createAGVIOTaskItem(1222, 23));
+	    taskItems.add(createAGVIOTaskItem(1222, 31));
+	    taskItems.add(createAGVIOTaskItem(1222, 12));
+	    taskItems.add(createAGVIOTaskItem(1222, 1));
+	    taskItems.add(createAGVIOTaskItem(1222, 54));
+	    addIOTaskItem(1000, taskItems);
+	    
+	    Map<Integer, AGVIOTaskItem> map = getIOTaskItemMap(1000);
+	    List<AGVIOTaskItem> items = getIOTaskItems(1000);
+	    AGVIOTaskItem agvioTaskItem = getIOTaskItem(1000, 31);
+	    System.out.println(map);
+	    System.out.println(items);
+	    System.out.println(agvioTaskItem);
+
+	  }
+	
+	private static AGVIOTaskItem createAGVIOTaskItem(Integer taskId, Integer id) {
+	    PackingListItem packingListItem = new PackingListItem();
+	    packingListItem.setId(id);
+	    packingListItem.setTaskId(taskId);
+	    packingListItem.setMaterialTypeId(new Random().nextInt(1000));
+	    packingListItem.setQuantity(new Random().nextInt(10000));
+	    AGVIOTaskItem agvioTaskItem = new AGVIOTaskItem(packingListItem, 0, 0, false);
+	    return agvioTaskItem;
 	}
 }

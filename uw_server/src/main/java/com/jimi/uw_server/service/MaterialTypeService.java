@@ -417,170 +417,181 @@ public class MaterialTypeService {
 		page.setTotalPage(materialTypesRecords.getTotalPage());
 		page.setTotalRow(materialTypesRecords.getTotalRow());
 		List<MaterialStockDetailVO> materialStockDetailVOs = new ArrayList<>();
-		//遍历所有物料类型
-		for (Record record : materialTypesRecords.getList()) {
-			
-			MaterialStockDetailVO materialStockDetailVO = new MaterialStockDetailVO();
-			materialStockDetailVO.setId(record.getInt("id"));
-			materialStockDetailVO.setNo(record.getStr("no"));
-			materialStockDetailVO.setSpecification(record.getStr("specification"));
-			materialStockDetailVO.setSupplierName(supplier.getName());
-			materialStockDetailVO.setWarehouse(warehouseString);
-			List<WarehouseStockVO> warehouseStockVOs = new ArrayList<>();
-			//全部仓库的入库数和出库数
-			Integer allWarehosueInNum = 0;
-			Integer allWarehosueOutNum = 0;
-			Integer allOldBalance = 0;
-			Integer allCurrentBalance = 0; 
-			//遍历所有仓库
-			for (Destination warehouse : warehouses) {
-				WarehouseStockVO warehouseStockVO = new WarehouseStockVO();
-				warehouseStockVO.setWarehouse(warehouse.getName());
-				List<WarehouseStockDetailVO> warehouseStockDetailVOs = new ArrayList<>();
-				//每个仓库内部的入库数和出库数
-				Integer inStockNum = 0;
-				Integer outStockNum = 0;
-				Integer oldBalance =  0;
-				if (warehouse.getId().equals(0)) {
-					List<Record> ioRecords = Db.find(IOTaskSQL.GET_ALL_SUM_OF_TASK_LOG_BY_TIME_AND_MATERIALTYPE_SQL, startTime, endTime, record.getInt("id"), startTime, endTime, record.getInt("id"), startTime, endTime, record.getInt("id"));
-					//遍历所有日志记录（同一任务同一物料类型入库，出库数量已统计）
-					for (Record ioRecord : ioRecords) {
-						Integer taskType = ioRecord.getInt("Task_Type");
-						Integer ioQuantity = ioRecord.getInt("IO_Quantity");
-						WarehouseStockDetailVO warehouseStockDetailVO = new WarehouseStockDetailVO();
-						switch (taskType) {
-						//入库
-						case TaskType.IN:
-							warehouseStockDetailVO.setOperationType("入库");
-							warehouseStockDetailVO.setNumberInStock(ioQuantity);
-							inStockNum += ioQuantity;
-							break;
-						//出库
-						case TaskType.OUT:
-							warehouseStockDetailVO.setOperationType("出库");
-							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
-							outStockNum += ioQuantity;
-							break;
-						//调拨入库
-						case TaskType.SEND_BACK:
-							warehouseStockDetailVO.setOperationType("入库");
-							warehouseStockDetailVO.setNumberInStock(ioQuantity);
-							inStockNum += ioQuantity;
-							break;
-						//紧急出库（紧急出库伴随着一个入库任务生成，紧急入库任务数量包含在入库任务中计算，此处仅计算紧急出库）
-						case TaskType.EMERGENCY_OUT:
-							warehouseStockDetailVO.setOperationType("出库");
-							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
-							outStockNum += ioQuantity;
-							break;
-						//盘点
-						case TaskType.COUNT:
-							if (ioQuantity > 0) {
-								warehouseStockDetailVO.setOperationType("入库");
-								warehouseStockDetailVO.setNumberInStock(ioQuantity);
-								inStockNum += ioQuantity;
-							}else {
-								warehouseStockDetailVO.setOperationType("出库");
-								warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
-								outStockNum += (0 - ioQuantity);
+		if (materialTypesRecords != null && materialTypesRecords.getList() != null && !materialTypesRecords.getList().isEmpty()) {
+			//遍历所有物料类型
+			for (Record record : materialTypesRecords.getList()) {
+				
+				MaterialStockDetailVO materialStockDetailVO = new MaterialStockDetailVO();
+				materialStockDetailVO.setId(record.getInt("id"));
+				materialStockDetailVO.setNo(record.getStr("no"));
+				materialStockDetailVO.setSpecification(record.getStr("specification"));
+				materialStockDetailVO.setSupplierName(supplier.getName());
+				materialStockDetailVO.setWarehouse(warehouseString);
+				List<WarehouseStockVO> warehouseStockVOs = new ArrayList<>();
+				//全部仓库的入库数和出库数
+				Integer allWarehosueInNum = 0;
+				Integer allWarehosueOutNum = 0;
+				Integer allOldBalance = 0;
+				Integer allCurrentBalance = 0; 
+				//遍历所有仓库
+				for (Destination warehouse : warehouses) {
+					WarehouseStockVO warehouseStockVO = new WarehouseStockVO();
+					warehouseStockVO.setWarehouse(warehouse.getName());
+					List<WarehouseStockDetailVO> warehouseStockDetailVOs = new ArrayList<>();
+					//每个仓库内部的入库数和出库数
+					Integer inStockNum = 0;
+					Integer outStockNum = 0;
+					Integer oldBalance =  0;
+					if (warehouse.getId().equals(0)) {
+						List<Record> ioRecords = Db.find(IOTaskSQL.GET_ALL_SUM_OF_TASK_LOG_BY_TIME_AND_MATERIALTYPE_SQL, startTime, endTime, record.getInt("id"), startTime, endTime, record.getInt("id"), startTime, endTime, record.getInt("id"));
+						//遍历所有日志记录（同一任务同一物料类型入库，出库数量已统计）
+						if (!ioRecords.isEmpty()) {
+							for (Record ioRecord : ioRecords) {
+								Integer taskType = ioRecord.getInt("Task_Type");
+								if (taskType == null) {
+									continue;
+								}
+								Integer ioQuantity = ioRecord.getInt("IO_Quantity") == null ? 0 : ioRecord.getInt("IO_Quantity");
+								WarehouseStockDetailVO warehouseStockDetailVO = new WarehouseStockDetailVO();
+								switch (taskType) {
+								//入库
+								case TaskType.IN:
+									warehouseStockDetailVO.setOperationType("入库");
+									warehouseStockDetailVO.setNumberInStock(ioQuantity);
+									inStockNum += ioQuantity;
+									break;
+								//出库
+								case TaskType.OUT:
+									warehouseStockDetailVO.setOperationType("出库");
+									warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+									outStockNum += ioQuantity;
+									break;
+								//调拨入库
+								case TaskType.SEND_BACK:
+									warehouseStockDetailVO.setOperationType("入库");
+									warehouseStockDetailVO.setNumberInStock(ioQuantity);
+									inStockNum += ioQuantity;
+									break;
+								//紧急出库（紧急出库伴随着一个入库任务生成，紧急入库任务数量包含在入库任务中计算，此处仅计算紧急出库）
+								case TaskType.EMERGENCY_OUT:
+									warehouseStockDetailVO.setOperationType("出库");
+									warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+									outStockNum += ioQuantity;
+									break;
+								//盘点
+								case TaskType.COUNT:
+									if (ioQuantity > 0) {
+										warehouseStockDetailVO.setOperationType("入库");
+										warehouseStockDetailVO.setNumberInStock(ioQuantity);
+										inStockNum += ioQuantity;
+									}else {
+										warehouseStockDetailVO.setOperationType("出库");
+										warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
+										outStockNum += (0 - ioQuantity);
+									}
+									break;
+								//抽检
+								case TaskType.SAMPLE:
+									warehouseStockDetailVO.setOperationType("出库");
+									warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+									outStockNum += ioQuantity;
+									break;
+								}
+								warehouseStockDetailVOs.add(warehouseStockDetailVO);
 							}
-							break;
-						//抽检
-						case TaskType.SAMPLE:
-							warehouseStockDetailVO.setOperationType("出库");
-							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
-							outStockNum += ioQuantity;
-							break;
 						}
-						warehouseStockDetailVOs.add(warehouseStockDetailVO);
-					}
-					oldBalance = getUwStockByTimeAndMaterialType(startTime, record.getInt("id"));
-				}else {
-					List<Record> ioRecords = Db.find(IOTaskSQL.GET_ALL_EXTERNAL_WH_IO_LOG_BY_TIME_AND_MATERIALTYPE_SQL, warehouse.getId(), startTime, endTime, record.getInt("id"), warehouse.getId(), startTime, endTime, record.getInt("id"), warehouse.getId(), startTime, endTime, record.getInt("id"));
-					for (Record ioRecord : ioRecords) {
-						Integer taskType = ioRecord.getInt("Task_Type");
-						Integer ioQuantity = ioRecord.getInt("IO_Quantity");
-						WarehouseStockDetailVO warehouseStockDetailVO = new WarehouseStockDetailVO();
-						switch (taskType) {
-						//出库
-						case TaskType.OUT :
-							if (ioQuantity > 0) {
-								warehouseStockDetailVO.setOperationType("入库");
-								warehouseStockDetailVO.setNumberInStock(ioQuantity);
-								inStockNum += ioQuantity;
-							}else {
-								warehouseStockDetailVO.setOperationType("出库");
-								warehouseStockDetailVO.setNumberOutStock(ioQuantity);
-								outStockNum += (0 - ioQuantity);
+						
+						oldBalance = getUwStockByTimeAndMaterialType(startTime, record.getInt("id"));
+					}else {
+						List<Record> ioRecords = Db.find(IOTaskSQL.GET_ALL_EXTERNAL_WH_IO_LOG_BY_TIME_AND_MATERIALTYPE_SQL, warehouse.getId(), startTime, endTime, record.getInt("id"), warehouse.getId(), startTime, endTime, record.getInt("id"), warehouse.getId(), startTime, endTime, record.getInt("id"));
+						if (!ioRecords.isEmpty()) {
+							for (Record ioRecord : ioRecords) {
+								Integer taskType = ioRecord.getInt("Task_Type");
+								if (taskType == null) {
+									continue;
+								}
+								Integer ioQuantity = ioRecord.getInt("IO_Quantity") == null ? 0 : ioRecord.getInt("IO_Quantity");
+								WarehouseStockDetailVO warehouseStockDetailVO = new WarehouseStockDetailVO();
+								switch (taskType) {
+								//出库
+								case TaskType.OUT :
+									if (ioQuantity > 0) {
+										warehouseStockDetailVO.setOperationType("入库");
+										warehouseStockDetailVO.setNumberInStock(ioQuantity);
+										inStockNum += ioQuantity;
+									}else {
+										warehouseStockDetailVO.setOperationType("出库");
+										warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+										outStockNum += (0 - ioQuantity);
+									}
+									break;
+								//紧急出库（紧急出库伴随着一个入库任务生成，紧急入库任务数量包含在入库任务中计算，此处仅计算紧急出库）
+								case TaskType.EMERGENCY_OUT :
+									if (ioQuantity > 0) {
+										warehouseStockDetailVO.setOperationType("入库");
+										warehouseStockDetailVO.setNumberInStock(ioQuantity);
+										inStockNum += ioQuantity;
+									}else {
+										warehouseStockDetailVO.setOperationType("出库");
+										warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+										outStockNum += (0 - ioQuantity);
+									}
+									break;
+								//调拨入库
+								case TaskType.SEND_BACK:
+									warehouseStockDetailVO.setOperationType("出库");
+									warehouseStockDetailVO.setNumberOutStock(ioQuantity);
+									outStockNum += ioQuantity;
+									break;
+								//盘点
+								case TaskType.COUNT:
+									if (ioQuantity > 0) {
+										warehouseStockDetailVO.setOperationType("入库");
+										warehouseStockDetailVO.setNumberInStock(ioQuantity);
+										inStockNum += ioQuantity;
+									}else {
+										warehouseStockDetailVO.setOperationType("出库");
+										warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
+										outStockNum += (0 - ioQuantity);
+									}
+									break;
+								//抽检
+								case TaskType.EXTERNAL_IN_OUT:
+									if (ioQuantity > 0) {
+										warehouseStockDetailVO.setOperationType("入库");
+										warehouseStockDetailVO.setNumberInStock(ioQuantity);
+										inStockNum += ioQuantity;
+									}else {
+										warehouseStockDetailVO.setOperationType("出库");
+										warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
+										outStockNum += (0 - ioQuantity);
+									}
+									
+									break;
+								}
+								warehouseStockDetailVOs.add(warehouseStockDetailVO);
 							}
-							break;
-						//紧急出库（紧急出库伴随着一个入库任务生成，紧急入库任务数量包含在入库任务中计算，此处仅计算紧急出库）
-						case TaskType.EMERGENCY_OUT :
-							if (ioQuantity > 0) {
-								warehouseStockDetailVO.setOperationType("入库");
-								warehouseStockDetailVO.setNumberInStock(ioQuantity);
-								inStockNum += ioQuantity;
-							}else {
-								warehouseStockDetailVO.setOperationType("出库");
-								warehouseStockDetailVO.setNumberOutStock(ioQuantity);
-								outStockNum += (0 - ioQuantity);
-							}
-							break;
-						//调拨入库
-						case TaskType.SEND_BACK:
-							warehouseStockDetailVO.setOperationType("出库");
-							warehouseStockDetailVO.setNumberOutStock(ioQuantity);
-							outStockNum += ioQuantity;
-							break;
-						//盘点
-						case TaskType.COUNT:
-							if (ioQuantity > 0) {
-								warehouseStockDetailVO.setOperationType("入库");
-								warehouseStockDetailVO.setNumberInStock(ioQuantity);
-								inStockNum += ioQuantity;
-							}else {
-								warehouseStockDetailVO.setOperationType("出库");
-								warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
-								outStockNum += (0 - ioQuantity);
-							}
-							break;
-						//抽检
-						case TaskType.EXTERNAL_IN_OUT:
-							if (ioQuantity > 0) {
-								warehouseStockDetailVO.setOperationType("入库");
-								warehouseStockDetailVO.setNumberInStock(ioQuantity);
-								inStockNum += ioQuantity;
-							}else {
-								warehouseStockDetailVO.setOperationType("出库");
-								warehouseStockDetailVO.setNumberOutStock(0 - ioQuantity);
-								outStockNum += (0 - ioQuantity);
-							}
-							
-							break;
 						}
-						warehouseStockDetailVOs.add(warehouseStockDetailVO);
+						oldBalance = externalWhLogService.getRuntimeEWhMaterialQuantity(record.getInt("id"), warehouse.getId(), startTime) ;
 					}
-					oldBalance = externalWhLogService.getRuntimeEWhMaterialQuantity(record.getInt("id"), warehouse.getId(), startTime) ;
+					warehouseStockVO.setNumberInStock(inStockNum);
+					warehouseStockVO.setNumberOutStock(outStockNum);
+					warehouseStockVO.setOldBalance(oldBalance);
+					warehouseStockVO.setCurrentBalance(oldBalance + inStockNum - outStockNum);
+					warehouseStockVO.setDetails(warehouseStockDetailVOs);
+					warehouseStockVOs.add(warehouseStockVO);
+					allWarehosueInNum += inStockNum;
+					allWarehosueOutNum += outStockNum;
+					allOldBalance += oldBalance;
+					allCurrentBalance += warehouseStockVO.getCurrentBalance();
 				}
-				warehouseStockVO.setNumberInStock(inStockNum);
-				warehouseStockVO.setNumberOutStock(outStockNum);
-				warehouseStockVO.setOldBalance(oldBalance);
-				warehouseStockVO.setCurrentBalance(oldBalance + inStockNum - outStockNum);
-				warehouseStockVO.setDetails(warehouseStockDetailVOs);
-				warehouseStockVOs.add(warehouseStockVO);
-				allWarehosueInNum += inStockNum;
-				allWarehosueOutNum += outStockNum;
-				allOldBalance += oldBalance;
-				allCurrentBalance += warehouseStockVO.getCurrentBalance();
+				materialStockDetailVO.setNumberInStock(allWarehosueInNum);
+				materialStockDetailVO.setNumberOutStock(allWarehosueOutNum);
+				materialStockDetailVO.setOldBalance(allOldBalance);
+				materialStockDetailVO.setCurrentBalance(allCurrentBalance);
+				materialStockDetailVO.setList(warehouseStockVOs);
+				materialStockDetailVOs.add(materialStockDetailVO);
 			}
-			materialStockDetailVO.setNumberInStock(allWarehosueInNum);
-			materialStockDetailVO.setNumberOutStock(allWarehosueOutNum);
-			materialStockDetailVO.setOldBalance(allOldBalance);
-			materialStockDetailVO.setCurrentBalance(allCurrentBalance);
-			materialStockDetailVO.setList(warehouseStockVOs);
-			materialStockDetailVOs.add(materialStockDetailVO);
-			
-			
 		}
 		page.setList(materialStockDetailVOs);
 		return page;

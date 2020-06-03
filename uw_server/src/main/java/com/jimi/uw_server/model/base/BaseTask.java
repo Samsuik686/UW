@@ -144,4 +144,12 @@ public abstract class BaseTask<M extends BaseTask<M>> extends Model<M> implement
 		return getInt("warehouse_type");
 	}
 
+	public java.lang.Boolean getIsDeducted() {
+		return get("is_deducted");
+	}
+
+	public M setIsDeducted(java.lang.Boolean isDeducted) {
+		set("is_deducted", isDeducted);
+		return (M)this;
+	}
 }

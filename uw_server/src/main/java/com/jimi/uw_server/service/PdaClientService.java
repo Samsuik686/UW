@@ -77,11 +77,11 @@ public class PdaClientService {
 		// 如果任务类型为出入库
 		String filter = null;
 		if (no != null && !no.trim().equals("")) {
-			filter = "material_type.no = " + no;
+			filter = "packing_list_item.task_id=" + taskId + "#&#material_type.no=" + no;
 		}
 		// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
 		Page<Record> packingListItems = selectService.select(new String[] { "packing_list_item", "material_type" },
-				new String[] { "packing_list_item.task_id = " + taskId, "material_type.id = packing_list_item.material_type_id" }, null, null, null, null, filter);
+				new String[] {"material_type.id = packing_list_item.material_type_id" }, null, null, null, null, filter);
 
 		// 遍历同一个任务id的套料单数据
 		for (Record packingListItem : packingListItems.getList()) {

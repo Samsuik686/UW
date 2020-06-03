@@ -84,12 +84,13 @@ public class InvTaskHandler extends BaseTaskHandler {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
 		// 匹配groupid
-		for (AGVInventoryTaskItem item : InventoryTaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split("@")[1]))) {
-			if (groupid.equals(item.getGroupId())) {
-				// 更新tsakitems里对应item的robotid
-				InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, null, null, null, statusCmd.getRobotid(), null);
-			}
+		AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(Integer.valueOf(groupid.split("@")[1]), Integer.valueOf(groupid.split("@")[0]));
+		// 更新tsakitems里对应item的robotid
+		if (item == null) {
+			return ;
 		}
+		InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, null, null, null, statusCmd.getRobotid(), null);
+		
 	}
 
 
@@ -98,18 +99,15 @@ public class InvTaskHandler extends BaseTaskHandler {
 		// 获取groupid
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
-		for (AGVInventoryTaskItem item : InventoryTaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split("@")[1]))) {
-			// 判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-			if (item.getGroupId().equals(groupid.trim()) && item.getState() == TaskItemState.ASSIGNED && missionGroupId.contains("S")) {// 判断是取料盒并且叉到料盒
-				// 更改taskitems里对应item状态为2（已拣料到站）***
-				InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null);
-				break;
-			} else if (item.getGroupId().equals(groupid.trim()) && item.getState() == TaskItemState.START_BACK && missionGroupId.contains("B")) {// 判断是回库并且叉到料盒
-				// 更改taskitems里对应item状态为4（已回库完成）***
-				InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null);
-				TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);
-				break;
-			}
+		AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(Integer.valueOf(groupid.split("@")[1]), Integer.valueOf(groupid.split("@")[0]));
+		if (item == null) {
+			return ;
+		}
+		if (missionGroupId.contains("S") && item.getState() == TaskItemState.ASSIGNED) {
+			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null);
+		}else if (missionGroupId.contains("B") && item.getState() == TaskItemState.START_BACK) {
+			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null);
+			TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);
 		}
 	}
 
@@ -120,42 +118,35 @@ public class InvTaskHandler extends BaseTaskHandler {
 		String missionGroupId = statusCmd.getMissiongroupid();
 		String groupid = missionGroupId.split("_")[0];
 		Integer taskId = Integer.valueOf(groupid.split("@")[1]);
+		Integer boxId = Integer.valueOf(groupid.split("@")[0]);
 		// 匹配groupid
-		for (AGVInventoryTaskItem item : InventoryTaskItemRedisDAO.getInventoryTaskItems(Integer.valueOf(groupid.split("@")[1]))) {
-			if (groupid.trim().equals(item.getGroupId())) {
-
-				// 判断是LS指令还是SL指令第二动作完成，状态是1说明是LS，状态2是SL
-				if (item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {// LS执行完成时
-					// 更改taskitems里对应item状态为2（已拣料到站）***
-					InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
-					Window window = Window.dao.findById(item.getWindowId());
-					int boxId = item.getBoxId();
-					if (window.getAuto()) {
-						List<Material> materials = Material.dao.find(SQL.GET_MATERIAL_BY_BOX, boxId);
-
-						if (!materials.isEmpty()) {
-							List<UrMaterialInfo> urMaterialInfos = new ArrayList<UrMaterialInfo>();
-							for (Material material : materials) {
-                                UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), 0);
-                                urMaterialInfos.add(urMaterialInfo);
-							}
-							UrTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
-						}
-						//发送ready包
-                        ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
-                        PackSender.sendForkliftReachPackage("robot1", pack);
+		AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(taskId, boxId);
+		if (item == null) {
+			return ;
+		}
+		if (item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {// LS执行完成时
+			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
+			Window window = Window.dao.findById(item.getWindowId());
+			if (window.getAuto()) {
+				List<Material> materials = Material.dao.find(SQL.GET_MATERIAL_BY_BOX, boxId);
+				if (!materials.isEmpty()) {
+					List<UrMaterialInfo> urMaterialInfos = new ArrayList<UrMaterialInfo>();
+					for (Material material : materials) {
+                        UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), 0);
+                        urMaterialInfos.add(urMaterialInfo);
 					}
-					break;
-				} else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {// SL执行完成时：
-					// 更改taskitems里对应item状态为4（已回库完成）***
-					InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
-					MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
-					materialBox.setIsOnShelf(true);
-					materialBox.update();
-					clearTask(item.getTaskId());
-					break;
+					UrTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
 				}
+				//发送ready包
+                ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
+                PackSender.sendForkliftReachPackage("robot1", pack);
 			}
+		}else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {
+			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
+			MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
+			materialBox.setIsOnShelf(true);
+			materialBox.update();
+			clearTask(item.getTaskId());
 		}
 	}
 

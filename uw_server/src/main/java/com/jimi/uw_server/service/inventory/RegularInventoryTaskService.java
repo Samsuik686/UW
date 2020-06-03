@@ -298,25 +298,26 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 			}
 			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
 			if (materialBox == null) {
-				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
+				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确！");
 			}
-			for (AGVInventoryTaskItem inventoryTaskItem : InventoryTaskItemRedisDAO.getInventoryTaskItems(taskId)) {
-				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
-					try {
-						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
-						if (goodsLocation != null) {
-							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
-						} else {
-							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
-						}
-						InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
-					} catch (Exception e) {
-						e.printStackTrace();
-						throw new OperationException(e.getMessage());
-					}
-					break;
+			AGVInventoryTaskItem inventoryTaskItem = InventoryTaskItemRedisDAO.getInventoryTaskItem(taskId, boxId);
+			if (inventoryTaskItem == null || inventoryTaskItem.getState() != TaskItemState.ARRIVED_WINDOW) {
+				throw new OperationException("任务条目不存在或者未到站！");
+			}
+			try {
+				GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
+				if (goodsLocation != null) {
+					invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
+				} else {
+					throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
 				}
+				InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new OperationException(e.getMessage());
 			}
+			
+			
 			for (InventoryLog inventoryLog : inventoryLogs) {
 				if (!inventoryLog.getBeforeNum().equals(inventoryLog.getActuralNum())) {
 					// 改变实际库存
@@ -363,22 +364,21 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 			if (materialBox == null) {
 				throw new OperationException("当前盘点的料盒不存在，请检查参数是否正确!");
 			}
-			for (AGVInventoryTaskItem inventoryTaskItem : InventoryTaskItemRedisDAO.getInventoryTaskItems(taskId)) {
-				if (inventoryTaskItem.getBoxId().equals(boxId) && inventoryTaskItem.getState().equals(TaskItemState.ARRIVED_WINDOW)) {
-					try {
-						GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
-						if (goodsLocation != null) {
-							invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
-						} else {
-							throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
-						}
-						InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
-					} catch (Exception e) {
-						e.printStackTrace();
-						throw new OperationException(e.getMessage());
-					}
-					break;
+			AGVInventoryTaskItem inventoryTaskItem = InventoryTaskItemRedisDAO.getInventoryTaskItem(taskId, boxId);
+			if (inventoryTaskItem == null || inventoryTaskItem.getState() != TaskItemState.ARRIVED_WINDOW) {
+				throw new OperationException("任务条目不存在或者未到站！");
+			}
+			try {
+				GoodsLocation goodsLocation = GoodsLocation.dao.findById(inventoryTaskItem.getGoodsLocationId());
+				if (goodsLocation != null) {
+					invTaskHandler.sendBackLL(inventoryTaskItem, materialBox, goodsLocation, task.getPriority());
+				} else {
+					throw new OperationException("找不到目的货位，仓口：" + inventoryTaskItem.getWindowId() + "货位：" + inventoryTaskItem.getGoodsLocationId());
 				}
+				InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(inventoryTaskItem, TaskItemState.START_BACK, null, null, null, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new OperationException(e.getMessage());
 			}
 			for (InventoryLog inventoryLog : inventoryLogs) {
 				if (!inventoryLog.getBeforeNum().equals(inventoryLog.getActuralNum())) {
