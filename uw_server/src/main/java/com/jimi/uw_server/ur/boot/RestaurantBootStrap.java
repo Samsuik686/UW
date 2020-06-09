@@ -16,9 +16,9 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
 
 /**
- * 服务端启动器，负责配置服务器参数、指令处理器链，并启动服务器
- * <br>
+ * 服务端启动器，负责配置服务器参数、指令处理器链，并启动服务器 <br>
  * <b>2019年9月27日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 public class RestaurantBootStrap extends ChannelInitializer<SocketChannel> {

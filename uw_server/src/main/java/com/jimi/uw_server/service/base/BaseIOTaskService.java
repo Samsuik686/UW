@@ -35,7 +35,6 @@ import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.constant.sql.WindowSQL;
 import com.jimi.uw_server.exception.FormDataValidateFailedException;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.MaterialType;
 import com.jimi.uw_server.model.PackingListItem;
@@ -86,6 +85,7 @@ public class BaseIOTaskService {
 
 	private static final String GET_UNCANCLE_TASK_BY_FILE_NAME_SQL = "SELECT * FROM task WHERE file_name = ? and state < 4";
 
+
 	// 创建出入库/退料任务
 	public void createTask(Integer type, String fileName, File file, Integer supplier, Integer destination, Boolean isInventoryApply, Integer inventoryTaskId, String remarks, Integer warehouseType,
 			Boolean isForced, Boolean isDeducted) throws Exception {
@@ -106,95 +106,95 @@ public class BaseIOTaskService {
 			resultString = "创建任务失败，请检查套料单的表头是否正确以及套料单表格中是否有效的任务记录！";
 			throw new OperationException(resultString);
 		} else {
-			synchronized (Lock.CREATE_IOTASK_LOCK) {
-				// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
-				if (Task.dao.find(GET_UNCANCLE_TASK_BY_FILE_NAME_SQL, fileName).size() > 0) {
-					resultString = "创建任务失败，已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
-					throw new OperationException(resultString);
-				}
-				// 从套料单电子表格第四行开始有任务记录
-				int i = 4;
-				// 读取excel表格的套料单数据，将数据一条条写入到套料单表
-				List<PackingListItemBO> validationFailedRecords = new ArrayList<>(items.size());
-				for (PackingListItemBO item : items) {
-					if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
+			// 如果已经用该套料单创建过任务，并且该任务没有被作废，则禁止再导入相同文件名的套料单
+			if (Task.dao.find(GET_UNCANCLE_TASK_BY_FILE_NAME_SQL, fileName).size() > 0) {
+				resultString = "创建任务失败，已经用该套料单创建过任务，请先作废掉原来的套料单任务！或者修改原套料单文件名，如：套料单A-重新入库";
+				throw new OperationException(resultString);
+			}
+			// 从套料单电子表格第四行开始有任务记录
+			int i = 4;
+			// 读取excel表格的套料单数据，将数据一条条写入到套料单表
+			List<PackingListItemBO> validationFailedRecords = new ArrayList<>(items.size());
+			for (PackingListItemBO item : items) {
+				if (item.getSerialNumber() != null && item.getSerialNumber() > 0) { // 只读取有序号的行数据
 
-						if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
-							resultString = "创建任务失败，请检查套料单表格第" + i + "行的料号或需求数列是否填写了准确信息！";
-							throw new OperationException(resultString);
-						}
-
-						if (item.getQuantity() <= 0) {
-							resultString = "创建任务失败，套料单表格第" + i + "行的需求数为" + item.getQuantity() + "，需求数必须大于0！";
-							throw new OperationException(resultString);
-						}
-						// 根据料号找到对应的物料类型
-						MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, item.getNo().trim(), supplier, warehouseType);
-						// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
-						if (mType == null) {
-							if (!isForced) {
-								validationFailedRecords.add(item);
-							}
-							continue;
-						}
-						if (taskDetailsMap.get(mType.getId()) == null) {
-							taskDetailsMap.put(mType.getId(), item.getQuantity());
-						} else {
-							taskDetailsMap.put(mType.getId(), taskDetailsMap.get(mType.getId()) + item.getQuantity());
-						}
-						i++;
-					} else if (i == 4) { // 若第四行就没有序号，则说明套料单表格没有一条任务记录
-						resultString = "创建任务失败，套料单表格没有任何有效的物料信息记录！";
+					if (item.getNo() == null || item.getQuantity() == null || item.getNo().replaceAll(" ", "").equals("") || item.getQuantity().toString().replaceAll(" ", "").equals("")) {
+						resultString = "创建任务失败，请检查套料单表格第" + i + "行的料号或需求数列是否填写了准确信息！";
 						throw new OperationException(resultString);
-					} else {
-						break;
 					}
-				}
-				if (!validationFailedRecords.isEmpty()) {
-					throw new FormDataValidateFailedException("表格校验存在问题！", validationFailedRecords);
-				}
-				if (taskDetailsMap.isEmpty()) {
+
+					if (item.getQuantity() <= 0) {
+						resultString = "创建任务失败，套料单表格第" + i + "行的需求数为" + item.getQuantity() + "，需求数必须大于0！";
+						throw new OperationException(resultString);
+					}
+					// 根据料号找到对应的物料类型
+					MaterialType mType = MaterialType.dao.findFirst(MaterialTypeSQL.GET_MATERIAL_TYPE_BY_NO_AND_SUPPLIER_AND_TYPE_SQL, item.getNo().trim(), supplier, warehouseType);
+					// 判断物料类型表中是否存在对应的料号且未被禁用，若不存在，则将对应的任务记录删除掉，并提示操作员检查套料单、新增对应的物料类型
+					if (mType == null) {
+						if (!isForced) {
+							validationFailedRecords.add(item);
+						}
+						continue;
+					}
+					if (taskDetailsMap.get(mType.getId()) == null) {
+						taskDetailsMap.put(mType.getId(), item.getQuantity());
+					} else {
+						taskDetailsMap.put(mType.getId(), taskDetailsMap.get(mType.getId()) + item.getQuantity());
+					}
+					i++;
+				} else if (i == 4) { // 若第四行就没有序号，则说明套料单表格没有一条任务记录
 					resultString = "创建任务失败，套料单表格没有任何有效的物料信息记录！";
 					throw new OperationException(resultString);
-				}
-				Task task = new Task();
-				task.setType(type);
-				task.setFileName(fileName);
-				task.setState(TaskState.WAIT_REVIEW);
-				task.setCreateTime(new Date());
-				task.setSupplier(supplier);
-				task.setDestination(destination);
-				task.setRemarks(remarks);
-				task.setIsDeducted(isDeducted);
-				if (isInventoryApply != null && isInventoryApply) {
-					task.setIsInventoryApply(true);
-					if (inventoryTaskId == null) {
-						resultString = "创建任务失败，未选择盘点期间申补单所绑定的盘点任务！";
-						throw new OperationException(resultString);
-					}
-					task.setInventoryTaskId(inventoryTaskId);
 				} else {
-					task.setIsInventoryApply(false);
-				}
-				task.setWarehouseType(warehouseType);
-				task.save();
-
-				for (Entry<Integer, Integer> entry : taskDetailsMap.entrySet()) {
-					PackingListItem packingListItem = new PackingListItem();
-					// 将任务条目插入套料单
-					Integer materialTypeId = entry.getKey();
-					// 添加物料类型id
-					packingListItem.setMaterialTypeId(materialTypeId);
-					// 添加计划出入库数量
-					packingListItem.setQuantity(entry.getValue());
-					// 添加任务id
-					packingListItem.setTaskId(task.getId());
-					// 保存该记录到套料单表
-					packingListItem.save();
+					break;
 				}
 			}
+			if (!validationFailedRecords.isEmpty()) {
+				throw new FormDataValidateFailedException("表格校验存在问题！", validationFailedRecords);
+			}
+			if (taskDetailsMap.isEmpty()) {
+				resultString = "创建任务失败，套料单表格没有任何有效的物料信息记录！";
+				throw new OperationException(resultString);
+			}
+			Task task = new Task();
+			task.setType(type);
+			task.setFileName(fileName);
+			task.setState(TaskState.WAIT_REVIEW);
+			task.setCreateTime(new Date());
+			task.setSupplier(supplier);
+			task.setDestination(destination);
+			task.setRemarks(remarks);
+			task.setIsDeducted(isDeducted);
+			if (isInventoryApply != null && isInventoryApply) {
+				task.setIsInventoryApply(true);
+				if (inventoryTaskId == null) {
+					resultString = "创建任务失败，未选择盘点期间申补单所绑定的盘点任务！";
+					throw new OperationException(resultString);
+				}
+				task.setInventoryTaskId(inventoryTaskId);
+			} else {
+				task.setIsInventoryApply(false);
+			}
+			task.setWarehouseType(warehouseType);
+			task.save();
+
+			for (Entry<Integer, Integer> entry : taskDetailsMap.entrySet()) {
+				PackingListItem packingListItem = new PackingListItem();
+				// 将任务条目插入套料单
+				Integer materialTypeId = entry.getKey();
+				// 添加物料类型id
+				packingListItem.setMaterialTypeId(materialTypeId);
+				// 添加计划出入库数量
+				packingListItem.setQuantity(entry.getValue());
+				// 添加任务id
+				packingListItem.setTaskId(task.getId());
+				// 保存该记录到套料单表
+				packingListItem.save();
+			}
 		}
+
 	}
+
 
 	public PagePaginate check(Integer id, Integer type, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
@@ -251,6 +251,7 @@ public class BaseIOTaskService {
 		return null;
 	}
 
+
 	public void pass(Integer id) {
 		Task task = Task.dao.findById(id);
 		int state = task.getState();
@@ -261,6 +262,7 @@ public class BaseIOTaskService {
 			task.setState(TaskState.WAIT_START).update();
 		}
 	}
+
 
 	// 查询所有任务
 	public PagePaginate select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -289,11 +291,12 @@ public class BaseIOTaskService {
 		return pagePaginate;
 	}
 
+
 	// 查看任务详情
 	public PagePaginate getIOTaskDetails(Integer id, Integer type, String no, Integer pageSize, Integer pageNo) {
 		List<IOTaskDetailVO> ioTaskDetailVOs = new ArrayList<IOTaskDetailVO>();
 		// 如果任务类型为出入库
-		
+
 		String filter = null;
 		if (no != null && !no.trim().equals("")) {
 			filter = "material_type.no like " + no;
@@ -312,7 +315,8 @@ public class BaseIOTaskService {
 				for (TaskLog tl : taskLog) {
 					actualQuantity += tl.getQuantity();
 				}
-				Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(packingListItem.getInt("PackingListItem_TaskId"), packingListItem.getInt("PackingListItem_MaterialTypeId"));
+				Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(packingListItem.getInt("PackingListItem_TaskId"),
+						packingListItem.getInt("PackingListItem_MaterialTypeId"));
 				IOTaskDetailVO io = new IOTaskDetailVO(packingListItem.get("PackingListItem_Id"), packingListItem.get("MaterialType_No"), packingListItem.get("PackingListItem_Quantity"),
 						actualQuantity, deductQuantity, packingListItem.get("PackingListItem_FinishTime"), type);
 				io.setDetails(taskLog);
@@ -331,6 +335,7 @@ public class BaseIOTaskService {
 		return null;
 	}
 
+
 	// 获取任务详情
 	public List<IOTaskInfo> getIOTaskInfos(Integer taskId) {
 		Task task = Task.dao.findById(taskId);
@@ -343,6 +348,7 @@ public class BaseIOTaskService {
 		List<IOTaskInfo> infos = IOTaskInfo.fillList(task, taskInfoRecords, uwStoreRecords, oldestMaterialRecords);
 		return infos;
 	}
+
 
 	public void exportIOTaskDetails(Integer id, Integer type, String fileName, OutputStream output) throws IOException {
 		// 如果任务类型为出入库
@@ -360,7 +366,8 @@ public class BaseIOTaskService {
 				for (TaskLog tl : taskLog) {
 					actualQuantity += tl.getQuantity();
 				}
-				Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(packingListItem.getInt("PackingListItem_TaskId"), packingListItem.getInt("PackingListItem_MaterialTypeId"));
+				Integer deductQuantity = externalWhLogService.getDeductEwhMaterialQuantityByOutTask(packingListItem.getInt("PackingListItem_TaskId"),
+						packingListItem.getInt("PackingListItem_MaterialTypeId"));
 				packingListItem.set("PackingListItem_actuallyQuantity", actualQuantity);
 				packingListItem.set("PackingListItem_deductQuantity", deductQuantity);
 				Integer lackQuantity = (packingListItem.getInt("PackingListItem_Quantity") - actualQuantity + deductQuantity) > 0
@@ -377,6 +384,7 @@ public class BaseIOTaskService {
 			writter.write(output, true);
 		}
 	}
+
 
 	/**
 	 * 获取进行中的出库任务
@@ -404,6 +412,7 @@ public class BaseIOTaskService {
 		}
 		return tasks;
 	}
+
 
 	/**
 	 * 获取截料中的物料信息
@@ -438,6 +447,7 @@ public class BaseIOTaskService {
 		}
 		return records;
 	}
+
 
 	protected Material putInMaterialToDb(Material material, String materialId, Integer boxId, Integer quantity, Date productionTime, Date printTime, Integer materialTypeId, String cycle,
 			String manufacturer, Integer materialStatus, Integer companyId) {
@@ -481,6 +491,7 @@ public class BaseIOTaskService {
 		return material;
 	}
 
+
 	public TaskLog createTaskLog(Integer packListItemId, String materialId, Integer quantity, User user, Task task) {
 		TaskLog taskLog = new TaskLog();
 		taskLog.setPackingListItemId(packListItemId);
@@ -498,8 +509,8 @@ public class BaseIOTaskService {
 		taskLog.save();
 		return taskLog;
 	}
-	
-	
+
+
 	public TaskLog createAutoTaskLog(Integer packListItemId, String materialId, Integer quantity, String user, Task task) {
 		TaskLog taskLog = new TaskLog();
 		taskLog.setPackingListItemId(packListItemId);
@@ -513,6 +524,7 @@ public class BaseIOTaskService {
 		return taskLog;
 	}
 
+
 	// 设置优先级
 	public boolean setPriority(Integer id, Integer priority) {
 		Task task = Task.dao.findById(id);
@@ -524,6 +536,7 @@ public class BaseIOTaskService {
 
 		return task.update();
 	}
+
 
 	/**
 	 * 将入库时间换算成年月日
@@ -542,6 +555,7 @@ public class BaseIOTaskService {
 		}
 	}
 
+
 	public String getTaskName(Integer id) {
 		Task task = Task.dao.findById(id);
 		if (task != null) {
@@ -549,6 +563,7 @@ public class BaseIOTaskService {
 		}
 		return null;
 	}
+
 
 	/**
 	 * 获取任务仓口
@@ -560,6 +575,7 @@ public class BaseIOTaskService {
 		return windows;
 	}
 
+
 	public String editTaskRemarks(Integer taskId, String remarks) {
 		Task task = Task.dao.findById(taskId);
 		if (task == null) {
@@ -569,6 +585,7 @@ public class BaseIOTaskService {
 		task.update();
 		return "操作成功";
 	}
+
 
 	public void clearTaskItem(Integer taskId) {
 		Db.update(DELETE_PACKING_LIST_ITEM_BY_TASK_ID_SQL, taskId);

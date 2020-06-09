@@ -19,7 +19,7 @@ public class SessionBox {
 
 	public synchronized static void remove(String name) {
 		ChannelHandlerContext context = map.remove(name);
-		if (context != null){
+		if (context != null) {
 			context.close();
 		}
 
@@ -27,7 +27,7 @@ public class SessionBox {
 
 
 	public static ChannelHandlerContext getChannelHandlerContext(String name) {
-		if (map.get(name) == null || !map.get(name).channel().isActive()){
+		if (map.get(name) == null || !map.get(name).channel().isActive()) {
 			map.remove(name);
 			return null;
 		}

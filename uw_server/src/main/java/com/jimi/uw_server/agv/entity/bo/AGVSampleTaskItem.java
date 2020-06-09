@@ -11,7 +11,7 @@ import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 
-public class AGVSampleTaskItem extends BaseTaskItem{
+public class AGVSampleTaskItem extends BaseTaskItem {
 
 	public AGVSampleTaskItem() {
 	}

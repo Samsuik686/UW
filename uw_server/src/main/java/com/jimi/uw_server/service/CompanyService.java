@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.service;
 
 import java.util.ArrayList;
@@ -18,22 +18,33 @@ import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.Supplier;
 import com.jimi.uw_server.model.vo.CompanyVO;
 
-/**  
- * <p>Title: CompanyService</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: CompanyService
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年1月8日
  *
  */
 public class CompanyService {
 
 	/**
-	 * <p>Description: <p>
+	 * <p>
+	 * Description:
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月8日
 	 */
 	public void add(String companyCode, String name, String nickname) {
@@ -53,13 +64,15 @@ public class CompanyService {
 		company.setCompanyCode(companyCode).setName(name).setNickname(nickname);
 		company.save();
 	}
-	
-	
+
+
 	/**
-	 * <p>Description: <p>
+	 * <p>
+	 * Description:
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月8日
 	 */
 	public void delete(Integer id) {
@@ -81,13 +94,15 @@ public class CompanyService {
 		}
 		company.setEnabled(false).update();
 	}
-	
-	
+
+
 	/**
-	 * <p>Description: <p>
+	 * <p>
+	 * Description:
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月8日
 	 */
 	public List<CompanyVO> get(String name) {
@@ -98,17 +113,19 @@ public class CompanyService {
 		List<Company> companies = Company.dao.find(CompanySQL.GET_COMPANY_SQL);
 		if (!companies.isEmpty()) {
 			return CompanyVO.fillList(companies);
-		}else {
+		} else {
 			return new ArrayList<CompanyVO>();
 		}
 	}
-	
-	
+
+
 	/**
-	 * <p>Description: <p>
+	 * <p>
+	 * Description:
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月8日
 	 */
 	public void update(Integer id, String companyCode, String name, String nickname) {

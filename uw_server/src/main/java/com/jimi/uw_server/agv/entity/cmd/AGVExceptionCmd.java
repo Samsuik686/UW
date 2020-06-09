@@ -4,9 +4,9 @@ import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 
 
 /**
- * 负债异常状态指令
- * <br>
+ * 负债异常状态指令 <br>
  * <b>2018年7月13日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class AGVExceptionCmd extends AGVBaseCmd {

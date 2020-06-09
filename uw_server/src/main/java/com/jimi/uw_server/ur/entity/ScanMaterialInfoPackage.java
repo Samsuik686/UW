@@ -4,30 +4,35 @@ import com.jimi.uw_server.ur.entity.base.UrBasePackage;
 
 
 /**
- * 出库结果包
- * <br>
+ * 出库结果包 <br>
  * <b>2019年5月9日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 public class ScanMaterialInfoPackage extends UrBasePackage {
 
 	private Integer taskId;
-	
+
 	private Integer boxId;
-	
+
 	private String materialId;
 
 	private Integer quantity;
 
+
 	/**
-	 * <p>Title<p>
-	 * <p>Description<p>
+	 * <p>
+	 * Title
+	 * <p>
+	 * <p>
+	 * Description
+	 * <p>
 	 */
 	public ScanMaterialInfoPackage() {
 		// TODO Auto-generated constructor stub
 	}
-	
-	
+
+
 	public boolean isContainsNullFields() {
 		if (taskId == null || materialId == null || quantity == null) {
 			return true;
@@ -76,5 +81,5 @@ public class ScanMaterialInfoPackage extends UrBasePackage {
 		this.boxId = boxId;
 	}
 
-	
+
 }

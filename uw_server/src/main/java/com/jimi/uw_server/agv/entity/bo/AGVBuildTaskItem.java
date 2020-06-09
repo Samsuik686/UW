@@ -3,7 +3,7 @@ package com.jimi.uw_server.agv.entity.bo;
 /**
  * 
  * @author HardyYao
- * @createTime 2018年12月12日  下午5:24:18
+ * @createTime 2018年12月12日 下午5:24:18
  */
 
 public class AGVBuildTaskItem {

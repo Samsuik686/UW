@@ -2,8 +2,9 @@ package com.jimi.uw_server.constant;
 
 /**
  * 建仓任务条目状态常量类
+ * 
  * @author HardyYao
- * @createTime 2018年12月18日  上午11:52:38
+ * @createTime 2018年12月18日 上午11:52:38
  */
 
 public class BuildTaskItemState {

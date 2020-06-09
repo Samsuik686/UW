@@ -74,6 +74,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 
 	private Integer uwId = 0;
 
+
 	/**
 	 * 创建盘点任务
 	 * 
@@ -124,6 +125,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		}
 		return "操作成功";
 	}
+
 
 	/**
 	 * 开始盘点任务
@@ -270,6 +272,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return "操作成功";
 	}
 
+
 	/**
 	 * 让盘点任务的叉车回库
 	 * 
@@ -280,7 +283,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 	 * @return
 	 */
 	public String backUWBox(Integer taskId, Integer boxId, Integer windowId, User user) {
-		synchronized (Lock.INV_TASK_BACK_LOCK) {
+		synchronized (RegularTaskLock.INV_TASK_BACK_LOCK) {
 			Task task = Task.dao.findById(taskId);
 			if (task == null) {
 				throw new OperationException("任务不存在，请检查参数是否正确!");
@@ -316,8 +319,8 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 				e.printStackTrace();
 				throw new OperationException(e.getMessage());
 			}
-			
-			
+
+
 			for (InventoryLog inventoryLog : inventoryLogs) {
 				if (!inventoryLog.getBeforeNum().equals(inventoryLog.getActuralNum())) {
 					// 改变实际库存
@@ -343,8 +346,9 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return "操作成功";
 	}
 
+
 	public String backUrUWBox(Integer taskId, Integer boxId, String user) {
-		synchronized (Lock.INV_TASK_BACK_LOCK) {
+		synchronized (RegularTaskLock.INV_TASK_BACK_LOCK) {
 			Task task = Task.dao.findById(taskId);
 			if (task == null) {
 				throw new OperationException("任务不存在，请检查参数是否正确!");
@@ -397,6 +401,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		}
 		return "操作成功";
 	}
+
 
 	/**
 	 * 盘点UW物料
@@ -451,6 +456,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return material;
 	}
 
+
 	/**
 	 * 机械臂盘点UW物料
 	 * 
@@ -465,6 +471,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		// 改变盘点记录
 		inventoryLog.setActuralNum(material.getRemainderQuantity()).setDifferentNum(0).setInventoryOperatior("robot1").setInventoryTime(new Date()).update();
 	}
+
 
 	/**
 	 * 平外仓物料
@@ -510,6 +517,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return "操作成功";
 	}
 
+
 	/**
 	 * 物料仓批量平仓，根据任务ID和物料类型ID
 	 * 
@@ -549,6 +557,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return "操作成功";
 	}
 
+
 	/**
 	 * 物料仓一键批量平仓
 	 * 
@@ -586,6 +595,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return "操作成功";
 	}
 
+
 	/**
 	 * 审核任务
 	 * 
@@ -621,6 +631,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		info.setCheckTime(new Date()).setCheckOperator(user.getUid()).update();
 		return "操作成功";
 	}
+
 
 	/**
 	 * 审核任务
@@ -666,6 +677,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return "操作成功";
 	}
 
+
 	/**
 	 * 导入外仓盘点数据
 	 * 
@@ -676,7 +688,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 	 */
 	public String importEWhInventoryRecord(File file, Integer taskId, Integer whId, User user) {
 		String resultString = "导入成功";
-		synchronized (Lock.IMPORT_EWH_INVENTORY_FILE_LOCK) {
+		synchronized (RegularTaskLock.IMPORT_EWH_INVENTORY_FILE_LOCK) {
 
 			ExcelHelper fileReader;
 			Task task = Task.dao.findById(taskId);
@@ -797,6 +809,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return resultString;
 	}
 
+
 	/**
 	 * 获取当前仓口的盘点物料清单
 	 * 
@@ -881,6 +894,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return new ArrayList<>(map.values());
 	}
 
+
 	public void exportEwhInventoryTask(Integer taskId, String no, Integer whId, String fileName, OutputStream output) throws IOException {
 		SqlPara sqlPara = new SqlPara();
 		Task task = Task.dao.findById(taskId);
@@ -908,6 +922,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		writter.write(output, true);
 	}
 
+
 	public List<Record> getEwhInventoryTaskInfo(Integer taskId, Integer whId, String no) {
 		SqlPara sqlPara = new SqlPara();
 		Task task = Task.dao.findById(taskId);
@@ -927,6 +942,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		List<Record> inventoryRecords = Db.find(sqlPara);
 		return inventoryRecords;
 	}
+
 
 	public List<InventoryTaskDetailVO> getUwInventoryTaskDetails(Integer taskId, Integer materialTypeId) {
 		List<InventoryLog> inventoryLogs = InventoryLog.dao.find(GET_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE, materialTypeId, taskId);
@@ -954,6 +970,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		return details;
 	}
 
+
 	public List<InventoryTaskDetailVO> getEwhInventoryTaskDetails(Integer taskId, Integer materialTypeId, Integer whId) {
 
 		List<ExternalInventoryLog> externalInventoryLogs = ExternalInventoryLog.dao.find(GET_EWH_INVENTORY_LOG_BY_TASKID_MATERIALTYPEID, taskId, materialTypeId, whId);
@@ -979,6 +996,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 		}
 		return details;
 	}
+
 
 	public String finishTask(Integer taskId, Integer whId, User user) {
 		Task task = Task.dao.findById(taskId);
@@ -1036,6 +1054,7 @@ public class RegularInventoryTaskService extends BaseInventoryTaskService {
 
 		return "操作成功！";
 	}
+
 
 	/**
 	 * 

@@ -4,9 +4,9 @@ import com.jimi.uw_server.model.bo.RobotBO;
 
 
 /**
- * 机器信息组
- * <br>
+ * 机器信息组 <br>
  * <b>2018年7月13日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class AGVRobot {

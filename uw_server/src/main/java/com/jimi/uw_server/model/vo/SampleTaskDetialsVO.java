@@ -11,7 +11,7 @@ import com.jfinal.plugin.activerecord.Record;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年6月24日  上午9:43:06
+ * @createTime 2019年6月24日 上午9:43:06
  */
 
 public class SampleTaskDetialsVO {

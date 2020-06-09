@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月8日  上午10:34:10
+ * @createTime 2019年5月8日 上午10:34:10
  */
 
 public class ExternalWhTaskService {
@@ -51,6 +51,7 @@ public class ExternalWhTaskService {
 
 	/**
 	 * 导入外仓的任务
+	 * 
 	 * @param file
 	 * @param supplierId
 	 * @param sourceWhId
@@ -63,7 +64,7 @@ public class ExternalWhTaskService {
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = file.getName();
-		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName, TaskState.CANCELED);
 		if (tempTask != null) {
 			throw new OperationException("文件名重复，请进行修改！");
 		}
@@ -110,7 +111,8 @@ public class ExternalWhTaskService {
 					if (sourceWhId != 0 && sourceWhId != -1) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId, inventoryTask.getCreateTime());
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId)
+									- externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId, inventoryTask.getCreateTime());
 						} else {
 							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), sourceWhId);
 						}
@@ -123,7 +125,8 @@ public class ExternalWhTaskService {
 					} else if (sourceWhId == 0) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId, inventoryTask.getCreateTime());
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId)
+									- externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId, inventoryTask.getCreateTime());
 						} else {
 							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), destinationWhId);
 						}
@@ -176,7 +179,7 @@ public class ExternalWhTaskService {
 		String resultString = "导入成功";
 		Date date = new Date();
 		String fileName = file.getName();
-		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName , TaskState.CANCELED);
+		Task tempTask = Task.dao.findFirst(IOTaskSQL.GET_TASK_BY_NAME, fileName, TaskState.CANCELED);
 		if (tempTask != null) {
 			throw new OperationException("文件名重复，请进行修改！");
 		}
@@ -219,7 +222,8 @@ public class ExternalWhTaskService {
 					if (whId != 0) {
 						int storeNum = 0;
 						if (inventoryTask != null) {
-							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId) - externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId, inventoryTask.getCreateTime());
+							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId)
+									- externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId, inventoryTask.getCreateTime());
 						} else {
 							storeNum = externalWhLogService.getEWhMaterialQuantity(mType.getId(), whId);
 						}
@@ -261,6 +265,7 @@ public class ExternalWhTaskService {
 
 	/**
 	 * 添加某仓库，某物料的损耗记录
+	 * 
 	 * @param materialTypeId
 	 * @param whId
 	 * @param quantity
@@ -394,7 +399,8 @@ public class ExternalWhTaskService {
 			}
 			if (inventoryTask != null) {
 				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTask.getCreateTime()));
-				externalWhInfoVO.setInventoryAfterQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")) - externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTask.getCreateTime()));
+				externalWhInfoVO.setInventoryAfterQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"))
+						- externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id"), inventoryTask.getCreateTime()));
 			} else {
 				externalWhInfoVO.setInventoryBeforeQuantity(externalWhLogService.getEWhMaterialQuantity(record.getInt("material_type_id"), record.getInt("wh_id")));
 			}
@@ -437,8 +443,8 @@ public class ExternalWhTaskService {
 		}
 		String[] field = null;
 		String[] head = null;
-		field = new String[] {"wh_name", "no", "specification", "supplier_name", "quantity"};
-		head = new String[] {"仓库名", "料号", "规格", "客户", "库存"};
+		field = new String[] { "wh_name", "no", "specification", "supplier_name", "quantity" };
+		head = new String[] { "仓库名", "料号", "规格", "客户", "库存" };
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(records, fileName, field, head);
 		writter.write(output, true);

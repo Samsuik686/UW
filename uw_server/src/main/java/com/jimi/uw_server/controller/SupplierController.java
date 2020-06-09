@@ -11,8 +11,9 @@ import com.jimi.uw_server.util.ResultUtil;
 
 /**
  * 客户控制层
+ * 
  * @author HardyYao
- * @createTime 2018年11月22日  下午3:55:50
+ * @createTime 2018年11月22日 下午3:55:50
  */
 
 public class SupplierController extends Controller {
@@ -23,8 +24,8 @@ public class SupplierController extends Controller {
 	// 添加客户
 	@Log("添加公司为{companyId},名为{name}的客户")
 	public void add(String name, Integer companyId) {
-		if (companyId == null || name == null){
-			throw  new ParameterException("参数不能为空");
+		if (companyId == null || name == null) {
+			throw new ParameterException("参数不能为空");
 		}
 		String resultString = supplierService.add(name, companyId);
 		if (resultString.equals("添加成功！")) {

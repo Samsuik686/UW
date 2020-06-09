@@ -3,7 +3,7 @@ package com.jimi.uw_server.lock;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年4月23日  上午10:25:27
+ * @createTime 2019年4月23日 上午10:25:27
  */
 
 public class Lock {
@@ -18,29 +18,9 @@ public class Lock {
 
 	public static Object INVENTORY_REDIS_LOCK = new Object();
 
-	public static Object IMPORT_EWH_INVENTORY_FILE_LOCK = new Object();
-	
-	public static Object CREATE_SAMPLE_LOCK = new Object();
-	
-	public static Object CREATE_INVENTORY_LOCK = new Object();
-
 	public static Object TASK_REDIS_LOCK = new Object();
 
-	public static Object REGULAR_SAMPLE_TASK_SCAN_LOCK = new Object();
-
-	public static Object PRECIOUS_SAMPLE_TASK_SCAN_LOCK = new Object();
-
-	public static Object IO_TASK_BACK_LOCK = new Object();
-
-	public static Object IO_TASK_CALL_LOCK = new Object();
-
-	public static Object INV_TASK_BACK_LOCK = new Object();
-
-	public static Object INV_TASK_CALL_LOCK = new Object();
-
-	public static Object CREATE_IOTASK_LOCK = new Object();
-
 	public static Object UR_INV_TASK_LOCK = new Object();
-	
-    public static Object UR_OUT_TASK_LOCK = new Object();
+
+	public static Object UR_OUT_TASK_LOCK = new Object();
 }

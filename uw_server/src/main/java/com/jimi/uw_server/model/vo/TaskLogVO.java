@@ -8,8 +8,9 @@ import com.jimi.uw_server.model.TaskLog;
 
 /**
  * 任务日志表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年7月5日 上午11:22:18 
+ * @createTime 2018年7月5日 上午11:22:18
  */
 @SuppressWarnings("serial")
 public class TaskLogVO extends TaskLog {

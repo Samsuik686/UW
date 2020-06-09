@@ -18,6 +18,7 @@ public class PrinterService {
 	// 等待反馈的时间
 	private static final int TIME_OUT = 10000;
 
+
 	public synchronized String print(String ip, String materialId, Integer packingListItemId, User user) throws InterruptedException, IOException {
 		if (PrintServerSocket.getClients().containsKey(ip)) {
 
@@ -47,13 +48,15 @@ public class PrinterService {
 			Long id2 = PrintServerSocket.getResults().size() + 1 + startTime2;
 			TaskLog taskLog = TaskLog.dao.findById(material.getCutTaskLogId());
 			if (taskLog == null || taskLog.getQuantity() == null) {
-				throw new OperationException("发送打印信息失败,请检查物料是否处于截料状态！"); 
+				throw new OperationException("发送打印信息失败,请检查物料是否处于截料状态！");
 			}
 			try {
 				if (materialType.getType().equals(WarehouseType.REGULAR.getId())) {
-					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
-				}else {
-					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity() - taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
+					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity()), dateString, user.getUid(), supplier.getName(), cycle,
+							manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
+				} else {
+					PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(material.getRemainderQuantity() - taskLog.getQuantity()), dateString, user.getUid(),
+							supplier.getName(), cycle, manufacturer, specification, designator, 1, printTimeString, material.getCompanyId());
 				}
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
@@ -62,11 +65,12 @@ public class PrinterService {
 				e.printStackTrace();
 				throw new OperationException("发送打印信息失败,请检查打印机连接！");
 			}
-			
+
 			if (taskLog != null && taskLog.getQuantity() != null && !taskLog.getQuantity().equals(0)) {
 				try {
-					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString, material.getCompanyId());
-					
+					PrintServerSocket.send(ip, id2.toString(), materialId, materialType.getNo(), String.valueOf(taskLog.getQuantity()), dateString, user.getUid(), supplier.getName(), cycle,
+							manufacturer, specification, designator, 0, printTimeString, material.getCompanyId());
+
 				} catch (Exception e) {
 					PrintServerSocket.getResults().remove(id.toString());
 					PrintServerSocket.getClients().get(ip).close();
@@ -132,7 +136,8 @@ public class PrinterService {
 				printTimeString = dateFormat.format(material.getPrintTime());
 			}
 			try {
-				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification, designator, 0, printTimeString, material.getCompanyId());
+				PrintServerSocket.send(ip, id.toString(), materialId, materialType.getNo(), String.valueOf(quantity), dateString, user.getUid(), supplier.getName(), cycle, manufacturer, specification,
+						designator, 0, printTimeString, material.getCompanyId());
 			} catch (Exception e) {
 				PrintServerSocket.getResults().remove(id.toString());
 				PrintServerSocket.getClients().get(ip).close();

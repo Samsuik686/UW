@@ -18,8 +18,9 @@ import com.jimi.uw_server.model.MaterialBox;
 
 /**
  * 建仓LL命令处理器
+ * 
  * @author HardyYao
- * @createTime 2018年12月12日  下午5:52:16
+ * @createTime 2018年12月12日 下午5:52:16
  */
 
 public class BuildHandler {
@@ -114,9 +115,8 @@ public class BuildHandler {
 
 
 	/**
-	 * 判断该srcPosition所在的任务是否全部条目状态为"已完成"
-	 * 如果是，则清除所有该任务id对应的条目，释放内存***
-	*/
+	 * 判断该srcPosition所在的任务是否全部条目状态为"已完成" 如果是，则清除所有该任务id对应的条目，释放内存***
+	 */
 	public static void clearTil(String srcPosition) {
 		boolean isAllFinish = true;
 		for (AGVBuildTaskItem item1 : BuildTaskItemDAO.getBuildTaskItems()) {

@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.controller;
 
 import com.jfinal.aop.Aop;
@@ -11,19 +11,29 @@ import com.jimi.uw_server.exception.ParameterException;
 import com.jimi.uw_server.service.MaterialBoxService;
 import com.jimi.uw_server.util.ResultUtil;
 
-/**  
- * <p>Title: MaterialBoxController</p>  
- * <p>Description: 料盒控制层</p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: MaterialBoxController
+ * </p>
+ * <p>
+ * Description: 料盒控制层
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年1月16日
  *
  */
 public class MaterialBoxController extends Controller {
 
 	MaterialBoxService materialBoxService = Aop.get(MaterialBoxService.class);
-	
+
+
 	// 获取料盒信息
 	public void getBoxes(Integer companyId, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		if (companyId == null) {
@@ -45,7 +55,8 @@ public class MaterialBoxController extends Controller {
 		if (area == null || row == null || col == null || height == null || supplierId == null || isStandard == null) {
 			throw new ParameterException("参数不能为空！");
 		}
-		materialBoxService.addBox(area, row, col, height, supplierId, isStandard);;
+		materialBoxService.addBox(area, row, col, height, supplierId, isStandard);
+		;
 		renderJson(ResultUtil.succeed());
 	}
 
@@ -56,7 +67,8 @@ public class MaterialBoxController extends Controller {
 		materialBoxService.updateBox(id, isOnShelf);
 		renderJson(ResultUtil.succeed());
 	}
-	
+
+
 	@Log("更新料盒号为[{ids}]信息，客户为{supplierId}")
 	public void editBoxOfSupplier(String ids, Integer supplierId) {
 		if (supplierId == null || ids == null || ids.trim().equals("")) {
@@ -65,7 +77,8 @@ public class MaterialBoxController extends Controller {
 		materialBoxService.editBoxOfSupplier(ids, supplierId);
 		renderJson(ResultUtil.succeed());
 	}
-	
+
+
 	@Log("更新料盒号为[{ids}]信息，料盒类型为{materialBoxTypeId}")
 	public void editBoxOfType(String ids, Integer materialBoxTypeId) {
 		if (materialBoxTypeId == null || ids == null || ids.trim().equals("")) {

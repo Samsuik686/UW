@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.service.base;
 
 import java.io.IOException;
@@ -35,22 +35,34 @@ import com.jimi.uw_server.model.vo.InventoryTaskVO;
 import com.jimi.uw_server.util.ExcelWritter;
 import com.jimi.uw_server.util.PagePaginate;
 
-/**  
- * <p>Title: BaseInventoryTaskService</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: BaseInventoryTaskService
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月25日
  *
  */
 public class BaseInventoryTaskService {
-	
+
 	private static SelectService selectService = Aop.get(SelectService.class);
 
 	private Integer uwId = 0;
+
+
 	/**
 	 * UW平仓，根据记录ID和任务ID
+	 * 
 	 * @param id
 	 * @param taskId
 	 * @param user
@@ -96,6 +108,7 @@ public class BaseInventoryTaskService {
 
 	/**
 	 * UW仓批量平仓，根据任务ID和物料类型ID
+	 * 
 	 * @param materialTypeId
 	 * @param taskId
 	 * @param user
@@ -138,6 +151,7 @@ public class BaseInventoryTaskService {
 
 	/**
 	 * 一键平仓UW
+	 * 
 	 * @param taskId
 	 * @param user
 	 * @return
@@ -168,19 +182,21 @@ public class BaseInventoryTaskService {
 		}
 		info.setFinishOperator(user.getUid()).setFinishTime(new Date()).update();
 		List<InventoryTaskBaseInfo> infos = InventoryTaskBaseInfo.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_BASE_INFO_BY_TASKID, task.getId());
-		if (infos.size() < 2 && task.getWarehouseType().equals(WarehouseType.REGULAR.getId())){
+		if (infos.size() < 2 && task.getWarehouseType().equals(WarehouseType.REGULAR.getId())) {
 			task.setState(TaskState.FINISHED).setEndTime(new Date()).update();
 		}
 		return "操作成功";
 	}
-	
-	
+
+
 	/**
 	 * 
-	 * <p>Description: 作废任务<p>
+	 * <p>
+	 * Description: 作废任务
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public void cancelTask(Integer taskId) {
@@ -193,10 +209,11 @@ public class BaseInventoryTaskService {
 		}
 		task.setState(TaskState.CANCELED).update();
 	}
-	
-	
+
+
 	/**
 	 * 根据客户获取盘点任务(下拉框使用)
+	 * 
 	 * @param supplierId
 	 * @return
 	 */
@@ -208,8 +225,8 @@ public class BaseInventoryTaskService {
 
 
 	public PagePaginate selectAllInventoryTask(String filter, Integer pageNo, Integer pageSize, String ascBy, String descBy) {
-		String[] tables = new String[] {"task", "supplier"};
-		String[] refers = new String[] {"task.supplier = supplier.id"};
+		String[] tables = new String[] { "task", "supplier" };
+		String[] refers = new String[] { "task.supplier = supplier.id" };
 		if (filter == null || filter.trim().equals("")) {
 			filter = "task.type=" + TaskType.COUNT;
 		} else {
@@ -261,35 +278,40 @@ public class BaseInventoryTaskService {
 		return pagePaginate;
 	}
 
-	
+
 	/**
 	 * 
-	 * <p>Description: 获取任务目的地：任务ID<p>
+	 * <p>
+	 * Description: 获取任务目的地：任务ID
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public List<Destination> getInventoryTaskDestination(Integer taskId) {
-		
+
 		List<Destination> destinations = Destination.dao.find(InventoryTaskSQL.GET_INVENTORY_TASK_DESTINATION_BY_TASKID, taskId);
 		return destinations;
 	}
-	
-	
+
+
 	/**
 	 * 
-	 * <p>Description: 获取任务基础信息：任务ID<p>
+	 * <p>
+	 * Description: 获取任务基础信息：任务ID
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public List<Record> getInventoryTaskBaseInfo(Integer taskId) {
-		
+
 		List<Record> records = Db.find(InventoryTaskSQL.GET_INVENTORY_TASK_BEAS_INFO_BY_TASKID, taskId);
 		return records;
 	}
+
 
 	public void exportUwInventoryTask(Integer taskId, String no, String fileName, OutputStream output) throws IOException {
 		SqlPara sqlPara = new SqlPara();
@@ -298,7 +320,7 @@ public class BaseInventoryTaskService {
 			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
 		}
 		if (no == null || no.equals("")) {
-			
+
 			sqlPara.setSql(InventoryTaskSQL.GET_UW_INVENTORY_TASK_INFO);
 			sqlPara.addPara(taskId);
 			sqlPara.addPara(uwId);
@@ -312,14 +334,14 @@ public class BaseInventoryTaskService {
 
 		String[] field = null;
 		String[] head = null;
-		field = new String[] {"supplier_name", "no", "before_num", "actural_num", "different_num"};
-		head = new String[] {"客户", "料号", "盘前数量", "盘点数量", "盈亏"};
+		field = new String[] { "supplier_name", "no", "before_num", "actural_num", "different_num" };
+		head = new String[] { "客户", "料号", "盘前数量", "盘点数量", "盈亏" };
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(inventoryRecords, fileName, field, head);
 		writter.write(output, true);
 	}
-	
-	
+
+
 	public void exportUwInventoryTaskDetials(Integer taskId, String no, String fileName, OutputStream output) throws IOException {
 		SqlPara sqlPara = new SqlPara();
 		Task task = Task.dao.findById(taskId);
@@ -327,7 +349,7 @@ public class BaseInventoryTaskService {
 			throw new OperationException("盘点任务不存在，请检查参数是否正确！");
 		}
 		if (no == null || no.equals("")) {
-			
+
 			sqlPara.setSql(InventoryTaskSQL.GET_UW_INVENTORY_TASK_DETIALS_INFO);
 			sqlPara.addPara(taskId);
 			sqlPara.addPara(uwId);
@@ -341,19 +363,22 @@ public class BaseInventoryTaskService {
 
 		String[] field = null;
 		String[] head = null;
-		field = new String[] {"supplier_name", "no", "material_id", "material_cycle",  "before_num", "actural_num", "different_num"};
-		head = new String[] {"客户", "料号", "料盘码", "周期" ,"盘前数量", "盘点数量", "盈亏"};
+		field = new String[] { "supplier_name", "no", "material_id", "material_cycle", "before_num", "actural_num", "different_num" };
+		head = new String[] { "客户", "料号", "料盘码", "周期", "盘前数量", "盘点数量", "盈亏" };
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(inventoryRecords, fileName, field, head);
 		writter.write(output, true);
 	}
 
+
 	/**
 	 * 
-	 * <p>Description: 获取任务信息<p>
+	 * <p>
+	 * Description: 获取任务信息
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public List<Record> getUwInventoryTaskInfo(Integer taskId, String no) {
@@ -376,12 +401,16 @@ public class BaseInventoryTaskService {
 
 		return inventoryRecords;
 	}
+
+
 	/**
 	 * 
-	 * <p>Description: 生成盘点任务名<p>
+	 * <p>
+	 * Description: 生成盘点任务名
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public String getTaskName(Date date, Integer warehouseType) {

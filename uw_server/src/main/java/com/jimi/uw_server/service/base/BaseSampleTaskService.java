@@ -291,7 +291,7 @@ public class BaseSampleTaskService {
 
 	public String getSampleTaskName(Date date, Integer warehouseType, String supplierName) {
 		String fileName = "";
-		fileName = supplierName + WarehouseType.getDescribeById(warehouseType)  + "抽检_";
+		fileName = supplierName + WarehouseType.getDescribeById(warehouseType) + "抽检_";
 		DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 		String time = formatter.format(date);
 		fileName = fileName + time;

@@ -63,7 +63,8 @@ public class BuildService extends SelectService {
 
 
 	// 根据起始坐标生成“建仓任务”
-	private void createBuildTasks(String area, Boolean isStandard, Integer supplierId, String srcPosition, Integer startX, Integer startY, Integer startZ, Integer endX, Integer endY, Integer endZ, Integer limitYL, Integer limitYR) {
+	private void createBuildTasks(String area, Boolean isStandard, Integer supplierId, String srcPosition, Integer startX, Integer startY, Integer startZ, Integer endX, Integer endY, Integer endZ,
+			Integer limitYL, Integer limitYR) {
 		List<AGVBuildTaskItem> buildTaskItems = new ArrayList<AGVBuildTaskItem>();
 		Supplier supplier = Supplier.dao.findById(supplierId);
 		if (supplier == null) {

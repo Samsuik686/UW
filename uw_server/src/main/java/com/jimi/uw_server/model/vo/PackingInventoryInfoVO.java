@@ -8,7 +8,7 @@ import com.jimi.uw_server.model.GoodsLocation;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月20日  下午2:54:09
+ * @createTime 2019年5月20日 下午2:54:09
  */
 
 public class PackingInventoryInfoVO {

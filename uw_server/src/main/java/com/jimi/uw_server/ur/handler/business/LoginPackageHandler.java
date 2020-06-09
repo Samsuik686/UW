@@ -13,9 +13,9 @@ import java.util.Date;
 
 
 /**
- * 登录请求处理器，单例类可被共享
- * <br>
+ * 登录请求处理器，单例类可被共享 <br>
  * <b>2019年9月26日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 @Sharable

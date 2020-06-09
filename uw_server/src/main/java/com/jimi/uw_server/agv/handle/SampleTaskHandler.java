@@ -48,7 +48,8 @@ public class SampleTaskHandler extends BaseTaskHandler {
 		AGVSampleTaskItem agvSampleTaskItem = (AGVSampleTaskItem) item;
 		synchronized (Lock.TASK_REDIS_LOCK) {
 			// 构建SL指令，令指定robot把料送回原仓位
-			if (TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()) != null && !TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()).equals(0)) {
+			if (TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()) != null
+					&& !TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()).equals(0)) {
 				return;
 			}
 			AGVMoveCmd moveCmd = createSendLLCmd(agvSampleTaskItem.getGroupId(), materialBox, goodsLocation, priority);
@@ -81,7 +82,7 @@ public class SampleTaskHandler extends BaseTaskHandler {
 		// 匹配groupid
 		AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
 		if (item == null) {
-			return ;
+			return;
 		}
 		SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, null, null, null, statusCmd.getRobotid(), null);
 	}
@@ -93,13 +94,13 @@ public class SampleTaskHandler extends BaseTaskHandler {
 		String groupid = missionGroupId.split("_")[0];
 		AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
 		if (item == null) {
-			return ;
+			return;
 		}
 		if (item.getState() == TaskItemState.ASSIGNED && missionGroupId.contains("S")) {
 			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null);
-		}else if (item.getState() == TaskItemState.START_BACK && missionGroupId.contains("B")) {
+		} else if (item.getState() == TaskItemState.START_BACK && missionGroupId.contains("B")) {
 			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null);
-			TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);	
+			TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);
 		}
 	}
 
@@ -112,11 +113,11 @@ public class SampleTaskHandler extends BaseTaskHandler {
 		// 匹配groupid
 		AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
 		if (item == null) {
-			return ;
+			return;
 		}
 		if (item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {
 			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
-		}else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {
+		} else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {
 			SampleTaskItemRedisDAO.updateSampleTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
 			MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 			materialBox.setIsOnShelf(true);

@@ -5,8 +5,9 @@ import com.jimi.uw_server.model.User;
 
 /**
  * 用户表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年7月5日 上午11:19:22 
+ * @createTime 2018年7月5日 上午11:19:22
  */
 @SuppressWarnings("serial")
 public class UserVO extends User {

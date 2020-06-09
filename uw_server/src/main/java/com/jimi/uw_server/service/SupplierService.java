@@ -21,13 +21,15 @@ import java.util.Collections;
 
 /**
  * 客户业务层
+ * 
  * @author HardyYao
- * @createTime 2018年11月22日  下午4:13:04
+ * @createTime 2018年11月22日 下午4:13:04
  */
 
 public class SupplierService extends SelectService {
 
 	private static SelectService selectService = Aop.get(SelectService.class);
+
 
 	// 添加客户
 	public String add(String name, Integer companyId) {
@@ -58,7 +60,7 @@ public class SupplierService extends SelectService {
 		}
 		Db.update(MaterialBoxSQL.SET_MATERIAL_BOX_SUPPLIER_NULL_BY_SUPPLIER_SQL, supplier.getId());
 		Db.update(MaterialTypeSQL.SET_MATERIAL_TYPE_UNABLED_BY_SUPPLIER_SQL, supplier.getId());
-		
+
 		supplier.setEnabled(false);
 		supplier.update();
 	}
@@ -72,14 +74,14 @@ public class SupplierService extends SelectService {
 		} else {
 			filter = "#&#supplier.enabled=1#&#company.enabled=1";
 		}
-		Page<Record> result = selectService.select(new String[] {"supplier", "company"}, new String[] {"supplier.company_id=company.id"}, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] { "supplier", "company" }, new String[] { "supplier.company_id=company.id" }, pageNo, pageSize, ascBy, descBy, filter);
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setTotalRow(result.getTotalRow());
 		if (result.getList() != null && !result.getList().isEmpty()) {
 			pagePaginate.setList(SupplierVO.fillList(result.getList()));
-		}else {
+		} else {
 			pagePaginate.setList(Collections.emptyList());
 		}
 		return pagePaginate;
@@ -107,8 +109,8 @@ public class SupplierService extends SelectService {
 		supplier.update();
 		return resultString;
 	}
-	
-	
+
+
 	public Supplier getSupplierById(Integer supplierId) {
 		Supplier supplier = Supplier.dao.findById(supplierId);
 		if (supplier == null) {

@@ -4,9 +4,9 @@ import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 
 
 /**
- * AGV指令任务状态指令
- * <br>
+ * AGV指令任务状态指令 <br>
  * <b>2018年6月15日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class AGVStatusCmd extends AGVBaseCmd {

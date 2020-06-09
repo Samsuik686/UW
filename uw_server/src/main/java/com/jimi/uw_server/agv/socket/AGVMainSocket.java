@@ -33,9 +33,9 @@ import com.jimi.uw_server.util.ErrorLogWritter;
 
 
 /**
- * 与AGV服务器进行通讯的主要类
- * <br>
+ * 与AGV服务器进行通讯的主要类 <br>
  * <b>2018年6月15日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 @ClientEndpoint

@@ -46,14 +46,14 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 
 	private Integer batchSize = 2000;
 
-	
+
 	public void create(File file, Integer supplierId, String remarks, Integer warehouseType) {
 		synchronized (RegularTaskLock.CREATE_SAMPLE_LOCK) {
 			super.createSampleTask(file, supplierId, remarks, warehouseType);
 		}
 	}
 
-	
+
 	public String start(Integer taskId, String windows) {
 		synchronized (RegularTaskLock.START_SAMPLE_LOCK) {
 			Task task = Task.dao.findById(taskId);
@@ -135,7 +135,7 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		return "操作成功！";
 	}
 
-	
+
 	// 作废指定任务
 	public boolean cancelRegularTask(Integer id) {
 		synchronized (RegularTaskLock.CANCEL_SAMPLE_LOCK) {
@@ -159,7 +159,7 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		}
 	}
 
-	
+
 	public String backRegularUWBox(String groupId) {
 		synchronized (Lock.SAMPLE_TASK_REDIS_LOCK) {
 			Task task = Task.dao.findById(Integer.valueOf(groupId.split("#")[1]));
@@ -191,9 +191,9 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		return "操作完成";
 	}
 
-	
+
 	public String outSingular(String materialId, String groupId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (RegularTaskLock.SAMPLE_SCAN_LOCK) {
 			AGVSampleTaskItem agvSampleTaskItem = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupId.split("#")[1]), Integer.valueOf(groupId.split("#")[0]));
 			if (agvSampleTaskItem == null || agvSampleTaskItem.getState() != TaskItemState.ARRIVED_WINDOW) {
 				throw new OperationException("任务条目不存在或者尚未到站！");
@@ -236,10 +236,10 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		}
 		return "操作成功";
 	}
-	
+
 
 	public String outRegular(String materialId, String groupId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (RegularTaskLock.SAMPLE_SCAN_LOCK) {
 			AGVSampleTaskItem agvSampleTaskItem = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupId.split("#")[1]), Integer.valueOf(groupId.split("#")[0]));
 			if (agvSampleTaskItem == null || agvSampleTaskItem.getState() != TaskItemState.ARRIVED_WINDOW) {
 				throw new OperationException("任务条目不存在或者尚未到站！");
@@ -284,9 +284,9 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		return "操作成功";
 	}
 
-	
+
 	public String outLost(String materialId, String groupId, User user) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (RegularTaskLock.SAMPLE_SCAN_LOCK) {
 			AGVSampleTaskItem agvSampleTaskItem = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupId.split("#")[1]), Integer.valueOf(groupId.split("#")[0]));
 			if (agvSampleTaskItem == null || agvSampleTaskItem.getState() != TaskItemState.ARRIVED_WINDOW) {
 				throw new OperationException("任务条目不存在或者尚未到站！");
@@ -335,9 +335,9 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		return "操作成功";
 	}
 
-	
+
 	public void sampleUWMaterial(String materialId, String groupId) {
-		synchronized (Lock.REGULAR_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (RegularTaskLock.SAMPLE_SCAN_LOCK) {
 			Integer boxId = Integer.valueOf(groupId.split("#")[0]);
 			Integer taskId = Integer.valueOf(groupId.split("#")[1]);
 			Material material = Material.dao.findById(materialId);
@@ -365,7 +365,7 @@ public class RegularSampleTaskService extends BaseSampleTaskService {
 		}
 
 	}
-	
+
 
 	public List<PackingSampleInfoVO> getParkingSampleMaterialInfo(Integer windowId) {
 		Integer boxId = 0;

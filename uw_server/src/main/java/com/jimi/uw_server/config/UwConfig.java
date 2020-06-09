@@ -37,13 +37,16 @@ public class UwConfig extends JFinalConfig {
 		me.setJsonFactory(new MixedJsonFactory());
 	}
 
+
 	@Override
 	public void configEngine(Engine me) {
 	}
 
+
 	@Override
 	public void configHandler(Handlers me) {
 	}
+
 
 	@Override
 	public void configInterceptor(Interceptors me) {
@@ -53,6 +56,7 @@ public class UwConfig extends JFinalConfig {
 		me.addGlobalActionInterceptor(new ActionLogInterceptor());
 		me.addGlobalServiceInterceptor(new Tx());
 	}
+
 
 	@Override
 	public void configRoute(Routes me) {
@@ -76,6 +80,7 @@ public class UwConfig extends JFinalConfig {
 		me.add("/pda", PdaClientController.class);
 	}
 
+
 	@Override
 	public void afterJFinalStart() {
 		try {
@@ -97,7 +102,7 @@ public class UwConfig extends JFinalConfig {
 				System.out.println("效率统计开启，初始化成功！");
 			}
 			Integer urSwitch = PropKit.use("properties.ini").getInt("urSwitch");
-			if (urSwitch != null && urSwitch == 1){
+			if (urSwitch != null && urSwitch == 1) {
 				Thread urThread = new Thread(new Runnable() {
 
 					@Override
@@ -115,7 +120,7 @@ public class UwConfig extends JFinalConfig {
 				urThread.start();
 				System.out.println("UW机械臂服务开启完毕！！！");
 			}
-            TaskPool taskPool = new TaskPool();
+			TaskPool taskPool = new TaskPool();
 			taskPool.setName("TaskPoolThread");
 			taskPool.start();
 			System.out.println("UW智能仓储系统开启完毕！！！");
@@ -125,6 +130,7 @@ public class UwConfig extends JFinalConfig {
 		}
 	}
 
+
 	@Override
 	public void beforeJFinalStop() {
 		TokenBox.stop();
@@ -132,6 +138,7 @@ public class UwConfig extends JFinalConfig {
 		RobotInfoSocket.stop();
 		RestaurantBootStrap.stop();
 	}
+
 
 	@Override
 	public void configPlugin(Plugins me) {
@@ -163,6 +170,7 @@ public class UwConfig extends JFinalConfig {
 		me.add(arp);
 	}
 
+
 	public static boolean isProductionEnvironment() {
 		File[] roots = File.listRoots();
 		for (int i = 0; i < roots.length; i++) {
@@ -172,6 +180,7 @@ public class UwConfig extends JFinalConfig {
 		}
 		return false;
 	}
+
 
 	public static boolean isTestEnvironment() {
 		File[] roots = File.listRoots();

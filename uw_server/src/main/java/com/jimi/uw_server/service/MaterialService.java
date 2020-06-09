@@ -26,13 +26,14 @@ import java.util.*;
 
 /**
  * 物料业务层
+ * 
  * @author HardyYao
  * @createTime 2018年6月8日
  */
 public class MaterialService extends SelectService {
 
 	private static SelectService selectService = Aop.get(SelectService.class);
-	
+
 	private static final String GET_ALL_TASK_LOGS_BY_MATERIAL_TYPE_ID_SQL = "SELECT a.* FROM((SELECT task.id, task.file_name, task.type, task.destination AS destination, packing_list_item.material_type_id, packing_list_item.quantity AS plan_quantity, SUM(task_log.quantity) AS quantity, task_log.operator, task_log.time FROM task_log INNER JOIN packing_list_item INNER JOIN task ON packing_list_item.task_id = task.id AND task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.material_type_id = ? GROUP BY task.id, packing_list_item.material_type_id) union ALL (SELECT task.id, task.file_name, task.type, NULL AS destination, sample_task_item.material_type_id, NULL AS plan_quantity, SUM(sample_out_record.quantity) AS quantity, sample_out_record.operator, sample_out_record.time FROM sample_out_record INNER JOIN sample_task_item INNER JOIN task ON task.id = sample_task_item.task_id AND sample_task_item.id = sample_out_record.sample_task_item_id WHERE sample_task_item.material_type_id = ? GROUP BY task.id, sample_task_item.material_type_id)) a";
 
 	private static final String GET_MATERIAL_DETIAL_REPORT_SQL = "SELECT supplier.`name` AS supplier_name, material_type.id AS material_type_id, material_type.`no` AS `no`, material_type.specification AS specification, material_box.id AS box_id, material_box.area AS area, material_box. ROW AS X, material_box.col AS Y, material_box.height AS Z, material.id AS material_id, material.col AS col, material.`row` AS `row`, material.production_time AS production_time, material.remainder_quantity AS quantity FROM supplier INNER JOIN material_type INNER JOIN material_box INNER JOIN material ON supplier.id = material_type.supplier AND supplier.id = material_box.supplier AND material_type.id = material.type AND material.box = material_box.id WHERE material_type.type = ? AND material_type.supplier = ? AND material_type.enabled = 1 AND remainder_quantity > 0 ORDER BY material_type.id, material_box.id";
@@ -48,7 +49,8 @@ public class MaterialService extends SelectService {
 	private static final String GET_OVERDUE_MATERIAL = "SELECT a.* FROM (SELECT DISTINCT material_type.type AS MaterialType_Type,material_type.enabled AS MaterialType_Enabled,material_type.id AS MaterialType_Id,material_type.supplier AS MaterialType_Supplier,material_type.no AS MaterialType_No,material_type.specification AS MaterialType_Specification,material_type.thickness AS MaterialType_Thickness,material_type.radius AS MaterialType_Radius,material_type.designator AS MaterialType_Designator, supplier.name AS Supplier_Name,supplier.enabled AS Supplier_Enabled,supplier.id AS Supplier_Id,supplier.company_id AS Supplier_CompanyId FROM supplier INNER JOIN material_type INNER JOIN material ON material_type.id = material.type AND supplier.id = material_type.supplier WHERE material_type.enabled = 1 AND material.remainder_quantity > 0 AND material.store_time < ? AND material_type.type = ? AND supplier.company_id = ?) a ";
 
 	public static MaterialService me = new MaterialService();
-	
+
+
 	// 统计物料类型信息
 	public PagePaginate countMaterials(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -57,14 +59,14 @@ public class MaterialService extends SelectService {
 		} else {
 			filter = "material_type.enabled=1#&#supplier.enabled=1";
 		}
-		Page<Record> result = selectService.select(new String[] {"material_type", "supplier"}, new String[] {"material_type.supplier=supplier.id"}, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] { "material_type", "supplier" }, new String[] { "material_type.supplier=supplier.id" }, pageNo, pageSize, ascBy, descBy, filter);
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setTotalRow(result.getTotalRow());
 		if (result.getList() != null && !result.getList().isEmpty()) {
 			pagePaginate.setList(MaterialInfoVO.fillList(result.getList()));
-		}else {
+		} else {
 			pagePaginate.setList(Collections.emptyList());
 		}
 
@@ -96,20 +98,22 @@ public class MaterialService extends SelectService {
 		pagePaginate.setTotalRow(result.getTotalRow());
 		if (result.getList() != null && !result.getList().isEmpty()) {
 			pagePaginate.setList(MaterialInfoVO.fillList(result.getList()));
-		}else {
+		} else {
 			pagePaginate.setList(Collections.emptyList());
 		}
-		
+
 		return pagePaginate;
 	}
 
 
 	/**
 	 * 
-	 * <p>Description: 通过公司和料盒获取物料信息<p>
+	 * <p>
+	 * Description: 通过公司和料盒获取物料信息
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月13日
 	 */
 	public PagePaginate getMaterialsByBox(Integer boxId, Integer pageNo, Integer pageSize) {
@@ -134,19 +138,21 @@ public class MaterialService extends SelectService {
 		pagePaginate.setTotalRow(page.getTotalRow());
 		if (page.getList() != null && !page.getList().isEmpty()) {
 			pagePaginate.setList(MaterialVO.fillRegualrMaterialVOList(page.getList(), company, supplier));
-		}else {
+		} else {
 			pagePaginate.setList(Collections.emptyList());
 		}
 		return pagePaginate;
 	}
-	
-	
+
+
 	/**
 	 * 
-	 * <p>Description: 通过公司和物料类型获取物料信息<p>
+	 * <p>
+	 * Description: 通过公司和物料类型获取物料信息
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月13日
 	 */
 	public PagePaginate getMaterialsByMaterialType(Integer materialTypeId, Integer pageNo, Integer pageSize) {
@@ -166,10 +172,10 @@ public class MaterialService extends SelectService {
 			page = Db.paginate(pageNo, pageSize, MaterialSQL.GET_ENTITIES_SELECT_SQL, MaterialSQL.GET_ENTITIES_BY_TYPE_EXCEPT_SELECT_SQL, materialTypeId, materialType.getSupplier());
 			if (page.getList() != null && !page.getList().isEmpty()) {
 				pagePaginate.setList(MaterialVO.fillRegualrMaterialVOList(page.getList(), company, supplier));
-			}else {
+			} else {
 				pagePaginate.setList(Collections.emptyList());
 			}
-		}else {
+		} else {
 			SqlPara sqlPara = new SqlPara();
 			sqlPara.setSql(MaterialSQL.GET_PRECIOUS_MATERIAL_ENTITIES_SQL);
 			sqlPara.addPara(materialTypeId);
@@ -177,7 +183,7 @@ public class MaterialService extends SelectService {
 			page = Db.paginate(pageNo, pageSize, sqlPara);
 			if (page.getList() != null && !page.getList().isEmpty()) {
 				pagePaginate.setList(MaterialVO.fillPreciousMaterialVOList(page.getList(), company, supplier));
-			}else {
+			} else {
 				pagePaginate.setList(Collections.emptyList());
 			}
 		}
@@ -185,11 +191,11 @@ public class MaterialService extends SelectService {
 		pagePaginate.setPageSize(page.getPageSize());
 		pagePaginate.setTotalPage(page.getTotalPage());
 		pagePaginate.setTotalRow(page.getTotalRow());
-		
+
 		return pagePaginate;
 	}
-	
-	
+
+
 	// 获取物料出入库记录
 	public Object getMaterialIOTaskRecords(Integer type, Integer materialTypeId, Integer destination, String startTime, String endTime, Integer pageNo, Integer pageSize) {
 		Page<Record> page = getRecordItemList(type, materialTypeId, destination, startTime, endTime, pageNo, pageSize);
@@ -200,7 +206,8 @@ public class MaterialService extends SelectService {
 		pagePaginate.setTotalPage(page.getTotalPage());
 		List<IOTaskRecord> recordItems = new ArrayList<>();
 		for (Record record : page.getList()) {
-			IOTaskRecord recordItem = new IOTaskRecord(record.getInt("material_type_id"), record.getInt("plan_quantity"), record.getStr("file_name"), record.getInt("type"), record.getInt("quantity"), record.getStr("operator"), record.getDate("time"));
+			IOTaskRecord recordItem = new IOTaskRecord(record.getInt("material_type_id"), record.getInt("plan_quantity"), record.getStr("file_name"), record.getInt("type"), record.getInt("quantity"),
+					record.getStr("operator"), record.getDate("time"));
 			recordItems.add(recordItem);
 		}
 		pagePaginate.setList(recordItems);
@@ -255,15 +262,15 @@ public class MaterialService extends SelectService {
 		String[] head = null;
 		if (warehouseType.equals(WarehouseType.REGULAR.getId())) {
 			List<Record> materialRecord = Db.find(MaterialSQL.GET_REGUALR_MATERIAL_REPORT_SQL, warehouseType, supplier.getCompanyId(), supplier.getId());
-			field = new String[] {"id", "no", "specification",  "quantity"};
-			head = new String[] {"物料类型号", "料号", "规格号", "物料数量"};
+			field = new String[] { "id", "no", "specification", "quantity" };
+			head = new String[] { "物料类型号", "料号", "规格号", "物料数量" };
 			ExcelWritter writter = ExcelWritter.create(true);
 			writter.fill(materialRecord, fileName, field, head);
 			writter.write(output, true);
 		} else {
 			List<Record> materialRecord = Db.find(MaterialSQL.GET_PRECIOUS_MATERIAL_REPORT_SQL, warehouseType, supplier.getCompanyId(), supplier.getId());
-			field = new String[] {"id", "no", "specification", "designator", "quantity"};
-			head = new String[] {"物料类型号", "料号", "规格号", "位号", "物料数量"};
+			field = new String[] { "id", "no", "specification", "designator", "quantity" };
+			head = new String[] { "物料类型号", "料号", "规格号", "位号", "物料数量" };
 			ExcelWritter writter = ExcelWritter.create(true);
 			writter.fill(materialRecord, fileName, field, head);
 			writter.write(output, true);
@@ -277,8 +284,8 @@ public class MaterialService extends SelectService {
 		List<Record> materialRecord = Db.find(GET_MATERIAL_DETIAL_REPORT_SQL, type, supplier);
 		String[] field = null;
 		String[] head = null;
-		field = new String[] {"supplier_name", "no", "material_type_id", "specification", "material_id", "production_time", "quantity", "area", "box_id", "X", "Y", "Z", "row", "col"};
-		head = new String[] {"客户", "料号", "物料类型", "规格", "料盘唯一码", "生产日期", "数量", "料盒所在区域", "料盒号", "X", "Y", "Z", "盒内行号", "盒内列号"};
+		field = new String[] { "supplier_name", "no", "material_type_id", "specification", "material_id", "production_time", "quantity", "area", "box_id", "X", "Y", "Z", "row", "col" };
+		head = new String[] { "客户", "料号", "物料类型", "规格", "料盘唯一码", "生产日期", "数量", "料盒所在区域", "料盒号", "X", "Y", "Z", "盒内行号", "盒内列号" };
 		ExcelWritter writter = ExcelWritter.create(true);
 		writter.fill(materialRecord, "物料库存表", field, head);
 		writter.write(output, true);
@@ -301,7 +308,7 @@ public class MaterialService extends SelectService {
 
 
 	/**
-	 * 根据物料类型号计算物料库存数并返回，有计算不在料盒内的物料，在 TaskPool类 的 sendIOCmds方法 中用得上 
+	 * 根据物料类型号计算物料库存数并返回，有计算不在料盒内的物料，在 TaskPool类 的 sendIOCmds方法 中用得上
 	 */
 	public Integer countMaterialIncludeNotInBox(Integer materialTypeId) {
 		Material material = Material.dao.findFirst(COUNT_MATERIAL_INCLUDE_NOT_IN_BOX_SQL, materialTypeId);

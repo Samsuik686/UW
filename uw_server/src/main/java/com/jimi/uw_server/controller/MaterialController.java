@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 
 /**
  * 物料控制层
+ * 
  * @author HardyYao
  * @createTime 2018年6月8日
  */
@@ -25,6 +26,7 @@ public class MaterialController extends Controller {
 	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 	private static SupplierService supplierService = Aop.get(SupplierService.class);
+
 
 	// 统计物料类型信息
 	public void countMaterials(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -69,7 +71,7 @@ public class MaterialController extends Controller {
 		renderJson(ResultUtil.succeed(materialService.getMaterialsByBox(boxId, pageNo, pageSize)));
 	}
 
-	
+
 	public void getMaterialsByMaterialType(Integer materialTypeId, Integer pageNo, Integer pageSize) {
 		if (materialTypeId == null) {
 			throw new ParameterException("参数不能为空！");
@@ -83,8 +85,6 @@ public class MaterialController extends Controller {
 		renderJson(ResultUtil.succeed(materialService.getMaterialsByMaterialType(materialTypeId, pageNo, pageSize)));
 	}
 
-
-	
 
 	// 获取物料出入库记录
 	public void getMaterialIOTaskRecords(Integer type, Integer materialTypeId, Integer destination, Integer pageNo, Integer pageSize, String startTime, String endTime) {
@@ -172,9 +172,10 @@ public class MaterialController extends Controller {
 		renderNull();
 	}
 
-	
+
 	/**
 	 * 判断是否符合日期格式
+	 * 
 	 * @param time
 	 * @return
 	 */

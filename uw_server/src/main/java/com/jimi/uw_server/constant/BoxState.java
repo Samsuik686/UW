@@ -3,7 +3,7 @@ package com.jimi.uw_server.constant;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年4月18日  上午9:44:11
+ * @createTime 2019年4月18日 上午9:44:11
  */
 
 public class BoxState {

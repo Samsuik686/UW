@@ -15,7 +15,6 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.WarehouseType;
 import com.jimi.uw_server.constant.sql.SampleTaskSQL;
 import com.jimi.uw_server.exception.OperationException;
-import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.lock.PreciousTaskLock;
 import com.jimi.uw_server.model.Material;
 import com.jimi.uw_server.model.SampleOutRecord;
@@ -141,7 +140,7 @@ public class PreciousSampleTaskService extends BaseSampleTaskService {
 
 
 	public String outSingular(String materialId, Integer taskId, User user) {
-		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (PreciousTaskLock.SAMPLE_SCAN_LOCK) {
 
 			Material material = Material.dao.findById(materialId);
 			if (material == null || material.getRemainderQuantity() <= 0) {
@@ -179,7 +178,7 @@ public class PreciousSampleTaskService extends BaseSampleTaskService {
 
 
 	public String outRegular(String materialId, Integer taskId, User user) {
-		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (PreciousTaskLock.SAMPLE_SCAN_LOCK) {
 			Material material = Material.dao.findById(materialId);
 			if (material == null || material.getRemainderQuantity() <= 0) {
 				throw new OperationException("料盘不存在或者已经出库！");
@@ -216,7 +215,7 @@ public class PreciousSampleTaskService extends BaseSampleTaskService {
 
 
 	public String outLost(String materialId, Integer taskId, User user) {
-		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (PreciousTaskLock.SAMPLE_SCAN_LOCK) {
 			Material material = Material.dao.findById(materialId);
 			if (material == null || material.getRemainderQuantity() <= 0) {
 				throw new OperationException("料盘不存在或者已经出库！");
@@ -257,7 +256,7 @@ public class PreciousSampleTaskService extends BaseSampleTaskService {
 
 
 	public void sampleUWMaterial(String materialId, Integer taskId) {
-		synchronized (Lock.PRECIOUS_SAMPLE_TASK_SCAN_LOCK) {
+		synchronized (PreciousTaskLock.SAMPLE_SCAN_LOCK) {
 			Task task = Task.dao.findById(taskId);
 			if (!task.getState().equals(TaskState.PROCESSING)) {
 				throw new OperationException("任务未处于进行中状态！");

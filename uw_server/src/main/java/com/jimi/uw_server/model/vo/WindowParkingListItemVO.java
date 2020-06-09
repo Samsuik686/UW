@@ -10,6 +10,7 @@ import com.jimi.uw_server.constant.TaskType;
 
 /**
  * 仓口停泊条目表示层
+ * 
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */
@@ -267,7 +268,8 @@ public class WindowParkingListItemVO {
 	}
 
 
-	public WindowParkingListItemVO fill(List<PackingListItemDetailsVO> details, Record record, Integer eWhStoreQuantity, Integer uwStoreQuantity, Integer actualQuantity, Integer reelNum, Boolean isForceFinish, Integer boxId, List<Material> materials) {
+	public WindowParkingListItemVO fill(List<PackingListItemDetailsVO> details, Record record, Integer eWhStoreQuantity, Integer uwStoreQuantity, Integer actualQuantity, Integer reelNum,
+			Boolean isForceFinish, Integer boxId, List<Material> materials) {
 		this.setMaterialTypeId(record.getInt("MaterialType_Id"));
 		this.setSpecification(record.getStr("MaterialType_Specification"));
 		this.setMaterialNo(record.getStr("MaterialType_No"));

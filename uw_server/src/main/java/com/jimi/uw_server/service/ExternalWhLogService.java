@@ -14,7 +14,7 @@ import com.jimi.uw_server.model.vo.ExternalWhInfoVO;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月8日  上午9:40:44
+ * @createTime 2019年5月8日 上午9:40:44
  */
 
 public class ExternalWhLogService {
@@ -34,16 +34,17 @@ public class ExternalWhLogService {
 	private static final String GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_TIME = "SELECT sum(external_wh_log.quantity) as quantity FROM external_wh_log INNER JOIN task ON external_wh_log.task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ? and external_wh_log.source_wh = external_wh_log.destination and task.type = ? and external_wh_log.time <= ?";
 
 	private static final String GET_DEDUCT_QUANTITY_BY_OUT_TASK = "SELECT * FROM external_wh_log WHERE task_id = ? AND material_type_id = ?";
-	
+
 	private static final String GET_IN_EXTERNALWHLOG_QUANTITY_BY_MATERIALTYPEID_AND_OPERATION_TIME = "SELECT sum(external_wh_log.quantity) as in_quantity FROM external_wh_log WHERE external_wh_log.material_type_id = ? and external_wh_log.destination = ? and external_wh_log.source_wh != external_wh_log.destination and external_wh_log.operation_time <= ?";
 
 	private static final String GET_OUT_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_OPERATION_TIME = "SELECT sum(external_wh_log.quantity) as out_quantity FROM external_wh_log WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ? and external_wh_log.source_wh != external_wh_log.destination and external_wh_log.operation_time <= ?";
 
 	private static final String GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_OPERATION_TIME = "SELECT sum(external_wh_log.quantity) as quantity FROM external_wh_log INNER JOIN task ON external_wh_log.task_id = task.id WHERE external_wh_log.material_type_id = ? and external_wh_log.source_wh = ? and external_wh_log.source_wh = external_wh_log.destination and task.type = ? and external_wh_log.operation_time <= ?";
 
-	
+
 	/**
 	 * 根据物料类型ID和仓库ID获取该物料类型在该仓库的库存
+	 * 
 	 * @param materialTypeId
 	 * @param whId
 	 * @return
@@ -85,6 +86,7 @@ public class ExternalWhLogService {
 
 	/**
 	 * 根据物料类型ID和仓库ID和时间获取该物料类型在该仓库的库存
+	 * 
 	 * @param materialTypeId
 	 * @param whId
 	 * @param time
@@ -127,6 +129,7 @@ public class ExternalWhLogService {
 
 	/**
 	 * 根据同个客户每个周转仓的库存，计算每个物料的总库存
+	 * 
 	 * @param materialTypeId
 	 * @param whId
 	 * @return
@@ -141,14 +144,16 @@ public class ExternalWhLogService {
 		}
 		return materialTypeQuantityMap;
 	}
-	
-	
+
+
 	public Integer getRuntimeEWhMaterialQuantity(Integer materialTypeId, Integer whId, Date time) {
 
 		List<ExternalWhLog> inExternalWhLogs = ExternalWhLog.dao.find(GET_IN_EXTERNALWHLOG_QUANTITY_BY_MATERIALTYPEID_AND_OPERATION_TIME, materialTypeId, whId, time);
 		List<ExternalWhLog> outExternalWhLogs = ExternalWhLog.dao.find(GET_OUT_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_OPERATION_TIME, materialTypeId, whId, time);
-		List<ExternalWhLog> wastageExternalWhLogs = ExternalWhLog.dao.find(GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_OPERATION_TIME, materialTypeId, whId, TaskType.WASTAGE, time);
-		List<ExternalWhLog> inventoryExternalWhLogs = ExternalWhLog.dao.find(GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_OPERATION_TIME, materialTypeId, whId, TaskType.COUNT, time);
+		List<ExternalWhLog> wastageExternalWhLogs = ExternalWhLog.dao.find(GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_OPERATION_TIME, materialTypeId, whId,
+				TaskType.WASTAGE, time);
+		List<ExternalWhLog> inventoryExternalWhLogs = ExternalWhLog.dao.find(GET_WASTAGE_EXTERNALWULOG_QUANTITY_BY_MATERIALTYPEID_AND_TASK_TYPE_AND_OPERATION_TIME, materialTypeId, whId,
+				TaskType.COUNT, time);
 		int inQuantity = 0;
 		int outQuantity = 0;
 		int wastageQuantity = 0;
@@ -177,23 +182,23 @@ public class ExternalWhLogService {
 		return quantity;
 	}
 
-	
+
 	public Integer getEwhMaterialQuantityByOutTask(Task mainTask, Task inventoryTask, Integer materialTypeId, Integer whId) {
 		Integer quantity = 0;
 		if (mainTask.getIsInventoryApply()) {
 			quantity = getEWhMaterialQuantity(materialTypeId, whId, inventoryTask.getCreateTime());
-		}else {
+		} else {
 			if (inventoryTask == null) {
 				quantity = getEWhMaterialQuantity(materialTypeId, whId);
-			}else {
+			} else {
 				quantity = getEWhMaterialQuantity(materialTypeId, whId) - getEWhMaterialQuantity(materialTypeId, whId, inventoryTask.getCreateTime());
 			}
-			
+
 		}
 		return quantity;
 	}
-	
-	
+
+
 	public Integer getDeductEwhMaterialQuantityByOutTask(Integer mainTaskId, Integer materialTypeId) {
 		List<ExternalWhLog> externalWhLogs = ExternalWhLog.dao.find(GET_DEDUCT_QUANTITY_BY_OUT_TASK, mainTaskId, materialTypeId);
 		int deductQuantity = 0;

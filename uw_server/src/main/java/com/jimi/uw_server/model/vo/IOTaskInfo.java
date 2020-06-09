@@ -35,11 +35,11 @@ public class IOTaskInfo {
 	public Integer scanNum;
 
 	public Date oldestMaterialDate;
-	
+
 	private String cycle;
 
 	public Boolean cutBoolean;
-	
+
 	public String cutString;
 
 	List<IOTaskItemInfo> infos;
@@ -183,8 +183,8 @@ public class IOTaskInfo {
 	public void setCutString(String cutString) {
 		this.cutString = cutString;
 	}
-	
-	
+
+
 	public String getCycle() {
 		return cycle;
 	}
@@ -193,6 +193,7 @@ public class IOTaskInfo {
 	public void setCycle(String cycle) {
 		this.cycle = cycle;
 	}
+
 
 	public static List<IOTaskInfo> fillList(Task task, List<Record> taskInfoRecords, List<Record> uwStoreRecords, List<Record> oldestMaterialRecords) {
 		Map<Integer, IOTaskInfo> map = new HashMap<>();
@@ -221,14 +222,14 @@ public class IOTaskInfo {
 					info.setScanNum(1);
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
 						info.setLackQuantity(info.getActuallyQuantity() - info.getPlanQuantity());
-					}else if (task.getType().equals(TaskType.OUT)) {
+					} else if (task.getType().equals(TaskType.OUT)) {
 						info.setLackQuantity(info.getPlanQuantity() - info.getActuallyQuantity());
 					}
 				} else {
 					info.setActuallyQuantity(0);
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
 						info.setLackQuantity(info.getActuallyQuantity() - info.getPlanQuantity());
-					}else if (task.getType().equals(TaskType.OUT)) {
+					} else if (task.getType().equals(TaskType.OUT)) {
 						info.setLackQuantity(info.getPlanQuantity() - info.getActuallyQuantity());
 					}
 					info.setScanNum(0);
@@ -245,7 +246,7 @@ public class IOTaskInfo {
 					info.setScanNum(info.getScanNum() + 1);
 					if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
 						info.setLackQuantity(info.getActuallyQuantity() - info.getPlanQuantity());
-					}else if (task.getType().equals(TaskType.OUT)) {
+					} else if (task.getType().equals(TaskType.OUT)) {
 						info.setLackQuantity(info.getPlanQuantity() - info.getActuallyQuantity());
 					}
 				}

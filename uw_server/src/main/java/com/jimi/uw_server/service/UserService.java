@@ -18,6 +18,7 @@ import cc.darhao.dautils.api.MD5Util;
 
 /**
  * 用户业务层
+ * 
  * @author HardyYao
  * @createTime 2018年6月8日
  */
@@ -94,7 +95,7 @@ public class UserService extends SelectService {
 
 	// 查询用户信息
 	public Object select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		Page<Record> result = selectService.select(new String[] {"user", "user_type"}, new String[] {"user.type = user_type.id"}, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] { "user", "user_type" }, new String[] { "user.type = user_type.id" }, pageNo, pageSize, ascBy, descBy, filter);
 		List<UserVO> userVOs = new ArrayList<UserVO>();
 		for (Record res : result.getList()) {
 			UserVO u = new UserVO(res.get("User_Uid"), res.get("User_Password"), res.get("User_Name"), res.get("User_Type"), res.get("User_Enabled"), res.getStr("UserType_Name"));

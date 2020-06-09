@@ -8,32 +8,33 @@ import com.jfinal.plugin.activerecord.Record;
 
 /**
  * 客户实体类
+ * 
  * @author HardyYao
- * @createTime 2018年11月22日  下午4:39:50
+ * @createTime 2018年11月22日 下午4:39:50
  */
 
-public class SupplierVO{
+public class SupplierVO {
 
 	private Integer id;
-	
+
 	private String name;
-	
+
 	private String companyName;
-	
+
 	private Boolean enabled;
-	
+
 	private String enabledString;
 
 
 	public SupplierVO() {
-		
+
 	}
-	
-	
+
+
 	public Integer getId() {
 		return id;
 	}
-	
+
 
 	public void setId(Integer id) {
 		this.id = id;
@@ -82,8 +83,8 @@ public class SupplierVO{
 			this.enabledString = "否";
 		}
 	}
-	
-	
+
+
 	public static List<SupplierVO> fillList(List<Record> records) {
 		List<SupplierVO> supplierVOs = new ArrayList<SupplierVO>(records.size());
 		for (Record record : records) {

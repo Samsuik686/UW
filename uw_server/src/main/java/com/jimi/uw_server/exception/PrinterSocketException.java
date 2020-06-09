@@ -1,8 +1,10 @@
 package com.jimi.uw_server.exception;
 
-/**打印错误异常类
- * @author   HCJ
- * @date     2019年1月29日 下午12:03:29
+/**
+ * 打印错误异常类
+ * 
+ * @author HCJ
+ * @date 2019年1月29日 下午12:03:29
  */
 public class PrinterSocketException extends RuntimeException {
 

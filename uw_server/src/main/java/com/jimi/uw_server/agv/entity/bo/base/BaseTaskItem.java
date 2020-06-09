@@ -9,12 +9,12 @@ public class BaseTaskItem {
 	protected Integer boxId;
 
 	/**
-	 * -1：不可分配  0：未分配  1：已分配拣料  2：已拣料到站  3：已分配回库  4：已回库完成
+	 * -1：不可分配 0：未分配 1：已分配拣料 2：已拣料到站 3：已分配回库 4：已回库完成
 	 */
 	protected Integer state;
 
 	/**
-	 * false：未完成	true：已完成
+	 * false：未完成 true：已完成
 	 */
 	protected Boolean isForceFinish;
 

@@ -23,9 +23,9 @@ import com.jimi.uw_server.service.MaterialService;
 
 
 /**
- * 异常处理器
- * <br>
+ * 异常处理器 <br>
  * <b>2018年7月13日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class ExceptionHandler {
@@ -55,7 +55,7 @@ public class ExceptionHandler {
 		if (groupid.contains(":") && missionGroupId.contains("B")) {
 			AGVIOTaskItem agvioTaskItem = IOTaskItemRedisDAO.getIOTaskItem(Integer.valueOf(groupid.split(":")[2]), Integer.valueOf(groupid.split(":")[0]));
 			if (agvioTaskItem == null) {
-				return ;
+				return;
 			}
 			if (agvioTaskItem.getState() > TaskItemState.ARRIVED_WINDOW) {
 				if (agvioTaskItem.getState() == TaskItemState.START_BACK) {
@@ -63,7 +63,8 @@ public class ExceptionHandler {
 				}
 			}
 			for (AGVIOTaskItem item : IOTaskItemRedisDAO.getIOTaskItems(Integer.valueOf(groupid.split(":")[2]))) {
-				if (item.getBoxId().equals(agvioTaskItem.getBoxId()) && item.getWindowId().equals(agvioTaskItem.getWindowId()) && item.getGoodsLocationId().equals(agvioTaskItem.getGoodsLocationId()) && item.getState() > TaskItemState.ARRIVED_WINDOW) {
+				if (item.getBoxId().equals(agvioTaskItem.getBoxId()) && item.getWindowId().equals(agvioTaskItem.getWindowId()) && item.getGoodsLocationId().equals(agvioTaskItem.getGoodsLocationId())
+						&& item.getState() > TaskItemState.ARRIVED_WINDOW) {
 					Task task = Task.dao.findById(item.getTaskId());
 					if (item.getIsForceFinish().equals(false) && task.getType().equals(TaskType.OUT)) {
 						Integer remainderQuantity = materialService.countAndReturnRemainderQuantityByMaterialTypeId(item.getMaterialTypeId());
@@ -97,10 +98,11 @@ public class ExceptionHandler {
 				}
 			}
 			ioTaskHandler.clearTask(Integer.valueOf(groupid.split(":")[2]), false);
-		} else if (groupid.contains("@") && missionGroupId.contains("B")) { // missiongroupid 包含“@”表示为盘点任务
+		} else if (groupid.contains("@") && missionGroupId.contains("B")) { // missiongroupid
+																			// 包含“@”表示为盘点任务
 			AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(Integer.valueOf(groupid.split("@")[1]), Integer.valueOf(groupid.split("@")[0]));
 			if (item == null) {
-				return ;
+				return;
 			}
 			if (item.getState() > TaskItemState.ARRIVED_WINDOW) {
 				if (item.getState() == TaskItemState.START_BACK) {
@@ -112,10 +114,11 @@ public class ExceptionHandler {
 				InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
 			}
 			invTaskHandler.clearTask(Integer.valueOf(groupid.split("@")[1]));
-		} else if (groupid.contains("#") && missionGroupId.contains("B")) { // missiongroupid 包含“@”表示为盘点任务
+		} else if (groupid.contains("#") && missionGroupId.contains("B")) { // missiongroupid
+																			// 包含“@”表示为盘点任务
 			AGVSampleTaskItem item = SampleTaskItemRedisDAO.getSampleTaskItem(Integer.valueOf(groupid.split("#")[1]), Integer.valueOf(groupid.split("#")[0]));
 			if (item == null) {
-				return ;
+				return;
 			}
 			if (item.getState() > TaskItemState.ARRIVED_WINDOW) {
 				if (item.getState() == TaskItemState.START_BACK) {

@@ -53,7 +53,8 @@ public class InvTaskHandler extends BaseTaskHandler {
 		AGVInventoryTaskItem agvInventoryTaskItem = (AGVInventoryTaskItem) item;
 		synchronized (Lock.TASK_REDIS_LOCK) {
 			// 构建SL指令，令指定robot把料送回原仓位
-			if (TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()) != null && !TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()).equals(0)) {
+			if (TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()) != null
+					&& !TaskPropertyRedisDAO.getLocationStatus(goodsLocation.getWindowId(), goodsLocation.getId()).equals(0)) {
 				return;
 			}
 			AGVMoveCmd moveCmd = createSendLLCmd(agvInventoryTaskItem.getGroupId(), materialBox, goodsLocation, priority);
@@ -87,10 +88,10 @@ public class InvTaskHandler extends BaseTaskHandler {
 		AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(Integer.valueOf(groupid.split("@")[1]), Integer.valueOf(groupid.split("@")[0]));
 		// 更新tsakitems里对应item的robotid
 		if (item == null) {
-			return ;
+			return;
 		}
 		InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, null, null, null, statusCmd.getRobotid(), null);
-		
+
 	}
 
 
@@ -101,11 +102,11 @@ public class InvTaskHandler extends BaseTaskHandler {
 		String groupid = missionGroupId.split("_")[0];
 		AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(Integer.valueOf(groupid.split("@")[1]), Integer.valueOf(groupid.split("@")[0]));
 		if (item == null) {
-			return ;
+			return;
 		}
 		if (missionGroupId.contains("S") && item.getState() == TaskItemState.ASSIGNED) {
 			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.SEND_BOX, null, null, null, null);
-		}else if (missionGroupId.contains("B") && item.getState() == TaskItemState.START_BACK) {
+		} else if (missionGroupId.contains("B") && item.getState() == TaskItemState.START_BACK) {
 			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.BACK_BOX, null, null, null, null);
 			TaskPropertyRedisDAO.setLocationStatus(item.getWindowId(), item.getGoodsLocationId(), 0);
 		}
@@ -122,7 +123,7 @@ public class InvTaskHandler extends BaseTaskHandler {
 		// 匹配groupid
 		AGVInventoryTaskItem item = InventoryTaskItemRedisDAO.getInventoryTaskItem(taskId, boxId);
 		if (item == null) {
-			return ;
+			return;
 		}
 		if (item.getState() == TaskItemState.SEND_BOX && missionGroupId.contains("S")) {// LS执行完成时
 			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.ARRIVED_WINDOW, null, null, null, null);
@@ -132,16 +133,17 @@ public class InvTaskHandler extends BaseTaskHandler {
 				if (!materials.isEmpty()) {
 					List<UrMaterialInfo> urMaterialInfos = new ArrayList<UrMaterialInfo>();
 					for (Material material : materials) {
-                        UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(), item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), 0);
-                        urMaterialInfos.add(urMaterialInfo);
+						UrMaterialInfo urMaterialInfo = new UrMaterialInfo(material.getId(), material.getRow(), material.getCol(), taskId, item.getBoxId(), item.getWindowId(),
+								item.getGoodsLocationId(), false, 0, material.getRemainderQuantity(), 0);
+						urMaterialInfos.add(urMaterialInfo);
 					}
 					UrTaskInfoDAO.putUrMaterialInfos(taskId, boxId, urMaterialInfos);
 				}
-				//发送ready包
-                ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
-                PackSender.sendForkliftReachPackage("robot1", pack);
+				// 发送ready包
+				ForkliftReachPackage pack = new ForkliftReachPackage(item.getTaskId(), item.getBoxId());
+				PackSender.sendForkliftReachPackage("robot1", pack);
 			}
-		}else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {
+		} else if (item.getState() == TaskItemState.BACK_BOX && missionGroupId.contains("B")) {
 			InventoryTaskItemRedisDAO.updateInventoryTaskItemInfo(item, TaskItemState.FINISH_BACK, null, null, null, null);
 			MaterialBox materialBox = MaterialBox.dao.findById(item.getBoxId());
 			materialBox.setIsOnShelf(true);

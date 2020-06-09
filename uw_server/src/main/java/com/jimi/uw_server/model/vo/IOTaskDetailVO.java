@@ -7,8 +7,9 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.model.TaskLog;
 
 
-/** 
+/**
  * 出入库任务详情表示层对象
+ * 
  * @author HardyYao
  * @createTime 2018年7月13日 上午8:29:22
  */

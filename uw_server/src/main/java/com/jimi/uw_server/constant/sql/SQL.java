@@ -47,7 +47,7 @@ public class SQL {
 	public static final String GET_MATERIAL_BY_SUPPLIER = "SELECT * FROM material INNER JOIN  material_box ON material.box = material_box.id WHERE material_box.supplier = ? AND material.remainder_quantity > 0 AND material.id != ? AND material_box.type = ?";
 
 	public static final String GET_GOODSLOCATION_BY_WINDOW = "SELECT * FROM goods_location where window_id = ?";
-	
+
 	public static final String GET_WINDOW_BY_TASK = "SELECT * FROM window WHERE bind_task_id = ? ORDER BY id ASC";
 
 }

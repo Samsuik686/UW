@@ -61,6 +61,8 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 			super.createTask(type, fileName, file, supplier, destination, isInventoryApply, inventoryTaskId, remarks, WarehouseType.PRECIOUS.getId(), isForced, false);
 		}
 	}
+
+
 	// 令指定任务开始
 	public boolean start(Integer id) {
 		synchronized (PreciousTaskLock.START_IO_LOCK) {
@@ -88,6 +90,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 		return false;
 	}
 
+
 	// 作废指定任务
 	public boolean cancel(Integer id) {
 		synchronized (PreciousTaskLock.CANCEL_IO_LOCK) {
@@ -106,7 +109,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 				}
 				task.setEndTime(new Date()).setState(TaskState.CANCELED).update();
 				return true;
-			} 
+			}
 			if (task.getWarehouseType().equals(WarehouseType.PRECIOUS.getId())) {
 				if (task.getType().equals(TaskType.IN) || task.getType().equals(TaskType.SEND_BACK)) {
 					Record problemRecords = Db.findFirst(IOTaskSQL.GET_IN_WRONG_IOTASK_ITEM_BY_TASK_ID, task.getId());
@@ -142,8 +145,9 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 			}
 		}
 		return false;
-		
+
 	}
+
 
 	// 新增入库料盘记录并写入库任务日志记录
 	public Material in(Integer packingListItemId, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime, User user) {
@@ -189,6 +193,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 			return material;
 		}
 	}
+
 
 	// 写贵重仓出库任务日志
 	public boolean out(Integer packingListItemId, String materialId, Integer quantity, String supplierName, User user, Boolean isForced) {
@@ -268,6 +273,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 		}
 	}
 
+
 	// 将普通仓截料后剩余的物料置为在盒内
 	public Material backAfterCutting(Integer packingListItemId, String materialId, Integer quantity, String supplierName) {
 		// 通过任务条目id获取套料单记录
@@ -294,6 +300,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 			return material;
 		}
 	}
+
 
 	// 删除错误的料盘记录
 	public Material deleteMaterialRecord(Integer packListItemId, String materialId) {
@@ -326,8 +333,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 		}
 	}
 
-	
-	
+
 	/**
 	 * 完成贵重仓出库任务缺料条目
 	 * 
@@ -388,6 +394,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 		return true;
 	}
 
+
 	// 令指定任务通过审核
 	@Override
 	public void pass(Integer id) {
@@ -395,6 +402,7 @@ public class PreciousIOTaskService extends BaseIOTaskService {
 			super.pass(id);
 		}
 	}
+
 
 	/**
 	 * 完成贵重仓出库任务条目

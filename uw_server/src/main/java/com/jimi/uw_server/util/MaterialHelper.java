@@ -19,6 +19,7 @@ public class MaterialHelper {
 
 	/**
 	 * 分配物料位置
+	 * 
 	 * @param material
 	 * @param isForced 是否强制分配
 	 */

@@ -3,7 +3,7 @@ package com.jimi.uw_server.model.vo;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月9日  上午10:57:49
+ * @createTime 2019年5月9日 上午10:57:49
  */
 
 public class ExternalWhInfoVO {

@@ -8,7 +8,7 @@ import com.jimi.uw_server.model.GoodsLocation;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年6月21日  下午4:22:53
+ * @createTime 2019年6月21日 下午4:22:53
  */
 
 public class PackingSampleInfoVO {

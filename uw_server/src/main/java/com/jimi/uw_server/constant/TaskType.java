@@ -2,8 +2,9 @@ package com.jimi.uw_server.constant;
 
 /**
  * 任务类型常量类
+ * 
  * @author HardyYao
- * @createTime 2018年11月21日  下午4:57:40
+ * @createTime 2018年11月21日 下午4:57:40
  */
 
 public class TaskType {
@@ -23,7 +24,7 @@ public class TaskType {
 	public static final int WASTAGE = 6; // 损耗
 
 	public static final int SAMPLE = 7;
-	
+
 	public static final int EMERGENCY_OUT = 8;
 
 }

@@ -40,7 +40,8 @@ public class ManualTaskService {
 		}
 		Task task = new Task();
 		if (type == 1) {
-            Destination destination = Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_AND_COMPANY_SQL, destinationName, supplier.getCompanyId());			if (destination == null) {
+			Destination destination = Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_AND_COMPANY_SQL, destinationName, supplier.getCompanyId());
+			if (destination == null) {
 				throw new OperationException("目的仓库不存在！");
 			}
 			task.setDestination(destination.getId());
@@ -102,7 +103,8 @@ public class ManualTaskService {
 							continue;
 						}
 						operator = materialReel.getOperator();
-						TaskLog taskLog = new TaskLog().setAuto(false).setMaterialId(materialReel.getMaterialId()).setOperator(materialReel.getOperator()).setQuantity(material.getRemainderQuantity()).setPackingListItemId(packingListItem.getId()).setDestination(task.getDestination()).setTime(new Date());
+						TaskLog taskLog = new TaskLog().setAuto(false).setMaterialId(materialReel.getMaterialId()).setOperator(materialReel.getOperator()).setQuantity(material.getRemainderQuantity())
+								.setPackingListItemId(packingListItem.getId()).setDestination(task.getDestination()).setTime(new Date());
 						material.setRemainderQuantity(0).setCol(-1).setRow(-1).setIsInBox(false).update();
 						actualQuantity += materialReel.getQuantity();
 						taskLog.save();

@@ -5,8 +5,9 @@ import com.jimi.uw_server.agv.entity.cmd.base.AGVBaseCmd;
 
 /**
  * 异常任务删除指令
+ * 
  * @author HardyYao
- * @createTime 2019年1月23日  上午10:56:43
+ * @createTime 2019年1月23日 上午10:56:43
  */
 
 public class AgvDelMissionExceptionCmd extends AGVBaseCmd {

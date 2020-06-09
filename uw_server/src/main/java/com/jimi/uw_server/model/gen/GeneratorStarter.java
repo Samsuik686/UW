@@ -13,6 +13,7 @@ public class GeneratorStarter {
 
 	/**
 	 * 用于生成表对应的Bean
+	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {

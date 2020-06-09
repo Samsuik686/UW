@@ -7,9 +7,9 @@ import com.jimi.uw_server.agv.entity.bo.base.BaseTaskItem;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月16日  上午9:38:15
+ * @createTime 2019年5月16日 上午9:38:15
  */
-public class AGVInventoryTaskItem extends BaseTaskItem{
+public class AGVInventoryTaskItem extends BaseTaskItem {
 
 	/**
 	 * 任务优先级，取值范围：1-9；数值越大，优先级越高
@@ -17,6 +17,7 @@ public class AGVInventoryTaskItem extends BaseTaskItem{
 	private Integer priority;
 
 	private Integer boxType;
+
 
 	public AGVInventoryTaskItem() {
 	}
@@ -127,7 +128,6 @@ public class AGVInventoryTaskItem extends BaseTaskItem{
 		return "AGVInventoryTaskItem [priority=" + priority + ", boxType=" + boxType + ", taskId=" + taskId + ", robotId=" + robotId + ", boxId=" + boxId + ", state=" + state + ", isForceFinish="
 				+ isForceFinish + ", windowId=" + windowId + ", goodsLocationId=" + goodsLocationId + "]";
 	}
-	
-	
-	
+
+
 }

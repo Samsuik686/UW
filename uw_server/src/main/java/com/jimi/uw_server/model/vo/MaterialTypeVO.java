@@ -8,37 +8,42 @@ import com.jfinal.plugin.activerecord.Record;
 
 /**
  * 物料类型表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年7月5日 上午11:25:16 
+ * @createTime 2018年7月5日 上午11:25:16
  */
-public class MaterialTypeVO{
+public class MaterialTypeVO {
 
 	private Integer id;
-	
+
 	private String no;
-	
+
 	private String specification;
-	
+
 	private Integer supplier;
-	
+
 	private String supplierName;
 
 	private Integer thickness;
-	
+
 	private Integer radius;
-	
+
 	private Integer type;
 
 	private String designator;
-	
+
 
 	/**
-	 * <p>Title<p>
-	 * <p>Description<p>
+	 * <p>
+	 * Title
+	 * <p>
+	 * <p>
+	 * Description
+	 * <p>
 	 */
 	public MaterialTypeVO() {
 	}
-	
+
 
 	public String getSupplierName() {
 		return supplierName;
@@ -49,7 +54,7 @@ public class MaterialTypeVO{
 		this.supplierName = supplierName;
 	}
 
-	
+
 	public Integer getId() {
 		return id;
 	}
@@ -109,6 +114,7 @@ public class MaterialTypeVO{
 		this.radius = radius;
 	}
 
+
 	public Integer getType() {
 		return type;
 	}
@@ -117,8 +123,8 @@ public class MaterialTypeVO{
 	public void setType(Integer type) {
 		this.type = type;
 	}
-	
-	
+
+
 	public String getDesignator() {
 		return designator;
 	}
@@ -128,11 +134,14 @@ public class MaterialTypeVO{
 		this.designator = designator;
 	}
 
+
 	/**
-	 * <p>Description: <p>
+	 * <p>
+	 * Description:
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年1月10日
 	 */
 	public static List<MaterialTypeVO> fillList(List<Record> records) {
@@ -154,5 +163,5 @@ public class MaterialTypeVO{
 		}
 		return materialTypeVOs;
 	}
-	
+
 }

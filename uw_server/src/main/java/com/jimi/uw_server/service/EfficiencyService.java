@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.service;
 
 import java.util.List;
@@ -11,21 +11,31 @@ import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;
 
-/**  
- * <p>Title: EfficiencyService</p>  
- * <p>Description: 效率统计，统计用户出入库效率</p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: EfficiencyService
+ * </p>
+ * <p>
+ * Description: 效率统计，统计用户出入库效率
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2019年11月29日
  *
  */
 public class EfficiencyService {
-	
+
 	private String GET_USER_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE task_log.operator = ? ORDER BY task_log.time DESC";
-	
+
 	private String GET_TASK_LAST_SCAN_MATERIAL_TIME = "SELECT * FROM task_log INNER JOIN packing_list_item ON task_log.packing_list_item_id = packing_list_item.id WHERE packing_list_item.task_id = ?  AND task_log.operator IS NOT NULL ORDER BY task_log.time DESC";
-			
+
+
 	public static void initTaskEfficiency() {
 		List<Window> windows = Window.dao.find(SQL.GET_WORKING_WINDOWS);
 		if (!windows.isEmpty()) {
@@ -39,15 +49,16 @@ public class EfficiencyService {
 		EfficiencyRedisDAO.removeTaskLastOperationTime();
 		EfficiencyRedisDAO.removeUserLastOperationTime();
 	}
-	
+
+
 	public Long getUserLastOperationTime(Integer taskId, Integer boxId, String uid) {
 		Long TaskLastOperationTime = EfficiencyRedisDAO.getTaskLastOperationTime(taskId);
 		Long taskBoxArrivedTime = EfficiencyRedisDAO.getTaskBoxArrivedTime(taskId, boxId);
 		Long taskLastStartTime = EfficiencyRedisDAO.getTaskStartTime(taskId);
 		Long userLastOperationTime = EfficiencyRedisDAO.getUserLastOperationTime(uid);
-		
+
 		String taskLastOperationUser = EfficiencyRedisDAO.getTaskLastOperationUser(taskId);
-		
+
 		TaskLog taskLog = null;
 		if (taskLastStartTime == null) {
 			taskLastStartTime = (long) 0;
@@ -66,7 +77,7 @@ public class EfficiencyService {
 			}
 		}
 		if (TaskLastOperationTime == null && taskLastOperationUser != null) {
-			//获取该任务最后一次出入库操作的时间
+			// 获取该任务最后一次出入库操作的时间
 			if (taskLog == null) {
 				taskLog = TaskLog.dao.findFirst(GET_TASK_LAST_SCAN_MATERIAL_TIME, taskId);
 			}
@@ -94,32 +105,33 @@ public class EfficiencyService {
 		if (TaskLastOperationTime == null && userLastOperationTime == null) {
 			return getBiggerTime(taskLastStartTime, taskBoxArrivedTime);
 		}
-		
-		
+
+
 		return null;
-		
+
 	}
-	
+
+
 	private Long getBiggerTime(Long t1, Long t2) {
 		if (t1 > t2) {
 			return t1;
-		}else {
+		} else {
 			return t2;
 		}
 	}
-	
-	
+
+
 	private Long getBiggerTime(Long t1, Long t2, Long t3) {
 		if (t1 > t2) {
 			if (t1 > t3) {
 				return t1;
-			}else {
+			} else {
 				return t3;
 			}
-		}else {
+		} else {
 			if (t2 > t3) {
 				return t2;
-			}else {
+			} else {
 				return t3;
 			}
 		}

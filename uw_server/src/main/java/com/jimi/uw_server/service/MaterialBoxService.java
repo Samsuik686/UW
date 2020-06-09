@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.service;
 
 import com.jfinal.aop.Aop;
@@ -27,22 +27,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**  
- * <p>Title: MaterialBoxService</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: MaterialBoxService
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年1月13日
  *
  */
 public class MaterialBoxService {
 
 	private static SelectService selectService = Aop.get(SelectService.class);
-	
+
 	private static int batchSize = 2000;
-	
-	
+
+
 	// 获取料盒信息
 	public PagePaginate getMaterialBoxes(Integer companyId, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -54,9 +63,10 @@ public class MaterialBoxService {
 		Page<Record> result = null;
 		Map<Integer, String> supplierNameMap = new HashMap<Integer, String>();
 		if (filter.contains("supplier")) {
-			result = selectService.select(new String[] {"material_box", "supplier", "company"}, new String[] {"material_box.supplier=supplier.id", "material_box.company_id=company.id"}, pageNo, pageSize, ascBy, descBy, filter);
-		}else {
-			result = selectService.select(new String[] {"material_box", "company"}, new String[] {"material_box.company_id=company.id"}, pageNo, pageSize, ascBy, descBy, filter);
+			result = selectService.select(new String[] { "material_box", "supplier", "company" }, new String[] { "material_box.supplier=supplier.id", "material_box.company_id=company.id" }, pageNo,
+					pageSize, ascBy, descBy, filter);
+		} else {
+			result = selectService.select(new String[] { "material_box", "company" }, new String[] { "material_box.company_id=company.id" }, pageNo, pageSize, ascBy, descBy, filter);
 			List<Supplier> suppliers = Supplier.dao.find(SupplierSQL.GET_SUPPLIER_BY_COMPANY_SQL, companyId);
 			if (suppliers != null && !suppliers.isEmpty()) {
 				for (Supplier supplier : suppliers) {
@@ -64,14 +74,14 @@ public class MaterialBoxService {
 				}
 			}
 		}
-		
+
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageSize(pageSize);
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setTotalRow(result.getTotalRow());
 		if (!result.getList().isEmpty()) {
 			pagePaginate.setList(MaterialBoxVO.fillList(result.getList(), supplierNameMap));
-		}else {
+		} else {
 			pagePaginate.setList(Collections.emptyList());
 		}
 		return pagePaginate;
@@ -79,7 +89,7 @@ public class MaterialBoxService {
 
 
 	// 手动添加料盒
-	public void addBox( String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
+	public void addBox(String area, Integer row, Integer col, Integer height, Integer supplierId, Boolean isStandard) {
 
 		Supplier supplier = Supplier.dao.findById(supplierId);
 		if (supplier == null) {
@@ -115,8 +125,8 @@ public class MaterialBoxService {
 		materialBox.setIsOnShelf(isOnShelf);
 		materialBox.update();
 	}
-		
-		
+
+
 	public void editBoxOfSupplier(String ids, Integer supplierId) {
 		String[] idStringArr = ids.split(",");
 		List<Integer> idIntegerArr = new ArrayList<>(idStringArr.length);
@@ -132,14 +142,14 @@ public class MaterialBoxService {
 			for (Integer idInteger : idIntegerArr) {
 				MaterialBox materialBox = MaterialBox.dao.findById(idInteger);
 				if (materialBox == null) {
-					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒不存在！");
+					throw new OperationException("修改失败，料盒号为" + idInteger + "的料盒不存在！");
 				}
 				Material material = Material.dao.findFirst(MaterialSQL.GET_MATERIAL_BY_BOX_SQL, idInteger);
 				if (material != null) {
-					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒存在物料！");
+					throw new OperationException("修改失败，料盒号为" + idInteger + "的料盒存在物料！");
 				}
 				if (!materialBox.getIsOnShelf()) {
-					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒不在架！");
+					throw new OperationException("修改失败，料盒号为" + idInteger + "的料盒不在架！");
 				}
 				materialBox.setSupplier(supplier.getId());
 				materialBox.setCompanyId(supplier.getCompanyId());
@@ -151,10 +161,10 @@ public class MaterialBoxService {
 		if (!materialBoxs.isEmpty()) {
 			Db.batchUpdate(materialBoxs, batchSize);
 		}
-		
+
 	}
-		
-		
+
+
 	public void editBoxOfType(String ids, Integer type) {
 		String[] idStringArr = ids.split(",");
 		List<Integer> idIntegerArr = new ArrayList<>(idStringArr.length);
@@ -162,7 +172,7 @@ public class MaterialBoxService {
 		if (type != MaterialBoxType.STANDARD && type != MaterialBoxType.NONSTANDARD) {
 			throw new OperationException("修改失败，料盒类型仅有标准与非标准！");
 		}
-		
+
 		try {
 			for (String idString : idStringArr) {
 				idIntegerArr.add(Integer.valueOf(idString));
@@ -170,14 +180,14 @@ public class MaterialBoxService {
 			for (Integer idInteger : idIntegerArr) {
 				MaterialBox materialBox = MaterialBox.dao.findById(idInteger);
 				if (materialBox == null) {
-					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒不存在！");
+					throw new OperationException("修改失败，料盒号为" + idInteger + "的料盒不存在！");
 				}
 				Material material = Material.dao.findFirst(MaterialSQL.GET_MATERIAL_BY_BOX_SQL, idInteger);
 				if (material != null) {
-					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒存在物料！");
+					throw new OperationException("修改失败，料盒号为" + idInteger + "的料盒存在物料！");
 				}
 				if (!materialBox.getIsOnShelf()) {
-					throw new OperationException("修改失败，料盒号为"+idInteger + "的料盒不在架！");
+					throw new OperationException("修改失败，料盒号为" + idInteger + "的料盒不在架！");
 				}
 				materialBox.setType(type);
 				materialBoxs.add(materialBox);
@@ -188,7 +198,7 @@ public class MaterialBoxService {
 		if (!materialBoxs.isEmpty()) {
 			Db.batchUpdate(materialBoxs, batchSize);
 		}
-		
+
 	}
 
 
@@ -196,14 +206,14 @@ public class MaterialBoxService {
 	public void deleteBox(Integer id) {
 		MaterialBox materialBox = MaterialBox.dao.findById(id);
 		if (materialBox == null) {
-			throw new OperationException("删除失败，料盒号为"+ id + "的料盒不存在！");
+			throw new OperationException("删除失败，料盒号为" + id + "的料盒不存在！");
 		}
 		Material material = Material.dao.findFirst(MaterialSQL.GET_MATERIAL_BY_BOX_SQL, id);
 		if (material != null) {
-			throw new OperationException("删除失败，料盒号为"+ id + "的料盒存在物料！");
+			throw new OperationException("删除失败，料盒号为" + id + "的料盒存在物料！");
 		}
 		materialBox.setEnabled(false);
 		materialBox.update();
 	}
-	
+
 }

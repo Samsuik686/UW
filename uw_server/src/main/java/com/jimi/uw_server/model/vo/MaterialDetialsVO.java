@@ -6,13 +6,13 @@ import java.util.Date;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月20日  下午2:48:55
+ * @createTime 2019年5月20日 下午2:48:55
  */
 
 public class MaterialDetialsVO {
 
 	private String materialId;
-	
+
 	private Integer row;
 
 	private Integer col;
@@ -38,9 +38,10 @@ public class MaterialDetialsVO {
 	private Integer isOuted;
 
 	private Integer exceptionCode;
-	
+
 	private String exceptionCodeString;
-	
+
+
 	public String getMaterialId() {
 		return materialId;
 	}
@@ -170,7 +171,6 @@ public class MaterialDetialsVO {
 		this.col = col;
 	}
 
-	
 
 	public Integer getExceptionCode() {
 		return exceptionCode;
@@ -196,7 +196,7 @@ public class MaterialDetialsVO {
 				break;
 			}
 		}
-		
+
 	}
 
 
@@ -211,11 +211,15 @@ public class MaterialDetialsVO {
 
 
 	/**
-	 * <p>Title<p>
-	 * <p>Description<p>
+	 * <p>
+	 * Title
+	 * <p>
+	 * <p>
+	 * Description
+	 * <p>
 	 */
 	public MaterialDetialsVO() {
 		// TODO Auto-generated constructor stub
 	}
-	
+
 }

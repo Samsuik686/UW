@@ -27,6 +27,7 @@ public class DestinationService {
 
 	private static SelectService selectService = Aop.get(SelectService.class);
 
+
 	// 添加发料目的地
 	public void add(String name, Integer companyId) {
 		if (Destination.dao.findFirst(DestinationSQL.GET_DESTINATION_BY_NAME_AND_COMPANY_SQL, name, companyId) != null) {
@@ -40,8 +41,8 @@ public class DestinationService {
 		}
 	}
 
-	
-	//修改目的仓库名称
+
+	// 修改目的仓库名称
 	public void update(Integer id, String name) {
 		Destination destination = Destination.dao.findById(id);
 		if (!destination.getName().equals(name)) {
@@ -53,7 +54,7 @@ public class DestinationService {
 		destination.update();
 	}
 
-	
+
 	// 删除发料目的地
 	public void delete(Integer id) {
 		Destination destination = Destination.dao.findById(id);
@@ -65,7 +66,7 @@ public class DestinationService {
 		destination.update();
 	}
 
-	
+
 	// 查询发料目的地
 	public PagePaginate select(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
 		// 只查询enabled字段为true的记录
@@ -74,8 +75,7 @@ public class DestinationService {
 		} else {
 			filter = "destination.enabled=1#&#company.enabled=1";
 		}
-		Page<Record> result = selectService.select(new String[] { "destination", "company" },
-				new String[] { "destination.company_id=company.id" }, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] { "destination", "company" }, new String[] { "destination.company_id=company.id" }, pageNo, pageSize, ascBy, descBy, filter);
 		List<Destination> destinations = Destination.dao.find(DestinationSQL.GET_SHARE_DESTINATION_SQL);
 		List<DestinationVO> destinationVOs = new ArrayList<DestinationVO>();
 		for (Destination destination : destinations) {
@@ -83,11 +83,10 @@ public class DestinationService {
 			destinationVOs.add(destinationVO);
 		}
 		for (Record res : result.getList()) {
-			DestinationVO s = new DestinationVO(res.get("Destination_Id"), res.get("Destination_Name"),
-					res.getStr("Company_NickName"), res.get("Destination_Enabled"));
+			DestinationVO s = new DestinationVO(res.get("Destination_Id"), res.get("Destination_Name"), res.getStr("Company_NickName"), res.get("Destination_Enabled"));
 			destinationVOs.add(s);
 		}
-		
+
 		PagePaginate pagePaginate = new PagePaginate();
 		pagePaginate.setPageNumber(pageNo);
 		pagePaginate.setPageSize(pageSize);

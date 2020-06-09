@@ -25,7 +25,7 @@ import com.jimi.uw_server.util.TokenBox;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年6月24日  上午10:56:45
+ * @createTime 2019年6月24日 上午10:56:45
  */
 
 public class SampleTaskController extends Controller {
@@ -33,6 +33,7 @@ public class SampleTaskController extends Controller {
 	private static RegularSampleTaskService regularSampleTaskService = Aop.get(RegularSampleTaskService.class);
 
 	private static PreciousSampleTaskService preciousSampleTaskService = Aop.get(PreciousSampleTaskService.class);
+
 	public static final String SESSION_KEY_LOGIN_USER = "loginUser";
 
 
@@ -237,6 +238,7 @@ public class SampleTaskController extends Controller {
 
 	/**
 	 * 获取到站的物料信息
+	 * 
 	 * @param windowId
 	 */
 	public void getPackingSampleMaterialInfo(Integer windowId) {
@@ -260,6 +262,7 @@ public class SampleTaskController extends Controller {
 
 	/**
 	 * 获取抽检任务详情
+	 * 
 	 * @param taskId
 	 * @param pageSize
 	 * @param pageNo
@@ -314,18 +317,20 @@ public class SampleTaskController extends Controller {
 		}
 		renderNull();
 	}
-	
-	
+
+
 	/**
-	 * <p>Description:强制解绑仓口，仅有作废任务可以解绑 <p>
+	 * <p>
+	 * Description:强制解绑仓口，仅有作废任务可以解绑
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2019年11月27日
 	 */
 	@Log("强制解绑仓口，抽检任务ID：{taskId}")
 	public void forceUnbundlingWindow(Integer taskId) {
-		
+
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空！");
 		}

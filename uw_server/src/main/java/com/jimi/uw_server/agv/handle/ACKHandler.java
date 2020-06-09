@@ -6,9 +6,9 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 
 
 /**
- * ACK
- * <br>
+ * ACK <br>
  * <b>2018年7月10日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class ACKHandler {
@@ -26,7 +26,8 @@ public class ACKHandler {
 
 	/**
 	 * 处理非ACK指令
-	 * @throws Exception 
+	 * 
+	 * @throws Exception
 	 */
 	public static boolean handleNOTACK(String message) throws Exception {
 		AGVBaseCmd baseCmd = Json.getJson().parse(message, AGVBaseCmd.class);

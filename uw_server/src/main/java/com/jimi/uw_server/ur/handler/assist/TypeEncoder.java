@@ -16,9 +16,9 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 
 /**
- * 类型编码器，负责把指令对象按照协议类型编码成指令字节集
- * <br>
+ * 类型编码器，负责把指令对象按照协议类型编码成指令字节集 <br>
  * <b>2019年9月26日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 public class TypeEncoder extends MessageToByteEncoder<Object> {
@@ -27,7 +27,7 @@ public class TypeEncoder extends MessageToByteEncoder<Object> {
 	protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
 		UrBasePackage pack = (UrBasePackage) msg;
 		switch (pack.getCmdCode()) {
-		
+
 		case UrCmdType.FORKLIFT_REACH:
 			out.writeBytes((Json.getJson().toJson((ForkliftReachPackage) pack)).getBytes(Charset.forName("UTF-8")));
 			break;

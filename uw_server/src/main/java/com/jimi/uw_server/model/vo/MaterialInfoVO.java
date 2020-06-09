@@ -11,44 +11,50 @@ import com.jimi.uw_server.service.MaterialService;
 
 /**
  * 物料类型表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年7月5日 上午11:25:16 
+ * @createTime 2018年7月5日 上午11:25:16
  */
-public class MaterialInfoVO{
+public class MaterialInfoVO {
 
 	private static MaterialService materialService = Aop.get(MaterialService.class);
 
 	private Integer id;
-	
+
 	private String no;
-	
+
 	private String specification;
-	
+
 	private Integer supplier;
-	
+
 	private String supplierName;
 
 	private Integer thickness;
-	
+
 	private Integer radius;
-	
+
 	private String designator;
-	
+
 	private Boolean enabled;
-	
+
 	private Integer type;
-	
+
 	private String enabledString;
 
 	private Integer quantity;
 
-    private Boolean isSuperable;
-    
-    private String isSuperableString;
+	private Boolean isSuperable;
+
+	private String isSuperableString;
+
 
 	/**
-	 * <p>Title<p>
-	 * <p>Description<p>
+	 * <p>
+	 * Title
+	 * <p>
+	 * <p>
+	 * Description
+	 * <p>
 	 */
 	public MaterialInfoVO() {
 		// TODO Auto-generated constructor stub
@@ -100,7 +106,7 @@ public class MaterialInfoVO{
 		this.enabledString = enabledString;
 	}
 
-	
+
 	public Integer getId() {
 		return id;
 	}
@@ -189,33 +195,33 @@ public class MaterialInfoVO{
 	public void setType(Integer type) {
 		this.type = type;
 	}
-	
-
-    public void setIsSuperable(Boolean isSuperable) {
-        this.isSuperable = isSuperable;
-    }
-    
-
-    public Boolean getIsSuperable() {
-        return isSuperable;
-    }
 
 
-    public String getIsSuperableString() {
-        return isSuperableString;
-    }
+	public void setIsSuperable(Boolean isSuperable) {
+		this.isSuperable = isSuperable;
+	}
 
 
-    public void setIsSuperableString(Boolean isSuperable) {
-        if (isSuperable) {
-            this.isSuperableString = "是";
-        }else {
-            this.isSuperableString = "否";
-        }
-    }
+	public Boolean getIsSuperable() {
+		return isSuperable;
+	}
 
-	
-	public static List<MaterialInfoVO> fillList(List<Record> records){
+
+	public String getIsSuperableString() {
+		return isSuperableString;
+	}
+
+
+	public void setIsSuperableString(Boolean isSuperable) {
+		if (isSuperable) {
+			this.isSuperableString = "是";
+		} else {
+			this.isSuperableString = "否";
+		}
+	}
+
+
+	public static List<MaterialInfoVO> fillList(List<Record> records) {
 		List<MaterialInfoVO> materialInfoVOs = new ArrayList<MaterialInfoVO>(records.size());
 		for (Record record : records) {
 			MaterialInfoVO m = new MaterialInfoVO();
@@ -231,8 +237,8 @@ public class MaterialInfoVO{
 			m.setType(record.getInt("MaterialType_Type"));
 			m.setQuantity(record.getInt("MaterialType_Id"), record.getInt("MaterialType_Type"));
 			m.setDesignator(record.getStr("MaterialType_Designator"));
-            m.setIsSuperable(record.getBoolean("MaterialType_IsSuperable"));
-            m.setIsSuperableString(record.getBoolean("MaterialType_IsSuperable"));
+			m.setIsSuperable(record.getBoolean("MaterialType_IsSuperable"));
+			m.setIsSuperableString(record.getBoolean("MaterialType_IsSuperable"));
 			materialInfoVOs.add(m);
 		}
 		return materialInfoVOs;

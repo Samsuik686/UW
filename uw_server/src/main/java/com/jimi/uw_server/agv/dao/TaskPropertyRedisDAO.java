@@ -23,6 +23,7 @@ public class TaskPropertyRedisDAO {
 
 	private static Cache cache = Redis.use();
 
+
 	/**
 	 * 获取一个新的CmdId
 	 */
@@ -41,12 +42,14 @@ public class TaskPropertyRedisDAO {
 		return cmdid;
 	}
 
+
 	/**
 	 * 设置agvWebSocket运行状态
 	 */
 	public synchronized static void setAgvWebSocketStatus(Boolean flag) {
 		cache.set(UW_AGV_LINK_SWITCH, flag);
 	}
+
 
 	public synchronized static Boolean getAgvWebSocketStatus() {
 		String flagStr = cache.get(UW_AGV_LINK_SWITCH);
@@ -58,6 +61,7 @@ public class TaskPropertyRedisDAO {
 		cache.set(UW_AGV_LINK_SWITCH, true);
 		return flag;
 	}
+
 
 	/**
 	 * 任务绑定仓口状态
@@ -75,6 +79,7 @@ public class TaskPropertyRedisDAO {
 		return status;
 	}
 
+
 	/**
 	 * 设置位置状态信息（0：空，1：满）
 	 */
@@ -83,12 +88,14 @@ public class TaskPropertyRedisDAO {
 		cache.set(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId, status);
 	}
 
+
 	/**
 	 * 删除位置状态信息
 	 */
 	public synchronized static void delLocationStatus(Integer windowId, Integer goodsLocId) {
 		cache.del(UW_LOCATION_SUFFIX + windowId + "_" + goodsLocId);
 	}
+
 
 	public synchronized static Boolean getTaskStatus(Integer taskId) {
 		String statusStr = cache.get(UW_TASK_STATUS_SUFFIX + taskId);
@@ -101,10 +108,12 @@ public class TaskPropertyRedisDAO {
 		return status;
 	}
 
+
 	public synchronized static void setTaskStatus(Integer taskId, Boolean flag) {
 		cache.del(UW_TASK_STATUS_SUFFIX + taskId);
 		cache.set(UW_TASK_STATUS_SUFFIX + taskId, flag);
 	}
+
 
 	public synchronized static void delTaskStatus(Integer taskId) {
 		cache.del(UW_TASK_STATUS_SUFFIX + taskId);

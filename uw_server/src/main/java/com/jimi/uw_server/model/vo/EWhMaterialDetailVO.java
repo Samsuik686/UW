@@ -10,7 +10,7 @@ import com.jfinal.plugin.activerecord.Record;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年5月10日  上午9:08:49
+ * @createTime 2019年5月10日 上午9:08:49
  */
 
 public class EWhMaterialDetailVO {
@@ -46,6 +46,7 @@ public class EWhMaterialDetailVO {
 	private Integer returnNum;
 
 	private String remarks;
+
 
 	public Integer getId() {
 		return id;

@@ -15,36 +15,36 @@ import com.jimi.uw_server.constant.TaskType;
 
 /**
  * 任务表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年10月13日  上午10:01:54
+ * @createTime 2018年10月13日 上午10:01:54
  */
 
-public class TaskVO{
+public class TaskVO {
 
 	private Integer id;
-	
+
 	private Integer state;
-	
+
 	private String stateString;
-	
+
 	private Integer type;
-	
+
 	private String typeString;
-	
+
 	private String fileName;
-	
+
 	private Integer supplier;
-	
+
 	private String supplierName;
 
 	private String createTimeString;
 
 	private Integer priority;
-	
+
 	private Boolean status;
-	
+
 	private String remarks;
-	
 
 
 	public Integer getId() {
@@ -167,7 +167,7 @@ public class TaskVO{
 	}
 
 
-	public static List<TaskVO> fillList(List<Record> records, Set<Integer> taskIdSet){
+	public static List<TaskVO> fillList(List<Record> records, Set<Integer> taskIdSet) {
 		if (records.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -246,6 +246,8 @@ public class TaskVO{
 			if (taskIdSet != null && !taskIdSet.isEmpty()) {
 				if (record.getInt("Task_State").equals(TaskState.PROCESSING) && taskIdSet.contains(record.getInt("Task_Id"))) {
 					taskVO.setStatus(TaskPropertyRedisDAO.getTaskStatus(record.getInt("Task_Id")));
+				} else {
+					taskVO.setStatus(false);
 				}
 			}
 			taskVOs.add(taskVO);

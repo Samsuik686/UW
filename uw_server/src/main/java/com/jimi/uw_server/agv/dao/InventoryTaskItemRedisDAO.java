@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
@@ -8,34 +8,41 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Map.Entry;
 
 import com.jfinal.json.Jackson;
 import com.jfinal.plugin.redis.Cache;
 import com.jfinal.plugin.redis.Redis;
 import com.jfinal.plugin.redis.RedisPlugin;
-import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
 import com.jimi.uw_server.agv.entity.bo.AGVInventoryTaskItem;
 import com.jimi.uw_server.comparator.InventoryTaskItemComparator;
-import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.util.VisualSerializer;
 
-/**  
- * <p>Title: InventoryTaskItemRedisDAO</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: InventoryTaskItemRedisDAO
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月22日
  *
  */
 public class InventoryTaskItemRedisDAO {
-	
+
 	private static final String UW_INVENTORY_TASK_SUFFIX = "UW:INVENTORY_TASK_";
-	
+
 	private static Cache cache = Redis.use();
-	
+
+
 	/**
 	 * 添加盘点任务条目，该方法会把新的任务条目插入到现有的任务列表当中<br>
 	 */
@@ -43,9 +50,7 @@ public class InventoryTaskItemRedisDAO {
 		cache.del(UW_INVENTORY_TASK_SUFFIX + taskId);
 		for (AGVInventoryTaskItem item : agvInventoryTaskItem) {
 			cache.hset(UW_INVENTORY_TASK_SUFFIX + taskId, item.getBoxId(), Jackson.getJson().toJson(item));
-	}
-		
-		
+		}
 	}
 
 
@@ -66,12 +71,12 @@ public class InventoryTaskItemRedisDAO {
 
 
 	/**
-	 *  填写指定盘点任务条目的信息
+	 * 填写指定盘点任务条目的信息
 	 */
 	public synchronized static void updateInventoryTaskItemInfo(AGVInventoryTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
 		String item = cache.hget(UW_INVENTORY_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getBoxId());
 		if (item == null || item.trim().equals("")) {
-			return ;
+			return;
 		}
 		AGVInventoryTaskItem agvInventoryTaskItem = Jackson.getJson().parse(new String(item), AGVInventoryTaskItem.class);
 		if (agvInventoryTaskItem.getGroupId().equals(taskItem.getGroupId())) {
@@ -94,7 +99,7 @@ public class InventoryTaskItemRedisDAO {
 		cache.hset(UW_INVENTORY_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getBoxId(), Jackson.getJson().toJson(agvInventoryTaskItem));
 	}
 
-	
+
 	@SuppressWarnings("unchecked")
 	public synchronized static Map<Integer, AGVInventoryTaskItem> getInventoryTaskItemMap(Integer taskId) {
 		Map<String, String> map = cache.hgetAll(UW_INVENTORY_TASK_SUFFIX + taskId);
@@ -106,8 +111,8 @@ public class InventoryTaskItemRedisDAO {
 		}
 		return itemMap;
 	}
-	
-	
+
+
 	public synchronized static AGVInventoryTaskItem getInventoryTaskItem(Integer taskId, Integer boxId) {
 		String item = cache.hget(UW_INVENTORY_TASK_SUFFIX + taskId, boxId);
 		if (item == null || item.trim().equals("")) {
@@ -116,7 +121,8 @@ public class InventoryTaskItemRedisDAO {
 		AGVInventoryTaskItem agvInventoryTaskItem = Jackson.getJson().parse(new String(item), AGVInventoryTaskItem.class);
 		return agvInventoryTaskItem;
 	}
-	
+
+
 	/**
 	 * 返回盘点任务条目列表的副本
 	 */
@@ -124,7 +130,7 @@ public class InventoryTaskItemRedisDAO {
 		List<AGVInventoryTaskItem> agvInventoryTaskItems = getInventoryTaskItems(taskId, null, null);
 		return agvInventoryTaskItems;
 	}
-	
+
 
 	/**
 	 * 返回盘点任务条目列表的副本
@@ -154,30 +160,31 @@ public class InventoryTaskItemRedisDAO {
 		return subAgvInventoryTaskItems;
 	}
 
-	
-	public static void main(String[] args) {
-	    RedisPlugin rp = new RedisPlugin("myRedis", "localhost");
-	    // 与web下唯一区别是需要这里调用一次start()方法
-	    rp.setSerializer(new VisualSerializer());
-	    rp.start();
-	    cache = Redis.use();
-	    List<AGVInventoryTaskItem> taskItems = new ArrayList<>();
-	    taskItems.add(createAGVInventoryTaskItem(1222, 23));
-	    taskItems.add(createAGVInventoryTaskItem(1222, 31));
-	    taskItems.add(createAGVInventoryTaskItem(1222, 12));
-	    taskItems.add(createAGVInventoryTaskItem(1222, 1));
-	    taskItems.add(createAGVInventoryTaskItem(1222, 54));
-	    addInventoryTaskItem(1000, taskItems);
-	    
-	    List<AGVInventoryTaskItem> items = getInventoryTaskItems(1000);
-	    List<AGVInventoryTaskItem> items2 = getInventoryTaskItems(1000, 0, 1);
-	    System.out.println(items);
-	    System.out.println(items2);
 
-	  }
-	
+	public static void main(String[] args) {
+		RedisPlugin rp = new RedisPlugin("myRedis", "localhost");
+		// 与web下唯一区别是需要这里调用一次start()方法
+		rp.setSerializer(new VisualSerializer());
+		rp.start();
+		cache = Redis.use();
+		List<AGVInventoryTaskItem> taskItems = new ArrayList<>();
+		taskItems.add(createAGVInventoryTaskItem(1222, 23));
+		taskItems.add(createAGVInventoryTaskItem(1222, 31));
+		taskItems.add(createAGVInventoryTaskItem(1222, 12));
+		taskItems.add(createAGVInventoryTaskItem(1222, 1));
+		taskItems.add(createAGVInventoryTaskItem(1222, 54));
+		addInventoryTaskItem(1000, taskItems);
+
+		List<AGVInventoryTaskItem> items = getInventoryTaskItems(1000);
+		List<AGVInventoryTaskItem> items2 = getInventoryTaskItems(1000, 0, 1);
+		System.out.println(items);
+		System.out.println(items2);
+
+	}
+
+
 	private static AGVInventoryTaskItem createAGVInventoryTaskItem(Integer taskId, Integer boxId) {
-	    AGVInventoryTaskItem agvioTaskItem = new AGVInventoryTaskItem(taskId, boxId, 0, 0, 0, 1);
-	    return agvioTaskItem;
+		AGVInventoryTaskItem agvioTaskItem = new AGVInventoryTaskItem(taskId, boxId, 0, 0, 0, 1);
+		return agvioTaskItem;
 	}
 }

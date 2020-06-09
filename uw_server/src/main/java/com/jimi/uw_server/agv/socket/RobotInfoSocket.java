@@ -23,9 +23,9 @@ import com.jimi.uw_server.util.ErrorLogWritter;
 
 
 /**
- * 实时接收机器信息的类
- * <br>
+ * 实时接收机器信息的类 <br>
  * <b>2018年6月15日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 @ClientEndpoint

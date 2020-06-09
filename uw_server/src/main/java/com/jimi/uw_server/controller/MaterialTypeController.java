@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.controller;
 
 import java.util.Date;
@@ -16,19 +16,29 @@ import com.jimi.uw_server.service.MaterialTypeService;
 import com.jimi.uw_server.util.PagePaginate;
 import com.jimi.uw_server.util.ResultUtil;
 
-/**  
- * <p>Title: MaterialTypeController</p>  
- * <p>Description: 物料类型控制层</p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: MaterialTypeController
+ * </p>
+ * <p>
+ * Description: 物料类型控制层
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年1月16日
  *
  */
 public class MaterialTypeController extends Controller {
 
 	private static MaterialTypeService materialTypeService = Aop.get(MaterialTypeService.class);
-	
+
+
 	@Log("添加普通仓料号为{no}的物料类型，规格号为{specification}，客户ID为{supplierId}，厚度为{thickness}，直径为{radius}，超发为{isSuperable}")
 	public void addRegularMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, Boolean isSuperable) {
 		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || isSuperable == null) {
@@ -46,7 +56,8 @@ public class MaterialTypeController extends Controller {
 	// 添加物料类型#
 	@Log("添加贵重仓料号为{no}的物料类型，规格号为{specification}，客户ID为{supplierId}，厚度为{thickness}，直径为{radius}， 位号为{designator}")
 	public void addPreciousMaterialType(String no, String specification, Integer supplierId, Integer thickness, Integer radius, String designator) {
-		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || designator == null || designator.equals("")) {
+		if (no == null || no.equals("") || specification == null || specification.equals("") || supplierId == null || thickness == null || radius == null || designator == null
+				|| designator.equals("")) {
 			throw new ParameterException("参数不能为空！");
 		}
 		String resultString = materialTypeService.addMaterialType(no, specification, supplierId, thickness, radius, WarehouseType.PRECIOUS.getId(), designator, false);
@@ -107,8 +118,8 @@ public class MaterialTypeController extends Controller {
 			renderJson(ResultUtil.succeed(resultString));
 		}
 	}
-	
-	
+
+
 	// 导入物料类型表#
 	@Log("导入普通仓物料类型表，导入的物料对应的客户为：{supplierId}")
 	public void importRegularMaterialTypeFile(UploadFile file, Integer supplierId) throws Exception {
@@ -121,7 +132,7 @@ public class MaterialTypeController extends Controller {
 		}
 	}
 
-	
+
 	@Log("导入物料类型表，导入的物料对应的客户为：{supplierId}")
 	public void importPreciousMaterialTypeFile(UploadFile file, Integer supplierId) throws Exception {
 		String fileName = file.getFileName();
@@ -132,9 +143,9 @@ public class MaterialTypeController extends Controller {
 			throw new OperationException(resultString);
 		}
 	}
-	
-	
-	public void getMaterialTypeVOs(Integer pageNo, Integer pageSize, Integer supplierId, String no, String specification){
+
+
+	public void getMaterialTypeVOs(Integer pageNo, Integer pageSize, Integer supplierId, String no, String specification) {
 		if (supplierId == null) {
 			throw new OperationException("参数不能为空");
 		}
@@ -146,9 +157,9 @@ public class MaterialTypeController extends Controller {
 		}
 		renderJson(ResultUtil.succeed(materialTypeService.getMaterialTypeVOs(pageNo, pageSize, supplierId, no, specification)));
 	}
-	
-	
-	public void getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNo, Integer pageSize, Date startTime,  Date endTime) {
+
+
+	public void getMaterialStockDetails(String no, String supplierId, Integer warehouseType, Integer whId, Integer pageNo, Integer pageSize, Date startTime, Date endTime) {
 		if (supplierId == null || warehouseType == null || startTime == null || endTime == null) {
 			throw new OperationException("参数不能为空");
 		}
@@ -165,6 +176,6 @@ public class MaterialTypeController extends Controller {
 		}
 		PagePaginate page = materialTypeService.getMaterialStockDetails(no, supplierId, warehouseType, whId, pageNo, pageSize, startTime, endTime);
 		renderJson(ResultUtil.succeed(page));
- 
+
 	}
 }

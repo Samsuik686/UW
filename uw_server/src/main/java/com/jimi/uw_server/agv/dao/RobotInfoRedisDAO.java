@@ -10,9 +10,9 @@ import java.util.List;
 
 
 /**
- * AGV任务条目Redis数据访问对象
- * <br>
+ * AGV任务条目Redis数据访问对象 <br>
  * <b>2018年6月15日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class RobotInfoRedisDAO {
@@ -20,6 +20,7 @@ public class RobotInfoRedisDAO {
 	private static Cache cache = Redis.use();
 
 	private static String UW_ROBOT_LIST = "UW:ROBOT_LIST";
+
 
 	/**
 	 * 更新机器实时数据到Redis

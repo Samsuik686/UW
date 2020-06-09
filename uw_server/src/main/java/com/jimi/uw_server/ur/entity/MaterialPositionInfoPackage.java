@@ -4,27 +4,28 @@ import com.jimi.uw_server.ur.entity.base.UrBasePackage;
 
 
 /**
- * 出入库包
- * <br>
+ * 出入库包 <br>
  * <b>2019年5月9日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 public class MaterialPositionInfoPackage extends UrBasePackage {
 
 	private Integer taskId;
-	
+
 	private Integer boxId;
 
 	private Integer type;
-	
+
 	private String materialId;
-	
+
 	private Integer xPosition;
-	
+
 	private Integer yPosition;
 
 	private Integer quantity;
-	
+
+
 	public MaterialPositionInfoPackage() {
 		this.cmdCode = "material_position_info";
 	}
@@ -98,7 +99,6 @@ public class MaterialPositionInfoPackage extends UrBasePackage {
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
 	}
-	
-	
-	
+
+
 }

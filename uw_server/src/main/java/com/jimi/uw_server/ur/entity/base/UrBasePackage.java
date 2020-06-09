@@ -1,9 +1,9 @@
 package com.jimi.uw_server.ur.entity.base;
 
 /**
- * Ur指令父类
- * <br>
+ * Ur指令父类 <br>
  * <b>2018年6月15日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class UrBasePackage {
@@ -14,14 +14,18 @@ public class UrBasePackage {
 
 
 	/**
-	 * <p>Title<p>
-	 * <p>Description<p>
+	 * <p>
+	 * Title
+	 * <p>
+	 * <p>
+	 * Description
+	 * <p>
 	 */
 	public UrBasePackage() {
 		// TODO Auto-generated constructor stub
 	}
-	
-	
+
+
 	public String getCmdCode() {
 		return cmdCode;
 	}

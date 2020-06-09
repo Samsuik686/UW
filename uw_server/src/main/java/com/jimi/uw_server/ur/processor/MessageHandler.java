@@ -20,8 +20,10 @@ public class MessageHandler {
 	public static MessageHandler me = new MessageHandler();
 
 	public static RegularIOTaskService ioTaskService = Aop.get(RegularIOTaskService.class);
-	
+
 	public static RobotService robotService = Aop.get(RobotService.class);
+
+
 	/**
 	 * 处理扫描物料包
 	 * 
@@ -57,7 +59,7 @@ public class MessageHandler {
 					}
 				}
 			}
-		}else if (task.getType().equals(TaskType.OUT)) {
+		} else if (task.getType().equals(TaskType.OUT)) {
 			List<UrMaterialInfo> urMaterialInfos = UrTaskInfoDAO.getUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId());
 			UrMaterialInfo presentInfo = null;
 			if (!urMaterialInfos.isEmpty() && urMaterialInfos.size() > 0) {
@@ -77,7 +79,7 @@ public class MessageHandler {
 					isScanFlag = true;
 				}
 				if (isScanFlag) {
-					
+
 					UrTaskInfoDAO.putUrMaterialInfos(scanMaterialInfoPackage.getTaskId(), scanMaterialInfoPackage.getBoxId(), urMaterialInfos);
 					UrOperationMaterialInfoDAO.removeUrTaskBoxArrivedPack("robot1");
 				}
@@ -91,6 +93,7 @@ public class MessageHandler {
 			}
 		}
 	}
+
 
 	/**
 	 * 处理机械臂请求夹取位置包
@@ -140,6 +143,7 @@ public class MessageHandler {
 
 	}
 
+
 	/**
 	 * 处理扫描物料异常包
 	 * 
@@ -166,7 +170,7 @@ public class MessageHandler {
 					UrTaskInfoDAO.putUrMaterialInfos(scanMaterialExceptionPackage.getTaskId(), scanMaterialExceptionPackage.getBoxId(), urMaterialInfos);
 				}
 			}
-		}else if (task.getType().equals(TaskType.OUT)) {
+		} else if (task.getType().equals(TaskType.OUT)) {
 			synchronized (Lock.UR_OUT_TASK_LOCK) {
 				List<UrMaterialInfo> urMaterialInfos = UrTaskInfoDAO.getUrMaterialInfos(scanMaterialExceptionPackage.getTaskId(), scanMaterialExceptionPackage.getBoxId());
 				boolean flag = false;

@@ -3,7 +3,7 @@ package com.jimi.uw_server.agv.entity;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年6月24日  下午3:31:45
+ * @createTime 2019年6月24日 下午3:31:45
  */
 
 public class CmdStatus {

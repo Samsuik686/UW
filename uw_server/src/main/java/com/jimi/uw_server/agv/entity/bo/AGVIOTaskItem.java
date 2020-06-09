@@ -12,7 +12,7 @@ import com.jimi.uw_server.model.PackingListItem;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 
-public class AGVIOTaskItem extends BaseTaskItem{
+public class AGVIOTaskItem extends BaseTaskItem {
 
 	private Integer id;
 
@@ -28,14 +28,14 @@ public class AGVIOTaskItem extends BaseTaskItem{
 	private Boolean isCut;
 
 	private Boolean isSuperable;
-	
+
 	private Integer oldWindowId;
 
 	private Integer uwQuantity;
-	
+
 	private Integer deductionQuantity;
-	
-	
+
+
 	public AGVIOTaskItem() {
 	}
 

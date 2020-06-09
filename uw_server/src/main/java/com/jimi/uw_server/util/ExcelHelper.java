@@ -32,19 +32,18 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 /**
- * 处理Excel表的常用工具类
- * <br>
- * 所需第三方依赖：
- * <br>
- * log4j
- * <br>
+ * 处理Excel表的常用工具类 <br>
+ * 所需第三方依赖： <br>
+ * log4j <br>
  * poi
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class ExcelHelper {
 
 	/**
 	 * 标记了该注解的属性（Fields）所属的类的实例，在调用ExcelHelper类实例的fill方法时，可以被作为参数传入，完成excel表格填写
+	 * 
 	 * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
 	 */
 	@Target(ElementType.FIELD)
@@ -57,7 +56,9 @@ public class ExcelHelper {
 		int col();
 	}
 
+
 	protected static Logger logger = LogManager.getLogger();
+
 
 	protected enum RequireType {
 		/**
@@ -86,6 +87,7 @@ public class ExcelHelper {
 		BOOLEAN,
 	}
 
+
 	protected Workbook workbook;
 
 	protected CellStyle headStyle;
@@ -113,6 +115,7 @@ public class ExcelHelper {
 
 	/**
 	 * 输出到流，可以设置是否自动列宽
+	 * 
 	 * @param outputStream
 	 * @param autoColumnWidth
 	 * @throws IOException
@@ -227,6 +230,7 @@ public class ExcelHelper {
 
 	/**
 	 * 根据提供的Class类，从第一行开始解析出报表实例列表
+	 * 
 	 * @throws 表头解析错误时抛出
 	 */
 	public <T> List<T> unfill(Class<T> clazz) throws Exception {
@@ -236,6 +240,7 @@ public class ExcelHelper {
 
 	/**
 	 * 根据提供的Class类，从某一行开始解析出报表实例列表
+	 * 
 	 * @throws 表头解析错误时抛出
 	 */
 	public <T> List<T> unfill(Class<T> clazz, int startRowNum) throws Exception {

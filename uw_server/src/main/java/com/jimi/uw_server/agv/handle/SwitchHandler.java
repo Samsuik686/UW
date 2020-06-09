@@ -10,9 +10,9 @@ import com.jimi.uw_server.agv.socket.AGVMainSocket;
 
 
 /**
- * 启用、禁用、暂停、继续处理器
- * <br>
+ * 启用、禁用、暂停、继续处理器 <br>
  * <b>2018年7月13日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class SwitchHandler {

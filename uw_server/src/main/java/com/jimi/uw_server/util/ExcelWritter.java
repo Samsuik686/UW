@@ -18,8 +18,9 @@ import com.jfinal.plugin.activerecord.Record;
 
 /**
  * 针对JFinal框架处理Excel表的类，可根据传入的Record集合对象填充excel表格数据
+ * 
  * @author HardyYao
- * @createTime 2018年11月27日  上午11:42:31
+ * @createTime 2018年11月27日 上午11:42:31
  */
 
 public class ExcelWritter extends ExcelHelper {
@@ -46,10 +47,11 @@ public class ExcelWritter extends ExcelHelper {
 
 	/**
 	 * 根据传入的值生成Excel
+	 * 
 	 * @param records 传入的集合对象
-	 * @param title Excel名称
-	 * @param field 对象的各个字段集合
-	 * @param head 显示在Excel表里的字段名称集合
+	 * @param title   Excel名称
+	 * @param field   对象的各个字段集合
+	 * @param head    显示在Excel表里的字段名称集合
 	 * @date 2018年10月16日 上午9:07:42
 	 */
 	public void fill(List<Record> records, String title, String[] field, String[] head) {
@@ -80,8 +82,9 @@ public class ExcelWritter extends ExcelHelper {
 	/**
 	 * 根据实体类列表从某一行开始填写表格，使用自定义样式
 	 * 需要在实体类的每个属性中注解@Excel，col属性代表列号，从0开始，head属性表示该字段的表头描述
-	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException 
+	 * 
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
 	 */
 	public void fill(CellStyle headStyle, CellStyle bodyStyle, List<Record> records, int startRowNum, String[] field, String[] head) {
 		if (records != null) {

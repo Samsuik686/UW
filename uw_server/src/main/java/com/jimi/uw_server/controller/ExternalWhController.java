@@ -25,7 +25,7 @@ import com.jfinal.upload.UploadFile;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月10日  下午2:16:15
+ * @createTime 2019年5月10日 下午2:16:15
  */
 
 public class ExternalWhController extends Controller {
@@ -73,6 +73,7 @@ public class ExternalWhController extends Controller {
 
 	/**
 	 * 添加某仓库，某物料的损耗记录
+	 * 
 	 * @param materialTypeId
 	 * @param whId
 	 * @param quantity

@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.ur.handler.assist;
 
 import com.jimi.uw_server.ur.dao.UrInvTaskBoxInfoDAO;
@@ -16,18 +16,27 @@ import io.netty.channel.ChannelHandlerContext;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**  
- * <p>Title: PackSender</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: PackSender
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2019年12月23日
  *
  */
 public class PackSender {
 
-	public static Boolean sendPackage(String urName, UrBasePackage pack){
+	public static Boolean sendPackage(String urName, UrBasePackage pack) {
 		ChannelHandlerContext ctx = SessionBox.getChannelHandlerContext(urName);
 		if (ctx != null) {
 			try {
@@ -48,27 +57,27 @@ public class PackSender {
 				e.printStackTrace();
 			}
 			return AckResponseManager.GetAndRemove(cmdId);
-		}else {
+		} else {
 			return false;
 		}
-		
+
 	}
-	
-	
-    public static void sendForkliftReachPackage(String urName, ForkliftReachPackage pack) {
-        Runnable runnable = new Runnable() {
-            
-            @Override
-            public void run() {
-                Boolean flag = PackSender.sendPackage(urName, pack);
-                if (!flag) {
-                    UrInvTaskBoxInfoDAO.putUrTaskBoxArrivedPack(urName, pack);
-                    SessionBox.remove(urName);
-                }else {
-                    UrInvTaskBoxInfoDAO.removeUrTaskBoxArrivedPack(urName);
-                }
-            }
-        };
-        ProcessorExecutor.me.execute(runnable);
-    }
+
+
+	public static void sendForkliftReachPackage(String urName, ForkliftReachPackage pack) {
+		Runnable runnable = new Runnable() {
+
+			@Override
+			public void run() {
+				Boolean flag = PackSender.sendPackage(urName, pack);
+				if (!flag) {
+					UrInvTaskBoxInfoDAO.putUrTaskBoxArrivedPack(urName, pack);
+					SessionBox.remove(urName);
+				} else {
+					UrInvTaskBoxInfoDAO.removeUrTaskBoxArrivedPack(urName);
+				}
+			}
+		};
+		ProcessorExecutor.me.execute(runnable);
+	}
 }

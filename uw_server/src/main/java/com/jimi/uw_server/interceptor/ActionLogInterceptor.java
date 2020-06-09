@@ -19,13 +19,15 @@ import com.jimi.uw_server.util.TokenBox;
 
 /**
  * 操作日志拦截器，本拦截器会对带有@Log注解的方法进行日志记录，记录的详细信息为Log中的值，其中变量<br>
- * 使用<b>{变量}</b>表示，变量名和被注解的方法参数名必须一致，值为参数值。举个例子：<br><br>
+ * 使用<b>{变量}</b>表示，变量名和被注解的方法参数名必须一致，值为参数值。举个例子：<br>
+ * <br>
  * @Log("获取了用户名为{userId}的用户")<br>
  * public void getUser(String userId){ ... }<br>
  * <br>
  * 如果传入参数值为"bobo"，则数据库的详细信息为"获取了用户名为bobo的用户"<br>
  * <br>
  * <b>2018年6月14日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class ActionLogInterceptor implements Interceptor {

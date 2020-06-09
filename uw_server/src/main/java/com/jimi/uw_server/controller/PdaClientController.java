@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.controller;
 
 import java.util.Date;
@@ -17,21 +17,31 @@ import com.jimi.uw_server.service.PdaClientService;
 import com.jimi.uw_server.util.ResultUtil;
 import com.jimi.uw_server.util.TokenBox;
 
-/**  
- * <p>Title: PdaClientController</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: PdaClientController
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月28日
  *
  */
 public class PdaClientController extends Controller {
 
 	private PdaClientService pdaClientService = Aop.get(PdaClientService.class);
-	
+
 	private static final String SESSION_KEY_LOGIN_USER = "loginUser";
-	
+
+
 	public void getWorkingEmergencyRegularTasks() {
 		List<TaskVO> taskVOs = pdaClientService.getWorkingEmergencyRegularTasks();
 		renderJson(ResultUtil.succeed(taskVOs));
@@ -42,8 +52,8 @@ public class PdaClientController extends Controller {
 		if (taskId == null || StrKit.isBlank(no)) {
 			throw new ParameterException("参数不能为空！");
 		}
-		 List<IOTaskDetailVO> ioTaskDetailVOs = pdaClientService.getEmergencyRegularTaskInfo(taskId, no);
-		 renderJson(ResultUtil.succeed(ioTaskDetailVOs));
+		List<IOTaskDetailVO> ioTaskDetailVOs = pdaClientService.getEmergencyRegularTaskInfo(taskId, no);
+		renderJson(ResultUtil.succeed(ioTaskDetailVOs));
 	}
 
 
@@ -58,7 +68,7 @@ public class PdaClientController extends Controller {
 	 * @Time 2020年5月28日
 	 */
 	public void outEmergencyRegular(String taskId, String no, String materialId, Integer quantity, Date productionTime, String supplierName, String cycle, String manufacturer, Date printTime) {
-	
+
 		if (taskId == null || materialId == null || quantity == null || supplierName == null || productionTime == null) {
 			throw new ParameterException("参数不能为空，请检查料盘二维码格式！");
 		}
@@ -107,10 +117,12 @@ public class PdaClientController extends Controller {
 
 	/**
 	 * 
-	 * <p>Description: 获取未盘点的料盘数<p>
+	 * <p>
+	 * Description: 获取未盘点的料盘数
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月28日
 	 */
 	public void getUnScanInventoryTaskMaterial(Integer taskId, String no, Integer supplierId) {
@@ -120,8 +132,8 @@ public class PdaClientController extends Controller {
 		Integer size = pdaClientService.getUnScanInventoryTaskMaterial(taskId, no, supplierId);
 		renderJson(ResultUtil.succeed(size));
 	}
-	
-	
+
+
 	/**
 	 * <p>
 	 * Description: 获取进行中的贵重仓抽检任务列表
@@ -157,10 +169,12 @@ public class PdaClientController extends Controller {
 
 	/**
 	 * 
-	 * <p>Description: 获取未抽检的料盘数<p>
+	 * <p>
+	 * Description: 获取未抽检的料盘数
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月28日
 	 */
 	public void getUnScanSampleTaskMaterial(Integer taskId, String no, Integer supplierId) {

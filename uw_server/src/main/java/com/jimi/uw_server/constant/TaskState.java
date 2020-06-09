@@ -2,8 +2,9 @@ package com.jimi.uw_server.constant;
 
 /**
  * 任务状态常量类
+ * 
  * @author HardyYao
- * @createTime 2018年11月21日  下午4:44:49
+ * @createTime 2018年11月21日 下午4:44:49
  */
 
 public class TaskState {

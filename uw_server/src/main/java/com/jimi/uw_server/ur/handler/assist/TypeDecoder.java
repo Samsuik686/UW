@@ -19,9 +19,9 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 
 
 /**
- * 类型解码器，负责把所有来自客户端的字节集按照协议类型解码成指令对象
- * <br>
+ * 类型解码器，负责把所有来自客户端的字节集按照协议类型解码成指令对象 <br>
  * <b>2019年9月26日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 public class TypeDecoder extends ByteToMessageDecoder {

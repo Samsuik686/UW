@@ -6,42 +6,53 @@ import java.util.concurrent.CountDownLatch;
 
 
 public class AckResponseManager {
-	
-	static class AckResponseInfo{
-		
+
+	static class AckResponseInfo {
+
 		private Boolean flag;
-		
+
 		private CountDownLatch countDownLatch;
-		
+
+
 		/**
-		 * <p>Title<p>
-		 * <p>Description<p>
+		 * <p>
+		 * Title
+		 * <p>
+		 * <p>
+		 * Description
+		 * <p>
 		 */
 		public AckResponseInfo(CountDownLatch l) {
 			this.flag = false;
 			this.countDownLatch = l;
 		}
 
+
 		public Boolean getFlag() {
 			return flag;
 		}
+
 
 		public void setFlag(Boolean flag) {
 			this.flag = flag;
 		}
 
+
 		public CountDownLatch getCountDownLatch() {
 			return countDownLatch;
 		}
 
+
 		public void setCountDownLatch(CountDownLatch countDownLatch) {
 			this.countDownLatch = countDownLatch;
 		}
-		
-		
+
+
 	}
-	
+
+
 	static Map<Integer, AckResponseInfo> ackMap = new ConcurrentHashMap<Integer, AckResponseInfo>();
+
 
 	public synchronized static void countDownAck(Integer id) {
 		AckResponseInfo ackResponseInfo = ackMap.get(id);
@@ -50,7 +61,7 @@ public class AckResponseManager {
 			ackResponseInfo.getCountDownLatch().countDown();
 		}
 	}
-	
+
 
 	public synchronized static Boolean GetAndRemove(Integer id) {
 		AckResponseInfo ackResponseInfo = ackMap.get(id);
@@ -58,13 +69,13 @@ public class AckResponseManager {
 		if (ackResponseInfo != null) {
 			if (ackResponseInfo.getFlag()) {
 				return true;
-			}else {
+			} else {
 				System.out.println("获取回复包失败：" + id);
 			}
-			
+
 		}
 		return false;
-		
+
 	}
 
 

@@ -17,6 +17,7 @@ import com.jimi.uw_server.util.PagePaginate;
 
 /**
  * 日志业务层
+ * 
  * @author HardyYao
  * @createTime 2018年6月8日
  */
@@ -28,7 +29,7 @@ public class LogService extends SelectService {
 
 	// 查询接口调用日志
 	public Object selectActionLog(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		Page<Record> result = selectService.select(new String[] {table}, null, pageNo, pageSize, ascBy, descBy, filter);
+		Page<Record> result = selectService.select(new String[] { table }, null, pageNo, pageSize, ascBy, descBy, filter);
 		List<ActionLogVO> actionLogVOs = new ArrayList<ActionLogVO>();
 		for (Record res : result.getList()) {
 			ActionLogVO a = new ActionLogVO(res.get("id"), res.get("ip"), res.get("uid"), res.get("action"), res.get("time"), res.get("result_code"));
@@ -63,10 +64,11 @@ public class LogService extends SelectService {
 			sb.append(", ");
 		}
 		sb.deleteCharAt(sb.lastIndexOf(","));
-		List<Record> records = Db.find(GET_TASK_LOG_INFO_BY_IDS +  " ( " + sb.toString() + " )");
+		List<Record> records = Db.find(GET_TASK_LOG_INFO_BY_IDS + " ( " + sb.toString() + " )");
 		for (Record record : records) {
 			Task task = Task.dao.findById(record.getInt("PackingListItem_TaskId"));
-			TaskLogVO t = new TaskLogVO(record.get("TaskLog_Id"), record.get("TaskLog_PackingListItemId"), task.getType(), record.get("TaskLog_MaterialId"), record.get("MaterialType_No"), record.get("TaskLog_Quantity"), record.get("User_Uid"), record.getStr("User_Name"), record.get("TaskLog_Auto"), record.get("TaskLog_Time"));
+			TaskLogVO t = new TaskLogVO(record.get("TaskLog_Id"), record.get("TaskLog_PackingListItemId"), task.getType(), record.get("TaskLog_MaterialId"), record.get("MaterialType_No"),
+					record.get("TaskLog_Quantity"), record.get("User_Uid"), record.getStr("User_Name"), record.get("TaskLog_Auto"), record.get("TaskLog_Time"));
 			taskLogVOs.add(t);
 		}
 		pagePaginate.setList(taskLogVOs);

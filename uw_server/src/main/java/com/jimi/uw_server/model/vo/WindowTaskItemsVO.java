@@ -10,6 +10,7 @@ import com.jimi.uw_server.constant.TaskType;
 
 /**
  * 仓口任务条目表示层
+ * 
  * @author HardyYao
  * @createTime 2018年7月23日 下午4:04:25
  */
@@ -47,7 +48,9 @@ public class WindowTaskItemsVO {
 
 	private Integer deductibleQuantity;
 
-	public WindowTaskItemsVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime, Integer state, Integer boxId, Integer goodsLocationId, String goodsLocaitonName, Integer robotId, Integer deductibleQuantity) {
+
+	public WindowTaskItemsVO(Integer packingListItemId, String fileName, Integer type, String materialNo, Integer planQuantity, Integer actualQuantity, Date finishTime, Integer state, Integer boxId,
+			Integer goodsLocationId, String goodsLocaitonName, Integer robotId, Integer deductibleQuantity) {
 		this.setId(packingListItemId);
 		this.setFileName(fileName);
 		this.setType(type);
@@ -283,13 +286,12 @@ public class WindowTaskItemsVO {
 		this.robotId = robotId;
 	}
 
-	
+
 	public Integer getDeductibleQuantity() {
 		return deductibleQuantity;
 	}
 
 
-	
 	public void setDeductibleQuantity(Integer deductibleQuantity) {
 		this.deductibleQuantity = deductibleQuantity;
 	}

@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月17日  下午2:30:53
+ * @createTime 2019年5月17日 下午2:30:53
  */
 
 public class InventoryTaskController extends Controller {
@@ -38,6 +38,7 @@ public class InventoryTaskController extends Controller {
 	private RegularInventoryTaskService regularInventoryTaskService = Aop.get(RegularInventoryTaskService.class);
 
 	private PreciousInventoryTaskService preciousInventoryTaskService = Aop.get(PreciousInventoryTaskService.class);
+
 
 	@Log("创建普通仓盘点任务，客户编号为{supplierId}， 盘点仓库{destinationIds}")
 	public void createRegularTask(Integer supplierId, String destinationIds) {
@@ -51,7 +52,7 @@ public class InventoryTaskController extends Controller {
 
 
 	@Log("创建贵重仓盘点任务，客户编号为{supplierId}")
-	public void createPreciousTask( Integer supplierId) {
+	public void createPreciousTask(Integer supplierId) {
 
 		if (supplierId == null) {
 			throw new ParameterException("参数不能为空！");
@@ -63,6 +64,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 开始盘点任务
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -79,6 +81,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 开始盘点任务
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -92,7 +95,7 @@ public class InventoryTaskController extends Controller {
 
 	}
 
-	
+
 	@Log("作废普通仓盘点任务，任务ID为{taskId}")
 	public void cancelRegularTask(Integer taskId) {
 		if (taskId == null) {
@@ -101,8 +104,8 @@ public class InventoryTaskController extends Controller {
 		regularInventoryTaskService.cancelTask(taskId);
 		renderJson(ResultUtil.succeed());
 	}
-	
-	
+
+
 	@Log("作废贵重仓盘点任务，任务ID为{taskId}")
 	public void cancelPreciousTask(Integer taskId) {
 		if (taskId == null) {
@@ -111,10 +114,11 @@ public class InventoryTaskController extends Controller {
 		preciousInventoryTaskService.cancelTask(taskId);
 		renderJson(ResultUtil.succeed());
 	}
-	
-	
+
+
 	/**
 	 * 让盘点任务的叉车回库
+	 * 
 	 * @param taskId
 	 * @param boxId
 	 * @param windowId
@@ -136,6 +140,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 盘点UW物料
+	 * 
 	 * @param materialId
 	 * @param boxId
 	 * @param taskId
@@ -158,6 +163,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 盘点UW物料
+	 * 
 	 * @param materialId
 	 * @param taskId
 	 * @param acturalNum
@@ -179,6 +185,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 平外仓物料
+	 * 
 	 * @param id
 	 * @param taskId
 	 * @return
@@ -198,6 +205,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * UW平仓，根据记录ID和任务ID
+	 * 
 	 * @param id
 	 * @param taskId
 	 * @return
@@ -217,6 +225,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * UW平仓，根据记录ID和任务ID
+	 * 
 	 * @param id
 	 * @param taskId
 	 * @return
@@ -236,6 +245,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 批量平仓，根据任务ID和物料类型ID
+	 * 
 	 * @param materialTypeId
 	 * @param taskId
 	 * @return
@@ -255,6 +265,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 批量平仓，根据任务ID和物料类型ID
+	 * 
 	 * @param materialTypeId
 	 * @param taskId
 	 * @return
@@ -274,6 +285,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 批量平仓，根据任务ID和物料类型ID
+	 * 
 	 * @param materialTypeId
 	 * @param taskId
 	 * @return
@@ -293,6 +305,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 审核任务
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -337,6 +350,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 导入外仓盘点数据
+	 * 
 	 * @param file
 	 * @param taskId
 	 * @return
@@ -350,7 +364,7 @@ public class InventoryTaskController extends Controller {
 		// 获取当前使用系统的用户，以便获取操作员uid
 		String tokenId = getPara(TokenBox.TOKEN_ID_KEY_NAME);
 		User user = TokenBox.get(tokenId, SESSION_KEY_LOGIN_USER);
-		String result = regularInventoryTaskService.importEWhInventoryRecord(file.getFile(), taskId,whId, user);
+		String result = regularInventoryTaskService.importEWhInventoryRecord(file.getFile(), taskId, whId, user);
 		if (result.equals("导入成功")) {
 			renderJson(ResultUtil.succeed());
 		} else {
@@ -361,6 +375,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 获取当前仓口的盘点物料清单
+	 * 
 	 * @param windowId
 	 * @return
 	 */
@@ -376,6 +391,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 根据客户获取盘点任务(下拉框使用)
+	 * 
 	 * @param supplierId
 	 * @return
 	 */
@@ -389,11 +405,13 @@ public class InventoryTaskController extends Controller {
 
 
 	/**
-	 *  
-	 * <p>Description: 获取进行中的贵重仓盘点任务（PDA用）<p>
+	 * 
+	 * <p>
+	 * Description: 获取进行中的贵重仓盘点任务（PDA用）
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public void getWorkingPreciousTask() {
@@ -405,6 +423,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 查询所有盘点任务（简单信息）
+	 * 
 	 * @param filter
 	 * @param pageNo
 	 * @param pageSize
@@ -424,6 +443,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 根据任务ID和料号查询UW仓盘点任务信息（较为详细，粒度：料号）
+	 * 
 	 * @param taskId
 	 * @param no
 	 */
@@ -439,6 +459,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 根据任务ID和料号查询物料仓盘点任务信息（较为详细，粒度：料号）
+	 * 
 	 * @param taskId
 	 * @param no
 	 */
@@ -454,6 +475,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 根据任务ID和物料ID查询UW仓盘点任务信息(详细，粒度：料盘）
+	 * 
 	 * @param taskId
 	 * @param materialTypeId
 	 */
@@ -469,6 +491,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 根据任务ID和物料ID查询物料仓盘点任务信息(详细，粒度：仓库，料号）
+	 * 
 	 * @param taskId
 	 * @param materialTypeId
 	 */
@@ -481,8 +504,10 @@ public class InventoryTaskController extends Controller {
 		renderJson(ResultUtil.succeed(inventoryTaskDetailVOs));
 	}
 
+
 	/**
 	 * 获取未开始的盘点任务
+	 * 
 	 * @param supplierId
 	 * @param warehouseType
 	 * @param whId
@@ -495,27 +520,29 @@ public class InventoryTaskController extends Controller {
 		renderJson(ResultUtil.succeed(tasks));
 	}
 
-	
+
 	/**
 	 * 获取盘点任务绑定的目的仓库
+	 * 
 	 * @param taskId
 	 */
 	public void getInventoryTaskDestination(Integer taskId) {
-		
+
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
 		List<Destination> destinations = regularInventoryTaskService.getInventoryTaskDestination(taskId);
 		renderJson(ResultUtil.succeed(destinations));
 	}
-	
-	
+
+
 	/**
 	 * 获取盘点任务基础信息，如每个仓库的审核时间，完成时间等
+	 * 
 	 * @param taskId
 	 */
 	public void getInventoryTaskBaseInfo(Integer taskId) {
-		
+
 		if (taskId == null) {
 			throw new ParameterException("参数不能为空");
 		}
@@ -523,8 +550,10 @@ public class InventoryTaskController extends Controller {
 		renderJson(ResultUtil.succeed(records));
 	}
 
+
 	/**
 	 * 完成盘点任务
+	 * 
 	 * @param taskId
 	 */
 	@Log("完成盘点任务，任务ID为{taskId}, 目的仓库ID为{whId}")
@@ -542,6 +571,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 完成盘点任务
+	 * 
 	 * @param taskId
 	 */
 	@Log("完成盘点任务，任务ID为{taskId}")
@@ -559,6 +589,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 修改盘点记录的盘点数量和退料盘盈
+	 * 
 	 * @param id
 	 * @param acturalNum
 	 * @param returnNum
@@ -581,6 +612,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 一键平仓UW
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -599,6 +631,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 一键平仓UW
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -617,6 +650,7 @@ public class InventoryTaskController extends Controller {
 
 	/**
 	 * 物料仓一键批量平仓
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -701,5 +735,5 @@ public class InventoryTaskController extends Controller {
 		}
 		renderNull();
 	}
-	
+
 }

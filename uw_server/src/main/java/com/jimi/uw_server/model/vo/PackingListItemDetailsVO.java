@@ -5,8 +5,9 @@ import java.util.Date;
 
 /**
  * 停泊任务条目详情表示层
+ * 
  * @author HardyYao
- * @createTime 2019年1月23日  下午4:22:14
+ * @createTime 2019年1月23日 下午4:22:14
  */
 
 public class PackingListItemDetailsVO {
@@ -30,7 +31,8 @@ public class PackingListItemDetailsVO {
 	private Date productionTime;
 
 
-	public PackingListItemDetailsVO(Integer taskLogId, String materialId, Integer ioQuantity, Integer remainderQuantity, Date productionTime, Boolean isInBox, Integer row, Integer col, Integer boxId) {
+	public PackingListItemDetailsVO(Integer taskLogId, String materialId, Integer ioQuantity, Integer remainderQuantity, Date productionTime, Boolean isInBox, Integer row, Integer col,
+			Integer boxId) {
 		this.setTaskLogId(taskLogId);
 		this.setMaterialId(materialId);
 		this.setQuantity(ioQuantity);

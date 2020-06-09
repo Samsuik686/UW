@@ -18,9 +18,9 @@ import cc.darhao.dautils.api.ResourcesUtil;
 
 
 /**
- * 错误Logger拦截器
- * <br>
+ * 错误Logger拦截器 <br>
  * <b>2018年5月29日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class ErrorLogInterceptor implements Interceptor {
@@ -50,8 +50,8 @@ public class ErrorLogInterceptor implements Interceptor {
 			errorLog.save();
 			logger.error(e.getClass().getSimpleName() + ":" + e.getMessage());
 			if (result == 413) {
-				invocation.getController().renderJson(ResultUtil.failed(result, ((FormDataValidateFailedException)e).getData()));
-			}else {
+				invocation.getController().renderJson(ResultUtil.failed(result, ((FormDataValidateFailedException) e).getData()));
+			} else {
 				invocation.getController().renderJson(ResultUtil.failed(result, e.getMessage()));
 			}
 		}

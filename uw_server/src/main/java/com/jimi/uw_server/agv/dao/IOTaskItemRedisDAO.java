@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
@@ -21,21 +21,31 @@ import com.jimi.uw_server.constant.TaskItemState;
 import com.jimi.uw_server.model.PackingListItem;
 import com.jimi.uw_server.util.VisualSerializer;
 
-/**  
- * <p>Title: IOTaskItemRedisDAO</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: IOTaskItemRedisDAO
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月22日
  *
  */
 public class IOTaskItemRedisDAO {
 
 	private static final String UW_IO_TASK_SUFFIX = "UW:IO_TASK_";
-	
+
 	private static Cache cache = Redis.use();
-	
+
+
 	/**
 	 * 添加出入库任务条目，一个任务仅能添加一次<br>
 	 */
@@ -54,7 +64,7 @@ public class IOTaskItemRedisDAO {
 	public synchronized static void removeUnAssignedTaskItemByTaskId(int taskId) {
 		List<String> list = cache.hvals(UW_IO_TASK_SUFFIX + taskId);
 		if (list == null || list.isEmpty()) {
-			return ;
+			return;
 		}
 		for (String item : list) {
 			AGVIOTaskItem taskItem = Jackson.getJson().parse(item, AGVIOTaskItem.class);
@@ -75,12 +85,13 @@ public class IOTaskItemRedisDAO {
 
 
 	/**
-	 *  填写指定出入库任务条目的信息
+	 * 填写指定出入库任务条目的信息
 	 */
-	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish, Boolean isCut, Integer oldWindowId, Integer uwQuantity, Integer deductionQuantity) {
+	public synchronized static void updateIOTaskItemInfo(AGVIOTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer boxId, Integer robotId, Boolean isForceFinish,
+			Boolean isCut, Integer oldWindowId, Integer uwQuantity, Integer deductionQuantity) {
 		String item = cache.hget(UW_IO_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getId());
 		if (item == null || item.trim().equals("")) {
-			return ;
+			return;
 		}
 		AGVIOTaskItem agvioTaskItem = Jackson.getJson().parse(new String(item), AGVIOTaskItem.class);
 		if (agvioTaskItem.getId().intValue() == taskItem.getId().intValue()) {
@@ -127,7 +138,6 @@ public class IOTaskItemRedisDAO {
 	}
 
 
-	
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVIOTaskItem> getIOTaskItems(Integer taskId, Integer startLine, Integer endLine) {
 		List<String> items = cache.hvals(UW_IO_TASK_SUFFIX + taskId);
@@ -152,13 +162,15 @@ public class IOTaskItemRedisDAO {
 		return subAgvioTaskItems;
 	}
 
-	
+
 	/**
 	 * 
-	 * <p>Description: 根据任务ID和任务条目ID返回对应的redis条目，返回可能为空<p>
+	 * <p>
+	 * Description: 根据任务ID和任务条目ID返回对应的redis条目，返回可能为空
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年6月1日
 	 */
 	public synchronized static AGVIOTaskItem getIOTaskItem(Integer taskId, Integer taskItemId) {
@@ -169,8 +181,8 @@ public class IOTaskItemRedisDAO {
 		AGVIOTaskItem taskItem = Jackson.getJson().parse(item, AGVIOTaskItem.class);
 		return taskItem;
 	}
-	
-	
+
+
 	@SuppressWarnings("unchecked")
 	public synchronized static Map<Integer, AGVIOTaskItem> getIOTaskItemMap(Integer taskId) {
 		Map<String, String> map = cache.hgetAll(UW_IO_TASK_SUFFIX + taskId);
@@ -182,37 +194,39 @@ public class IOTaskItemRedisDAO {
 		}
 		return itemMap;
 	}
-	
-	public static void main(String[] args) {
-	    RedisPlugin rp = new RedisPlugin("myRedis", "localhost");
-	    // 与web下唯一区别是需要这里调用一次start()方法
-	    rp.setSerializer(new VisualSerializer());
-	    rp.start();
-	    cache = Redis.use();
-	    List<AGVIOTaskItem> taskItems = new ArrayList<>();
-	    taskItems.add(createAGVIOTaskItem(1222, 23));
-	    taskItems.add(createAGVIOTaskItem(1222, 31));
-	    taskItems.add(createAGVIOTaskItem(1222, 12));
-	    taskItems.add(createAGVIOTaskItem(1222, 1));
-	    taskItems.add(createAGVIOTaskItem(1222, 54));
-	    addIOTaskItem(1000, taskItems);
-	    
-	    Map<Integer, AGVIOTaskItem> map = getIOTaskItemMap(1000);
-	    List<AGVIOTaskItem> items = getIOTaskItems(1000);
-	    AGVIOTaskItem agvioTaskItem = getIOTaskItem(1000, 31);
-	    System.out.println(map);
-	    System.out.println(items);
-	    System.out.println(agvioTaskItem);
 
-	  }
-	
+
+	public static void main(String[] args) {
+		RedisPlugin rp = new RedisPlugin("myRedis", "localhost");
+		// 与web下唯一区别是需要这里调用一次start()方法
+		rp.setSerializer(new VisualSerializer());
+		rp.start();
+		cache = Redis.use();
+		List<AGVIOTaskItem> taskItems = new ArrayList<>();
+		taskItems.add(createAGVIOTaskItem(1222, 23));
+		taskItems.add(createAGVIOTaskItem(1222, 31));
+		taskItems.add(createAGVIOTaskItem(1222, 12));
+		taskItems.add(createAGVIOTaskItem(1222, 1));
+		taskItems.add(createAGVIOTaskItem(1222, 54));
+		addIOTaskItem(1000, taskItems);
+
+		Map<Integer, AGVIOTaskItem> map = getIOTaskItemMap(1000);
+		List<AGVIOTaskItem> items = getIOTaskItems(1000);
+		AGVIOTaskItem agvioTaskItem = getIOTaskItem(1000, 31);
+		System.out.println(map);
+		System.out.println(items);
+		System.out.println(agvioTaskItem);
+
+	}
+
+
 	private static AGVIOTaskItem createAGVIOTaskItem(Integer taskId, Integer id) {
-	    PackingListItem packingListItem = new PackingListItem();
-	    packingListItem.setId(id);
-	    packingListItem.setTaskId(taskId);
-	    packingListItem.setMaterialTypeId(new Random().nextInt(1000));
-	    packingListItem.setQuantity(new Random().nextInt(10000));
-	    AGVIOTaskItem agvioTaskItem = new AGVIOTaskItem(packingListItem, 0, 0, false);
-	    return agvioTaskItem;
+		PackingListItem packingListItem = new PackingListItem();
+		packingListItem.setId(id);
+		packingListItem.setTaskId(taskId);
+		packingListItem.setMaterialTypeId(new Random().nextInt(1000));
+		packingListItem.setQuantity(new Random().nextInt(10000));
+		AGVIOTaskItem agvioTaskItem = new AGVIOTaskItem(packingListItem, 0, 0, false);
+		return agvioTaskItem;
 	}
 }

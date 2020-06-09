@@ -10,8 +10,9 @@ import com.jimi.uw_server.util.ResultUtil;
 
 /**
  * 发料目的地控制层
+ * 
  * @author HardyYao
- * @createTime 2019年3月11日  上午11:35:50
+ * @createTime 2019年3月11日 上午11:35:50
  */
 
 public class DestinationController extends Controller {
@@ -27,7 +28,7 @@ public class DestinationController extends Controller {
 		}
 		destinationService.add(name, companyId);
 		renderJson(ResultUtil.succeed());
-		
+
 	}
 
 
@@ -41,7 +42,7 @@ public class DestinationController extends Controller {
 		renderJson(ResultUtil.succeed());
 	}
 
-	
+
 	@Log("修改发料目的地名称，ID：{id}， 名称：{name}")
 	public void update(Integer id, String name) {
 		if (id == null || name == null) {
@@ -49,6 +50,7 @@ public class DestinationController extends Controller {
 		}
 		destinationService.update(id, name);
 	}
+
 
 	// 查询发料目的地
 	public void getDestinations(Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {

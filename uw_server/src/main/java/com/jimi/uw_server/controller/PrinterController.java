@@ -37,8 +37,8 @@ public class PrinterController extends Controller {
 		}
 
 	}
-	
-	
+
+
 	@Log("普通远程打印， 打印机IP地址:{ip}，料盘时间戳：{materialId}，数量：{quantity}")
 	public void printSingle(String ip, String materialId, Integer quantity) {
 		if (materialId == null || ip == null || quantity == null) {

@@ -1,23 +1,23 @@
 package com.jimi.uw_server.model.vo;
 
 
-
 /**
  * 目的地表示层
+ * 
  * @author HardyYao
- * @createTime 2019年3月11日  上午11:53:36
+ * @createTime 2019年3月11日 上午11:53:36
  */
 
-public class DestinationVO{
+public class DestinationVO {
 
 	private Integer id;
-	
+
 	private String name;
-	
+
 	private Boolean enabled;
-	
+
 	private String companyName;
-	
+
 	private String enabledString;
 
 

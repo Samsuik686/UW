@@ -5,7 +5,7 @@ import com.jimi.uw_server.util.ExcelHelper.Excel;
 
 /**
  * @author HardyYao
- * @createTime 2018年7月5日 上午11:23:18 
+ * @createTime 2018年7月5日 上午11:23:18
  */
 public class PackingListItemBO {
 

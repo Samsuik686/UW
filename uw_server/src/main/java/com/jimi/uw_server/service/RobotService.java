@@ -15,6 +15,7 @@ import com.jimi.uw_server.constant.sql.IOTaskSQL;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.lock.Lock;
+import com.jimi.uw_server.lock.RegularTaskLock;
 import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.RobotBO;
 import com.jimi.uw_server.model.vo.RobotVO;
@@ -55,6 +56,7 @@ public class RobotService extends SelectService {
 
 	private static final int UW_ID = 0;
 
+
 	// 查询叉车
 	public List<RobotVO> select() {
 		List<RobotBO> robotBOs = RobotInfoRedisDAO.check();
@@ -67,6 +69,7 @@ public class RobotService extends SelectService {
 		Collections.sort(robotVOs, new RobotComparator());
 		return robotVOs;
 	}
+
 
 	// 启用/禁用叉车
 	public void robotSwitch(String id, Integer enabled) throws Exception {
@@ -82,6 +85,7 @@ public class RobotService extends SelectService {
 		}
 	}
 
+
 	// 运行/停止所有叉车
 	public void pause(Boolean pause) throws Exception {
 		if (pause) {
@@ -91,6 +95,7 @@ public class RobotService extends SelectService {
 			SwitchHandler.sendAllPause();
 		}
 	}
+
 
 	/**
 	 * 叉车回库SL
@@ -104,7 +109,7 @@ public class RobotService extends SelectService {
 		Task task = Task.dao.findById(packingListItem.getTaskId());
 		Boolean afterCut = false;
 		AGVIOTaskItem agvioTaskItem = null;
-		synchronized (Lock.IO_TASK_BACK_LOCK) {
+		synchronized (RegularTaskLock.IO_TASK_BACK_LOCK) {
 			agvioTaskItem = IOTaskItemRedisDAO.getIOTaskItem(task.getId(), packingListItem.getId());
 			if (agvioTaskItem == null || agvioTaskItem.getState() != TaskItemState.ARRIVED_WINDOW) {
 				resultString = "查无此任务条目或该条目已回库";
@@ -246,6 +251,7 @@ public class RobotService extends SelectService {
 		return resultString;
 	}
 
+
 	public void urOutTaskBack(Integer packingListItemId, AGVIOTaskItem agvioTaskItem) throws Exception {
 		if (packingListItemId == null) {
 			return;
@@ -335,6 +341,7 @@ public class RobotService extends SelectService {
 		return;
 	}
 
+
 	/**
 	 * 获取任务条目实际出入库数量
 	 */
@@ -348,6 +355,7 @@ public class RobotService extends SelectService {
 		}
 		return actualQuantity;
 	}
+
 
 	/**
 	 * 获取同组任务、同料盒中尚未被分配任务的任务条目
@@ -379,11 +387,12 @@ public class RobotService extends SelectService {
 		return null;
 	}
 
+
 	/**
 	 * 物料入库/截料后重新入库扫料盘，用于呼叫叉车
 	 */
 	public String call(Integer id, String no, String supplierName) throws Exception {
-		synchronized (Lock.IO_TASK_CALL_LOCK) {
+		synchronized (RegularTaskLock.IO_TASK_CALL_LOCK) {
 			String resultString = "调用成功！";
 			// 只在有选择仓口时才读取仓口和任务信息，避免出现NPE异常
 			if (id == null) {
@@ -423,20 +432,20 @@ public class RobotService extends SelectService {
 			if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_BACK) {
 				resultString = "该任务条目已完成，请不要重复执行已完成任务条目";
 				return resultString;
-			}else if ((redisTaskItem.getState().intValue() > TaskItemState.WAIT_SCAN) && (redisTaskItem.getState().intValue() < TaskItemState.FINISH_BACK)) {
+			} else if ((redisTaskItem.getState().intValue() > TaskItemState.WAIT_SCAN) && (redisTaskItem.getState().intValue() < TaskItemState.FINISH_BACK)) {
 				// 若该任务条目正在执行当中，则提示不能再调用该接口
 				resultString = "该物料对应的任务条目正在执行中，请勿重复调用叉车！";
 				return resultString;
-			}else if (redisTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN) {
+			} else if (redisTaskItem.getState().intValue() == TaskItemState.WAIT_SCAN) {
 				// 若任务条目状态为等待扫码，则将其状态更新为未分配拣料
 				IOTaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, 0, 0, null, null, null, null, null);
 				return resultString;
-			}else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
+			} else if (redisTaskItem.getState().intValue() == TaskItemState.FINISH_CUT) {
 				// 若任务条目状态为已完成截料，且判断其对应的料盒是否在架，根据料盒在架情况更新其状态
 				// 若料盒在架，则将其状态更新为未分配拣料
 				IOTaskItemRedisDAO.updateIOTaskItemInfo(redisTaskItem, TaskItemState.WAIT_ASSIGN, 0, 0, null, 0, null, null, null, null, null);
 				return resultString;
-			}else {// 如果该料号对应的任务条目不存在于任务队列中，则提示“该物料暂时不需要入库或截料！”
+			} else {// 如果该料号对应的任务条目不存在于任务队列中，则提示“该物料暂时不需要入库或截料！”
 				resultString = "该物料暂时不需要入库或截料！";
 				return resultString;
 			}

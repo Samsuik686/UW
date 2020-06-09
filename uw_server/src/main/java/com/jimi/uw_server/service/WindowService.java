@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.service;
 
 import java.util.List;
@@ -9,12 +9,21 @@ import com.jimi.uw_server.constant.TaskType;
 import com.jimi.uw_server.constant.sql.WindowSQL;
 import com.jimi.uw_server.model.Window;
 
-/**  
- * <p>Title: WindowService</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: WindowService
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月18日
  *
  */

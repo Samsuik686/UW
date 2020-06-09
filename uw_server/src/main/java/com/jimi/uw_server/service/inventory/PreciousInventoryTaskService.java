@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.service.inventory;
 
 import java.util.ArrayList;
@@ -24,23 +24,34 @@ import com.jimi.uw_server.model.Task;
 import com.jimi.uw_server.model.User;
 import com.jimi.uw_server.service.base.BaseInventoryTaskService;
 
-/**  
- * <p>Title: PreciousInventoryTaskService</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: PreciousInventoryTaskService
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月25日
  *
  */
-public class PreciousInventoryTaskService extends BaseInventoryTaskService{
+public class PreciousInventoryTaskService extends BaseInventoryTaskService {
 
 	private Integer batchSize = 2000;
-	
+
 	private Integer uwId = 0;
-	
+
+
 	/**
 	 * 创建盘点任务
+	 * 
 	 * @param supplierId
 	 * @return
 	 */
@@ -55,19 +66,22 @@ public class PreciousInventoryTaskService extends BaseInventoryTaskService{
 		}
 		Date date = new Date();
 		task = new Task();
-		task.setFileName(getTaskName(date, WarehouseType.PRECIOUS.getId())).setCreateTime(date).setType(TaskType.COUNT).setState(TaskState.WAIT_START).setSupplier(supplierId).setWarehouseType(WarehouseType.PRECIOUS.getId()).save();
+		task.setFileName(getTaskName(date, WarehouseType.PRECIOUS.getId())).setCreateTime(date).setType(TaskType.COUNT).setState(TaskState.WAIT_START).setSupplier(supplierId)
+				.setWarehouseType(WarehouseType.PRECIOUS.getId()).save();
 		InventoryTaskBaseInfo info = new InventoryTaskBaseInfo();
 		info.setTaskId(task.getId()).setDestinationId(uwId).save();
 		return "操作成功";
 	}
-	
-	
+
+
 	/**
 	 * 
-	 * <p>Description: 开始盘点任务<p>
+	 * <p>
+	 * Description: 开始盘点任务
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public String start(Integer taskId) {
@@ -106,8 +120,8 @@ public class PreciousInventoryTaskService extends BaseInventoryTaskService{
 		}
 		return "操作成功";
 	}
-	
-	
+
+
 	public Boolean inventoryUWMaterial(String materialId, Integer taskId, Integer acturalNum, User user) {
 		Task task = Task.dao.findById(taskId);
 		if (task == null || !task.getState().equals(TaskState.PROCESSING)) {
@@ -133,10 +147,11 @@ public class PreciousInventoryTaskService extends BaseInventoryTaskService{
 		info.setCheckTime(null).setCheckOperator(null).update();
 		return true;
 	}
-	
-	
+
+
 	/**
 	 * 审核任务
+	 * 
 	 * @param taskId
 	 * @return
 	 */
@@ -173,14 +188,16 @@ public class PreciousInventoryTaskService extends BaseInventoryTaskService{
 		info.setCheckTime(new Date()).setCheckOperator(user.getUid()).update();
 		return "操作成功";
 	}
-	
-	
+
+
 	/**
 	 * 
-	 * <p>Description: 完成任务<p>
+	 * <p>
+	 * Description: 完成任务
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月25日
 	 */
 	public String finish(Integer taskId, User user) {

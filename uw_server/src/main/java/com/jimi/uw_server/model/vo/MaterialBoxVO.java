@@ -8,8 +8,9 @@ import com.jfinal.plugin.activerecord.Record;
 
 /**
  * 料盒表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年9月7日  上午10:56:49
+ * @createTime 2018年9月7日 上午10:56:49
  */
 
 public class MaterialBoxVO {
@@ -29,7 +30,7 @@ public class MaterialBoxVO {
 	private String supplierName;
 
 	private String typeName;
-	
+
 	private String companyName;
 
 
@@ -134,9 +135,9 @@ public class MaterialBoxVO {
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
 	}
-	
-	
-	public static List<MaterialBoxVO> fillList(List<Record> records, Map<Integer, String> supplierNameMap){
+
+
+	public static List<MaterialBoxVO> fillList(List<Record> records, Map<Integer, String> supplierNameMap) {
 		List<MaterialBoxVO> materialBoxVOs = new ArrayList<MaterialBoxVO>(records.size());
 		for (Record record : records) {
 			MaterialBoxVO materialBoxVO = new MaterialBoxVO();
@@ -147,7 +148,7 @@ public class MaterialBoxVO {
 			materialBoxVO.setHeight(record.getInt("MaterialBox_Height"));
 			if (supplierNameMap != null && !supplierNameMap.isEmpty() && record.getInt("MaterialBox_Supplier") != null) {
 				materialBoxVO.setSupplierName(supplierNameMap.get(record.getInt("MaterialBox_Supplier")));
-			}else {
+			} else {
 				materialBoxVO.setSupplierName(record.getStr("Supplier_Name"));
 			}
 			materialBoxVO.setCompanyName(record.getStr("Company_Nickname"));

@@ -21,9 +21,9 @@ import cc.darhao.dautils.api.StringUtil;
 
 
 /**
- * 通用查询业务层
- * <br>
+ * 通用查询业务层 <br>
  * <b>2018年5月23日</b>
+ * 
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class SelectService {
@@ -38,20 +38,23 @@ public class SelectService {
 		dp.start();
 		arp.start();
 		SelectService selectService = new SelectService();
-		String result = selectService.select(new String[] {"material", "material_type","material_box", "supplier", "company"}, new String[] {"material.type=material_type.id", "material_type.supplier=supplier.id", "supplier.company_id=company.id", "material_box.id=material.box"}, null, null, null, null, null).getList().toString();
+		String result = selectService.select(new String[] { "material", "material_type", "material_box", "supplier", "company" },
+				new String[] { "material.type=material_type.id", "material_type.supplier=supplier.id", "supplier.company_id=company.id", "material_box.id=material.box" }, null, null, null, null, null)
+				.getList().toString();
 		System.out.println(result);
 	}
 
 
 	/**
 	 * 分页查询，支持筛选和排序
-	 * @param tables 提供可读的表名数组
-	 * @param refers 外键数组，单表可为null
-	 * @param pageNo 页码，从1开始
+	 * 
+	 * @param tables   提供可读的表名数组
+	 * @param refers   外键数组，单表可为null
+	 * @param pageNo   页码，从1开始
 	 * @param pageSize 每页的条目数
-	 * @param ascBy 按指定字段升序，不可和descBy同时使用
-	 * @param descBy 按指定字段降序，不可和ascBy同时使用
-	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
+	 * @param ascBy    按指定字段升序，不可和descBy同时使用
+	 * @param descBy   按指定字段降序，不可和ascBy同时使用
+	 * @param filter   按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
 	 * @return Page对象
 	 */
 	public Page<Record> select(String[] tables, String[] refers, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
@@ -66,16 +69,17 @@ public class SelectService {
 
 	/**
 	 * 分页查询，支持筛选和排序
-	 * @param table 提供可读的表名
-	 * @param pageNo 页码，从1开始
+	 * 
+	 * @param table    提供可读的表名
+	 * @param pageNo   页码，从1开始
 	 * @param pageSize 每页的条目数
-	 * @param ascBy 按指定字段升序，不可和descBy同时使用
-	 * @param descBy 按指定字段降序，不可和ascBy同时使用
-	 * @param filter 按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
+	 * @param ascBy    按指定字段升序，不可和descBy同时使用
+	 * @param descBy   按指定字段降序，不可和ascBy同时使用
+	 * @param filter   按字段筛选，支持<, >, >,=, <=, !=, =，多个字段请用#&#隔开
 	 * @return Page对象
 	 */
 	public Page<Record> select(String table, Integer pageNo, Integer pageSize, String ascBy, String descBy, String filter) {
-		return select(new String[] {table}, null, pageNo, pageSize, ascBy, descBy, filter);
+		return select(new String[] { table }, null, pageNo, pageSize, ascBy, descBy, filter);
 	}
 
 

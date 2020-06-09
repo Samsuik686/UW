@@ -7,8 +7,9 @@ import com.jimi.uw_server.model.ActionLog;
 
 /**
  * 接口调用日志表示层对象
+ * 
  * @author HardyYao
- * @createTime 2018年10月13日  上午10:01:54
+ * @createTime 2018年10月13日 上午10:01:54
  */
 
 public class ActionLogVO extends ActionLog {

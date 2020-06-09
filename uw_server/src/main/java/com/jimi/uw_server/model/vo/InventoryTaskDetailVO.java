@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 
  * @author HardyYao
- * @createTime 2019年5月21日  下午2:31:47
+ * @createTime 2019年5月21日 下午2:31:47
  */
 
 public class InventoryTaskDetailVO {

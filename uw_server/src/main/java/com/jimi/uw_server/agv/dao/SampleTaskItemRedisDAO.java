@@ -1,6 +1,6 @@
 /**  
 *  
-*/  
+*/
 package com.jimi.uw_server.agv.dao;
 
 import java.util.ArrayList;
@@ -14,21 +14,31 @@ import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
 import com.jimi.uw_server.comparator.SampleTaskItemComparator;
 import com.jimi.uw_server.constant.TaskItemState;
 
-/**  
- * <p>Title: SampleTaskItemRedisDAO</p>  
- * <p>Description: </p>  
- * <p>Copyright: Copyright (c) 2019</p>  
- * <p>Company: 惠州市几米物联技术有限公司</p>  
- * @author trjie  
+/**
+ * <p>
+ * Title: SampleTaskItemRedisDAO
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c) 2019
+ * </p>
+ * <p>
+ * Company: 惠州市几米物联技术有限公司
+ * </p>
+ * 
+ * @author trjie
  * @date 2020年5月22日
  *
  */
 public class SampleTaskItemRedisDAO {
-	
+
 	private static final String UW_SAMPLE_TASK_SUFFIX = "UW:SAMPLE_TASK_";
 
 	private static Cache cache = Redis.use();
-	
+
+
 	/**
 	 * 添加抽检任务条目，该方法会把新的任务条目插入到现有的任务列表当中<br>
 	 */
@@ -37,7 +47,7 @@ public class SampleTaskItemRedisDAO {
 		for (AGVSampleTaskItem item : agvSampleTaskItems) {
 			cache.hset(UW_SAMPLE_TASK_SUFFIX + taskId, item.getBoxId(), Jackson.getJson().toJson(item));
 		}
-		
+
 	}
 
 
@@ -47,15 +57,15 @@ public class SampleTaskItemRedisDAO {
 	public static void removeSampleTaskItemByTaskId(int taskId) {
 		cache.del(UW_SAMPLE_TASK_SUFFIX + taskId);
 	}
-	
+
 
 	/**
-	 *  填写指定出入库任务条目的信息
+	 * 填写指定出入库任务条目的信息
 	 */
 	public synchronized static void updateSampleTaskItemInfo(AGVSampleTaskItem taskItem, Integer state, Integer windowId, Integer goodsLocationId, Integer robotId, Boolean isForceFinish) {
 		String item = cache.hget(UW_SAMPLE_TASK_SUFFIX + taskItem.getTaskId(), taskItem.getBoxId());
 		if (item == null || item.trim().equals("")) {
-			return ;
+			return;
 		}
 		AGVSampleTaskItem agvSampleTaskItem = Jackson.getJson().parse(item, AGVSampleTaskItem.class);
 		if (state != null) {
@@ -84,7 +94,8 @@ public class SampleTaskItemRedisDAO {
 		List<AGVSampleTaskItem> agvSampleTaskItems = getSampleTaskItems(taskId, null, null);
 		return agvSampleTaskItems;
 	}
-	
+
+
 	@SuppressWarnings("unchecked")
 	public synchronized static List<AGVSampleTaskItem> getSampleTaskItems(Integer taskId, Integer startLine, Integer endLine) {
 		List<String> items = cache.hvals(UW_SAMPLE_TASK_SUFFIX + taskId);
@@ -109,7 +120,7 @@ public class SampleTaskItemRedisDAO {
 		List<AGVSampleTaskItem> subAGVSampleTaskItems = new ArrayList<>(agvSampleTaskItems.subList(startLine, endLine));
 		return subAGVSampleTaskItems;
 	}
-	
+
 
 	/**
 	 * 删除指定任务id的未分配的条目<br>
@@ -118,7 +129,7 @@ public class SampleTaskItemRedisDAO {
 	public synchronized static void removeUnAssignedSampleTaskItemByTaskId(int taskId) {
 		List<String> items = cache.hvals(UW_SAMPLE_TASK_SUFFIX + taskId);
 		if (items == null || items.isEmpty()) {
-			return ;
+			return;
 		}
 		List<AGVSampleTaskItem> agvSampleTaskItems = new ArrayList<>(items.size());
 
@@ -134,10 +145,12 @@ public class SampleTaskItemRedisDAO {
 
 
 	/**
-	 * <p>Description: <p>
+	 * <p>
+	 * Description:
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年6月2日
 	 */
 	public static AGVSampleTaskItem getSampleTaskItem(Integer taskId, Integer boxId) {

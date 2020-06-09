@@ -9,7 +9,7 @@ import com.jimi.uw_server.constant.TaskType;
 /**
  * 
  * @author trjie
- * @createTime 2019年5月21日  下午3:00:34
+ * @createTime 2019年5月21日 下午3:00:34
  */
 
 public class InventoryTaskVO {

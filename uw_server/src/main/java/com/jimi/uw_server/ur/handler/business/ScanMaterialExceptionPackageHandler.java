@@ -9,9 +9,9 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 
 /**
- * 异常信息处理器，单例类可被共享
- * <br>
+ * 异常信息处理器，单例类可被共享 <br>
  * <b>2019年9月27日</b>
+ * 
  * @author <a href="https://github.com/darhao">鲁智深</a>
  */
 @Sharable

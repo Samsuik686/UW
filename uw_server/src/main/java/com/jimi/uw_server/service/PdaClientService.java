@@ -80,8 +80,8 @@ public class PdaClientService {
 			filter = "packing_list_item.task_id=" + taskId + "#&#material_type.no=" + no;
 		}
 		// 先进行多表查询，查询出同一个任务id的套料单表的id,物料类型表的料号no,套料单表的计划出入库数量quantity,套料单表对应任务的实际完成时间finish_time
-		Page<Record> packingListItems = selectService.select(new String[] { "packing_list_item", "material_type" },
-				new String[] {"material_type.id = packing_list_item.material_type_id" }, null, null, null, null, filter);
+		Page<Record> packingListItems = selectService.select(new String[] { "packing_list_item", "material_type" }, new String[] { "material_type.id = packing_list_item.material_type_id" }, null,
+				null, null, null, filter);
 
 		// 遍历同一个任务id的套料单数据
 		for (Record packingListItem : packingListItems.getList()) {
@@ -150,10 +150,12 @@ public class PdaClientService {
 
 	/**
 	 * 
-	 * <p>Description: 获取未盘点的料盘数<p>
+	 * <p>
+	 * Description: 获取未盘点的料盘数
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月28日
 	 */
 	public Integer getUnScanInventoryTaskMaterial(Integer taskId, String no, Integer supplierId) {
@@ -161,14 +163,14 @@ public class PdaClientService {
 		if (materialType == null) {
 			throw new OperationException("物料类型不存在！");
 		}
-		List<InventoryLog> inventoryLogs = InventoryLog.dao.find(InventoryTaskSQL.GET_UN_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE, taskId, materialType.getId() );
+		List<InventoryLog> inventoryLogs = InventoryLog.dao.find(InventoryTaskSQL.GET_UN_INVENTORY_LOG_BY_TASKID_AND_MATERIAL_TYPE, taskId, materialType.getId());
 		if (inventoryLogs == null) {
 			return 0;
 		}
 		return inventoryLogs.size();
 	}
-	
-	
+
+
 	/**
 	 * <p>
 	 * Description: 获取进行中的贵重仓抽检任务列表
@@ -202,10 +204,12 @@ public class PdaClientService {
 
 	/**
 	 * 
-	 * <p>Description: 获取未抽检的料盘数<p>
+	 * <p>
+	 * Description: 获取未抽检的料盘数
+	 * <p>
+	 * 
 	 * @return
-	 * @exception
-	 * @author trjie
+	 * @exception @author trjie
 	 * @Time 2020年5月28日
 	 */
 	public Integer getUnScanSampleTaskMaterial(Integer taskId, String no, Integer supplierId) {
@@ -213,7 +217,7 @@ public class PdaClientService {
 		if (materialType == null) {
 			throw new OperationException("物料类型不存在！");
 		}
-		List<SampleTaskMaterialRecord> sampleTaskMaterialRecords = SampleTaskMaterialRecord.dao.find(SampleTaskSQL.GET_UNSCAN_MATERIAL_BY_TASK_AND_MATERIAL_TYPE, taskId, materialType.getId() );
+		List<SampleTaskMaterialRecord> sampleTaskMaterialRecords = SampleTaskMaterialRecord.dao.find(SampleTaskSQL.GET_UNSCAN_MATERIAL_BY_TASK_AND_MATERIAL_TYPE, taskId, materialType.getId());
 		if (sampleTaskMaterialRecords == null) {
 			return 0;
 		}

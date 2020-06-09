@@ -5,8 +5,9 @@ import java.util.Date;
 
 /**
  * 出入库记录业务对象
+ * 
  * @author HardyYao
- * @createTime 2018年11月14日  下午2:38:54
+ * @createTime 2018年11月14日 下午2:38:54
  */
 
 public class IOTaskRecord {
