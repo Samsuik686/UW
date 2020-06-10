@@ -5,7 +5,7 @@ package com.jimi.uw_server.comparator;
 
 import java.util.Comparator;
 
-import com.jimi.uw_server.agv.entity.bo.AGVSampleTaskItem;
+import com.jimi.uw_server.agv.gaitek.entity.bo.AGVSampleTaskItem;
 
 /**
  * <p>

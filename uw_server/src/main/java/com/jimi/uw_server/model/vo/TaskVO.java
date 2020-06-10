@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.jfinal.plugin.activerecord.Record;
-import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
+import com.jimi.uw_server.agv.gaitek.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.constant.TaskState;
 import com.jimi.uw_server.constant.TaskType;
 

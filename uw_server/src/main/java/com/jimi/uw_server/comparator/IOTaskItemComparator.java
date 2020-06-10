@@ -2,7 +2,7 @@ package com.jimi.uw_server.comparator;
 
 import java.util.Comparator;
 
-import com.jimi.uw_server.agv.entity.bo.AGVIOTaskItem;
+import com.jimi.uw_server.agv.gaitek.entity.bo.AGVIOTaskItem;
 
 
 /**

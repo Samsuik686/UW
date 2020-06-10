@@ -5,8 +5,8 @@ package com.jimi.uw_server.service;
 
 import java.util.List;
 
-import com.jimi.uw_server.agv.dao.EfficiencyRedisDAO;
-import com.jimi.uw_server.agv.dao.TaskPropertyRedisDAO;
+import com.jimi.uw_server.agv.gaitek.dao.EfficiencyRedisDAO;
+import com.jimi.uw_server.agv.gaitek.dao.TaskPropertyRedisDAO;
 import com.jimi.uw_server.constant.sql.SQL;
 import com.jimi.uw_server.model.TaskLog;
 import com.jimi.uw_server.model.Window;

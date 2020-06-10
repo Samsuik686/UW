@@ -1,8 +1,8 @@
 package com.jimi.uw_server.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jimi.uw_server.agv.dao.BuildTaskItemDAO;
-import com.jimi.uw_server.agv.entity.bo.AGVBuildTaskItem;
+import com.jimi.uw_server.agv.gaitek.dao.BuildTaskItemDAO;
+import com.jimi.uw_server.agv.gaitek.entity.bo.AGVBuildTaskItem;
 import com.jimi.uw_server.constant.BoxState;
 import com.jimi.uw_server.exception.OperationException;
 import com.jimi.uw_server.model.MaterialBox;
