@@ -146,7 +146,8 @@ public class TaskPool extends Thread {
 		} else if (task.getType().equals(TaskType.OUT) && !task.getIsInventoryApply()) {
 			inventoryTask = RegularInventoryTaskService.me.getOneUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR.getId(), task.getDestination());
 		}
-		List<AGVIOTaskItem> standardItems = new ArrayList<AGVIOTaskItem>(4);
+		List<AGVIOTaskItem> standardSuperableItems = new ArrayList<AGVIOTaskItem>(4);
+		List<AGVIOTaskItem> standardUnSuperableItems = new ArrayList<AGVIOTaskItem>(4);
 		List<AGVIOTaskItem> nonStandardItems = new ArrayList<AGVIOTaskItem>(4);
 		Map<Integer, Integer> taskItemBoxMap = new HashMap<Integer, Integer>();
 		for (AGVIOTaskItem item : ioTaskItems) {
@@ -176,24 +177,40 @@ public class TaskPool extends Thread {
 			if (boxId == 0) {
 				continue;
 			}
-			distributeBoxToItem(item, boxId, inventoryTask);
+			distributeBoxToItem(item, boxId, task);
 			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
 			if (materialBox == null || !materialBox.getIsOnShelf()) {
 				continue;
 			}
 			if (window.getAuto()) {
-				if (standardItems.size() > i) {
+				if (standardSuperableItems.size() > i) {
 					continue;
 				}
-				sieveAutoOutTaskItem(item, materialBox, window, standardItems, taskItemBoxMap);
+				sieveAutoOutTaskItem(item, materialBox, window, standardSuperableItems, taskItemBoxMap);
 			} else {
-				if (nonStandardItems.size() > i) {
+				if (standardUnSuperableItems.size() > i) {
 					continue;
 				}
-				sieveManualOutTaskItem(item, materialBox, window, standardItems, nonStandardItems, taskItemBoxMap);
+				sieveManualOutTaskItem(item, materialBox, window,standardUnSuperableItems,  standardSuperableItems, nonStandardItems, taskItemBoxMap);
 			}
 		}
 		if (!window.getAuto()) {
+			for (AGVIOTaskItem standardUnSuperableItem : standardUnSuperableItems) {
+				if (goodsLocations.isEmpty()) {
+					return;
+				}
+				// 5. 发送LS指令
+				Integer boxId = taskItemBoxMap.get(standardUnSuperableItem.getId());
+				if (boxId == null || boxId == 0) {
+					continue;
+				}
+				MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+				sendTaskMoveBoxOrder(standardUnSuperableItem, task, goodsLocations.get(0), materialBox, windowSize, i);
+				goodsLocations.remove(0);
+				if (i > 0) {
+					i--;
+				}
+			}
 			for (AGVIOTaskItem nonStandardItem : nonStandardItems) {
 				if (goodsLocations.isEmpty()) {
 					return;
@@ -211,7 +228,7 @@ public class TaskPool extends Thread {
 				}
 			}
 		}
-		for (AGVIOTaskItem standardItem : standardItems) {
+		for (AGVIOTaskItem standardItem : standardSuperableItems) {
 			if (goodsLocations.isEmpty()) {
 				return;
 			}
@@ -718,7 +735,7 @@ public class TaskPool extends Thread {
 	 * @exception @author trjie
 	 * @Time 2020年5月30日
 	 */
-	private void sieveManualOutTaskItem(AGVIOTaskItem item, MaterialBox materialBox, Window window, List<AGVIOTaskItem> standardItems, List<AGVIOTaskItem> nonStandardItems,
+	private void sieveManualOutTaskItem(AGVIOTaskItem item, MaterialBox materialBox, Window window, List<AGVIOTaskItem> standardUnSuperableItems, List<AGVIOTaskItem> standardItems, List<AGVIOTaskItem> nonStandardItems,
 			Map<Integer, Integer> taskTtemBoxMap) {
 		if (taskTtemBoxMap.containsValue(item.getBoxId())) {
 			return;
@@ -726,7 +743,10 @@ public class TaskPool extends Thread {
 		if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
 			nonStandardItems.add(item);
 			taskTtemBoxMap.put(item.getId(), item.getBoxId());
-		} else if (item.getOldWindowId() == 0 || window.getId().equals(item.getOldWindowId())) {
+		} else if (!item.getIsSuperable()) {
+			standardUnSuperableItems.add(item);
+			taskTtemBoxMap.put(item.getId(), item.getBoxId());
+		}else if (item.getOldWindowId() == 0 || window.getId().equals(item.getOldWindowId())) {
 			if (taskTtemBoxMap.containsValue(item.getBoxId())) {
 				return;
 			}
