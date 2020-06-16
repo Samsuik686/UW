@@ -72,7 +72,7 @@ public class RegularIOTaskService extends BaseIOTaskService {
 
 	private static final int UW_ID = 0;
 
-	private static final int EWH_DEDUCT_QUANTITY_LIMIT = 5000;
+	private static final int EWH_DEDUCT_QUANTITY_LIMIT = 10000;
 
 
 	// 创建出入库/退料任务

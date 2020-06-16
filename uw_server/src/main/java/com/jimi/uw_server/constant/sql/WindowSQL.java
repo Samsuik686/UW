@@ -34,5 +34,7 @@ public class WindowSQL {
 	public static final String GET_WINDOWS_BY_TASK_TYPE_SQL = "SELECT * FROM window WHERE bind_task_id IN (SELECT id FROM task WHERE type = ?) ORDER BY id ASC";
 
 	public static final String GET_WINDOW_BY_TASK = "SELECT * FROM window WHERE bind_task_id = ? ORDER BY id ASC";
+	
+	public static final String GET_AUTO_WINDOW_BY_TASK = "select window.* from window INNER JOIN task ON window.bind_task_id = task.id WHERE task.id = ? AND window.auto = 1";
 
 }

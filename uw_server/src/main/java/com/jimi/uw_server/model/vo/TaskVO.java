@@ -46,7 +46,10 @@ public class TaskVO {
 
 	private String remarks;
 
-
+	private Boolean isDeducted;
+	
+	private String isDeductedString;
+	
 	public Integer getId() {
 		return id;
 	}
@@ -167,6 +170,26 @@ public class TaskVO {
 	}
 
 
+	public Boolean getIsDeducted() {
+		return isDeducted;
+	}
+
+
+	public void setIsDeducted(Boolean isDeducted) {
+		this.isDeducted = isDeducted;
+	}
+
+
+	public String getIsDeductedString() {
+		return isDeductedString;
+	}
+
+
+	public void setIsDeductedString(String isDeductedString) {
+		this.isDeductedString = isDeductedString;
+	}
+
+
 	public static List<TaskVO> fillList(List<Record> records, Set<Integer> taskIdSet) {
 		if (records.isEmpty()) {
 			return Collections.emptyList();
@@ -242,6 +265,14 @@ public class TaskVO {
 				default:
 					break;
 				}
+			}
+			if (record.getBoolean("Task_IsDeducted") == null || record.getBoolean("Task_IsDeducted") == false) {
+				taskVO.setIsDeducted(false);
+				taskVO.setIsDeductedString("否");
+			}else {
+				taskVO.setIsDeducted(true);
+				taskVO.setIsDeductedString("是");
+
 			}
 			if (taskIdSet != null && !taskIdSet.isEmpty()) {
 				if (record.getInt("Task_State").equals(TaskState.PROCESSING) && taskIdSet.contains(record.getInt("Task_Id"))) {

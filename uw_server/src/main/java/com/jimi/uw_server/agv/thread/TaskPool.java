@@ -20,6 +20,7 @@ import com.jimi.uw_server.agv.handle.SampleTaskHandler;
 import com.jimi.uw_server.agv.handle.base.BaseTaskHandler;
 import com.jimi.uw_server.constant.*;
 import com.jimi.uw_server.constant.sql.SQL;
+import com.jimi.uw_server.constant.sql.WindowSQL;
 import com.jimi.uw_server.lock.Lock;
 import com.jimi.uw_server.model.*;
 import com.jimi.uw_server.model.bo.RobotBO;
@@ -133,6 +134,11 @@ public class TaskPool extends Thread {
 
 
 	public void sendOutTaskItemCmds(Task task, Window window) throws Exception {
+		Boolean hasAutoWindow = false;
+		Window autoWindow = Window.dao.findFirst(WindowSQL.GET_AUTO_WINDOW_BY_TASK, task.getId());
+		if (autoWindow != null) {
+			hasAutoWindow = true;
+		}
 		List<AGVIOTaskItem> ioTaskItems = IOTaskItemRedisDAO.getIOTaskItems(task.getId());
 		if (ioTaskItems.isEmpty()) {
 			return;
@@ -147,6 +153,7 @@ public class TaskPool extends Thread {
 			inventoryTask = RegularInventoryTaskService.me.getOneUnStartInventoryTask(task.getSupplier(), WarehouseType.REGULAR.getId(), task.getDestination());
 		}
 		List<AGVIOTaskItem> standardSuperableItems = new ArrayList<AGVIOTaskItem>(4);
+		//标准不可超发任务条目列表
 		List<AGVIOTaskItem> standardUnSuperableItems = new ArrayList<AGVIOTaskItem>(4);
 		List<AGVIOTaskItem> nonStandardItems = new ArrayList<AGVIOTaskItem>(4);
 		Map<Integer, Integer> taskItemBoxMap = new HashMap<Integer, Integer>();
@@ -182,19 +189,36 @@ public class TaskPool extends Thread {
 			if (materialBox == null || !materialBox.getIsOnShelf()) {
 				continue;
 			}
-			if (window.getAuto()) {
-				if (standardSuperableItems.size() > i) {
-					continue;
+			if (standardSuperableItems.size() > i) {
+				continue;
+			}
+			if (taskItemBoxMap.containsValue(item.getBoxId())) {
+				continue;
+			}
+			if (hasAutoWindow) {
+				if (window.getAuto()) {
+					if (standardSuperableItems.size() > i) {
+						continue;
+					}
+					sieveAutoOutTaskItem(item, materialBox, window, standardSuperableItems, taskItemBoxMap);
+				} else {
+					if (standardUnSuperableItems.size() > i) {
+						continue;
+					}
+					sieveManualOutTaskItem(item, materialBox, window,standardUnSuperableItems,  standardSuperableItems, nonStandardItems, taskItemBoxMap);
 				}
-				sieveAutoOutTaskItem(item, materialBox, window, standardSuperableItems, taskItemBoxMap);
-			} else {
-				if (standardUnSuperableItems.size() > i) {
-					continue;
-				}
-				sieveManualOutTaskItem(item, materialBox, window,standardUnSuperableItems,  standardSuperableItems, nonStandardItems, taskItemBoxMap);
+				
+			}else {
+				standardSuperableItems.add(item);
+				taskItemBoxMap.put(item.getId(), item.getBoxId());
 			}
 		}
-		if (!window.getAuto()) {
+		if (hasAutoWindow) {
+			sendOutTaskItemCmd(task, goodsLocations, standardUnSuperableItems, taskItemBoxMap, windowSize);
+			sendOutTaskItemCmd(task, goodsLocations, nonStandardItems, taskItemBoxMap, windowSize);
+		}
+		sendOutTaskItemCmd(task, goodsLocations, standardSuperableItems, taskItemBoxMap, windowSize);
+		/*if (!window.getAuto()) {
 			for (AGVIOTaskItem standardUnSuperableItem : standardUnSuperableItems) {
 				if (goodsLocations.isEmpty()) {
 					return;
@@ -243,7 +267,7 @@ public class TaskPool extends Thread {
 			if (i > 0) {
 				i--;
 			}
-		}
+		}*/
 	}
 
 
@@ -631,7 +655,7 @@ public class TaskPool extends Thread {
 	private Boolean deductOutTaskQauntity(AGVIOTaskItem item, Task task, Task inventoryTask) {
 		Integer eWhStoreQuantity = externalWhLogService.getEwhMaterialQuantityByOutTask(task, inventoryTask, item.getMaterialTypeId(), task.getDestination());
 		Integer outQuantity = taskService.getActualIOQuantity(item.getId());
-		if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 5000) {
+		if (outQuantity == 0 && (eWhStoreQuantity - item.getPlanQuantity()) >= 10000) {
 			final Date time = inventoryTask == null ? new Date() : inventoryTask.getCreateTime();
 			UwProcessorExcutor.me.execute(new Runnable() {
 
@@ -715,6 +739,7 @@ public class TaskPool extends Thread {
 	 * @exception @author trjie
 	 * @Time 2020年5月30日
 	 */
+	@SuppressWarnings("unused")
 	private void sieveAutoOutTaskItem(AGVIOTaskItem item, MaterialBox materialBox, Window window, List<AGVIOTaskItem> standardItems, Map<Integer, Integer> taskTtemBoxMap) {
 		if (taskTtemBoxMap.containsValue(item.getBoxId())) {
 			return;
@@ -735,23 +760,45 @@ public class TaskPool extends Thread {
 	 * @exception @author trjie
 	 * @Time 2020年5月30日
 	 */
+	@SuppressWarnings("unused")
 	private void sieveManualOutTaskItem(AGVIOTaskItem item, MaterialBox materialBox, Window window, List<AGVIOTaskItem> standardUnSuperableItems, List<AGVIOTaskItem> standardItems, List<AGVIOTaskItem> nonStandardItems,
-			Map<Integer, Integer> taskTtemBoxMap) {
-		if (taskTtemBoxMap.containsValue(item.getBoxId())) {
+			Map<Integer, Integer> taskItemBoxMap) {
+		if (taskItemBoxMap.containsValue(item.getBoxId())) {
 			return;
 		}
 		if (materialBox.getType().equals(MaterialBoxType.NONSTANDARD)) {
 			nonStandardItems.add(item);
-			taskTtemBoxMap.put(item.getId(), item.getBoxId());
+			taskItemBoxMap.put(item.getId(), item.getBoxId());
 		} else if (!item.getIsSuperable()) {
 			standardUnSuperableItems.add(item);
-			taskTtemBoxMap.put(item.getId(), item.getBoxId());
+			taskItemBoxMap.put(item.getId(), item.getBoxId());
 		}else if (item.getOldWindowId() == 0 || window.getId().equals(item.getOldWindowId())) {
-			if (taskTtemBoxMap.containsValue(item.getBoxId())) {
+			if (taskItemBoxMap.containsValue(item.getBoxId())) {
 				return;
 			}
 			standardItems.add(item);
-			taskTtemBoxMap.put(item.getId(), item.getBoxId());
+			taskItemBoxMap.put(item.getId(), item.getBoxId());
+		}
+	}
+	
+	
+	private void sendOutTaskItemCmd(Task task, List<GoodsLocation> goodsLocations, List<AGVIOTaskItem> taskItems, Map<Integer, Integer> taskItemBoxMap, Integer windowSize) throws Exception {
+		int j = goodsLocations.size();
+		for (AGVIOTaskItem taskItem : taskItems) {
+			if (goodsLocations.isEmpty()) {
+				return ;
+			}
+			// 5. 发送LS指令
+			Integer boxId = taskItemBoxMap.get(taskItem.getId());
+			if (boxId == null || boxId == 0) {
+				continue;
+			}
+			MaterialBox materialBox = MaterialBox.dao.findById(boxId);
+			sendTaskMoveBoxOrder(taskItem, task, goodsLocations.get(0), materialBox, windowSize, j);
+			goodsLocations.remove(0);
+			if (j > 0) {
+				j--;
+			}
 		}
 	}
 }
