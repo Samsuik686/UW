@@ -1,13 +1,13 @@
 /**  
 *  
 */  
-package com.jimi.uw_server.util.http;
+package com.jimi.uw_server.agv.gzrobot.util;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.jfinal.json.Jackson;
+import com.jimi.uw_server.agv.gzrobot.entity.base.BaseResponse;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -28,7 +28,7 @@ public class HttpPostRequestSender {
 	
 	private static OkHttpClient client = new OkHttpClient();
 	
-	public <T> T sendSynPostRequest(String url, Object args, Class<T> clazz) {
+	public static BaseResponse sendBaseRequestByPost(String url, Object args) {
 		
 		OkHttpClient thisClient =  client.newBuilder().readTimeout(120, TimeUnit.SECONDS).build();
 		RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), Jackson.getJson().toJson(args));
@@ -41,7 +41,7 @@ public class HttpPostRequestSender {
 		try {
 			response = thisClient.newCall(request).execute();
 			if (response.isSuccessful()) {
-				T result =  Jackson.getJson().parse(response.body().string(), clazz);
+				BaseResponse result = JsonParserUtil.me.parseToBaseRequset(response.body().string(), BaseResponse.class);
 				return result;
 			}
 		} catch (IOException e) {
