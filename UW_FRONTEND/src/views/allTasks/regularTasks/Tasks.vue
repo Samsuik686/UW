@@ -52,6 +52,7 @@
     <el-table
       @sort-change="sortChange"
       :data="tableData"
+      header-align="center"
       style="width:100%">
       <el-table-column label="启动/暂停" width="60">
         <template slot-scope="scope">
@@ -64,13 +65,13 @@
       <el-table-column
         label="序号"
         prop="showId"
+        align="center"
         width="70">
       </el-table-column>
       <el-table-column
         sortable="custom"
         label="状态"
-        prop="stateString"
-      >
+        prop="stateString">
       </el-table-column>
       <el-table-column
         sortable="custom"
@@ -80,11 +81,13 @@
       <el-table-column
         sortable="custom"
         label="客户"
+        align="center"
         prop="supplierName">
       </el-table-column>
       <el-table-column
         sortable="custom"
         label="优先级"
+        align="center"
         prop="priorityString">
       </el-table-column>
       <el-table-column
@@ -94,15 +97,22 @@
       </el-table-column>
       <el-table-column
         sortable="custom"
-        label="创建时间"
-        min-width="160"
-        prop="createTimeString">
+        label="抵扣"
+        align="center"
+        prop="isDeductedString">
       </el-table-column>
       <el-table-column
         sortable="custom"
         label="备注"
         prop="remarks">
       </el-table-column>
+      <el-table-column
+        sortable="custom"
+        label="创建时间"
+        min-width="160"
+        prop="createTimeString">
+      </el-table-column>
+
       <el-table-column label="操作" min-width="200">
         <template slot-scope="scope">
                     <span style="margin-right:10px;cursor:pointer" title="设置优先级" @click="handleSet(scope.row)">

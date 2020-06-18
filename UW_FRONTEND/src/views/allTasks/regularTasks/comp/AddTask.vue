@@ -37,13 +37,17 @@
                 <el-input id="uploadFile" size="large" @click.native="handleUpload" v-model="fileName"
                           placeholder="请选择"></el-input>
             </el-form-item>
+            <template>
+                <el-radio v-model="isDeducted" label="true">抵扣</el-radio>
+                <el-radio v-model="isDeducted" label="false">不抵扣</el-radio>
+            </template>
             <el-form-item label="备注">
                 <el-input type="textarea" v-model.trim="remarks"></el-input>
             </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
             <el-button type="info" size="mini" @click="cancel" >取 消</el-button>
-            <el-button type="primary" size="mini" @click="submit">确定</el-button>
+            <el-button type="primary" size="mini" @click="submit">确 定</el-button>
         </span>
     </el-dialog>
 </template>
@@ -78,7 +82,8 @@
                 inventoryTasks:[],
                 isDestinationShow:false,
                 destinationTip:'目的地',
-                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId'))
+                activeCompanyId: parseInt(window.localStorage.getItem('activeCompanyId')),
+                isDeducted:"true"     //是否抵扣
             }
         },
         computed:{
@@ -161,6 +166,7 @@
                     formData.append('remarks',this.remarks);
                     formData.append('#TOKEN#', this.token);
                     formData.append('isForced',false);
+                    formData.append('isDeducted',this.isDeducted);
                     this.isPending = true;
                     axios.post(taskCreateRegularIOTaskUrl, formData).then(res => {
                         if (res.data.result === 200) {
@@ -175,8 +181,9 @@
                             if(this.thisFile)task['file']=this.thisFile;
                             if(this.supplier)task['supplier']=this.supplier;
                             if(this.remarks)task['remarks']=this.remarks;
+                            if(this.isDeducted)task['isDeducted']=this.isDeducted;
                             if(this.token)task['#TOKEN#']=this.token;
-                            Bus.$emit('setNonexistentMaterial', this.fileName, this.suppliers,task,res.data.data);
+                            Bus.$emit('setNonexistentMaterial', this.fileName, this.suppliers,task,res.data.data,this.isDeducted);
                             this.cancel();
                         }else{
                             errHandler(res.data);

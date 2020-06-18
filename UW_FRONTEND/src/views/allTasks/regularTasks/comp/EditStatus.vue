@@ -27,7 +27,8 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="机械臂仓口选择" v-if="windowShow === '2' && originState === '1' && editData.type !== 8">
-                <el-select v-model.trim="robotWindowVal" placeholder="机械臂仓口选择" value="" style="width:100%" :disabled="robotWindows.length === 0">
+<!--                <el-select v-model.trim="robotWindowVal" placeholder="机械臂仓口选择" value="" style="width:100%" :disabled="robotWindows.length === 0">-->
+                <el-select v-model.trim="robotWindowVal" placeholder="机械臂仓口选择" value="" style="width:100%" :disabled="robotWindows.length >= 0">
                     <el-option  :label="robotWindows.length > 0 ? '请选择' : '无可用仓口'" value=''></el-option>
                     <el-option v-for="item in robotWindows" :value="item.id" :label="item.id" :key="item.id"></el-option>
                 </el-select>
@@ -147,9 +148,10 @@
                                 return;
                             }
                             options.data.window = this.windowVal;
-                            if (this.robotWindowVal !== '') {
-                                options.data.urWindowId = this.robotWindowVal;
-                            }
+                            // if (this.robotWindowVal !== '') {
+                            //     options.data.urWindowId = JSON.parse(JSON.stringify(this.robotWindowVal));
+                            // }
+                            this.robotWindowVal = '';
                         }
                         axiosPost(options).then(res => {
                             if(res.data.result === 200){

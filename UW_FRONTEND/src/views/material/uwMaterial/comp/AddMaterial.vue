@@ -56,7 +56,7 @@
                     supplierId:'',
                     thickness:'',
                     radius:'',
-                    isSuperable: ''
+                    isSuperable: false,
                 },
                 isPending: false,
                 isCloseOnModal: false,
@@ -69,7 +69,7 @@
                 this.addInfo.specification = '';
                 this.addInfo.no = '';
                 this.addInfo.supplierId = '';
-                this.addInfo.isSuperable = '';
+                this.addInfo.isSuperable = false;
                 this.$emit("update:isAdding",false);
             },
             submit:function(){

@@ -79,13 +79,15 @@
                 tableData: [],
                 task:{},
                 name:'',
-                isPending:false
+                isDeducted:true,
+                isPending:false,
             }
         },
         mounted(){
-            Bus.$on('setNonexistentMaterial',(fileName,suppliers,task,data) => {
+            Bus.$on('setNonexistentMaterial',(fileName,suppliers,task,data,isDeducted) => {
                 this.name = fileName + ' - 物料类型不存在清单';
                 this.task = task;
+                this.isDeducted = isDeducted;
                 data.map((item,index) =>{
                     item['specification'] = '';
                     item['thickness'] = '';
@@ -108,6 +110,7 @@
             close:function(){
                 this.name = '';
                 this.task = {};
+                this.isDeducted = true;
                 this.tableData = [];
                 this.supplierName = '';
                 this.dialogVisible = false;

@@ -50,7 +50,7 @@
                     prop="actualQuantity">
             </el-table-column>
             <el-table-column
-                    label="抵扣数"
+                    label="抵扣数(-)/超发数(+)"
                     prop="deductQuantity">
             </el-table-column>
             <el-table-column
